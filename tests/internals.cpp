@@ -29,5 +29,4 @@ int main()
     times(&dense, 2);
     times(&diag, &dense);
     times(&diag, &diag);
-    //static_assert(is_same<yomm::Method<>, times_spec<void()>>::value, "failure");
 }
