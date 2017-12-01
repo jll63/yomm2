@@ -22,6 +22,7 @@ begin_method(void, times, const Matrix*, const Matrix*) {
 
 int main()
 {
+    std::cout << "hello\n";
     const Matrix& dense = Dense_matrix();
     const Matrix& diag = Diagonal_matrix();
     times(&dense, &dense);
