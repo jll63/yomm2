@@ -17,8 +17,8 @@ YOMM2_DECLARE(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
 YOMM2_DECLARE(void, times, double, virtual_<const matrix&>);
 YOMM2_DECLARE(void, times, virtual_<const matrix&>, double);
 
-// YOMM2_OVERRIDE(void, times, const matrix&, const matrix&) {
-// } YOMM2_END;
+YOMM2_DEFINE(void, times, const matrix&, const matrix&) {
+} YOMM2_END;
 
 int main()
 {

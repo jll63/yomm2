@@ -63,8 +63,19 @@
                                      _YOMM2_ALIST, (__VA_ARGS__))); }
 
 
-#define YOMM2_OVERRIDE(R, ID, ...)
-#define YOMM2_END
+#define YOMM2_DEFINE(R, ID, ...)                                              \
+    namespace {                                                               \
+    namespace _YOMM2_NS {                                                     \
+    template<typename T> struct select_method;                                \
+    template<typename... A> struct select_method<void(A...)> {                \
+        using type = decltype(ID(::yorel::yomm2::details::discriminator(),    \
+                                   std::declval<A>()...));                    \
+    };                                                                        \
+    select_method<void(__VA_ARGS__)>::type::register_spec                     \
+    init("(" #__VA_ARGS__ ")");                                               \
+    R body(__VA_ARGS__)
+
+#define YOMM2_END } }
 
 namespace yorel {
 namespace yomm2 {
@@ -84,7 +95,7 @@ struct remove_virtual< virtual_<T> > {
     using type = T;
 };
 
-struct discriminator;
+struct discriminator {};
 
 } // namespace details
 
@@ -100,6 +111,12 @@ struct method {
     struct init_name {
         init_name(const char* name) {
             _name = name;
+        }
+    };
+
+    struct register_spec {
+        register_spec(const char* description) {
+            _YOMM2_DEBUG(std::cerr << name() << " += " << description << "\n");
         }
     };
 };
