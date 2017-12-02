@@ -20,9 +20,25 @@ YOMM2_DECLARE(void, times, virtual_<const matrix&>, double);
 YOMM2_DEFINE(void, times, const matrix&, const matrix&) {
 } YOMM2_END;
 
+YOMM2_DEFINE(void, times, const diagonal_matrix&, const diagonal_matrix&) {
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, double a, const diagonal_matrix& m) {
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, double a, const matrix& m) {
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, const diagonal_matrix& m, double a) {
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, const matrix& m, double a) {
+} YOMM2_END;
+
 int main()
 {
-    std::cout << "hello\n";
+    yorel::yomm2::update_methods();
+
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
     times(dense, dense);
