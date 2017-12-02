@@ -1,33 +1,33 @@
 #include <iostream>
 #include <type_traits>
 
-#include <yorel/openmethods.hpp>
+#include <yorel/yomm2.hpp>
 
 using std::is_same;
-namespace yomm = yorel::openmethods;
+using yorel::yomm2::virtual_;
 
-struct Matrix {
-    virtual ~Matrix() {}
+struct matrix {
+    virtual ~matrix() {}
 };
 
-struct Dense_matrix : Matrix {};
-struct Diagonal_matrix : Matrix {};
+struct dense_matrix : matrix {};
+struct diagonal_matrix : matrix {};
 
-declare_method(void, times, const Matrix*, const Matrix*);
-declare_method(void, times, double, const Matrix*);
-declare_method(void, times, const Matrix*, double);
+YOMM2_METHOD(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
+YOMM2_METHOD(void, times, double, virtual_<const matrix&>);
+YOMM2_METHOD(void, times, virtual_<const matrix&>, double);
 
-begin_method(void, times, const Matrix*, const Matrix*) {
-} end_method;
+// YOMM2_OVERRIDE(void, times, const matrix&, const matrix&) {
+// } YOMM2_END;
 
 int main()
 {
     std::cout << "hello\n";
-    const Matrix& dense = Dense_matrix();
-    const Matrix& diag = Diagonal_matrix();
-    times(&dense, &dense);
-    times(2, &dense);
-    times(&dense, 2);
-    times(&diag, &dense);
-    times(&diag, &diag);
+    const matrix& dense = dense_matrix();
+    const matrix& diag = diagonal_matrix();
+    times(dense, dense);
+    times(2, dense);
+    times(dense, 2);
+    times(diag, dense);
+    times(diag, diag);
 }
