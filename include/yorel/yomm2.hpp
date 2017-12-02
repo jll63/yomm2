@@ -102,6 +102,7 @@ struct method {
     static R dispatch(typename details::remove_virtual<A>::type... a) {
         _YOMM2_DEBUG(std::cerr << "call " << name() << "\n");
     }
+#if YOMM2_DEBUG
     static const char* name() { return _name; }
 
     static const char* _name;
@@ -111,7 +112,7 @@ struct method {
             _name = name;
         }
     };
-
+#endif
     struct register_spec {
         register_spec(const char* description) {
             _YOMM2_DEBUG(std::cerr << name() << " += " << description << "\n");
