@@ -7,8 +7,6 @@
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/cat.hpp>
 
-#define YOMM2_DEBUG 1
-
 #ifndef YOMM2_DEBUG
 #ifdef NDEBUG
 #define YOMM2_DEBUG 0
