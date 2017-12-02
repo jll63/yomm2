@@ -13,9 +13,9 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-YOMM2_METHOD(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
-YOMM2_METHOD(void, times, double, virtual_<const matrix&>);
-YOMM2_METHOD(void, times, virtual_<const matrix&>, double);
+YOMM2_DECLARE(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
+YOMM2_DECLARE(void, times, double, virtual_<const matrix&>);
+YOMM2_DECLARE(void, times, virtual_<const matrix&>, double);
 
 // YOMM2_OVERRIDE(void, times, const matrix&, const matrix&) {
 // } YOMM2_END;

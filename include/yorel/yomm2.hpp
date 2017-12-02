@@ -25,7 +25,7 @@
 #define _YOMM2_INIT_METHOD_NAME(ID, R, ...)                                   \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
-    ::yorel::yomm2::method<_YOMM2_METHOD_KEY(ID), R, __VA_ARGS__>::init_name  \
+    ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_name  \
     init(#ID "(" #__VA_ARGS__ ")"); } }                                       \
 
 #include <iostream>
@@ -46,19 +46,19 @@
 #define _YOMM2_ALIST(N, I, ARGS) \
     BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
 
-#define _YOMM2_METHOD_KEY(ID)                                                 \
+#define _YOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
-#define YOMM2_METHOD(R, ID, ...)                                              \
-    struct _YOMM2_METHOD_KEY(ID);                                             \
+#define YOMM2_DECLARE(R, ID, ...)                                              \
+    struct _YOMM2_DECLARE_KEY(ID);                                             \
     _YOMM2_INIT_METHOD_NAME(ID, R, __VA_ARGS__)                               \
-    ::yorel::yomm2::method<_YOMM2_METHOD_KEY(ID), R, __VA_ARGS__> ID(         \
+    ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> ID(         \
         ::yorel::yomm2::details::discriminator,                               \
         BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
                         _YOMM2_PLIST, (__VA_ARGS__)));                        \
     R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                 \
                              _YOMM2_PLIST, (__VA_ARGS__))) {                  \
-        return ::yorel::yomm2::method<_YOMM2_METHOD_KEY(ID), R, __VA_ARGS__>:: \
+        return ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>:: \
             dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),     \
                                      _YOMM2_ALIST, (__VA_ARGS__))); }
 
