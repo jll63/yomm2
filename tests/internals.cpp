@@ -13,6 +13,12 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
+using yorel::yomm2::init_class_info;
+using yorel::yomm2::global_class_registry;
+init_class_info<matrix> i0(global_class_registry());
+init_class_info<dense_matrix, matrix> i2(global_class_registry());
+init_class_info<diagonal_matrix, matrix> i3(global_class_registry());
+
 YOMM2_DECLARE(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
 YOMM2_DECLARE(void, times, double, virtual_<const matrix&>);
 YOMM2_DECLARE(void, times, virtual_<const matrix&>, double);

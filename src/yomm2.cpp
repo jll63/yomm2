@@ -10,9 +10,14 @@
 namespace yorel {
 namespace yomm2 {
 
-void update_methods(const method_registry_t& methods) {
+void update_methods(const class_registry_t& classes,
+                    const method_registry_t& methods) {
     //_YOMM2_DEBUG(std::cerr << name() << " += " << description << "\n");
     using std::cout;
+
+    for (auto cls : classes) {
+        //cout << cls->description << ": \n";
+    }
 
     for (auto meth : methods) {
         cout << meth->description << ": \n";
@@ -25,6 +30,11 @@ void update_methods(const method_registry_t& methods) {
 
 method_registry_t& global_method_registry() {
     static method_registry_t registry;
+    return registry;
+}
+
+class_registry_t& global_class_registry() {
+    static class_registry_t registry;
     return registry;
 }
 

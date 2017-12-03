@@ -3,6 +3,10 @@
 
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
+#include <typeinfo>
+#include <typeindex>
+
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
@@ -92,8 +96,6 @@ using method_registry_t = std::vector<const method_info*>;
 
 method_registry_t& global_method_registry();
 
-void update_methods(const method_registry_t& methods = global_method_registry());
-
 template<typename T>
 struct virtual_;
 
@@ -157,6 +159,31 @@ method_info& method<ID, R, A...>::info() {
     static method_info info;
     return info;
 }
+
+struct class_info {
+    std::unordered_set<const std::type_info*> ti;
+};
+
+template<class C>
+struct class_info_singleton {
+    static class_info ci;
+};
+
+using class_registry_t = std::unordered_map<std::type_index, class_info>;
+
+class_registry_t& global_class_registry();
+
+template<class C, class... B>
+struct init_class_info {
+
+    init_class_info(class_registry_t& registry) {
+        auto& ci = registry[std::type_index(typeid(C))];
+    }
+
+};
+
+void update_methods(const class_registry_t& classes = global_class_registry(),
+                    const method_registry_t& methods = global_method_registry());
 
 } // namespace yomm2
 } // namespace yorel
