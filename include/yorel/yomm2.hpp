@@ -53,21 +53,21 @@
     BOOST_PP_CAT(_yomm2_method_, ID)
 
 #define YOMM2_DECLARE(R, ID, ...) \
-        YOMM2_DECLARE_(::yorel::yomm2::global_method_registry(), R, ID, __VA_ARGS__)
+    YOMM2_DECLARE_(::yorel::yomm2::registry::global_, R, ID, __VA_ARGS__)
 
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ...)                                   \
     struct _YOMM2_DECLARE_KEY(ID);                                            \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
-    ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_method  \
-    init(REGISTRY  _YOMM2_COMMA_DEBUG(#ID "(" #__VA_ARGS__ ")")); } }         \
-    ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> ID(        \
+    ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_method \
+    init(_YOMM2_DEBUG(#ID "(" #__VA_ARGS__ ")")); } }         \
+    ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> ID( \
         ::yorel::yomm2::details::discriminator,                               \
         BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
                         _YOMM2_PLIST, (__VA_ARGS__)));                        \
     R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                 \
                              _YOMM2_PLIST, (__VA_ARGS__))) {                  \
-        return ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
+        return ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
             ::dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),   \
                                      _YOMM2_ALIST, (__VA_ARGS__))); }
 
@@ -95,6 +95,18 @@ class method_info;
 using method_registry_t = std::vector<const method_info*>;
 
 method_registry_t& global_method_registry();
+
+struct registry {
+    std::vector<const method_info*> methods;
+    template<typename T> static registry& get();
+    struct global_;
+    static registry& global() { return get<global_>(); }
+};
+
+template<typename T> registry& registry::get() {
+    static registry r;
+    return r;
+}
 
 template<typename T>
 struct virtual_;
@@ -124,7 +136,7 @@ struct method_info {
     std::vector<const spec_info*> specs;
 };
 
-template<typename ID, typename R, typename... A>
+template<typename REG, typename ID, typename R, typename... A>
 struct method {
 
     static method_info& info();
@@ -145,17 +157,16 @@ struct method {
     static const char* description() { return info().description; }
 
     struct init_method {
-        init_method(method_registry_t& registry
-                    _YOMM2_COMMA_DEBUG(const char* description)) {
+        init_method(_YOMM2_DEBUG(const char* description)) {
             info().description = description;
-            registry.push_back(&info());
+            registry::get<REG>().methods.push_back(&info());
         }
     };
 #endif
 };
 
-template<typename ID, typename R, typename... A>
-method_info& method<ID, R, A...>::info() {
+template<typename REG, typename ID, typename R, typename... A>
+method_info& method<REG, ID, R, A...>::info() {
     static method_info info;
     return info;
 }
