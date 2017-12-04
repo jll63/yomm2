@@ -13,11 +13,11 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-using yorel::yomm2::init_class_info;
-using yorel::yomm2::global_class_registry;
-init_class_info<matrix> i0(global_class_registry());
-init_class_info<dense_matrix, matrix> i2(global_class_registry());
-init_class_info<diagonal_matrix, matrix> i3(global_class_registry());
+// using yorel::yomm2::init_class_info;
+// using yorel::yomm2::registry;
+// init_class_info<registry::global_, matrix> i0("matrix");
+// // init_class_info<dense_matrix, matrix> i2;
+// // init_class_info<diagonal_matrix, matrix> i3;
 
 YOMM2_DECLARE(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
 YOMM2_DECLARE(void, times, double, virtual_<const matrix&>);
@@ -53,3 +53,14 @@ int main()
     times(diag, dense);
     times(diag, diag);
 }
+
+YOMM2_CLASS(matrix);
+YOMM2_CLASS(dense_matrix, matrix);
+
+
+// #define TEST1(...)                                                     \
+//     BOOST_PP_IF(BOOST_PP_GREATER(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), a, b)
+
+// TEST1(a)
+
+// TEST1(a, b)
