@@ -13,6 +13,9 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
+YOMM2_CLASS(matrix);
+YOMM2_CLASS(dense_matrix, matrix);
+
 // using yorel::yomm2::init_class_info;
 // using yorel::yomm2::registry;
 // init_class_info<registry::global_, matrix> i0("matrix");
@@ -53,9 +56,6 @@ int main()
     times(diag, dense);
     times(diag, diag);
 }
-
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
 
 
 // #define TEST1(...)                                                     \
