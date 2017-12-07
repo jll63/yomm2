@@ -17,11 +17,14 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-using yorel::yomm2::init_class_info;
-using yorel::yomm2::global_class_registry;
-init_class_info<matrix> i0(global_class_registry());
-init_class_info<dense_matrix, matrix> i2(global_class_registry());
-init_class_info<diagonal_matrix, matrix> i3(global_class_registry());
+YOMM2_CLASS(matrix);
+YOMM2_CLASS(dense_matrix, matrix);
+
+// using yorel::yomm2::init_class_info;
+// using yorel::yomm2::registry;
+// init_class_info<registry::global_, matrix> i0("matrix");
+// // init_class_info<dense_matrix, matrix> i2;
+// // init_class_info<diagonal_matrix, matrix> i3;
 
 // int main()
 // {
@@ -69,3 +72,11 @@ BOOST_AUTO_TEST_CASE(registration)
 }
 
 }
+
+
+// #define TEST1(...)                                                     \
+//     BOOST_PP_IF(BOOST_PP_GREATER(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), a, b)
+
+// TEST1(a)
+
+// TEST1(a, b)
