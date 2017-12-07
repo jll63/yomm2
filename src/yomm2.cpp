@@ -12,16 +12,21 @@ namespace yomm2 {
 
 void update_methods(const registry& reg) {
     //_YOMM2_DEBUG(std::cerr << name() << " += " << description << "\n");
-    using std::cout;
+    using std::cerr;
 
     for (auto cls : reg.classes) {
-        cout << cls.second->description << ": \n";
+        cerr << cls.second->description << "\n";
     }
 
     for (auto meth : reg.methods) {
-        cout << meth->description << ": \n";
+        cerr << meth->description << ":\n";
+        cerr << "  vargs:";
+        for (auto varg : meth->vargs) {
+            cerr << " " << varg->description;
+        }
+        cerr << "\n  specs:\n";
         for (auto spec : meth->specs) {
-            cout << "  " << spec->description << "\n";
+            cerr << "    " << spec->description << "\n";
         }
     }
 

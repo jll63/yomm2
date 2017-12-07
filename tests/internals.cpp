@@ -4,6 +4,7 @@
 #include <yorel/yomm2.hpp>
 
 #define BOOST_TEST_MODULE example
+//#include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 using std::is_same;
@@ -50,6 +51,7 @@ YOMM2_DEFINE(void, times, const matrix& m, double a) {
 
 BOOST_AUTO_TEST_CASE(compilation)
 {
+    update_methods(registry);
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
     times(dense, dense);
@@ -61,8 +63,17 @@ BOOST_AUTO_TEST_CASE(compilation)
 
 BOOST_AUTO_TEST_CASE(registration)
 {
-    BOOST_TEST(registry.methods.size() == 3);
     BOOST_TEST(registry.classes.size() == 3);
+
+    BOOST_TEST(registry.methods.size() == 3);
+    BOOST_TEST(registry.methods[0]->vargs.size() == 2);
+    BOOST_TEST(registry.methods[0]->specs.size() == 2);
+
+    BOOST_TEST(registry.methods[1]->specs.size() == 2);
+    BOOST_TEST(registry.methods[1]->vargs.size() == 1);
+
+    BOOST_TEST(registry.methods[2]->specs.size() == 2);
+    BOOST_TEST(registry.methods[2]->vargs.size() == 1);
 }
 
 }
