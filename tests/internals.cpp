@@ -10,6 +10,11 @@ using std::is_same;
 namespace yomm2 = yorel::yomm2;
 using yomm2::virtual_;
 
+namespace test_internals {
+
+struct test;
+auto& registry = yomm2::registry::get<test>();
+
 struct matrix {
     virtual ~matrix() {}
 };
@@ -17,32 +22,9 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
-
-// using yorel::yomm2::init_class_info;
-// using yorel::yomm2::registry;
-// init_class_info<registry::global_, matrix> i0("matrix");
-// // init_class_info<dense_matrix, matrix> i2;
-// // init_class_info<diagonal_matrix, matrix> i3;
-
-// int main()
-// {
-//     yorel::yomm2::update_methods();
-
-//     const matrix& dense = dense_matrix();
-//     const matrix& diag = diagonal_matrix();
-//     times(dense, dense);
-//     times(2, dense);
-//     times(dense, 2);
-//     times(diag, dense);
-//     times(diag, diag);
-// }
-
-namespace test_internals {
-
-struct test;
-auto& registry = yomm2::registry::get<test>();
+YOMM2_CLASS_(test, matrix);
+YOMM2_CLASS_(test, dense_matrix, matrix);
+YOMM2_CLASS_(test, diagonal_matrix, matrix);
 
 YOMM2_DECLARE_(test, void, times, virtual_<const matrix&>, virtual_<const matrix&>);
 YOMM2_DECLARE_(test, void, times, double, virtual_<const matrix&>);
@@ -66,17 +48,21 @@ YOMM2_DEFINE(void, times, const diagonal_matrix& m, double a) {
 YOMM2_DEFINE(void, times, const matrix& m, double a) {
 } YOMM2_END;
 
+BOOST_AUTO_TEST_CASE(compilation)
+{
+    const matrix& dense = dense_matrix();
+    const matrix& diag = diagonal_matrix();
+    times(dense, dense);
+    times(2, dense);
+    times(dense, 2);
+    times(diag, dense);
+    times(diag, diag);
+}
+
 BOOST_AUTO_TEST_CASE(registration)
 {
     BOOST_TEST(registry.methods.size() == 3);
+    BOOST_TEST(registry.classes.size() == 3);
 }
 
 }
-
-
-// #define TEST1(...)                                                     \
-//     BOOST_PP_IF(BOOST_PP_GREATER(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), 1), a, b)
-
-// TEST1(a)
-
-// TEST1(a, b)
