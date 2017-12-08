@@ -121,13 +121,9 @@ namespace yomm2 {
 struct method_info;
 struct class_info;
 
-using method_registry_t = std::vector<const method_info*>;
-
-method_registry_t& global_method_registry();
-
 struct registry {
+    std::vector<const class_info*> classes;
     std::vector<const method_info*> methods;
-    std::unordered_map<std::type_index, const class_info*> classes;
     template<typename T> static registry& get();
     struct global_;
     static registry& global() { return get<global_>(); }
@@ -158,23 +154,29 @@ struct discriminator {};
 } // namespace details
 
 struct class_info {
+    std::vector<class_info*> bases;
     _YOMM2_DEBUG(const char* description);
     std::unordered_set<const std::type_info*> ti;
     template<typename REG, class CLASS> static class_info& get();
 };
 
-template<typename REG, class CLASS> class_info& class_info::get() {
+template<typename REG, class CLASS>
+class_info& class_info::get() {
     static class_info info;
     return info;
 }
 
-template<typename REG, class C, class... B>
+template<typename REG, class CLASS, class... BASE>
 struct init_class_info {
 
     init_class_info(_YOMM2_DEBUG(const char* description)) {
-        auto& info = class_info::get<REG, C>();
-        _YOMM2_DEBUG(info.description = description);
-        registry::get<REG>().classes[std::type_index(typeid(C))] = &info;
+        auto& info = class_info::get<REG, CLASS>();
+        static int called;
+        if (!called++) {
+            info.bases = { &class_info::get<REG, BASE>()... };
+            _YOMM2_DEBUG(info.description = description);
+            registry::get<REG>().classes.push_back(&info);
+        }
     }
 
 };

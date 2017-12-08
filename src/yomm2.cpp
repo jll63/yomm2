@@ -15,11 +15,17 @@ void update_methods(const registry& reg) {
     using std::cerr;
 
     for (auto cls : reg.classes) {
-        cerr << cls.second->description << "\n";
+        cerr << "class " << cls->description;
+        const char* sep = ": ";
+        for (auto base : cls->bases) {
+            cerr << sep << base->description;
+            sep = ", ";
+        }
+        cerr << "\n";
     }
 
     for (auto meth : reg.methods) {
-        cerr << meth->description << ":\n";
+        cerr << "method " << meth->description << ":\n";
         cerr << "  vargs:";
         for (auto varg : meth->vargs) {
             cerr << " " << varg->description;
