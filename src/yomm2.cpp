@@ -7,6 +7,7 @@
 #include <yorel/yomm2/runtime.hpp>
 
 #include <algorithm>
+#include <list>
 #include <iostream>
 
 namespace yorel {
@@ -67,6 +68,40 @@ void runtime::augment_classes() {
 }
 
 void runtime::layer_classes() {
+    std::list<rt_class*> input;
+    std::unordered_set<rt_class*> previous_layer;
+
+    layered_classes.reserve(classes.size());
+
+    for (auto& rtc : classes) {
+        if (rtc.direct_bases.empty()) {
+            layered_classes.push_back(&rtc);
+            previous_layer.insert(&rtc);
+        } else {
+            input.push_back(&rtc);
+        }
+    }
+
+    while (input.size()) {
+        std::unordered_set<rt_class*> current_layer;
+
+        for (auto class_iter = input.begin(); class_iter != input.end(); ) {
+            auto rtc = *class_iter;
+            if (std::any_of(
+                    rtc->direct_bases.begin(), rtc->direct_bases.end(),
+                    [&previous_layer](rt_class* base) {
+                        return previous_layer.find(base) != previous_layer.end();
+                    })
+                ) {
+                current_layer.insert(rtc);
+                layered_classes.push_back(rtc);
+                class_iter = input.erase(class_iter);
+            } else {
+                ++class_iter;
+            }
+        }
+        previous_layer.swap(current_layer);
+    }
 }
 
 } // namespace yomm2

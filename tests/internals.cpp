@@ -151,6 +151,17 @@ YOMM2_DEFINE(bool, approve, const executive& r, const jet& e, double amount) {
 
 const int num_classes = 10;
 
+std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
+    std::ostringstream os;
+    const char* sep = "{ ";
+    for (auto cls : classes) {
+        os << sep << cls->info->description;
+        sep = ", ";
+    }
+    os << " }";
+    return os.str();
+}
+
 BOOST_AUTO_TEST_CASE(registration) {
     using yomm2::class_info;
 
@@ -256,7 +267,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = { role_class };
-        BOOST_TEST_REQUIRE(employee_class->direct_bases == expected);
+        BOOST_TEST(employee_class->direct_bases == expected);
     }
 
     {
@@ -271,17 +282,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST_REQUIRE(public_transport_class->direct_bases == expected);
+        BOOST_TEST(public_transport_class->direct_bases == expected);
     }
 
     {
         std::vector<rt_class*> expected = { public_transport_class };
-        BOOST_TEST_REQUIRE(bus_class->direct_bases == expected);
+        BOOST_TEST(bus_class->direct_bases == expected);
     }
 
     {
         std::vector<rt_class*> expected = { public_transport_class };
-        BOOST_TEST_REQUIRE(train_class->direct_bases == expected);
+        BOOST_TEST(train_class->direct_bases == expected);
     }
 
     {
@@ -291,12 +302,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST_REQUIRE(jet_class->direct_bases == expected);
+        BOOST_TEST(jet_class->direct_bases == expected);
     }
 
     {
         std::vector<rt_class*> expected = { employee_class, founder_class };
-        BOOST_TEST_REQUIRE(role_class->direct_specs == expected);
+        BOOST_TEST(role_class->direct_specs == expected);
     }
 
     {
@@ -308,20 +319,32 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         std::vector<rt_class*> expected = {
             public_transport_class, cab_class, jet_class
         };
-        BOOST_TEST_REQUIRE(expense_class->direct_specs == expected);
+        BOOST_TEST(expense_class->direct_specs == expected);
     }
 
     {
         std::vector<rt_class*> expected = { bus_class, train_class };
-        BOOST_TEST_REQUIRE(public_transport_class->direct_specs == expected);
+        BOOST_TEST(public_transport_class->direct_specs == expected);
     }
 
-    BOOST_TEST_REQUIRE(bus_class->direct_specs.size() == 0);
-    BOOST_TEST_REQUIRE(train_class->direct_specs.size() == 0);
-    BOOST_TEST_REQUIRE(cab_class->direct_specs.size() == 0);
-    BOOST_TEST_REQUIRE(jet_class->direct_specs.size() == 0);
+    BOOST_TEST(bus_class->direct_specs.size() == 0);
+    BOOST_TEST(train_class->direct_specs.size() == 0);
+    BOOST_TEST(cab_class->direct_specs.size() == 0);
+    BOOST_TEST(jet_class->direct_specs.size() == 0);
 
     rt.layer_classes();
+
+    {
+        std::vector<rt_class*> expected = {
+          role_class, expense_class,
+          employee_class, founder_class, public_transport_class, cab_class, jet_class,
+          executive_class, bus_class, train_class,
+        };
+        BOOST_TEST_INFO("result   = " + to_string(rt.layered_classes));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(rt.layered_classes == expected);
+    }
 }
+
 
 }

@@ -23,7 +23,7 @@ struct runtime {
 
     const registry& reg;
     std::vector<rt_class> classes;
-    std::vector<rt_class*> layered;
+    std::vector<rt_class*> layered_classes;
 
     explicit runtime(const registry& reg);
 
