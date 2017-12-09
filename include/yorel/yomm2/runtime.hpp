@@ -11,8 +11,8 @@ namespace yomm2 {
 
 struct rt_class {
     const class_info* info;
-    std::vector<rt_class*> direct_bases;
-    std::vector<rt_class*> direct_specs;
+    std::vector<rt_class*> bases;
+    std::vector<rt_class*> specs;
 };
 
 struct rt_method {

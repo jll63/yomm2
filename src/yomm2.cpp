@@ -56,11 +56,11 @@ void runtime::augment_classes() {
         std::transform(
             (*class_iter)->bases.begin(),
             (*class_iter)->bases.end(),
-            std::back_inserter(rt_class.direct_bases),
+            std::back_inserter(rt_class.bases),
             [&class_map](const class_info* ci) { return class_map[ci]; });
 
-        for (auto rt_base : rt_class.direct_bases) {
-            rt_base->direct_specs.push_back(&rt_class);
+        for (auto rt_base : rt_class.bases) {
+            rt_base->specs.push_back(&rt_class);
         }
 
         ++class_iter;
@@ -74,7 +74,7 @@ void runtime::layer_classes() {
     layered_classes.reserve(classes.size());
 
     for (auto& rtc : classes) {
-        if (rtc.direct_bases.empty()) {
+        if (rtc.bases.empty()) {
             layered_classes.push_back(&rtc);
             previous_layer.insert(&rtc);
         } else {
@@ -88,7 +88,7 @@ void runtime::layer_classes() {
         for (auto class_iter = input.begin(); class_iter != input.end(); ) {
             auto rtc = *class_iter;
             if (std::any_of(
-                    rtc->direct_bases.begin(), rtc->direct_bases.end(),
+                    rtc->bases.begin(), rtc->bases.end(),
                     [&previous_layer](rt_class* base) {
                         return previous_layer.find(base) != previous_layer.end();
                     })
