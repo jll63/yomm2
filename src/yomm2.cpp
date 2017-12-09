@@ -4,6 +4,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <yorel/yomm2.hpp>
+#include <yorel/yomm2/runtime.hpp>
 
 #include <iostream>
 

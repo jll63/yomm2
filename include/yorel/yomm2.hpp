@@ -2,11 +2,10 @@
 #define YOREL_YOMM2_INCLUDED
 
 #include <vector>
-#include <unordered_set>
-#include <unordered_map>
 #include <typeinfo>
 #include <typeindex>
 #include <type_traits>
+#include <unordered_set>
 
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>

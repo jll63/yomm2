@@ -2,6 +2,7 @@
 #include <type_traits>
 
 #include <yorel/yomm2.hpp>
+#include <yorel/yomm2/runtime.hpp>
 
 #define BOOST_TEST_MODULE yomm2
 //#include <boost/test/unit_test.hpp>
