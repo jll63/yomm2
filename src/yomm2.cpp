@@ -66,6 +66,8 @@ void runtime::augment_classes() {
     }
 }
 
+void runtime::layer_classes() {
+}
 
 } // namespace yomm2
 } // namespace yorel
