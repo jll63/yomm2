@@ -39,6 +39,7 @@
     init(#ID "(" #__VA_ARGS__ ")"); } }                                       \
 
 #include <iostream>
+#include <iterator>
 
 #else
 #define _YOMM2_DEBUG(ST)

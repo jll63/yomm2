@@ -68,40 +68,52 @@ void runtime::augment_classes() {
 }
 
 void runtime::layer_classes() {
+
+    _YOMM2_DEBUG(std::cerr << "Layering...");
+    _YOMM2_DEBUG(const char* sep = "\n  ");
+
     std::list<rt_class*> input;
     std::unordered_set<rt_class*> previous_layer;
 
     layered_classes.reserve(classes.size());
 
-    for (auto& rtc : classes) {
-        if (rtc.bases.empty()) {
-            layered_classes.push_back(&rtc);
-            previous_layer.insert(&rtc);
+    for (auto& cls : classes) {
+        if (cls.bases.empty()) {
+            layered_classes.push_back(&cls);
+            previous_layer.insert(&cls);
+            _YOMM2_DEBUG(std::cerr << sep << cls.info->description);
+            _YOMM2_DEBUG(sep = " ");
         } else {
-            input.push_back(&rtc);
+            input.push_back(&cls);
         }
     }
+
+    _YOMM2_DEBUG(sep = "\n  ");
 
     while (input.size()) {
         std::unordered_set<rt_class*> current_layer;
 
         for (auto class_iter = input.begin(); class_iter != input.end(); ) {
-            auto rtc = *class_iter;
+            auto cls = *class_iter;
             if (std::any_of(
-                    rtc->bases.begin(), rtc->bases.end(),
+                    cls->bases.begin(), cls->bases.end(),
                     [&previous_layer](rt_class* base) {
                         return previous_layer.find(base) != previous_layer.end();
                     })
                 ) {
-                current_layer.insert(rtc);
-                layered_classes.push_back(rtc);
+                current_layer.insert(cls);
+                layered_classes.push_back(cls);
                 class_iter = input.erase(class_iter);
+                _YOMM2_DEBUG(std::cerr << sep << cls->info->description);
+                _YOMM2_DEBUG(sep = " ");
             } else {
                 ++class_iter;
             }
         }
         previous_layer.swap(current_layer);
+        _YOMM2_DEBUG(sep = "\n  ");
     }
+    _YOMM2_DEBUG(std::cerr << "\n");
 }
 
 void runtime::calculate_conforming_classes() {
