@@ -16,4 +16,4 @@ the following ways:
 - ...and form pointers to open methods
 - Overriding methods across namespaces was a hassle. It shoud be easier.
 - We had to choose between a fast intrusive mode and a slow orthogonal mode. I
-  think I can support a fast orthgonal mode. See my article on the D blog.
+  think I can support a fast orthogonal mode. See my article on the D blog.
