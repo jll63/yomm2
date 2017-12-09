@@ -13,6 +13,8 @@ struct rt_class {
     const class_info* info;
     std::vector<rt_class*> bases;
     std::vector<rt_class*> specs;
+    std::unordered_set<rt_class*> confs; // all the classes that conform to this one,
+                                         // = the class itself and all its subclasses
 };
 
 struct rt_method {
@@ -29,6 +31,7 @@ struct runtime {
 
     void augment_classes();
     void layer_classes();
+    void calculate_conforming_classes();
 };
 
 } // namespace yomm2

@@ -11,6 +11,31 @@
 using std::is_same;
 namespace yomm2 = yorel::yomm2;
 using yomm2::virtual_;
+using namespace yomm2;
+
+std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
+    std::ostringstream os;
+    os << "{ ";
+    const char* sep = "";
+    for (auto cls : classes) {
+        os << sep << cls->info->description;
+        sep = ", ";
+    }
+    os << " }";
+    return os.str();
+}
+
+std::string to_string(const std::unordered_set<rt_class*>& classes) {
+    std::vector<rt_class*> vec(classes.begin(), classes.end());
+    std::sort(vec.begin(), vec.end()); // sort by address = good
+    // std::sort(
+    //     vec.begin(), vec.end(),
+    //     [](rt_class* a, rt_class* b) {
+    //         std::cerr << a->info->description << " <=> " << b->info->description << "\n";
+    //         return strcmp(a->info->description, b->info->description) < 0;
+    //     });
+    return to_string(vec);
+}
 
 namespace matrices {
 
@@ -150,17 +175,6 @@ YOMM2_DEFINE(bool, approve, const executive& r, const jet& e, double amount) {
 } YOMM2_END;
 
 const int num_classes = 10;
-
-std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
-    std::ostringstream os;
-    const char* sep = "{ ";
-    for (auto cls : classes) {
-        os << sep << cls->info->description;
-        sep = ", ";
-    }
-    os << " }";
-    return os.str();
-}
 
 BOOST_AUTO_TEST_CASE(registration) {
     using yomm2::class_info;
@@ -343,6 +357,47 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_INFO("result   = " + to_string(rt.layered_classes));
         BOOST_TEST_INFO("expected = " + to_string(expected));
         BOOST_TEST(rt.layered_classes == expected);
+    }
+
+    rt.calculate_conforming_classes();
+
+    {
+        std::unordered_set<rt_class*> expected = {
+            role_class, employee_class, founder_class, executive_class
+        };
+
+        BOOST_TEST_INFO("result   = " + to_string(role_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(role_class->confs == expected);
+    }
+
+    {
+        std::unordered_set<rt_class*> expected = { founder_class };
+
+        BOOST_TEST_INFO("result   = " + to_string(founder_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(founder_class->confs == expected);
+    }
+
+    {
+        std::unordered_set<rt_class*> expected = {
+          expense_class, public_transport_class, cab_class, jet_class,
+          bus_class, train_class,
+        };
+
+        BOOST_TEST_INFO("result   = " + to_string(expense_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(expense_class->confs == expected);
+    }
+
+    {
+        std::unordered_set<rt_class*> expected = {
+          public_transport_class, bus_class, train_class,
+        };
+
+        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(public_transport_class->confs == expected);
     }
 }
 

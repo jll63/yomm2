@@ -104,5 +104,20 @@ void runtime::layer_classes() {
     }
 }
 
+void runtime::calculate_conforming_classes() {
+    for (auto class_iter = layered_classes.rbegin();
+         class_iter != layered_classes.rend();
+         ++class_iter) {
+        auto c = *class_iter;
+        c->confs.insert(c);
+        for (auto s : c->specs) {
+            c->confs.insert(s);
+            std::copy(
+                s->confs.begin(), s->confs.end(),
+                std::inserter(c->confs, c->confs.end()));
+        }
+    }
+}
+
 } // namespace yomm2
 } // namespace yorel
