@@ -2,8 +2,10 @@
 #include <type_traits>
 
 #include <yorel/yomm2.hpp>
+#include <yorel/yomm2/runtime.hpp>
 
-#define BOOST_TEST_MODULE example
+#define BOOST_TEST_MODULE yomm2
+//#include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 using std::is_same;
@@ -50,6 +52,7 @@ YOMM2_DEFINE(void, times, const matrix& m, double a) {
 
 BOOST_AUTO_TEST_CASE(compilation)
 {
+    update_methods(registry);
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
     times(dense, dense);
@@ -61,8 +64,22 @@ BOOST_AUTO_TEST_CASE(compilation)
 
 BOOST_AUTO_TEST_CASE(registration)
 {
-    BOOST_TEST(registry.methods.size() == 3);
     BOOST_TEST(registry.classes.size() == 3);
+    BOOST_TEST(registry.classes[0]->bases.size() == 0);
+    BOOST_TEST_REQUIRE(registry.classes[1]->bases.size() == 1);
+    BOOST_TEST(registry.classes[1]->bases[0] == registry.classes[0]);
+    BOOST_TEST(registry.classes[2]->bases.size() == 1);
+    BOOST_TEST_REQUIRE(registry.classes[2]->bases[0] == registry.classes[0]);
+
+    BOOST_TEST(registry.methods.size() == 3);
+    BOOST_TEST(registry.methods[0]->vargs.size() == 2);
+    BOOST_TEST(registry.methods[0]->specs.size() == 2);
+
+    BOOST_TEST(registry.methods[1]->specs.size() == 2);
+    BOOST_TEST(registry.methods[1]->vargs.size() == 1);
+
+    BOOST_TEST(registry.methods[2]->specs.size() == 2);
+    BOOST_TEST(registry.methods[2]->vargs.size() == 1);
 }
 
 }

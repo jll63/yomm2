@@ -2,10 +2,10 @@
 #define YOREL_YOMM2_INCLUDED
 
 #include <vector>
-#include <unordered_set>
-#include <unordered_map>
 #include <typeinfo>
 #include <typeindex>
+#include <type_traits>
+#include <unordered_set>
 
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -50,7 +50,7 @@
 
 #define _YOMM2_PLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::details::remove_virtual<BOOST_PP_TUPLE_ELEM(I, A)>::type  \
+    ::yorel::yomm2::virtual_traits<BOOST_PP_TUPLE_ELEM(I, A)>::type  \
     BOOST_PP_CAT(a, I)
 
 #define _YOMM2_ALIST(N, I, ARGS) \
@@ -120,13 +120,9 @@ namespace yomm2 {
 struct method_info;
 struct class_info;
 
-using method_registry_t = std::vector<const method_info*>;
-
-method_registry_t& global_method_registry();
-
 struct registry {
+    std::vector<const class_info*> classes;
     std::vector<const method_info*> methods;
-    std::unordered_map<std::type_index, const class_info*> classes;
     template<typename T> static registry& get();
     struct global_;
     static registry& global() { return get<global_>(); }
@@ -140,29 +136,83 @@ template<typename T> registry& registry::get() {
 template<typename T>
 struct virtual_;
 
+template<typename T>
+struct virtual_traits {
+    using type = T;
+};
+
+template<typename T>
+struct virtual_traits< virtual_<T&> > {
+    using type = typename std::remove_cv<T>::type;
+};
+
 namespace details {
-
-template<typename T>
-struct remove_virtual {
-    using type = T;
-};
-
-template<typename T>
-struct remove_virtual< virtual_<T> > {
-    using type = T;
-};
 
 struct discriminator {};
 
 } // namespace details
 
+struct class_info {
+    std::vector<class_info*> bases;
+    _YOMM2_DEBUG(const char* description);
+    std::unordered_set<const std::type_info*> ti;
+    template<typename REG, class CLASS> static class_info& get();
+};
+
+template<typename REG, class CLASS>
+class_info& class_info::get() {
+    static class_info info;
+    return info;
+}
+
+template<typename REG, class CLASS, class... BASE>
+struct init_class_info {
+
+    init_class_info(_YOMM2_DEBUG(const char* description)) {
+        auto& info = class_info::get<REG, CLASS>();
+        static int called;
+        if (!called++) {
+            info.bases = { &class_info::get<REG, BASE>()... };
+            _YOMM2_DEBUG(info.description = description);
+            registry::get<REG>().classes.push_back(&info);
+        }
+    }
+
+};
+
 struct spec_info {
-    _YOMM2_DEBUG(const char* description;)
+    _YOMM2_DEBUG(const char* description);
 };
 
 struct method_info {
-    _YOMM2_DEBUG(const char* description;)
+    _YOMM2_DEBUG(const char* description);
+    std::vector<const class_info*> vargs;
     std::vector<const spec_info*> specs;
+};
+
+template<typename REG, typename... ARGS>
+struct collect_vargs;
+
+template<typename REG, typename FIRST, typename... REST>
+struct collect_vargs<REG, FIRST, REST...> {
+    static void into(std::vector<const class_info*>& vargs) {
+        collect_vargs<REG, REST...>::into(vargs);
+    }
+};
+
+template<typename REG, typename FIRST, typename... REST>
+struct collect_vargs<REG, virtual_<FIRST>, REST...> {
+    static void into(std::vector<const class_info*>& vargs) {
+        vargs.push_back(
+            &class_info::get<REG, typename virtual_traits<virtual_<FIRST>>::type>());
+        collect_vargs<REG, REST...>::into(vargs);
+    }
+};
+
+template<typename REG>
+struct collect_vargs<REG> {
+    static void into(std::vector<const class_info*>& vargs) {
+    }
 };
 
 template<typename REG, typename ID, typename R, typename... A>
@@ -179,19 +229,21 @@ struct method {
         }
     };
 
-    static R dispatch(typename details::remove_virtual<A>::type... a) {
+    static R dispatch(typename virtual_traits<A>::type... a) {
         _YOMM2_DEBUG(std::cerr << "call " << description() << "\n");
     }
+
 #if YOMM2_DEBUG
     static const char* description() { return info().description; }
+#endif
 
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* description)) {
-            info().description = description;
+            _YOMM2_DEBUG(info().description = description);
+            collect_vargs<REG, A...>::into(info().vargs);
             registry::get<REG>().methods.push_back(&info());
         }
     };
-#endif
 };
 
 template<typename REG, typename ID, typename R, typename... A>
@@ -199,34 +251,6 @@ method_info& method<REG, ID, R, A...>::info() {
     static method_info info;
     return info;
 }
-
-struct class_info {
-    _YOMM2_DEBUG(const char* description;)
-    std::unordered_set<const std::type_info*> ti;
-};
-
-template<typename REG, class C>
-struct class_info_singleton {
-    static class_info& info();
-};
-
-template<typename REG, class C>
-class_info& class_info_singleton<REG, C>::info() {
-    static class_info info;
-    return info;
-}
-
-template<typename REG, class C, class... B>
-struct init_class_info {
-
-    init_class_info(_YOMM2_DEBUG(const char* description)) {
-        auto& info = class_info_singleton<REG, C>::info();
-        _YOMM2_DEBUG(info.description = description);
-        registry::get<REG>().classes[std::type_index(typeid(C))] = &info;
-
-    }
-
-};
 
 void update_methods(const registry& reg = registry::global());
 
