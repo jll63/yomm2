@@ -153,7 +153,7 @@ struct discriminator {};
 } // namespace details
 
 struct class_info {
-    std::vector<class_info*> bases;
+    std::vector<const class_info*> bases;
     _YOMM2_DEBUG(const char* description);
     std::unordered_set<const std::type_info*> ti;
     template<typename REG, class CLASS> static class_info& get();
