@@ -79,21 +79,25 @@
             ::dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),   \
                                      _YOMM2_ALIST, (__VA_ARGS__))); }
 
-
 #define YOMM2_DEFINE(R, ID, ...)                                              \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
     template<typename T> struct select_method;                                \
     template<typename... A> struct select_method<void(A...)> {                \
         using type = decltype(ID(::yorel::yomm2::details::discriminator(),    \
-                                   std::declval<A>()...));                    \
+                                 std::declval<A>()...));                      \
     };                                                                        \
-    R body(__VA_ARGS__);                                                      \
-    select_method<void(__VA_ARGS__)>::type::register_spec                     \
-    init(body _YOMM2_COMMA_DEBUG("(" #__VA_ARGS__ ")"));                      \
+    using _YOMM2_METHOD = select_method<void(__VA_ARGS__)>::type;             \
+    using _YOMM2_SIGNATURE = void(__VA_ARGS__);                               \
+    const char* _YOMM2_DESCRIPTION = "(" #__VA_ARGS__ ")";                    \
+    struct _YOMM2_SPEC {                                                      \
     R body(__VA_ARGS__)
 
-#define YOMM2_END } }
+#define YOMM2_END                                                             \
+    };                                                                        \
+    ::yorel::yomm2::register_spec<_YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
+    init(_YOMM2_DEBUG(_YOMM2_DESCRIPTION));                                   \
+    } }
 
 #define _YOMM2_CLASS_NAME(CLASS, ...) \
     #CLASS
@@ -200,6 +204,12 @@ struct collect_vargs<REG, FIRST, REST...> {
     static void into(std::vector<const class_info*>& vargs) {
         collect_vargs<REG, REST...>::into(vargs);
     }
+    template<typename SPEC_FIRST, typename... SPEC_REST>
+    struct for_spec {
+        static void into(std::vector<const class_info*>& vargs) {
+            collect_vargs<REG, REST...>::template for_spec<SPEC_REST...>::into(vargs);
+        }
+    };
 };
 
 template<typename REG, typename FIRST, typename... REST>
@@ -209,11 +219,38 @@ struct collect_vargs<REG, virtual_<FIRST>, REST...> {
             &class_info::get<REG, typename virtual_traits<virtual_<FIRST>>::type>());
         collect_vargs<REG, REST...>::into(vargs);
     }
+    template<typename SPEC_FIRST, typename... SPEC_REST>
+    struct for_spec {
+        static void into(std::vector<const class_info*>& vargs) {
+            vargs.push_back(
+                &class_info::get<REG, typename virtual_traits<virtual_<SPEC_FIRST>>::type>());
+            collect_vargs<REG, REST...>::template for_spec<SPEC_REST...>::into(vargs);
+        }
+    };
 };
 
 template<typename REG>
 struct collect_vargs<REG> {
     static void into(std::vector<const class_info*>& vargs) {
+    }
+    template<typename...>
+    struct for_spec {
+        static void into(std::vector<const class_info*>& vargs) {
+        }
+    };
+};
+
+template<class METHOD, class BODY, typename F>
+struct register_spec;
+
+template<class METHOD, class BODY, class... ARGS>
+struct register_spec<METHOD, BODY, void(ARGS...)>
+{
+    register_spec(_YOMM2_DEBUG(const char* description)) {
+        static spec_info si;
+        _YOMM2_DEBUG(si.description = description);
+        METHOD::collect::template for_spec<ARGS...>::into(si.vargs);
+        METHOD::info().specs.push_back(&si);
     }
 };
 
@@ -221,15 +258,6 @@ template<typename REG, typename ID, typename R, typename... A>
 struct method {
 
     static method_info& info();
-
-    struct register_spec {
-        template<typename F>
-        register_spec(F _YOMM2_COMMA_DEBUG(const char* description)) {
-            static spec_info si;
-            _YOMM2_DEBUG(si.description = description);
-            info().specs.push_back(&si);
-        }
-    };
 
     static R dispatch(typename virtual_traits<A>::type... a) {
         _YOMM2_DEBUG(std::cerr << "call " << description() << "\n");
@@ -239,10 +267,12 @@ struct method {
     static const char* description() { return info().description; }
 #endif
 
+    using collect = collect_vargs<REG, A...>;
+
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* description)) {
             _YOMM2_DEBUG(info().description = description);
-            collect_vargs<REG, A...>::into(info().vargs);
+            collect::into(info().vargs);
             registry::get<REG>().methods.push_back(&info());
         }
     };

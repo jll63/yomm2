@@ -251,8 +251,8 @@ BOOST_AUTO_TEST_CASE(registration) {
 
     auto approve_employee_public = approve_method->specs[2];
     BOOST_TEST_REQUIRE(approve_employee_public->vargs.size() == 2);
-    BOOST_TEST(pay_employee->vargs[0] == employee_class);
-    BOOST_TEST(pay_employee->vargs[1] == public_transport_class);
+    BOOST_TEST(approve_employee_public->vargs[0] == employee_class);
+    BOOST_TEST(approve_employee_public->vargs[1] == public_transport_class);
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
