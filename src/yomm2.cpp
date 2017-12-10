@@ -45,8 +45,6 @@ runtime::runtime(const registry& reg) : reg(reg) {
 }
 
 void runtime::augment_classes() {
-    std::unordered_map<const class_info*, rt_class*> class_map;
-
     classes.resize(reg.classes.size());
     auto class_iter = reg.classes.begin();
 
@@ -57,13 +55,35 @@ void runtime::augment_classes() {
             (*class_iter)->bases.begin(),
             (*class_iter)->bases.end(),
             std::back_inserter(rt_class.bases),
-            [&class_map](const class_info* ci) { return class_map[ci]; });
+            [this](const class_info* ci) { return class_map[ci]; });
 
         for (auto rt_base : rt_class.bases) {
             rt_base->specs.push_back(&rt_class);
         }
 
         ++class_iter;
+    }
+}
+
+void runtime::augment_methods() {
+    // methods.reserve(reg.methods.size());
+    // std::transform(
+    //     reg.methods.begin(), reg.methods.end(),
+    //     std::back_inserter(methods),
+    //     [](const method_info* mi) { return { mi }; });
+    methods.resize(reg.methods.size());
+    auto info_iter = reg.methods.begin(), info_end = reg.methods.end();
+    auto meth_iter = methods.begin();
+
+    for (; info_iter != info_end; ++info_iter, ++meth_iter) {
+        meth_iter->info = *info_iter;
+        std::transform(
+            (*info_iter)->vargs.begin(), (*info_iter)->vargs.end(),
+            std::back_inserter(meth_iter->vargs),
+            [this](const class_info* ci) {
+                return class_map[ci];
+            });
+        meth_iter->specs.resize((*info_iter)->specs.size());
     }
 }
 

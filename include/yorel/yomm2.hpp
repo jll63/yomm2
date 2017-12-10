@@ -183,6 +183,7 @@ struct init_class_info {
 
 struct spec_info {
     _YOMM2_DEBUG(const char* description);
+    std::vector<const class_info*> vargs;
 };
 
 struct method_info {

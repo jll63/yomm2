@@ -241,9 +241,18 @@ BOOST_AUTO_TEST_CASE(registration) {
     BOOST_TEST(pay_method->vargs.size() == 1);
     BOOST_TEST(pay_method->specs.size() == 3);
 
+    auto pay_employee = pay_method->specs[0];
+    BOOST_TEST_REQUIRE(pay_employee->vargs.size() == 1);
+    BOOST_TEST(pay_employee->vargs[0] == employee_class);
+
     auto approve_method = registry.methods[1];
     BOOST_TEST(approve_method->vargs.size() == 2);
     BOOST_TEST(approve_method->specs.size() == 4);
+
+    auto approve_employee_public = approve_method->specs[2];
+    BOOST_TEST_REQUIRE(approve_employee_public->vargs.size() == 2);
+    BOOST_TEST(pay_employee->vargs[0] == employee_class);
+    BOOST_TEST(pay_employee->vargs[1] == public_transport_class);
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
@@ -399,6 +408,44 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_INFO("expected = " + to_string(expected));
         BOOST_TEST(public_transport_class->confs == expected);
     }
+
+    rt.augment_methods();
+
+    BOOST_TEST_REQUIRE(rt.methods.size() == 2);
+    BOOST_TEST(rt.methods[0].info == registry.methods[0]);
+    rt_method& pay_method = rt.methods[0];
+    BOOST_TEST(rt.methods[1].info == registry.methods[1]);
+    rt_method& approve_method = rt.methods[1];
+
+    {
+        std::vector<rt_class*> expected = { role_class };
+        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(pay_method.vargs == expected);
+    }
+
+    {
+        std::vector<rt_class*> expected = { role_class, expense_class };
+        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->confs));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(approve_method.vargs == expected);
+    }
+
+    BOOST_TEST_REQUIRE(rt.methods.size() == registry.methods.size());
+
+    // for (int i = 0; i < rt.methods.size(); ++i) {
+    //     BOOST_TEST_INFO("i = " << i);
+    //     auto st_meth = registry.methods[i];
+    //     auto& rt_meth = rt.methods[i];
+    //     BOOST_TEST_REQUIRE(rt_meth.specs.size() == st_meth->specs.size());
+    //     for (int j = 0; j < rt_meth.specs.size(); ++j) {
+    //         auto st_spec = st_meth->specs[j];
+    //         auto& rt_spec = rt_meth.specs[j];
+    //         BOOST_TEST(rt_spec.args.size() > 0);
+    //         BOOST_TEST_REQUIRE(rt_spec.args.size() == st_spec->args.size());
+    //     }
+
+    // }
 }
 
 
