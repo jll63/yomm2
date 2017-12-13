@@ -30,6 +30,8 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "-D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
+include(CTest)
+
 add_subdirectory (src)
 add_subdirectory (tests)
 #add_subdirectory (examples)
