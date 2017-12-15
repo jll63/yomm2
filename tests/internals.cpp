@@ -531,7 +531,7 @@ BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     auto m_a = m_iter++;
     auto m_b = m_iter++;
     auto m_ab = m_iter++;
-    auto m_ac = m_iter++;
+    auto m_c = m_iter++;
     auto m_d = m_iter++;
 
     {
@@ -546,24 +546,20 @@ BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
 
     {
         std::cerr << m_ab->slots << "\n";
-        BOOST_TEST_INFO("m_ab->slots" << m_ab->slots);
-        const std::vector<int> expected = { 1, 1 };
+        //BOOST_TEST_INFO("m_ab->slots" << m_ab->slots);
+        const std::vector<int> expected = { 1, 3 };
         BOOST_TEST(expected == m_ab->slots);
     }
 
     {
-        const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == m_a->slots);
+        const std::vector<int> expected = { 4 };
+        BOOST_TEST(expected == m_c->slots);
     }
 
     {
-        const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == m_a->slots);
-    }
-
-    {
-        const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == m_a->slots);
+        const std::vector<int> expected = { 4 };
+        BOOST_TEST(expected == m_d->slots);
     }
 }
+
 } // namespace multiple_inheritance
