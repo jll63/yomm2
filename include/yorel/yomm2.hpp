@@ -187,55 +187,55 @@ struct init_class_info {
 
 struct spec_info {
     _YOMM2_DEBUG(const char* name);
-    std::vector<const class_info*> params;
+    std::vector<const class_info*> vp;
 };
 
 struct method_info {
     _YOMM2_DEBUG(const char* name);
-    std::vector<const class_info*> params;
+    std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
 };
 
 template<typename REG, typename... ARGS>
-struct collect_params;
+struct collect_vp;
 
 template<typename REG, typename FIRST, typename... REST>
-struct collect_params<REG, FIRST, REST...> {
-    static void into(std::vector<const class_info*>& params) {
-        collect_params<REG, REST...>::into(params);
+struct collect_vp<REG, FIRST, REST...> {
+    static void into(std::vector<const class_info*>& vp) {
+        collect_vp<REG, REST...>::into(vp);
     }
     template<typename SPEC_FIRST, typename... SPEC_REST>
     struct for_spec {
-        static void into(std::vector<const class_info*>& params) {
-            collect_params<REG, REST...>::template for_spec<SPEC_REST...>::into(params);
+        static void into(std::vector<const class_info*>& vp) {
+            collect_vp<REG, REST...>::template for_spec<SPEC_REST...>::into(vp);
         }
     };
 };
 
 template<typename REG, typename FIRST, typename... REST>
-struct collect_params<REG, virtual_<FIRST>, REST...> {
-    static void into(std::vector<const class_info*>& params) {
-        params.push_back(
+struct collect_vp<REG, virtual_<FIRST>, REST...> {
+    static void into(std::vector<const class_info*>& vp) {
+        vp.push_back(
             &class_info::get<REG, typename virtual_traits<virtual_<FIRST>>::type>());
-        collect_params<REG, REST...>::into(params);
+        collect_vp<REG, REST...>::into(vp);
     }
     template<typename SPEC_FIRST, typename... SPEC_REST>
     struct for_spec {
-        static void into(std::vector<const class_info*>& params) {
-            params.push_back(
+        static void into(std::vector<const class_info*>& vp) {
+            vp.push_back(
                 &class_info::get<REG, typename virtual_traits<virtual_<SPEC_FIRST>>::type>());
-            collect_params<REG, REST...>::template for_spec<SPEC_REST...>::into(params);
+            collect_vp<REG, REST...>::template for_spec<SPEC_REST...>::into(vp);
         }
     };
 };
 
 template<typename REG>
-struct collect_params<REG> {
-    static void into(std::vector<const class_info*>& params) {
+struct collect_vp<REG> {
+    static void into(std::vector<const class_info*>& vp) {
     }
     template<typename...>
     struct for_spec {
-        static void into(std::vector<const class_info*>& params) {
+        static void into(std::vector<const class_info*>& vp) {
         }
     };
 };
@@ -249,7 +249,7 @@ struct register_spec<METHOD, BODY, void(ARGS...)>
     register_spec(_YOMM2_DEBUG(const char* name)) {
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
-        METHOD::collect::template for_spec<ARGS...>::into(si.params);
+        METHOD::collect::template for_spec<ARGS...>::into(si.vp);
         METHOD::info().specs.push_back(&si);
     }
 };
@@ -268,12 +268,12 @@ struct method {
     static const char* name() { return info().name; }
 #endif
 
-    using collect = collect_params<REG, A...>;
+    using collect = collect_vp<REG, A...>;
 
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* name)) {
             _YOMM2_DEBUG(info().name = name);
-            collect::into(info().params);
+            collect::into(info().vp);
             registry::get<REG>().methods.push_back(&info());
         }
     };

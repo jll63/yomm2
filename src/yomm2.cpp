@@ -15,34 +15,34 @@ namespace yorel {
 namespace yomm2 {
 
 void update_methods(const registry& reg) {
-    //_YOMM2_DEBUG(std::cerr << name() << " += " << name << "\n");
-    using std::cerr;
+    // //_YOMM2_DEBUG(std::log() << name() << " += " << name << "\n");
+    // using std::cerr;
 
-    for (auto cls : reg.classes) {
-        cerr << "class " << cls->name;
-        const char* sep = ": ";
-        for (auto base : cls->direct_bases) {
-            cerr << sep << base->name;
-            sep = ", ";
-        }
-        cerr << "\n";
-    }
+    // for (auto cls : reg.classes) {
+    //     log() << "class " << cls->name;
+    //     const char* sep = ": ";
+    //     for (auto base : cls->direct_bases) {
+    //         log() << sep << base->name;
+    //         sep = ", ";
+    //     }
+    //     log() << "\n";
+    // }
 
-    for (auto meth : reg.methods) {
-        cerr << "method " << meth->name << ":\n";
-        cerr << "  params:";
-        for (auto param : meth->params) {
-            cerr << " " << param->name;
-        }
-        cerr << "\n  specs:\n";
-        for (auto spec : meth->specs) {
-            cerr << "    " << spec->name << "\n";
-        }
-    }
+    // for (auto meth : reg.methods) {
+    //     log() << "method " << meth->name << ":\n";
+    //     log() << "  vp:";
+    //     for (auto param : meth->vp) {
+    //         log() << " " << param->name;
+    //     }
+    //     log() << "\n  specs:\n";
+    //     for (auto spec : meth->specs) {
+    //         log() << "    " << spec->name << "\n";
+    //     }
+    // }
 }
 
 runtime::runtime(const registry& reg) : reg(reg) {
-
+    //_YOMM2_DEBUG(discard_log.)
 }
 
 void runtime::augment_classes() {
@@ -78,15 +78,15 @@ void runtime::augment_methods() {
 
     for (; meth_info_iter != meth_info_iter_end; ++meth_info_iter, ++meth_iter) {
         meth_iter->info = *meth_info_iter;
-        meth_iter->params.resize((*meth_info_iter)->params.size());
+        meth_iter->vp.resize((*meth_info_iter)->vp.size());
         int param_index = 0;
         std::transform(
-            (*meth_info_iter)->params.begin(), (*meth_info_iter)->params.end(),
-            meth_iter->params.begin(),
+            (*meth_info_iter)->vp.begin(), (*meth_info_iter)->vp.end(),
+            meth_iter->vp.begin(),
             [this, meth_iter, &param_index](const class_info* ci) {
                 auto rt_class = class_map[ci];
                 rt_arg param = { &*meth_iter,  param_index++ };
-                rt_class->method_params.push_back(param);
+                rt_class->method_vp.push_back(param);
                 return class_map[ci];
             });
 
@@ -97,10 +97,10 @@ void runtime::augment_methods() {
 
         for (; spec_info_iter != spec_info_end; ++spec_info_iter, ++spec_iter) {
             spec_iter->info = *spec_info_iter;
-            spec_iter->params.resize((*spec_info_iter)->params.size());
+            spec_iter->vp.resize((*spec_info_iter)->vp.size());
             std::transform(
-                (*spec_info_iter)->params.begin(), (*spec_info_iter)->params.end(),
-                spec_iter->params.begin(),
+                (*spec_info_iter)->vp.begin(), (*spec_info_iter)->vp.end(),
+                spec_iter->vp.begin(),
                 [this](const class_info* ci) {
                     return class_map[ci];
                 });
@@ -110,7 +110,7 @@ void runtime::augment_methods() {
 
 void runtime::layer_classes() {
 
-    _YOMM2_DEBUG(std::cerr << "Layering...");
+    _YOMM2_DEBUG(log() << "Layering...");
     _YOMM2_DEBUG(const char* sep = "\n  ");
 
     std::list<rt_class*> input;
@@ -122,7 +122,7 @@ void runtime::layer_classes() {
         if (cls.direct_bases.empty()) {
             layered_classes.push_back(&cls);
             previous_layer.insert(&cls);
-            _YOMM2_DEBUG(std::cerr << sep << cls.info->name);
+            _YOMM2_DEBUG(log() << sep << cls.info->name);
             _YOMM2_DEBUG(sep = " ");
         } else {
             input.push_back(&cls);
@@ -145,7 +145,7 @@ void runtime::layer_classes() {
                 current_layer.insert(cls);
                 layered_classes.push_back(cls);
                 class_iter = input.erase(class_iter);
-                _YOMM2_DEBUG(std::cerr << sep << cls->info->name);
+                _YOMM2_DEBUG(log() << sep << cls->info->name);
                 _YOMM2_DEBUG(sep = " ");
             } else {
                 ++class_iter;
@@ -154,7 +154,7 @@ void runtime::layer_classes() {
         previous_layer.swap(current_layer);
         _YOMM2_DEBUG(sep = "\n  ");
     }
-    _YOMM2_DEBUG(std::cerr << "\n");
+    _YOMM2_DEBUG(log() << "\n");
 }
 
 void runtime::calculate_conforming_classes() {
@@ -162,29 +162,29 @@ void runtime::calculate_conforming_classes() {
          class_iter != layered_classes.rend();
          ++class_iter) {
         auto c = *class_iter;
-        c->confs.insert(c);
+        c->conforming.insert(c);
         for (auto s : c->direct_derived) {
-            c->confs.insert(s);
+            c->conforming.insert(s);
             std::copy(
-                s->confs.begin(), s->confs.end(),
-                std::inserter(c->confs, c->confs.end()));
+                s->conforming.begin(), s->conforming.end(),
+                std::inserter(c->conforming, c->conforming.end()));
         }
     }
 }
 
 void runtime::allocate_slots() {
-    _YOMM2_DEBUG(std::cerr << "Allocating slots...\n");
+    _YOMM2_DEBUG(log() << "Allocating slots...\n");
 
     for (auto& c : classes) {
-        if (!c.method_params.empty()) {
-            _YOMM2_DEBUG(std::cerr << c.info->name << "...\n");
+        if (!c.method_vp.empty()) {
+            _YOMM2_DEBUG(log() << c.info->name << "...\n");
         }
 
-        for (const auto& mp : c.method_params) {
+        for (const auto& mp : c.method_vp) {
             int slot = c.next_slot++;
 
             _YOMM2_DEBUG(
-                std::cerr
+                log()
                 << "  for " << mp.method->info->name << "#" << mp.param
                 << ": "
                 << slot << "  also in");
@@ -205,7 +205,7 @@ void runtime::allocate_slots() {
                 allocate_slot_down(derived, slot);
             }
 
-            _YOMM2_DEBUG(std::cerr << "\n");
+            _YOMM2_DEBUG(log() << "\n");
         }
     }
 }
@@ -217,7 +217,7 @@ void runtime::allocate_slot_down(rt_class* cls, int slot) {
 
     cls->visited = class_visit;
 
-    _YOMM2_DEBUG(std::cerr << "\n    " << cls->info->name);
+    _YOMM2_DEBUG(log() << "\n    " << cls->info->name);
 
     assert(slot >= cls->next_slot);
 
@@ -243,7 +243,7 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
 
     cls->visited = class_visit;
 
-    _YOMM2_DEBUG(std::cerr << "\n    " << cls->info->name);
+    _YOMM2_DEBUG(log() << "\n    " << cls->info->name);
 
     assert(slot >= cls->next_slot);
 
@@ -257,6 +257,161 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
         allocate_slot_up(d, slot);
     }
 }
+
+void runtime::build_dispatch_tables() {
+    for (auto& m : methods) {
+        _YOMM2_DEBUG(
+            log() << "Building dispatch table for " << m.info->name << "\n");
+
+        auto dims = m.vp.size();
+
+        std::vector<group_map> groups;
+        groups.resize(dims);
+
+        {
+            int dim = 0;
+
+            for (auto vp : m.vp) {
+                auto& dim_group = groups[dim];
+
+                _YOMM2_DEBUG(log()
+                             << "  make groups for param #" << dim
+                             << ", class " << vp->info->name
+                             << "\n");
+
+                for  (auto conforming : vp->conforming) {
+                    _YOMM2_DEBUG(log()
+                                 << "    specs applicable to "
+                                 << conforming->info->name
+                                 << "\n");
+                    bitvec mask;
+                    mask.resize(m.specs.size());
+
+                    int spec_index = 0;
+
+                    for (auto& spec : m.specs) {
+                        if (spec.vp[dim]->conforming.find(conforming)
+                            != spec.vp[dim]->conforming.end()) {
+                            _YOMM2_DEBUG(log() << "      "
+                                         << spec.info->name << "\n");
+                            mask[spec_index] = 1;
+                        }
+                        ++spec_index;
+                    }
+
+                    dim_group[mask].push_back(conforming);
+
+                    _YOMM2_DEBUG(
+                        log() << "      bit mask = " << mask
+                        // << " group = "
+                        // << std::distance(dim_group.begin(), dim_group.find(mask))
+                        << "\n");
+
+                }
+
+                ++dim;
+            }
+        }
+
+        {
+            int stride = 1;
+            m.strides.reserve(dims - 1);
+
+            for (int dim = 1; dim < m.vp.size(); ++dim) {
+                stride *= groups[dim - 1].size();
+                _YOMM2_DEBUG(
+                    log() << "    stride for dim " <<  dim
+                    << " = " << stride << "\n");
+                m.strides.push_back(stride);
+            }
+        }
+
+        m.first_dim = groups[0];
+
+        _YOMM2_DEBUG(log() << "    assign specs\n");
+
+        bitvec none;
+        none.resize(m.specs.size());
+
+        build_dispatch_table(m, dims - 1, groups, ~none);
+
+    }
+}
+
+void runtime::build_dispatch_table(
+    rt_method& m, size_t dim, const std::vector<group_map>& groups,
+    const bitvec& candidates) {
+
+    int group_index = 0;
+
+    for (auto& group : groups[dim]) {
+    }
+
+}
+
+std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {
+    std::vector<const rt_spec*> best;
+
+    for (auto spec : candidates) {
+        const rt_spec* candidate = spec;
+
+        for (auto iter = best.begin(); iter != best.end(); ) {
+            if (is_more_specific(spec, *iter)) {
+                iter = best.erase(iter);
+            } else if (is_more_specific(*iter, spec)) {
+                candidate = nullptr;
+                break;
+            } else {
+                ++iter;
+            }
+        }
+
+        if (spec) {
+            best.push_back(candidate);
+        }
+    }
+
+    return best;
+}
+
+bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
+{
+    bool result = false;
+
+    auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
+
+    for (; a_iter != a_last; ++a_iter, ++b_iter) {
+        if (*a_iter != *b_iter) {
+            if ((*b_iter)->conforming.find(*a_iter) != (*b_iter)->conforming.end()) {
+                result = true;
+            } else if ((*a_iter)->conforming.find(*b_iter) != (*a_iter)->conforming.end()) {
+                return false;
+            }
+        }
+    }
+
+    return result;
+}
+
+#if YOMM2_DEBUG
+
+std::ostream& runtime::log() {
+    return *active_log;
+}
+
+std::ostream* runtime::log_on(std::ostream* os) {
+    auto prev = active_log;
+    active_log = os;
+    return prev;
+}
+
+std::ostream* runtime::log_off() {
+    auto prev = active_log;
+    active_log = nullptr;
+    return prev;
+}
+
+#endif
 
 } // namespace yomm2
 } // namespace yorel

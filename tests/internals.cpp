@@ -121,14 +121,14 @@ BOOST_AUTO_TEST_CASE(registration)
     BOOST_TEST_REQUIRE(registry.classes[2]->direct_bases[0] == registry.classes[0]);
 
     BOOST_TEST(registry.methods.size() == 3);
-    BOOST_TEST(registry.methods[0]->params.size() == 2);
+    BOOST_TEST(registry.methods[0]->vp.size() == 2);
     BOOST_TEST(registry.methods[0]->specs.size() == 2);
 
     BOOST_TEST(registry.methods[1]->specs.size() == 2);
-    BOOST_TEST(registry.methods[1]->params.size() == 1);
+    BOOST_TEST(registry.methods[1]->vp.size() == 1);
 
     BOOST_TEST(registry.methods[2]->specs.size() == 2);
-    BOOST_TEST(registry.methods[2]->params.size() == 1);
+    BOOST_TEST(registry.methods[2]->vp.size() == 1);
 }
 
 }
@@ -262,21 +262,21 @@ BOOST_AUTO_TEST_CASE(registration) {
     }
 
     auto pay_method = registry.methods[0];
-    BOOST_TEST(pay_method->params.size() == 1);
+    BOOST_TEST(pay_method->vp.size() == 1);
     BOOST_TEST(pay_method->specs.size() == 3);
 
     auto pay_employee = pay_method->specs[0];
-    BOOST_TEST_REQUIRE(pay_employee->params.size() == 1);
-    BOOST_TEST(pay_employee->params[0] == employee_class);
+    BOOST_TEST_REQUIRE(pay_employee->vp.size() == 1);
+    BOOST_TEST(pay_employee->vp[0] == employee_class);
 
     auto approve_method = registry.methods[1];
-    BOOST_TEST(approve_method->params.size() == 2);
+    BOOST_TEST(approve_method->vp.size() == 2);
     BOOST_TEST(approve_method->specs.size() == 4);
 
     auto approve_employee_public = approve_method->specs[2];
-    BOOST_TEST_REQUIRE(approve_employee_public->params.size() == 2);
-    BOOST_TEST(approve_employee_public->params[0] == employee_class);
-    BOOST_TEST(approve_employee_public->params[1] == public_transport_class);
+    BOOST_TEST_REQUIRE(approve_employee_public->vp.size() == 2);
+    BOOST_TEST(approve_employee_public->vp[0] == employee_class);
+    BOOST_TEST(approve_employee_public->vp[1] == public_transport_class);
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
@@ -399,17 +399,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             role_class, employee_class, founder_class, executive_class
         };
 
-        BOOST_TEST_INFO("result   = " + to_string(role_class->confs));
+        BOOST_TEST_INFO("result   = " + to_string(role_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(role_class->confs == expected);
+        BOOST_TEST(role_class->conforming == expected);
     }
 
     {
         std::unordered_set<rt_class*> expected = { founder_class };
 
-        BOOST_TEST_INFO("result   = " + to_string(founder_class->confs));
+        BOOST_TEST_INFO("result   = " + to_string(founder_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(founder_class->confs == expected);
+        BOOST_TEST(founder_class->conforming == expected);
     }
 
     {
@@ -418,9 +418,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
           bus_class, train_class,
         };
 
-        BOOST_TEST_INFO("result   = " + to_string(expense_class->confs));
+        BOOST_TEST_INFO("result   = " + to_string(expense_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(expense_class->confs == expected);
+        BOOST_TEST(expense_class->conforming == expected);
     }
 
     {
@@ -428,9 +428,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
           public_transport_class, bus_class, train_class,
         };
 
-        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->confs));
+        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(public_transport_class->confs == expected);
+        BOOST_TEST(public_transport_class->conforming == expected);
     }
 
     rt.augment_methods();
@@ -443,16 +443,16 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = { role_class };
-        BOOST_TEST_INFO("result   = " + to_string(pay_method.params));
+        BOOST_TEST_INFO("result   = " + to_string(pay_method.vp));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(pay_method.params == expected);
+        BOOST_TEST(pay_method.vp == expected);
     }
 
     {
         std::vector<rt_class*> expected = { role_class, expense_class };
-        BOOST_TEST_INFO("result   = " << to_string(approve_method.params));
+        BOOST_TEST_INFO("result   = " << to_string(approve_method.vp));
         BOOST_TEST_INFO("expected = " << to_string(expected));
-        BOOST_TEST(approve_method.params == expected);
+        BOOST_TEST(approve_method.vp == expected);
     }
 
     for (int i = 0; i < rt.methods.size(); ++i) {
@@ -465,21 +465,57 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             BOOST_TEST_INFO("j = " << j);
             auto st_spec = st_meth->specs[j];
             auto& rt_spec = rt_meth.specs[j];
-            BOOST_TEST_REQUIRE(rt_spec.params.size() == st_spec->params.size());
+            BOOST_TEST_REQUIRE(rt_spec.vp.size() == st_spec->vp.size());
         }
     }
 
-    BOOST_TEST_REQUIRE(role_class->method_params.size() == 2);
-    BOOST_TEST(role_class->method_params[0].method == &pay_method);
-    BOOST_TEST(role_class->method_params[0].param == 0);
-    BOOST_TEST(role_class->method_params[1].method == &approve_method);
-    BOOST_TEST(role_class->method_params[1].param == 0);
+    BOOST_TEST_REQUIRE(role_class->method_vp.size() == 2);
+    BOOST_TEST(role_class->method_vp[0].method == &pay_method);
+    BOOST_TEST(role_class->method_vp[0].param == 0);
+    BOOST_TEST(role_class->method_vp[1].method == &approve_method);
+    BOOST_TEST(role_class->method_vp[1].param == 0);
 
-    BOOST_TEST_REQUIRE(expense_class->method_params.size() == 1);
-    BOOST_TEST(expense_class->method_params[0].method == &approve_method);
-    BOOST_TEST(expense_class->method_params[0].param == 1);
+    BOOST_TEST_REQUIRE(expense_class->method_vp.size() == 1);
+    BOOST_TEST(expense_class->method_vp[0].method == &approve_method);
+    BOOST_TEST(expense_class->method_vp[0].param == 1);
 
     rt.allocate_slots();
+
+    {
+        const std::vector<int> expected = { 0 };
+        BOOST_TEST(expected == pay_method.slots);
+    }
+
+    {
+        const std::vector<int> expected = { 1, 0 };
+        BOOST_TEST(expected == approve_method.slots);
+    }
+
+    {
+        auto spec_iter = approve_method.specs.begin();
+        auto approve_role_expense = spec_iter++;
+        auto approve_founder_expense = spec_iter++;
+        auto approve_public_transport = spec_iter++;
+        auto approve_executive_jet = spec_iter++;
+
+        BOOST_TEST(
+            runtime::is_more_specific(&*approve_founder_expense, &*approve_role_expense));
+        BOOST_TEST(
+            runtime::is_more_specific(&*approve_executive_jet, &*approve_role_expense));
+        BOOST_TEST(
+            !runtime::is_more_specific(&*approve_role_expense, &*approve_role_expense));
+
+        {
+            std::vector<const rt_spec*> expected = { &*approve_executive_jet };
+            BOOST_TEST(expected ==
+                       runtime::best({ &*approve_role_expense, &*approve_executive_jet }));
+        }
+    }
+
+    rt.log_on(&std::cerr);
+    rt.build_dispatch_tables();
+
+
 }
 }
 
@@ -545,7 +581,6 @@ BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     }
 
     {
-        std::cerr << m_ab->slots << "\n";
         //BOOST_TEST_INFO("m_ab->slots" << m_ab->slots);
         const std::vector<int> expected = { 1, 3 };
         BOOST_TEST(expected == m_ab->slots);
