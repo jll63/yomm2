@@ -89,9 +89,9 @@
     };                                                                        \
     using _YOMM2_METHOD = select_method<void(__VA_ARGS__)>::type;             \
     using _YOMM2_SIGNATURE = void(__VA_ARGS__);                               \
-    const char* _YOMM2_NAME = "(" #__VA_ARGS__ ")";                    \
+    const char* _YOMM2_NAME = "(" #__VA_ARGS__ ")";                           \
     struct _YOMM2_SPEC {                                                      \
-    R body(__VA_ARGS__)
+        static R body(__VA_ARGS__)
 
 #define YOMM2_END                                                             \
     };                                                                        \
@@ -160,7 +160,7 @@ struct discriminator {};
 struct class_info {
     std::vector<const class_info*> direct_bases;
     _YOMM2_DEBUG(const char* name);
-    std::unordered_set<const std::type_info*> ti;
+    std::unordered_set<const std::type_info*> ti_ptrs;
     template<typename REG, class CLASS> static class_info& get();
 };
 
@@ -177,8 +177,9 @@ struct init_class_info {
         auto& info = class_info::get<REG, CLASS>();
         static int called;
         if (!called++) {
-            info.direct_bases = { &class_info::get<REG, BASE>()... };
             _YOMM2_DEBUG(info.name = name);
+            info.direct_bases = { &class_info::get<REG, BASE>()... };
+            info.ti_ptrs.insert(&typeid(CLASS));
             registry::get<REG>().classes.push_back(&info);
         }
     }
@@ -188,12 +189,15 @@ struct init_class_info {
 struct spec_info {
     _YOMM2_DEBUG(const char* name);
     std::vector<const class_info*> vp;
+    const void* pf;
 };
 
 struct method_info {
     _YOMM2_DEBUG(const char* name);
     std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
+    void* ambiguous_call;
+    void* not_implemented;
 };
 
 template<typename REG, typename... ARGS>
@@ -240,15 +244,16 @@ struct collect_vp<REG> {
     };
 };
 
-template<class METHOD, class BODY, typename F>
+template<class METHOD, class SPEC, typename F>
 struct register_spec;
 
-template<class METHOD, class BODY, class... ARGS>
-struct register_spec<METHOD, BODY, void(ARGS...)>
+template<class METHOD, class SPEC, class... ARGS>
+struct register_spec<METHOD, SPEC, void(ARGS...)>
 {
     register_spec(_YOMM2_DEBUG(const char* name)) {
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
+        si.pf = (const void*) SPEC::body;
         METHOD::collect::template for_spec<ARGS...>::into(si.vp);
         METHOD::info().specs.push_back(&si);
     }

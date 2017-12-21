@@ -152,8 +152,8 @@ struct expense {
 
 struct public_transport : expense {};
 struct bus : public_transport {};
-struct train : public_transport {};
-struct cab : expense {};
+struct metro : public_transport {};
+struct taxi : expense {};
 struct jet : expense {};
 
 YOMM2_CLASS_(test, role);
@@ -163,8 +163,8 @@ YOMM2_CLASS_(test, founder, role);
 YOMM2_CLASS_(test, expense);
 YOMM2_CLASS_(test, public_transport, expense);
 YOMM2_CLASS_(test, bus, public_transport);
-YOMM2_CLASS_(test, train, public_transport);
-YOMM2_CLASS_(test, cab, expense);
+YOMM2_CLASS_(test, metro, public_transport);
+YOMM2_CLASS_(test, taxi, expense);
 YOMM2_CLASS_(test, jet, expense);
 
 YOMM2_DECLARE_(test, double, pay, virtual_<const role&>);
@@ -186,15 +186,15 @@ YOMM2_DEFINE(bool, approve, const role& r, const expense& e, double amount) {
     return false;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const founder& r, const expense& e, double amount) {
-    return true;
-} YOMM2_END;
-
 YOMM2_DEFINE(bool, approve, const employee& r, const public_transport& e, double amount) {
     return true;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const executive& r, const jet& e, double amount) {
+YOMM2_DEFINE(bool, approve, const executive& r, const taxi& e, double amount) {
+    return true;
+} YOMM2_END;
+
+YOMM2_DEFINE(bool, approve, const founder& r, const expense& e, double amount) {
     return true;
 } YOMM2_END;
 
@@ -213,8 +213,8 @@ BOOST_AUTO_TEST_CASE(registration) {
     auto expense_class = *class_iter++;
     auto public_transport_class = *class_iter++;
     auto bus_class = *class_iter++;
-    auto train_class = *class_iter++;
-    auto cab_class = *class_iter++;
+    auto metro_class = *class_iter++;
+    auto taxi_class = *class_iter++;
     auto jet_class = *class_iter++;
 
     BOOST_CHECK(class_iter == registry.classes.end());
@@ -248,12 +248,12 @@ BOOST_AUTO_TEST_CASE(registration) {
 
     {
         std::vector<const class_info*> expected = { public_transport_class };
-        BOOST_TEST_REQUIRE(train_class->direct_bases == expected);
+        BOOST_TEST_REQUIRE(metro_class->direct_bases == expected);
     }
 
     {
         std::vector<const class_info*> expected = { expense_class };
-        BOOST_TEST(cab_class->direct_bases == expected);
+        BOOST_TEST(taxi_class->direct_bases == expected);
     }
 
     {
@@ -265,15 +265,19 @@ BOOST_AUTO_TEST_CASE(registration) {
     BOOST_TEST(pay_method->vp.size() == 1);
     BOOST_TEST(pay_method->specs.size() == 3);
 
-    auto pay_employee = pay_method->specs[0];
+    auto pay_method_iter = pay_method->specs.begin();
+    auto pay_employee = *pay_method_iter++;
     BOOST_TEST_REQUIRE(pay_employee->vp.size() == 1);
     BOOST_TEST(pay_employee->vp[0] == employee_class);
+
+    auto pay_executive = pay_method_iter++;
+    auto pay_founder = pay_method_iter++;
 
     auto approve_method = registry.methods[1];
     BOOST_TEST(approve_method->vp.size() == 2);
     BOOST_TEST(approve_method->specs.size() == 4);
 
-    auto approve_employee_public = approve_method->specs[2];
+    auto approve_employee_public = approve_method->specs[1];
     BOOST_TEST_REQUIRE(approve_employee_public->vp.size() == 2);
     BOOST_TEST(approve_employee_public->vp[0] == employee_class);
     BOOST_TEST(approve_employee_public->vp[1] == public_transport_class);
@@ -282,6 +286,7 @@ BOOST_AUTO_TEST_CASE(registration) {
 BOOST_AUTO_TEST_CASE(runtime_test) {
     using namespace yomm2;
     runtime rt(registry);
+    rt.log_on(&std::cerr);
 
     rt.augment_classes();
 
@@ -304,8 +309,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     auto expense_class = &*class_iter++;
     auto public_transport_class = &*class_iter++;
     auto bus_class = &*class_iter++;
-    auto train_class = &*class_iter++;
-    auto cab_class = &*class_iter++;
+    auto metro_class = &*class_iter++;
+    auto taxi_class = &*class_iter++;
     auto jet_class = &*class_iter++;
 
     BOOST_CHECK(class_iter == rt.classes.end());
@@ -339,12 +344,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = { public_transport_class };
-        BOOST_TEST(train_class->direct_bases == expected);
+        BOOST_TEST(metro_class->direct_bases == expected);
     }
 
     {
         std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST(cab_class->direct_bases == expected);
+        BOOST_TEST(taxi_class->direct_bases == expected);
     }
 
     {
@@ -364,19 +369,19 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::vector<rt_class*> expected = {
-            public_transport_class, cab_class, jet_class
+            public_transport_class, taxi_class, jet_class
         };
         BOOST_TEST(expense_class->direct_derived == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { bus_class, train_class };
+        std::vector<rt_class*> expected = { bus_class, metro_class };
         BOOST_TEST(public_transport_class->direct_derived == expected);
     }
 
     BOOST_TEST(bus_class->direct_derived.size() == 0);
-    BOOST_TEST(train_class->direct_derived.size() == 0);
-    BOOST_TEST(cab_class->direct_derived.size() == 0);
+    BOOST_TEST(metro_class->direct_derived.size() == 0);
+    BOOST_TEST(taxi_class->direct_derived.size() == 0);
     BOOST_TEST(jet_class->direct_derived.size() == 0);
 
     rt.layer_classes();
@@ -384,8 +389,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         std::vector<rt_class*> expected = {
           role_class, expense_class,
-          employee_class, founder_class, public_transport_class, cab_class, jet_class,
-          executive_class, bus_class, train_class,
+          employee_class, founder_class, public_transport_class, taxi_class, jet_class,
+          executive_class, bus_class, metro_class,
         };
         BOOST_TEST_INFO("result   = " + to_string(rt.layered_classes));
         BOOST_TEST_INFO("expected = " + to_string(expected));
@@ -414,8 +419,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::unordered_set<rt_class*> expected = {
-          expense_class, public_transport_class, cab_class, jet_class,
-          bus_class, train_class,
+          expense_class, public_transport_class, taxi_class, jet_class,
+          bus_class, metro_class,
         };
 
         BOOST_TEST_INFO("result   = " + to_string(expense_class->conforming));
@@ -425,7 +430,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::unordered_set<rt_class*> expected = {
-          public_transport_class, bus_class, train_class,
+          public_transport_class, bus_class, metro_class,
         };
 
         BOOST_TEST_INFO("result   = " + to_string(public_transport_class->conforming));
@@ -491,33 +496,109 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == approve_method.slots);
     }
 
-    {
-        auto spec_iter = approve_method.specs.begin();
-        auto approve_role_expense = spec_iter++;
-        auto approve_founder_expense = spec_iter++;
-        auto approve_public_transport = spec_iter++;
-        auto approve_executive_jet = spec_iter++;
+    auto pay_method_iter = pay_method.specs.begin();
+    auto pay_employee = pay_method_iter++;
+    auto pay_executive = pay_method_iter++;
+    auto pay_founder = pay_method_iter++;
 
+    auto spec_iter = approve_method.specs.begin();
+    auto approve_role_expense = spec_iter++;
+    auto approve_employee_public = spec_iter++;
+    auto approve_executive_taxi = spec_iter++;
+    auto approve_founder_expense = spec_iter++;
+
+    {
         BOOST_TEST(
             runtime::is_more_specific(&*approve_founder_expense, &*approve_role_expense));
         BOOST_TEST(
-            runtime::is_more_specific(&*approve_executive_jet, &*approve_role_expense));
+            runtime::is_more_specific(&*approve_executive_taxi, &*approve_role_expense));
         BOOST_TEST(
             !runtime::is_more_specific(&*approve_role_expense, &*approve_role_expense));
 
         {
-            std::vector<const rt_spec*> expected = { &*approve_executive_jet };
+            std::vector<const rt_spec*> expected = { &*approve_executive_taxi };
             BOOST_TEST(expected ==
-                       runtime::best({ &*approve_role_expense, &*approve_executive_jet }));
+                       runtime::best({ &*approve_role_expense, &*approve_executive_taxi }));
         }
     }
 
-    rt.log_on(&std::cerr);
     rt.build_dispatch_tables();
 
+    {
+        BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 4);
+        BOOST_TEST(pay_method.dispatch_table[0] == nullptr);
+        BOOST_TEST(pay_method.dispatch_table[1] == pay_employee->info->pf);
+        BOOST_TEST(pay_method.dispatch_table[2] == pay_executive->info->pf);
+        BOOST_TEST(pay_method.dispatch_table[3] == pay_founder->info->pf);
+    }
 
+    {
+        // expected dispatch table here:
+        // https://www.codeproject.com/Articles/859492/Open-Multi-Methods-for-Cplusplus-Part-Inside-Yomm
+        BOOST_TEST_REQUIRE(approve_method.dispatch_table.size() == 12);
+        BOOST_TEST_REQUIRE(approve_method.strides.size() == 1);
+        BOOST_TEST_REQUIRE(approve_method.strides[0] == 4);
+
+        auto dp_iter = approve_method.dispatch_table.begin();
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_employee_public->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_employee_public->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_executive_taxi->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
+    }
 }
 }
+
+namespace layer_mi {
+
+struct test;
+auto& registry = yomm2::registry::get<test>();
+
+
+struct A0 {};
+
+struct B0 {};
+
+struct B1 : B0 {};
+
+struct A1B2 : A0, B1 {};
+
+YOMM2_CLASS_(test, A0);
+YOMM2_CLASS_(test, B0);
+YOMM2_CLASS_(test, B1, B0);
+YOMM2_CLASS_(test, A1B2, A0, B1);
+
+BOOST_AUTO_TEST_CASE(test_layer_mi) {
+    using namespace yomm2;
+    runtime rt(registry);
+    rt.log_on(&std::cerr);
+    rt.augment_classes();
+    rt.layer_classes();
+    BOOST_TEST_REQUIRE(rt.layered_classes.size() == 4);
+    auto layered_class_iter = rt.layered_classes.begin();
+    auto class_iter = rt.classes.begin();
+    auto a0_class = &*class_iter++;
+    auto b0_class = &*class_iter++;
+    auto b1_class = &*class_iter++;
+    auto a1b2_class = &*class_iter++;
+    BOOST_TEST(*layered_class_iter++ == a0_class);
+    BOOST_TEST(a0_class->layer == 1);
+    BOOST_TEST(*layered_class_iter++ == b0_class);
+    BOOST_TEST(b0_class->layer == 1);
+    BOOST_TEST(*layered_class_iter++ == b1_class);
+    BOOST_TEST(b1_class->layer == 2);
+    BOOST_TEST(*layered_class_iter++ == a1b2_class);
+    BOOST_TEST(a1b2_class->layer == 3);
+}
+
+} // namespace layer_mi
 
 namespace multiple_inheritance {
 

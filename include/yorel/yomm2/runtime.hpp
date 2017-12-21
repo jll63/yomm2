@@ -33,7 +33,7 @@ struct rt_class {
     std::vector<rt_arg> method_vp;
     int next_slot{0};
     int first_used_slot{-1};
-
+    int layer{0};
     int visited{0};
 };
 
@@ -52,7 +52,7 @@ struct rt_method {
     std::vector<rt_spec> specs;
     std::vector<int> slots;
     std::vector<int> strides;
-    std::vector<void*> dispatch_table;
+    std::vector<const void*> dispatch_table;
     group_map first_dim;
 };
 

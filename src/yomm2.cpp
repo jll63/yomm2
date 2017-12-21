@@ -14,6 +14,48 @@
 namespace yorel {
 namespace yomm2 {
 
+#if YOMM2_DEBUG
+
+struct indent {
+    indent(int n) : n(n) {
+        assert(n >= 0);
+    }
+    int n;
+};
+
+std::ostream& operator <<(std::ostream& os, const indent& i) {
+    for (int n = i.n; n--; ) os << "  ";
+    return os;
+}
+
+template<typename ITER, typename FUN>
+struct outseq_t {
+    outseq_t(ITER first, ITER last, FUN fun, int indent = 0)
+    : first(first), last(last), fun(fun), indent(indent) { }
+    ITER first, last;
+    FUN fun;
+    int indent;
+};
+
+template<typename ITER, typename FUN>
+outseq_t<ITER, FUN> outseq(ITER first, ITER last, FUN fun) {
+    return { first, last, fun };
+}
+
+template<typename ITER, typename FUN>
+std::ostream& operator <<(std::ostream& os, const outseq_t<ITER, FUN>& s) {
+    const char* sep = "";
+    ITER iter = s.first;
+    os << indent(s.indent);
+    while (iter != s.last) {
+        os << sep << s.fun(*iter++);
+        sep = " ";
+    }
+    return os;
+}
+
+#endif
+
 void update_methods(const registry& reg) {
     // //_YOMM2_DEBUG(std::log() << name() << " += " << name << "\n");
     // using std::cerr;
@@ -56,7 +98,17 @@ void runtime::augment_classes() {
             (*class_iter)->direct_bases.begin(),
             (*class_iter)->direct_bases.end(),
             std::back_inserter(rt_class.direct_bases),
-            [this](const class_info* ci) { return class_map[ci]; });
+            [this, rt_class](const class_info* ci) {
+                auto base = class_map[ci];
+                if (!base) {
+                    throw std::runtime_error(
+                        std::string("yomm2: derived class ")
+                        + rt_class.info->name
+                        + " registered before its base "
+                        + ci->name);
+                }
+                return base;
+            });
 
         for (auto rt_base : rt_class.direct_bases) {
             rt_base->direct_derived.push_back(&rt_class);
@@ -110,51 +162,88 @@ void runtime::augment_methods() {
 
 void runtime::layer_classes() {
 
-    _YOMM2_DEBUG(log() << "Layering...");
-    _YOMM2_DEBUG(const char* sep = "\n  ");
-
-    std::list<rt_class*> input;
-    std::unordered_set<rt_class*> previous_layer;
+    _YOMM2_DEBUG(log() << "Layering...\n");
 
     layered_classes.reserve(classes.size());
+    std::list<rt_class*> input;
+    std::transform(
+        classes.begin(), classes.end(), std::inserter(input, input.begin()),
+        [](rt_class& cls) { return &cls; });
 
-    for (auto& cls : classes) {
-        if (cls.direct_bases.empty()) {
-            layered_classes.push_back(&cls);
-            previous_layer.insert(&cls);
-            _YOMM2_DEBUG(log() << sep << cls.info->name);
-            _YOMM2_DEBUG(sep = " ");
-        } else {
-            input.push_back(&cls);
-        }
-    }
-
-    _YOMM2_DEBUG(sep = "\n  ");
-
-    while (input.size()) {
-        std::unordered_set<rt_class*> current_layer;
+    for (int layer = 1; !input.empty(); ++layer) {
+        _YOMM2_DEBUG(const char* sep = "");
 
         for (auto class_iter = input.begin(); class_iter != input.end(); ) {
-            auto cls = *class_iter;
-            if (std::any_of(
-                    cls->direct_bases.begin(), cls->direct_bases.end(),
-                    [&previous_layer](rt_class* base) {
-                        return previous_layer.find(base) != previous_layer.end();
-                    })
-                ) {
-                current_layer.insert(cls);
-                layered_classes.push_back(cls);
-                class_iter = input.erase(class_iter);
-                _YOMM2_DEBUG(log() << sep << cls->info->name);
+            auto seen_all_bases = true;
+            auto in_this_layer = (*class_iter)->direct_bases.empty();
+
+            for (auto base : (*class_iter)->direct_bases) {
+                if (!base->layer) {
+                    seen_all_bases = false;
+                    break;
+                } else if (base->layer == layer) {
+                    in_this_layer = false;
+                    break;
+                }
+                if (base->layer == layer - 1) {
+                    in_this_layer = true;
+                }
+            }
+
+            if (seen_all_bases && in_this_layer) {
+                layered_classes.push_back(*class_iter);
+                (*class_iter)->layer = layer;
+                _YOMM2_DEBUG(log() << sep << (*class_iter)->info->name);
                 _YOMM2_DEBUG(sep = " ");
+                class_iter = input.erase(class_iter);
             } else {
                 ++class_iter;
             }
         }
-        previous_layer.swap(current_layer);
-        _YOMM2_DEBUG(sep = "\n  ");
+        _YOMM2_DEBUG(log() << "\n");
     }
-    _YOMM2_DEBUG(log() << "\n");
+
+
+    // std::list<rt_class*> input;
+    // std::unordered_set<rt_class*> previous_layer;
+
+    // for (auto& cls : classes) {
+    //     if (cls.direct_bases.empty()) {
+    //         layered_classes.push_back(&cls);
+    //         previous_layer.insert(&cls);
+    //         _YOMM2_DEBUG(log() << sep << cls.info->name);
+    //         _YOMM2_DEBUG(sep = " ");
+    //     } else {
+    //         input.push_back(&cls);
+    //     }
+    // }
+
+    // _YOMM2_DEBUG(sep = "\n  ");
+
+    // while (input.size()) {
+    //     std::unordered_set<rt_class*> current_layer;
+
+    //     for (auto class_iter = input.begin(); class_iter != input.end(); ) {
+    //         auto cls = *class_iter;
+    //         if (std::any_of(
+    //                 cls->direct_bases.begin(), cls->direct_bases.end(),
+    //                 [&previous_layer](rt_class* base) {
+    //                     return previous_layer.find(base) != previous_layer.end();
+    //                 })
+    //             ) {
+    //             current_layer.insert(cls);
+    //             layered_classes.push_back(cls);
+    //             class_iter = input.erase(class_iter);
+    //             _YOMM2_DEBUG(log() << sep << cls->info->name);
+    //             _YOMM2_DEBUG(sep = " ");
+    //         } else {
+    //             ++class_iter;
+    //         }
+    //     }
+    //     previous_layer.swap(current_layer);
+    //     _YOMM2_DEBUG(sep = "\n  ");
+    // }
+    // _YOMM2_DEBUG(log() << "\n");
 }
 
 void runtime::calculate_conforming_classes() {
@@ -275,13 +364,15 @@ void runtime::build_dispatch_tables() {
                 auto& dim_group = groups[dim];
 
                 _YOMM2_DEBUG(log()
-                             << "  make groups for param #" << dim
+                             << indent(1)
+                             << "make groups for param #" << dim
                              << ", class " << vp->info->name
                              << "\n");
 
                 for  (auto conforming : vp->conforming) {
                     _YOMM2_DEBUG(log()
-                                 << "    specs applicable to "
+                                 << indent(2)
+                                 << "specs applicable to "
                                  << conforming->info->name
                                  << "\n");
                     bitvec mask;
@@ -292,7 +383,8 @@ void runtime::build_dispatch_tables() {
                     for (auto& spec : m.specs) {
                         if (spec.vp[dim]->conforming.find(conforming)
                             != spec.vp[dim]->conforming.end()) {
-                            _YOMM2_DEBUG(log() << "      "
+                            _YOMM2_DEBUG(log()
+                                         << indent(3)
                                          << spec.info->name << "\n");
                             mask[spec_index] = 1;
                         }
@@ -328,13 +420,30 @@ void runtime::build_dispatch_tables() {
 
         m.first_dim = groups[0];
 
-        _YOMM2_DEBUG(log() << "    assign specs\n");
+#if YOMM2_DEBUG
+        for (int dim = 0; dim < m.vp.size(); ++dim) {
+            log()<< indent(1) << "groups for dim " << dim  << ":\n";
+            int group_num = 0;
+            for (auto& group_pair : groups[dim]) {
+                auto mask = group_pair.first;
+                auto& group = group_pair.second;
+                log()
+                    << indent(2)
+                    << "group " << dim << "/" << group_num << " mask " << mask
+                    << " " << outseq(
+                        group.begin(), group.end(),
+                        [](const rt_class* c) { return c->info->name; })
+                    << "\n";
+                ++group_num;
+            }
+        }
+#endif
 
-        bitvec none;
-        none.resize(m.specs.size());
+        _YOMM2_DEBUG(log() << indent(1) << "assign specs\n");
 
-        build_dispatch_table(m, dims - 1, groups, ~none);
-
+        bitvec all(m.specs.size());
+        all = ~all;
+        build_dispatch_table(m, dims - 1, groups, all);
     }
 }
 
@@ -344,7 +453,65 @@ void runtime::build_dispatch_table(
 
     int group_index = 0;
 
-    for (auto& group : groups[dim]) {
+    for (auto& group_pair : groups[dim]) {
+        auto mask = candidates & group_pair.first;
+        auto& group = group_pair.second;
+
+#if YOMM2_DEBUG
+        log()
+            << indent(m.vp.size() - dim + 1)
+            << "group " << dim << "/" << group_index
+            << " mask " << mask
+            << " " << outseq(
+                group.begin(), group.end(),
+                [](const rt_class* c) { return c->info->name; })
+            << "\n";
+#endif
+        if (dim == 0) {
+            std::vector<const rt_spec*> applicable;
+
+            int i = 0;
+
+            for (const auto& spec : m.specs) {
+                if (mask[i]) {
+                    applicable.push_back(&spec);
+                }
+                ++i;
+            }
+
+#if YOMM2_DEBUG
+            log()
+                << indent(m.vp.size() - dim + 2)
+                << "select best of:\n";
+
+            for (auto& app : applicable) {
+                log() << indent(m.vp.size() - dim + 3)
+                      << app->info->name << "\n";
+            }
+#endif
+
+            auto specs = best(applicable);
+
+            if (specs.size() > 1) {
+                m.dispatch_table.push_back(m.info->ambiguous_call);
+            } else if (specs.empty()) {
+                m.dispatch_table.push_back(m.info->not_implemented);
+            } else {
+                m.dispatch_table.push_back(specs[0]->info->pf);
+#if YOMM2_DEBUG
+                log()
+                    << indent(m.vp.size() - dim + 2)
+                    << outseq(
+                        specs.begin(), specs.end(),
+                        [](const rt_spec* spec) { return spec->info->name; })
+                    << ": pf = " << specs[0]->info->pf
+                    << "\n";
+#endif
+            }
+        } else {
+            build_dispatch_table(m, dim - 1, groups, mask);
+        }
+        ++group_index;
     }
 
 }
