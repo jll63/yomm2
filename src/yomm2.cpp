@@ -8,11 +8,14 @@
 
 #include <algorithm>
 #include <cassert>
-#include <list>
 #include <iostream>
+#include <list>
+#include <random>
 
 namespace yorel {
 namespace yomm2 {
+
+using namespace details;
 
 #if YOMM2_DEBUG
 
@@ -516,6 +519,74 @@ void runtime::build_dispatch_table(
 
 }
 
+void runtime::find_hash_function() {
+    std::vector<const void*> keys;
+    auto start_time = std::chrono::steady_clock::now();
+
+    for (auto& cls : classes) {
+        std::copy(
+            cls.info->ti_ptrs.begin(), cls.info->ti_ptrs.end(),
+            std::back_inserter(keys));
+    }
+
+    const auto N = keys.size();
+
+    _YOMM2_DEBUG(log() << "Finding hash factor for " << N << " ti*\n");
+
+    std::default_random_engine rnd(13081963);
+    int total_attempts = 0;
+    int M = 0;
+    std::uniform_int_distribution<std::uintptr_t> uniform_dist;
+
+    for (int room = 2; room <= 6; ++room) {
+        M = 1;
+
+        while ((1 << M) < room * N / 2) {
+            ++M;
+        }
+
+        hash_shift = 64 - M;
+        hash_size = 1 << M;
+        std::vector<int> buckets(hash_size);
+
+        _YOMM2_DEBUG(
+            log() << indent(1) << "trying with M = " << M
+            << ", " << hash_size << " buckets\n");
+
+        bool found = false;
+        int attempts = 0;
+
+        while (!found && attempts < 100000) {
+            ++attempts;
+            ++total_attempts;
+            found = true;
+            hash_mult = uniform_dist(rnd) | 1;
+            for (auto key : keys) {
+                auto h = hash(key);
+                if (buckets[h]++) {
+                    found = false;
+                    break;
+                }
+            }
+            std::fill(buckets.begin(), buckets.end(), 0);
+        }
+
+        metrics.hash_search_attempts = total_attempts;
+        metrics.hash_search_time = std::chrono::steady_clock::now() - start_time;
+        metrics.hash_table_size = hash_size;
+
+        if (found) {
+            _YOMM2_DEBUG(
+                log() << indent(1) << "found " << hash_mult
+                << " after " << total_attempts << " attempts and "
+                << metrics.hash_search_time.count() * 1000 << " msecs\n");
+            return;
+        }
+    }
+
+    throw std::runtime_error("cannot find hash factor");
+}
+
 std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {
     std::vector<const rt_spec*> best;
 
@@ -558,6 +629,13 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
     }
 
     return result;
+}
+
+namespace details {
+std::uintptr_t hash_mult;
+std::size_t hash_shift;
+std::size_t hash_size;
+std::vector<const void*> hash_table;
 }
 
 #if YOMM2_DEBUG

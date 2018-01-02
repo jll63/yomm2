@@ -155,12 +155,23 @@ namespace details {
 
 struct discriminator {};
 
+extern std::uintptr_t hash_mult;
+extern std::size_t hash_shift;
+extern std::size_t hash_size;
+extern std::vector<const void*> hash_table;
+
+inline std::size_t hash(const void* p) {
+    return static_cast<std::size_t>(
+        (hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
+        >> hash_shift);
+}
+
 } // namespace details
 
 struct class_info {
     std::vector<const class_info*> direct_bases;
     _YOMM2_DEBUG(const char* name);
-    std::unordered_set<const std::type_info*> ti_ptrs;
+    std::unordered_set<const void*> ti_ptrs;
     template<typename REG, class CLASS> static class_info& get();
 };
 

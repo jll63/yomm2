@@ -284,8 +284,11 @@ BOOST_AUTO_TEST_CASE(registration) {
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
+
     using namespace yomm2;
+
     runtime rt(registry);
+
     rt.log_on(&std::cerr);
 
     rt.augment_classes();
@@ -553,6 +556,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(*dp_iter++ == approve_executive_taxi->info->pf);
         BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
     }
+
+    rt.find_hash_function();
+
 }
 }
 
@@ -578,7 +584,6 @@ YOMM2_CLASS_(test, A1B2, A0, B1);
 BOOST_AUTO_TEST_CASE(test_layer_mi) {
     using namespace yomm2;
     runtime rt(registry);
-    rt.log_on(&std::cerr);
     rt.augment_classes();
     rt.layer_classes();
     BOOST_TEST_REQUIRE(rt.layered_classes.size() == 4);

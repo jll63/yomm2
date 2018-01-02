@@ -3,8 +3,9 @@
 
 #include <yorel/yomm2.hpp>
 
-#include <unordered_map>
+#include <chrono>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/dynamic_bitset.hpp>
@@ -65,6 +66,15 @@ struct runtime {
     std::vector<rt_method> methods;
     int class_visit{0};
 
+    struct metrics_t
+    {
+        size_t method_table_size, dispatch_table_size, hash_table_size;
+        ulong hash_search_attempts;
+        std::chrono::duration<double> hash_search_time;
+    };
+
+    metrics_t metrics;
+
     explicit runtime(const registry& reg);
 
     void augment_classes();
@@ -78,6 +88,7 @@ struct runtime {
     void build_dispatch_table(
         rt_method& m, size_t dim, const std::vector<group_map>& groups,
         const bitvec& candidates);
+    void find_hash_function();
 
     static std::vector<const rt_spec*> best(std::vector<const rt_spec*> candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
