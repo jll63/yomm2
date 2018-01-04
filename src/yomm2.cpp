@@ -86,7 +86,7 @@ void update_methods(const registry& reg) {
     // }
 }
 
-runtime::runtime(const registry& reg, data_t& data) : reg(reg), data(data) {
+runtime::runtime(registry& reg) : reg(reg) {
     _YOMM2_DEBUG(active_log = &discard_log);
 }
 
@@ -545,9 +545,9 @@ void runtime::find_hash_function() {
             ++M;
         }
 
-        data.hash_shift = 64 - M;
+        reg.hash_shift = 64 - M;
         auto hash_size = 1 << M;
-        std::vector<int> buckets(hash_size);
+        hash_table.resize(hash_size);
 
         _YOMM2_DEBUG(
             log() << indent(1) << "trying with M = " << M
@@ -555,19 +555,22 @@ void runtime::find_hash_function() {
 
         bool found = false;
         int attempts = 0;
+        std::vector<int> buckets(hash_size);
 
         while (!found && attempts < 100000) {
             ++attempts;
             ++total_attempts;
             found = true;
-            data.hash_mult = uniform_dist(rnd) | 1;
+            reg.hash_mult = uniform_dist(rnd) | 1;
+
             for (auto key : keys) {
-                auto h = hash(data, key);
+                auto h = hash(reg, key);
                 if (buckets[h]++) {
                     found = false;
                     break;
                 }
             }
+
             std::fill(buckets.begin(), buckets.end(), 0);
         }
 
@@ -577,7 +580,7 @@ void runtime::find_hash_function() {
 
         if (found) {
             _YOMM2_DEBUG(
-                log() << indent(1) << "found " << data.hash_mult
+                log() << indent(1) << "found " << reg.hash_mult
                 << " after " << total_attempts << " attempts and "
                 << metrics.hash_search_time.count() * 1000 << " msecs\n");
             return;
@@ -629,12 +632,6 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
     }
 
     return result;
-}
-
-namespace details {
-
-data_t globals;
-
 }
 
 #if YOMM2_DEBUG

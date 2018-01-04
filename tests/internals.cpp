@@ -168,7 +168,7 @@ YOMM2_CLASS_(test, metro, public_transport);
 YOMM2_CLASS_(test, taxi, expense);
 YOMM2_CLASS_(test, jet, expense);
 
-YOMM2_DECLARE_(test, double, pay, virtual_<const role&>);
+YOMM2_DECLARE_(test, double, pay, virtual_<const employee&>);
 YOMM2_DECLARE_(test, bool, approve, virtual_<const role&>, virtual_<const expense&>, double);
 
 YOMM2_DEFINE(double, pay, const employee&) {
@@ -177,10 +177,6 @@ YOMM2_DEFINE(double, pay, const employee&) {
 
 YOMM2_DEFINE(double, pay, const executive&) {
     return 5000;
-} YOMM2_END;
-
-YOMM2_DEFINE(double, pay, const founder&) {
-    return 0;
 } YOMM2_END;
 
 YOMM2_DEFINE(bool, approve, const role& r, const expense& e, double amount) {
@@ -264,7 +260,7 @@ BOOST_AUTO_TEST_CASE(registration) {
 
     auto pay_method = registry.methods[0];
     BOOST_TEST(pay_method->vp.size() == 1);
-    BOOST_TEST(pay_method->specs.size() == 3);
+    BOOST_TEST(pay_method->specs.size() == 2);
 
     auto pay_method_iter = pay_method->specs.begin();
     auto pay_employee = *pay_method_iter++;
@@ -286,8 +282,7 @@ BOOST_AUTO_TEST_CASE(registration) {
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
 
-    data_t data;
-    runtime rt(registry, data);
+    runtime rt(registry);
 
     rt.log_on(&std::cerr);
 
@@ -450,7 +445,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     rt_method& approve_method = rt.methods[1];
 
     {
-        std::vector<rt_class*> expected = { role_class };
+        std::vector<rt_class*> expected = { employee_class };
         BOOST_TEST_INFO("result   = " + to_string(pay_method.vp));
         BOOST_TEST_INFO("expected = " + to_string(expected));
         BOOST_TEST(pay_method.vp == expected);
@@ -477,11 +472,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         }
     }
 
-    BOOST_TEST_REQUIRE(role_class->method_vp.size() == 2);
-    BOOST_TEST(role_class->method_vp[0].method == &pay_method);
+    BOOST_TEST_REQUIRE(role_class->method_vp.size() == 1);
+    BOOST_TEST(role_class->method_vp[0].method == &approve_method);
     BOOST_TEST(role_class->method_vp[0].param == 0);
-    BOOST_TEST(role_class->method_vp[1].method == &approve_method);
-    BOOST_TEST(role_class->method_vp[1].param == 0);
+
+    BOOST_TEST_REQUIRE(employee_class->method_vp.size() == 1);
+    BOOST_TEST(employee_class->method_vp[0].method == &pay_method);
+    BOOST_TEST(employee_class->method_vp[0].param == 0);
 
     BOOST_TEST_REQUIRE(expense_class->method_vp.size() == 1);
     BOOST_TEST(expense_class->method_vp[0].method == &approve_method);
@@ -490,19 +487,18 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     rt.allocate_slots();
 
     {
-        const std::vector<int> expected = { 0 };
+        const std::vector<int> expected = { 1 };
         BOOST_TEST(expected == pay_method.slots);
     }
 
     {
-        const std::vector<int> expected = { 1, 0 };
+        const std::vector<int> expected = { 0, 0 };
         BOOST_TEST(expected == approve_method.slots);
     }
 
     auto pay_method_iter = pay_method.specs.begin();
     auto pay_employee = pay_method_iter++;
     auto pay_executive = pay_method_iter++;
-    auto pay_founder = pay_method_iter++;
 
     auto spec_iter = approve_method.specs.begin();
     auto approve_role_expense = spec_iter++;
@@ -528,11 +524,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     rt.build_dispatch_tables();
 
     {
-        BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 4);
-        BOOST_TEST(pay_method.dispatch_table[0] == (const void*) nullptr);
-        BOOST_TEST(pay_method.dispatch_table[1] == pay_employee->info->pf);
-        BOOST_TEST(pay_method.dispatch_table[2] == pay_executive->info->pf);
-        BOOST_TEST(pay_method.dispatch_table[3] == pay_founder->info->pf);
+        BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
+        BOOST_TEST(pay_method.dispatch_table[0] == pay_employee->info->pf);
+        BOOST_TEST(pay_method.dispatch_table[1] == pay_executive->info->pf);
     }
 
     {
@@ -559,6 +553,30 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     rt.find_hash_function();
 
+    {
+        // from beginning of gv:
+        //  0 : 1 slots for pay, no strides nor dispatch table (1-method)
+        //  1 : 2 slots for approve, 1 stride, 12 pointers
+        // 16 : beginning of hash table
+
+        // hash table
+
+        // mtbl area
+        //  0 : mtbl for role: 1 word: row in approve mtbl
+        //  1 : mtbl for employee: 2 words: pay spec, row in approve mtbl
+        //  2 : same for executive
+        //  4 : same for founder
+        //  6 : mtbl for expense: 1 word: column in approve mtbl
+        //  7 : same for public_transport
+        //  8 : same for bus
+        //  9 : same for metro
+        // 10 : same for taxi
+        // 11 : same for jet
+
+        //BOOST_TEST_REQUIRE(data.gv.size() == 33);
+
+    }
+
 }
 }
 
@@ -582,8 +600,7 @@ YOMM2_CLASS_(test, B1, B0);
 YOMM2_CLASS_(test, A1B2, A0, B1);
 
 BOOST_AUTO_TEST_CASE(test_layer_mi) {
-    data_t data;
-    runtime rt(registry, data);
+    runtime rt(registry);
     rt.augment_classes();
     rt.layer_classes();
     BOOST_TEST_REQUIRE(rt.layered_classes.size() == 4);
@@ -641,8 +658,7 @@ YOMM2_DECLARE_(test, void, c, virtual_<C&>);
 YOMM2_DECLARE_(test, void, d, virtual_<D&>);
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
-    data_t data;
-    runtime rt(registry, data);
+    runtime rt(registry);
     rt.augment_classes();
     rt.layer_classes();
     rt.calculate_conforming_classes();

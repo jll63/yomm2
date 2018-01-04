@@ -125,10 +125,34 @@ namespace yomm2 {
 struct method_info;
 struct class_info;
 
+union word {
+    const void* pv;
+    std::uintptr_t i;
+};
+
 struct registry {
     std::vector<const class_info*> classes;
     std::vector<const method_info*> methods;
+    std::uintptr_t hash_mult;
+    std::size_t hash_shift;
+
+    // global vector:
+    std::vector<word> gv;
+    // consists of 3 areas:
+
+    const word* method_data;
+    // 1. for each method:
+    // - slots
+    // - strides if virtual arity > 1
+    // - dispatch table if virtual arity > 1
+
+    const word* hash_table;
+    // 2. for each class: maps ti* to mtbls
+
+    // 3. mtbls, one per each class
+
     template<typename T> static registry& get();
+
     struct global_;
     static registry& global() { return get<global_>(); }
 };
@@ -155,18 +179,10 @@ namespace details {
 
 struct discriminator {};
 
-struct data_t {
-    std::uintptr_t hash_mult;
-    std::size_t hash_shift;
-    std::vector<const void*> hash_table;
-};
-
-extern data_t globals;
-
-inline std::size_t hash(const data_t& data, const void* p) {
+inline std::size_t hash(const registry& reg, const void* p) {
     return static_cast<std::size_t>(
-        (data.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
-        >> data.hash_shift);
+        (reg.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
+        >> reg.hash_shift);
 }
 
 } // namespace details
@@ -212,6 +228,7 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous_call;
     void* not_implemented;
+    const word* dispatch; // slots, then strides, then funptrs
 };
 
 template<typename REG, typename... ARGS>
