@@ -12,6 +12,7 @@ using std::is_same;
 namespace yomm2 = yorel::yomm2;
 using yomm2::virtual_;
 using namespace yomm2;
+using namespace details;
 
 std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
     std::ostringstream os;
@@ -285,9 +286,8 @@ BOOST_AUTO_TEST_CASE(registration) {
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
 
-    using namespace yomm2;
-
-    runtime rt(registry);
+    data_t data;
+    runtime rt(registry, data);
 
     rt.log_on(&std::cerr);
 
@@ -582,8 +582,8 @@ YOMM2_CLASS_(test, B1, B0);
 YOMM2_CLASS_(test, A1B2, A0, B1);
 
 BOOST_AUTO_TEST_CASE(test_layer_mi) {
-    using namespace yomm2;
-    runtime rt(registry);
+    data_t data;
+    runtime rt(registry, data);
     rt.augment_classes();
     rt.layer_classes();
     BOOST_TEST_REQUIRE(rt.layered_classes.size() == 4);
@@ -641,8 +641,8 @@ YOMM2_DECLARE_(test, void, c, virtual_<C&>);
 YOMM2_DECLARE_(test, void, d, virtual_<D&>);
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
-    using namespace yomm2;
-    runtime rt(registry);
+    data_t data;
+    runtime rt(registry, data);
     rt.augment_classes();
     rt.layer_classes();
     rt.calculate_conforming_classes();

@@ -155,15 +155,18 @@ namespace details {
 
 struct discriminator {};
 
-extern std::uintptr_t hash_mult;
-extern std::size_t hash_shift;
-extern std::size_t hash_size;
-extern std::vector<const void*> hash_table;
+struct data_t {
+    std::uintptr_t hash_mult;
+    std::size_t hash_shift;
+    std::vector<const void*> hash_table;
+};
 
-inline std::size_t hash(const void* p) {
+extern data_t globals;
+
+inline std::size_t hash(const data_t& data, const void* p) {
     return static_cast<std::size_t>(
-        (hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
-        >> hash_shift);
+        (data.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
+        >> data.hash_shift);
 }
 
 } // namespace details

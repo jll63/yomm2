@@ -59,12 +59,19 @@ struct rt_method {
 
 struct runtime {
 
+    // input
     const registry& reg;
+
+    // work
     std::unordered_map<const class_info*, rt_class*> class_map;
     std::vector<rt_class> classes;
     std::vector<rt_class*> layered_classes;
     std::vector<rt_method> methods;
     int class_visit{0};
+
+    // output
+    using data_t = details::data_t;
+    data_t& data;
 
     struct metrics_t
     {
@@ -75,7 +82,7 @@ struct runtime {
 
     metrics_t metrics;
 
-    explicit runtime(const registry& reg);
+    runtime(const registry& reg, data_t& data);
 
     void augment_classes();
     void layer_classes();
