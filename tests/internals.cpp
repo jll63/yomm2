@@ -529,7 +529,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 4);
-        BOOST_TEST(pay_method.dispatch_table[0] == nullptr);
+        BOOST_TEST(pay_method.dispatch_table[0] == (const void*) nullptr);
         BOOST_TEST(pay_method.dispatch_table[1] == pay_employee->info->pf);
         BOOST_TEST(pay_method.dispatch_table[2] == pay_executive->info->pf);
         BOOST_TEST(pay_method.dispatch_table[3] == pay_founder->info->pf);

@@ -87,7 +87,7 @@ void update_methods(const registry& reg) {
 }
 
 runtime::runtime(const registry& reg) : reg(reg) {
-    //_YOMM2_DEBUG(discard_log.)
+    _YOMM2_DEBUG(active_log = &discard_log);
 }
 
 void runtime::augment_classes() {
@@ -652,7 +652,7 @@ std::ostream* runtime::log_on(std::ostream* os) {
 
 std::ostream* runtime::log_off() {
     auto prev = active_log;
-    active_log = nullptr;
+    active_log = &discard_log;
     return prev;
 }
 
