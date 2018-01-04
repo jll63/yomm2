@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <random>
@@ -588,6 +589,55 @@ void runtime::find_hash_factor() {
     }
 
     throw std::runtime_error("cannot find hash factor");
+}
+
+void operator +=(std::vector<word>& words, const std::vector<int>& ints) {
+    words.reserve(words.size() + ints.size());
+    for (auto i : ints) {
+        word w;
+        w.i = i;
+        words.push_back(w);
+    }
+}
+
+inline word make_word(int i) {
+    word w;
+    w.i = i;
+    return w;
+}
+
+inline word make_word(const void* pv) {
+    word w;
+    w.pv = pv;
+    return w;
+}
+
+void runtime::install_gv() {
+    reg.gv.resize(0);
+
+    _YOMM2_DEBUG(log() << "Initializing global vector\n");
+
+    using std::copy;
+    using std::back_inserter;
+    using std::setw;
+
+    for (auto& m : methods) {
+        _YOMM2_DEBUG(log() << setw(4) << reg.gv.size() << ' ' << m.info->name << "\n");
+        auto slot_iter = m.slots.begin();
+        auto stride_iter = m.strides.begin();
+        reg.gv.emplace_back(make_word(*slot_iter++));
+
+        while (slot_iter != m.slots.end()) {
+            reg.gv.emplace_back(make_word(*slot_iter++));
+            reg.gv.emplace_back(make_word(*stride_iter++));
+        }
+        std::transform(
+            m.dispatch_table.begin(), m.dispatch_table.end(),
+            std::back_inserter(reg.gv), [](const void* pf) {
+                return make_word(pf); });
+    }
+
+    _YOMM2_DEBUG(log() << setw(4) << reg.gv.size() << " end\n");
 }
 
 std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {

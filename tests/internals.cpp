@@ -552,11 +552,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     rt.find_hash_factor();
+    rt.install_gv();
 
     {
         // from beginning of gv:
-        //  0 : 1 slots for pay, no strides nor dispatch table (1-method)
-        //  1 : 2 slots for approve, 1 stride, 12 pointers
+        //  0 : 1 slot for pay (0), no strides nor dispatch table (1-method)
+        //  1 : 2 slots for approve (1, 0), 1 stride (4), 12 pointers
         // 16 : beginning of hash table
 
         // hash table
@@ -575,8 +576,29 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // 12: end
 
         // total size: 16 + hash table size + 12
-        BOOST_TEST_REQUIRE(registry.gv.size() == 12 + rt.metrics.hash_table_size);
-
+        //BOOST_TEST_REQUIRE(registry.gv.size() == 12 + rt.metrics.hash_table_size);
+        BOOST_TEST_REQUIRE(registry.gv.size() == 18);
+        auto gv_iter = registry.gv.begin();
+        BOOST_TEST(gv_iter++->i == 1); // slot for pay
+        // 2 fun*
+        BOOST_TEST(
+            std::equal(
+                pay_method.dispatch_table.begin(),
+                pay_method.dispatch_table.end(),
+                gv_iter,
+                [](const void* pf, word w) { return w.pv == pf; }));
+        gv_iter += pay_method.dispatch_table.size();
+        BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
+        BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
+        BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
+        // 12 fun*
+        BOOST_TEST(
+            std::equal(
+                approve_method.dispatch_table.begin(),
+                approve_method.dispatch_table.end(),
+                gv_iter,
+                [](const void* pf, word w) { return w.pv == pf; }));
+        gv_iter += approve_method.dispatch_table.size();
     }
 
 }

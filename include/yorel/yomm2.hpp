@@ -127,7 +127,7 @@ struct class_info;
 
 union word {
     const void* pv;
-    std::uintptr_t i;
+    int i;
 };
 
 struct registry {
@@ -191,6 +191,8 @@ struct class_info {
     std::vector<const class_info*> direct_bases;
     _YOMM2_DEBUG(const char* name);
     std::unordered_set<const void*> ti_ptrs;
+
+    const word* slots;
     template<typename REG, class CLASS> static class_info& get();
 };
 
