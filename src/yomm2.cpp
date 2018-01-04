@@ -519,7 +519,7 @@ void runtime::build_dispatch_table(
 
 }
 
-void runtime::find_hash_function() {
+void runtime::find_hash_factor() {
     std::vector<const void*> keys;
     auto start_time = std::chrono::steady_clock::now();
 

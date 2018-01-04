@@ -551,7 +551,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
     }
 
-    rt.find_hash_function();
+    rt.find_hash_factor();
 
     {
         // from beginning of gv:
@@ -572,8 +572,10 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         //  9 : same for metro
         // 10 : same for taxi
         // 11 : same for jet
+        // 12: end
 
-        //BOOST_TEST_REQUIRE(data.gv.size() == 33);
+        // total size: 16 + hash table size + 12
+        BOOST_TEST_REQUIRE(registry.gv.size() == 12 + rt.metrics.hash_table_size);
 
     }
 
