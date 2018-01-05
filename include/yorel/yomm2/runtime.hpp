@@ -36,6 +36,7 @@ struct rt_class {
     int first_used_slot{-1};
     int layer{0};
     int visited{0};
+    std::vector<int> mtbl;
 };
 
 struct rt_spec
@@ -48,7 +49,7 @@ using bitvec = boost::dynamic_bitset<>;
 using group_map = std::map< bitvec, std::vector<rt_class*> >;
 
 struct rt_method {
-    const method_info* info;
+    method_info* info;
     std::vector<rt_class*> vp;
     std::vector<rt_spec> specs;
     std::vector<int> slots;

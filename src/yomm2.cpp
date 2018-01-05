@@ -123,13 +123,9 @@ void runtime::augment_classes() {
 }
 
 void runtime::augment_methods() {
-    // methods.reserve(reg.methods.size());
-    // std::transform(
-    //     reg.methods.begin(), reg.methods.end(),
-    //     std::back_inserter(methods),
-    //     [](const method_info* mi) { return { mi }; });
     methods.resize(reg.methods.size());
-    auto meth_info_iter = reg.methods.begin(), meth_info_iter_end = reg.methods.end();
+    auto meth_info_iter = reg.methods.begin(),
+        meth_info_iter_end = reg.methods.end();
     auto meth_iter = methods.begin();
 
     for (; meth_info_iter != meth_info_iter_end; ++meth_info_iter, ++meth_iter) {
@@ -301,6 +297,10 @@ void runtime::allocate_slots() {
             _YOMM2_DEBUG(log() << "\n");
         }
     }
+
+    for (auto& c : classes) {
+        c.mtbl.resize(c.next_slot);
+    }
 }
 
 void runtime::allocate_slot_down(rt_class* cls, int slot) {
@@ -424,13 +424,16 @@ void runtime::build_dispatch_tables() {
 
         m.first_dim = groups[0];
 
-#if YOMM2_DEBUG
         for (int dim = 0; dim < m.vp.size(); ++dim) {
-            log()<< indent(1) << "groups for dim " << dim  << ":\n";
+            _YOMM2_DEBUG(log()<< indent(1) << "groups for dim " << dim  << ":\n");
             int group_num = 0;
             for (auto& group_pair : groups[dim]) {
-                auto mask = group_pair.first;
                 auto& group = group_pair.second;
+                for (auto cls : group) {
+                    cls->mtbl[m.slots[dim]] = group_num;
+                }
+#if YOMM2_DEBUG
+                auto mask = group_pair.first;
                 log()
                     << indent(2)
                     << "group " << dim << "/" << group_num << " mask " << mask
@@ -438,10 +441,10 @@ void runtime::build_dispatch_tables() {
                         group.begin(), group.end(),
                         [](const rt_class* c) { return c->info->name; })
                     << "\n";
+#endif
                 ++group_num;
             }
         }
-#endif
 
         _YOMM2_DEBUG(log() << indent(1) << "assign specs\n");
 
@@ -613,31 +616,37 @@ inline word make_word(const void* pv) {
 }
 
 void runtime::install_gv() {
-    reg.gv.resize(0);
 
     _YOMM2_DEBUG(log() << "Initializing global vector\n");
 
-    using std::copy;
-    using std::back_inserter;
-    using std::setw;
+    for (int pass = 0; pass != 2; ++pass) {
+        reg.gv.resize(metrics.hash_table_size);
 
-    for (auto& m : methods) {
-        _YOMM2_DEBUG(log() << setw(4) << reg.gv.size() << ' ' << m.info->name << "\n");
-        auto slot_iter = m.slots.begin();
-        auto stride_iter = m.strides.begin();
-        reg.gv.emplace_back(make_word(*slot_iter++));
-
-        while (slot_iter != m.slots.end()) {
+        for (auto& m : methods) {
+            _YOMM2_DEBUG(
+                if (pass)
+                    log() << std::setw(4) << reg.gv.size()
+                          << ' ' << m.info->name << "\n");
+            m.info->dispatch = reg.gv.data() + reg.gv.size();
+            auto slot_iter = m.slots.begin();
+            auto stride_iter = m.strides.begin();
             reg.gv.emplace_back(make_word(*slot_iter++));
-            reg.gv.emplace_back(make_word(*stride_iter++));
+
+            while (slot_iter != m.slots.end()) {
+                reg.gv.emplace_back(make_word(*slot_iter++));
+                reg.gv.emplace_back(make_word(*stride_iter++));
+            }
+
+            if (m.info->vp.size() > 1) {
+                std::transform(
+                    m.dispatch_table.begin(), m.dispatch_table.end(),
+                    std::back_inserter(reg.gv), [](const void* pf) {
+                        return make_word(pf); });
+            }
         }
-        std::transform(
-            m.dispatch_table.begin(), m.dispatch_table.end(),
-            std::back_inserter(reg.gv), [](const void* pf) {
-                return make_word(pf); });
     }
 
-    _YOMM2_DEBUG(log() << setw(4) << reg.gv.size() << " end\n");
+    _YOMM2_DEBUG(log() << std::setw(4) << reg.gv.size() << " end\n");
 }
 
 std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {

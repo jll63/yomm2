@@ -132,7 +132,7 @@ union word {
 
 struct registry {
     std::vector<const class_info*> classes;
-    std::vector<const method_info*> methods;
+    std::vector<method_info*> methods;
     std::uintptr_t hash_mult;
     std::size_t hash_shift;
 
@@ -230,7 +230,7 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous_call;
     void* not_implemented;
-    const word* dispatch; // slots, then strides, then funptrs
+    const word* dispatch; // slots, strides, fun*
 };
 
 template<typename REG, typename... ARGS>

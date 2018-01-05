@@ -496,6 +496,18 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == approve_method.slots);
     }
 
+    BOOST_TEST_REQUIRE(role_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(employee_class->mtbl.size() == 2);
+    BOOST_TEST_REQUIRE(executive_class->mtbl.size() == 2);
+    BOOST_TEST_REQUIRE(founder_class->mtbl.size() == 1);
+
+    BOOST_TEST_REQUIRE(expense_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(public_transport_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(bus_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(metro_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(taxi_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(jet_class->mtbl.size() == 1);
+
     auto pay_method_iter = pay_method.specs.begin();
     auto pay_employee = pay_method_iter++;
     auto pay_executive = pay_method_iter++;
@@ -551,43 +563,70 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
     }
 
+    {
+        const std::vector<int> expected = { 0 };
+        BOOST_TEST(expected == role_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 1, 0 };
+        BOOST_TEST(expected == employee_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 2, 1 };
+        BOOST_TEST(expected == executive_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 3 };
+        BOOST_TEST(expected == founder_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 0 };
+        BOOST_TEST(expected == expense_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 1 };
+        BOOST_TEST(expected == public_transport_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 1 };
+        BOOST_TEST(expected == bus_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 1 };
+        BOOST_TEST(expected == metro_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 2 };
+        BOOST_TEST(expected == taxi_class->mtbl);
+    }
+
+    {
+        const std::vector<int> expected = { 0 };
+        BOOST_TEST(expected == jet_class->mtbl);
+    }
+
+
     rt.find_hash_factor();
     rt.install_gv();
 
     {
-        // from beginning of gv:
-        //  0 : 1 slot for pay (0), no strides nor dispatch table (1-method)
-        //  1 : 2 slots for approve (1, 0), 1 stride (4), 12 pointers
-        // 16 : beginning of hash table
-
-        // hash table
-
-        // mtbl area
-        //  0 : mtbl for role: 1 word: row in approve mtbl
-        //  1 : mtbl for employee: 2 words: pay spec, row in approve mtbl
-        //  2 : same for executive
-        //  4 : same for founder
-        //  6 : mtbl for expense: 1 word: column in approve mtbl
-        //  7 : same for public_transport
-        //  8 : same for bus
-        //  9 : same for metro
-        // 10 : same for taxi
-        // 11 : same for jet
-        // 12: end
-
-        // total size: 16 + hash table size + 12
-        //BOOST_TEST_REQUIRE(registry.gv.size() == 12 + rt.metrics.hash_table_size);
-        BOOST_TEST_REQUIRE(registry.gv.size() == 18);
-        auto gv_iter = registry.gv.begin();
+        // pay
+        BOOST_TEST_REQUIRE(registry.gv.size() == 16 + rt.metrics.hash_table_size);
+        auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
+        BOOST_TEST(&*gv_iter == pay_method.info->dispatch);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
-        // 2 fun*
-        BOOST_TEST(
-            std::equal(
-                pay_method.dispatch_table.begin(),
-                pay_method.dispatch_table.end(),
-                gv_iter,
-                [](const void* pf, word w) { return w.pv == pf; }));
-        gv_iter += pay_method.dispatch_table.size();
+        // no fun* for 1-method
+
+        // approve
+        BOOST_TEST(&*gv_iter == approve_method.info->dispatch);
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
         BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
