@@ -139,18 +139,6 @@ struct registry {
 
     // global vector:
     std::vector<word> gv;
-    // consists of 3 areas:
-
-    const word* method_data;
-    // 1. for each method:
-    // - slots
-    // - strides if virtual arity > 1
-    // - dispatch table if virtual arity > 1
-
-    const word* hash_table;
-    // 2. for each class: maps ti* to mtbls
-
-    // 3. mtbls, one per each class
 
     template<typename T> static registry& get();
 
@@ -186,6 +174,10 @@ inline std::size_t hash(const registry& reg, const void* p) {
         >> reg.hash_shift);
 }
 
+inline const word* mptr(const registry& reg, const std::type_info* ti) {
+    return reg.gv[hash(reg, ti)].pw;
+}
+
 } // namespace details
 
 struct class_info {
@@ -193,7 +185,6 @@ struct class_info {
     _YOMM2_DEBUG(const char* name);
     std::unordered_set<const void*> ti_ptrs;
 
-    const word* slots;
     template<typename REG, class CLASS> static class_info& get();
 };
 

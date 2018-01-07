@@ -661,6 +661,11 @@ void runtime::install_gv() {
                 cls.mtbl.begin(), cls.mtbl.end(),
                 std::back_inserter(reg.gv), [](int i) {
                     return make_word(i); });
+
+            for (auto tid : cls.info->ti_ptrs) {
+                reg.gv[hash(reg, tid)].pw = cls.mptr;
+
+            }
         }
     }
 

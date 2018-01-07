@@ -623,6 +623,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                            rt.metrics.hash_table_size
                            + 16
                            + 12);
+
         auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
         BOOST_TEST(&*gv_iter == pay_method.gv_slots_strides);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
@@ -692,6 +693,18 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(opt_iter++->i == 2); // approve/1
         // plane
         BOOST_TEST(opt_iter++->i == 0); // approve/1
+
+        BOOST_TEST(mptr(registry, &typeid(role)) == role_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(employee)) == employee_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(executive)) == executive_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(founder)) == founder_class->mptr);
+
+        BOOST_TEST(mptr(registry, &typeid(expense)) == expense_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(public_transport)) == public_transport_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(bus)) == bus_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(metro)) == metro_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(taxi)) == taxi_class->mptr);
+        BOOST_TEST(mptr(registry, &typeid(jet)) == jet_class->mptr);
     }
 }
 }
