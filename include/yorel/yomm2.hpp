@@ -127,6 +127,7 @@ struct class_info;
 
 union word {
     const void* pv;
+    const word* pw;
     int i;
 };
 
@@ -230,7 +231,6 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous_call;
     void* not_implemented;
-    const word* dispatch; // slots, strides, fun*
 };
 
 template<typename REG, typename... ARGS>

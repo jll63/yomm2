@@ -138,7 +138,7 @@ void runtime::augment_methods() {
             [this, meth_iter, &param_index](const class_info* ci) {
                 auto rt_class = class_map[ci];
                 rt_arg param = { &*meth_iter,  param_index++ };
-                rt_class->method_vp.push_back(param);
+                rt_class->vp.push_back(param);
                 return class_map[ci];
             });
 
@@ -265,11 +265,11 @@ void runtime::allocate_slots() {
     _YOMM2_DEBUG(log() << "Allocating slots...\n");
 
     for (auto& c : classes) {
-        if (!c.method_vp.empty()) {
+        if (!c.vp.empty()) {
             _YOMM2_DEBUG(log() << c.info->name << "...\n");
         }
 
-        for (const auto& mp : c.method_vp) {
+        for (const auto& mp : c.vp) {
             int slot = c.next_slot++;
 
             _YOMM2_DEBUG(
@@ -618,17 +618,18 @@ inline word make_word(const void* pv) {
 void runtime::install_gv() {
 
     _YOMM2_DEBUG(log() << "Initializing global vector\n");
+    _YOMM2_DEBUG(log() << "   0 hash table\n");
 
     for (int pass = 0; pass != 2; ++pass) {
         reg.gv.resize(metrics.hash_table_size);
 
         for (auto& m : methods) {
+            m.gv_slots_strides = reg.gv.data() + reg.gv.size();
+            auto slot_iter = m.slots.begin();
             _YOMM2_DEBUG(
                 if (pass)
                     log() << std::setw(4) << reg.gv.size()
-                          << ' ' << m.info->name << "\n");
-            m.info->dispatch = reg.gv.data() + reg.gv.size();
-            auto slot_iter = m.slots.begin();
+                          << ' ' << m.info->name << " slots and strides\n");
             auto stride_iter = m.strides.begin();
             reg.gv.emplace_back(make_word(*slot_iter++));
 
@@ -638,15 +639,63 @@ void runtime::install_gv() {
             }
 
             if (m.info->vp.size() > 1) {
+                _YOMM2_DEBUG(
+                    if (pass)
+                        log() << std::setw(4) << reg.gv.size()
+                              << ' ' << m.info->name << " dispatch table\n");
+                m.gv_dispatch_table = reg.gv.data() + reg.gv.size();
                 std::transform(
                     m.dispatch_table.begin(), m.dispatch_table.end(),
                     std::back_inserter(reg.gv), [](const void* pf) {
                         return make_word(pf); });
             }
         }
+
+        for (auto& cls : classes) {
+            _YOMM2_DEBUG(
+                if (pass)
+                    log() << std::setw(4) << reg.gv.size()
+                          << " mtbl for " << cls.info->name << "\n");
+            cls.mptr = reg.gv.data() + reg.gv.size();
+            std::transform(
+                cls.mtbl.begin(), cls.mtbl.end(),
+                std::back_inserter(reg.gv), [](int i) {
+                    return make_word(i); });
+        }
     }
 
     _YOMM2_DEBUG(log() << std::setw(4) << reg.gv.size() << " end\n");
+}
+
+void runtime::optimize() {
+    _YOMM2_DEBUG(log() << "Optimizing\n");
+
+    for (auto& m : methods) {
+        _YOMM2_DEBUG(
+            log() << "  "
+            << m.info->name
+            << "\n");
+        auto slot = m.slots[0];
+        if (m.vp.size() == 1) {
+            for (auto cls : m.vp[0]->conforming) {
+                auto pf = m.dispatch_table[cls->mptr[slot].i];
+                _YOMM2_DEBUG(
+                    log() << "    " << cls->info->name
+                    << ".mtbl[" << slot << "] = " << pf << " (function)"
+                    << "\n");
+                cls->mptr[slot].pv = pf;
+            }
+        } else {
+            for (auto cls : m.vp[0]->conforming) {
+                auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
+                _YOMM2_DEBUG(
+                    log() << "    " << cls->info->name
+                    << ".mtbl[" << slot << "] = gv+" << (pw - reg.gv.data())
+                    << "\n");
+                cls->mptr[slot].pw = pw;
+            }
+        }
+    }
 }
 
 std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {

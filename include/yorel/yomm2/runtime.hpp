@@ -31,12 +31,13 @@ struct rt_class {
     std::vector<rt_class*> direct_derived;
     std::unordered_set<rt_class*> conforming; // all the classes that conform to this one,
                                          // = the class itself and all its subclasses
-    std::vector<rt_arg> method_vp;
+    std::vector<rt_arg> vp;
     int next_slot{0};
     int first_used_slot{-1};
     int layer{0};
     int visited{0};
     std::vector<int> mtbl;
+    word* mptr;
 };
 
 struct rt_spec
@@ -56,6 +57,8 @@ struct rt_method {
     std::vector<int> strides;
     std::vector<const void*> dispatch_table;
     group_map first_dim;
+    const word* gv_slots_strides{nullptr}; // slots, strides, fun*
+    const word* gv_dispatch_table{nullptr};
 };
 
 struct runtime {
@@ -95,6 +98,7 @@ struct runtime {
         const bitvec& candidates);
     void find_hash_factor();
     void install_gv();
+    void optimize();
 
     static std::vector<const rt_spec*> best(std::vector<const rt_spec*> candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);

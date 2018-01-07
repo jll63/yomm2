@@ -472,17 +472,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         }
     }
 
-    BOOST_TEST_REQUIRE(role_class->method_vp.size() == 1);
-    BOOST_TEST(role_class->method_vp[0].method == &approve_method);
-    BOOST_TEST(role_class->method_vp[0].param == 0);
+    BOOST_TEST_REQUIRE(role_class->vp.size() == 1);
+    BOOST_TEST(role_class->vp[0].method == &approve_method);
+    BOOST_TEST(role_class->vp[0].param == 0);
 
-    BOOST_TEST_REQUIRE(employee_class->method_vp.size() == 1);
-    BOOST_TEST(employee_class->method_vp[0].method == &pay_method);
-    BOOST_TEST(employee_class->method_vp[0].param == 0);
+    BOOST_TEST_REQUIRE(employee_class->vp.size() == 1);
+    BOOST_TEST(employee_class->vp[0].method == &pay_method);
+    BOOST_TEST(employee_class->vp[0].param == 0);
 
-    BOOST_TEST_REQUIRE(expense_class->method_vp.size() == 1);
-    BOOST_TEST(expense_class->method_vp[0].method == &approve_method);
-    BOOST_TEST(expense_class->method_vp[0].param == 1);
+    BOOST_TEST_REQUIRE(expense_class->vp.size() == 1);
+    BOOST_TEST(expense_class->vp[0].method == &approve_method);
+    BOOST_TEST(expense_class->vp[0].param == 1);
 
     rt.allocate_slots();
 
@@ -619,18 +619,22 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         // pay
-        BOOST_TEST_REQUIRE(registry.gv.size() == 16 + rt.metrics.hash_table_size);
+        BOOST_TEST_REQUIRE(registry.gv.size() ==
+                           rt.metrics.hash_table_size
+                           + 16
+                           + 12);
         auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
-        BOOST_TEST(&*gv_iter == pay_method.info->dispatch);
+        BOOST_TEST(&*gv_iter == pay_method.gv_slots_strides);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
         // no fun* for 1-method
 
         // approve
-        BOOST_TEST(&*gv_iter == approve_method.info->dispatch);
+        BOOST_TEST(&*gv_iter == approve_method.gv_slots_strides);
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
         BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
         // 12 fun*
+        auto approve_dispatch_table = gv_iter;
         BOOST_TEST(
             std::equal(
                 approve_method.dispatch_table.begin(),
@@ -638,8 +642,57 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                 gv_iter,
                 [](const void* pf, word w) { return w.pv == pf; }));
         gv_iter += approve_method.dispatch_table.size();
-    }
 
+        auto opt_iter = gv_iter;
+
+        // role
+        BOOST_TEST(gv_iter++->i == 0); // approve/0
+        // employee
+        BOOST_TEST(gv_iter++->i == 1); // approve/0
+        BOOST_TEST(gv_iter++->i == 0); // pay
+        // executive
+        BOOST_TEST(gv_iter++->i == 2); // approve/0
+        BOOST_TEST(gv_iter++->i == 1); // pay
+        // owner
+        BOOST_TEST(gv_iter++->i == 3); // approve/0
+        // expense
+        BOOST_TEST(gv_iter++->i == 0); // approve/1
+        // public_transport
+        BOOST_TEST(gv_iter++->i == 1); // approve/1
+        // bus
+        BOOST_TEST(gv_iter++->i == 1); // approve/1
+        // metro
+        BOOST_TEST(gv_iter++->i == 1); // approve/1
+        // taxi
+        BOOST_TEST(gv_iter++->i == 2); // approve/1
+        // plane
+        BOOST_TEST(gv_iter++->i == 0); // approve/1
+
+        rt.optimize();
+
+        // role
+        BOOST_TEST(opt_iter++->pw == 0 + approve_dispatch_table); // approve/0
+        // employee
+        BOOST_TEST(opt_iter++->pw == 1 + approve_dispatch_table); // approve/0
+        BOOST_TEST(opt_iter++->pv == pay_employee->info->pf); // pay
+        // executive
+        BOOST_TEST(opt_iter++->pw == 2 + approve_dispatch_table); // approve/0
+        BOOST_TEST(opt_iter++->pv == pay_executive->info->pf); // pay
+        // owner
+        BOOST_TEST(opt_iter++->pw == 3 + approve_dispatch_table); // approve/0
+        // expense
+        BOOST_TEST(opt_iter++->i == 0); // approve/1
+        // public_transport
+        BOOST_TEST(opt_iter++->i == 1); // approve/1
+        // bus
+        BOOST_TEST(opt_iter++->i == 1); // approve/1
+        // metro
+        BOOST_TEST(opt_iter++->i == 1); // approve/1
+        // taxi
+        BOOST_TEST(opt_iter++->i == 2); // approve/1
+        // plane
+        BOOST_TEST(opt_iter++->i == 0); // approve/1
+    }
 }
 }
 
