@@ -222,48 +222,74 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous_call;
     void* not_implemented;
+    const word* gv_slots_strides{nullptr}; // slot 0, slot 1,  stride 1, slot 2, ...
 };
 
 template<typename REG, typename... ARGS>
-struct collect_vp;
+struct for_each_vp;
 
 template<typename REG, typename FIRST, typename... REST>
-struct collect_vp<REG, FIRST, REST...> {
-    static void into(std::vector<const class_info*>& vp) {
-        collect_vp<REG, REST...>::into(vp);
+struct for_each_vp<REG, FIRST, REST...> {
+
+    static void collect_class_info(std::vector<const class_info*>& vp) {
+        for_each_vp<REG, REST...>::collect_class_info(vp);
     }
+
     template<typename SPEC_FIRST, typename... SPEC_REST>
     struct for_spec {
-        static void into(std::vector<const class_info*>& vp) {
-            collect_vp<REG, REST...>::template for_spec<SPEC_REST...>::into(vp);
+        static void collect_class_info(std::vector<const class_info*>& vp) {
+            for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
         }
     };
+
+    static const void* resolve(const word* ssp, typename virtual_traits<FIRST>::type first, REST... rest) {
+        return for_each_vp<REG, REST...>::resolve(ssp, rest...);
+    }
 };
 
 template<typename REG, typename FIRST, typename... REST>
-struct collect_vp<REG, virtual_<FIRST>, REST...> {
-    static void into(std::vector<const class_info*>& vp) {
+struct for_each_vp<REG, virtual_<FIRST>, REST...> {
+
+    static void collect_class_info(std::vector<const class_info*>& vp) {
         vp.push_back(
             &class_info::get<REG, typename virtual_traits<virtual_<FIRST>>::type>());
-        collect_vp<REG, REST...>::into(vp);
+        for_each_vp<REG, REST...>::collect_class_info(vp);
     }
+
     template<typename SPEC_FIRST, typename... SPEC_REST>
     struct for_spec {
-        static void into(std::vector<const class_info*>& vp) {
+        static void collect_class_info(std::vector<const class_info*>& vp) {
             vp.push_back(
                 &class_info::get<REG, typename virtual_traits<virtual_<SPEC_FIRST>>::type>());
-            collect_vp<REG, REST...>::template for_spec<SPEC_REST...>::into(vp);
+            for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
         }
     };
+
+    static const void* resolve(
+        const word* ssp,
+        typename virtual_traits<FIRST>::type first,
+        typename virtual_traits<REST>::type... rest) {
+        return nullptr;
+        // return resolve_next(
+        //     ssp + 1,
+        //     details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pw,
+        //     rest...);
+    }
+
+    static const void* resolve_next(const word* ssp, const word* next, typename virtual_traits<FIRST>::type& first, REST... rest) {
+        return nullptr;
+    }
 };
 
 template<typename REG>
-struct collect_vp<REG> {
-    static void into(std::vector<const class_info*>& vp) {
+struct for_each_vp<REG> {
+
+    static void collect_class_info(std::vector<const class_info*>& vp) {
     }
+
     template<typename...>
     struct for_spec {
-        static void into(std::vector<const class_info*>& vp) {
+        static void collect_class_info(std::vector<const class_info*>& vp) {
         }
     };
 };
@@ -278,7 +304,7 @@ struct register_spec<METHOD, SPEC, void(ARGS...)>
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
         si.pf = (const void*) SPEC::body;
-        METHOD::collect::template for_spec<ARGS...>::into(si.vp);
+        METHOD::for_each_vp::template for_spec<ARGS...>::collect_class_info(si.vp);
         METHOD::info().specs.push_back(&si);
     }
 };
@@ -286,6 +312,7 @@ struct register_spec<METHOD, SPEC, void(ARGS...)>
 template<typename REG, typename ID, typename R, typename... A>
 struct method {
 
+    static method_info* _info;
     static method_info& info();
 
     static R dispatch(typename virtual_traits<A>::type... a) {
@@ -293,24 +320,32 @@ struct method {
         return R();
     }
 
+    using for_each_vp = for_each_vp<REG, A...>;
+
+    static const void* resolve(typename virtual_traits<A>::type... args) {
+        return for_each_vp::resolve(_info->gv_slots_strides, args...);
+    }
+
 #if YOMM2_DEBUG
     static const char* name() { return info().name; }
 #endif
 
-    using collect = collect_vp<REG, A...>;
-
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* name)) {
             _YOMM2_DEBUG(info().name = name);
-            collect::into(info().vp);
+            for_each_vp::collect_class_info(info().vp);
             registry::get<REG>().methods.push_back(&info());
         }
     };
 };
 
 template<typename REG, typename ID, typename R, typename... A>
+method_info* method<REG, ID, R, A...>::_info;
+
+template<typename REG, typename ID, typename R, typename... A>
 method_info& method<REG, ID, R, A...>::info() {
     static method_info info;
+    _info = &info;
     return info;
 }
 

@@ -57,7 +57,6 @@ struct rt_method {
     std::vector<int> strides;
     std::vector<const void*> dispatch_table;
     group_map first_dim;
-    const word* gv_slots_strides{nullptr}; // slots, strides, fun*
     const word* gv_dispatch_table{nullptr};
 };
 

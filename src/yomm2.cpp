@@ -624,7 +624,7 @@ void runtime::install_gv() {
         reg.gv.resize(metrics.hash_table_size);
 
         for (auto& m : methods) {
-            m.gv_slots_strides = reg.gv.data() + reg.gv.size();
+            m.info->gv_slots_strides = reg.gv.data() + reg.gv.size();
             auto slot_iter = m.slots.begin();
             _YOMM2_DEBUG(
                 if (pass)

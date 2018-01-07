@@ -625,12 +625,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                            + 12);
 
         auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
-        BOOST_TEST(&*gv_iter == pay_method.gv_slots_strides);
+        BOOST_TEST(&*gv_iter == pay_method.info->gv_slots_strides);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
         // no fun* for 1-method
 
         // approve
-        BOOST_TEST(&*gv_iter == approve_method.gv_slots_strides);
+        BOOST_TEST(&*gv_iter == approve_method.info->gv_slots_strides);
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
         BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
@@ -705,6 +705,20 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(mptr(registry, &typeid(metro)) == metro_class->mptr);
         BOOST_TEST(mptr(registry, &typeid(taxi)) == taxi_class->mptr);
         BOOST_TEST(mptr(registry, &typeid(jet)) == jet_class->mptr);
+    }
+
+    {
+        const role& r = employee();
+        const expense& exp = jet();
+        using approve_method = decltype(approve(discriminator(), r, exp, 0.));
+            // yorel::yomm2::method<
+            //     rolex::test,
+            // rolex::_yomm2_method_approve,
+            // bool,
+            // yorel::yomm2::virtual_<rolex::role>,
+            // yorel::yomm2::virtual_<rolex::expense>,
+            // double>;
+        BOOST_TEST(approve_method::resolve(r, exp, 0.) == nullptr);
     }
 }
 }
