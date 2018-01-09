@@ -83,21 +83,27 @@ YOMM2_DECLARE_(test, void, times, double, virtual_<const matrix&>);
 YOMM2_DECLARE_(test, void, times, virtual_<const matrix&>, double);
 
 YOMM2_DEFINE(void, times, const matrix&, const matrix&) {
+    std::cout << "matrix * matrix\n";
 } YOMM2_END;
 
 YOMM2_DEFINE(void, times, const diagonal_matrix&, const diagonal_matrix&) {
-} YOMM2_END;
-
-YOMM2_DEFINE(void, times, double a, const diagonal_matrix& m) {
+    std::cout << "diagonal_matrix * diagonal_matrix\n";
 } YOMM2_END;
 
 YOMM2_DEFINE(void, times, double a, const matrix& m) {
+    std::cout << "double * matrix\n";
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, double a, const diagonal_matrix& m) {
+    std::cout << "double * diagonal_matrix\n";
 } YOMM2_END;
 
 YOMM2_DEFINE(void, times, const diagonal_matrix& m, double a) {
+    std::cout << "diagonal_matrix * double\n";
 } YOMM2_END;
 
 YOMM2_DEFINE(void, times, const matrix& m, double a) {
+    std::cout << "matrix * double\n";
 } YOMM2_END;
 
 BOOST_AUTO_TEST_CASE(compilation)
@@ -106,10 +112,11 @@ BOOST_AUTO_TEST_CASE(compilation)
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
     times(dense, dense);
+    times(diag, diag);
+    times(diag, dense);
     times(2, dense);
     times(dense, 2);
-    times(diag, dense);
-    times(diag, diag);
+    times(diag, 2);
 }
 
 BOOST_AUTO_TEST_CASE(registration)
@@ -766,6 +773,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                 ++i;
             }
         }
+
+        BOOST_TEST(pay(a_employee) == 2000);
+        BOOST_TEST(pay(a_executive) == 5000);
     }
 }
 }

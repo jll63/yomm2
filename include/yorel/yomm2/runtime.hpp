@@ -84,6 +84,8 @@ struct runtime {
 
     runtime(registry& reg);
 
+    void update();
+
     void augment_classes();
     void layer_classes();
     void calculate_conforming_classes();

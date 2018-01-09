@@ -60,31 +60,21 @@ std::ostream& operator <<(std::ostream& os, const outseq_t<ITER, FUN>& s) {
 
 #endif
 
-void update_methods(const registry& reg) {
-    // //_YOMM2_DEBUG(std::log() << name() << " += " << name << "\n");
-    // using std::cerr;
+void update_methods(registry& reg) {
+    runtime rt(reg);
+    rt.update();
+}
 
-    // for (auto cls : reg.classes) {
-    //     log() << "class " << cls->name;
-    //     const char* sep = ": ";
-    //     for (auto base : cls->direct_bases) {
-    //         log() << sep << base->name;
-    //         sep = ", ";
-    //     }
-    //     log() << "\n";
-    // }
-
-    // for (auto meth : reg.methods) {
-    //     log() << "method " << meth->name << ":\n";
-    //     log() << "  vp:";
-    //     for (auto param : meth->vp) {
-    //         log() << " " << param->name;
-    //     }
-    //     log() << "\n  specs:\n";
-    //     for (auto spec : meth->specs) {
-    //         log() << "    " << spec->name << "\n";
-    //     }
-    // }
+void runtime::update() {
+    augment_classes();
+    layer_classes();
+    calculate_conforming_classes();
+    augment_methods();
+    allocate_slots();
+    build_dispatch_tables();
+    find_hash_factor();
+    install_gv();
+    optimize();
 }
 
 runtime::runtime(registry& reg) : reg(reg) {

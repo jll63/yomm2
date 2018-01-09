@@ -51,7 +51,7 @@
 
 #define _YOMM2_PLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::virtual_traits<BOOST_PP_TUPLE_ELEM(I, A)>::type  \
+    ::yorel::yomm2::virtual_traits<BOOST_PP_TUPLE_ELEM(I, A)>::argument_type  \
     BOOST_PP_CAT(a, I)
 
 #define _YOMM2_ALIST(N, I, ARGS) \
@@ -425,9 +425,11 @@ struct method {
 
     static method_info& info();
 
-    static R dispatch(typename virtual_traits<A>::type... a) {
-        _YOMM2_DEBUG(std::cerr << "call " << name() << "\n");
-        return R();
+    static R dispatch(typename virtual_traits<A>::argument_type... args) {
+        return reinterpret_cast<R (*)(typename virtual_traits<A>::argument_type...)>(
+            const_cast<void*>(resolve(args...)))(
+            args...
+            );
     }
 
     using for_each_vp = for_each_vp<REG, A...>;
@@ -462,7 +464,7 @@ method_info& method<REG, ID, R, A...>::info() {
     return info;
 }
 
-void update_methods(const registry& reg = registry::global());
+void update_methods(registry& reg = registry::global());
 
 } // namespace yomm2
 } // namespace yorel
