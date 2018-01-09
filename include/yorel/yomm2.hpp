@@ -157,11 +157,13 @@ struct virtual_;
 template<typename T>
 struct virtual_traits {
     using type = T;
+    using argument_type = T;
 };
 
 template<typename T>
 struct virtual_traits< virtual_<T&> > {
     using type = typename std::remove_cv<T>::type;
+    using argument_type = T&;
 };
 
 namespace details {
@@ -222,7 +224,8 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous_call;
     void* not_implemented;
-    const word* gv_slots_strides{nullptr}; // slot 0, slot 1,  stride 1, slot 2, ...
+    const word** slots_strides_p{nullptr};
+
 };
 
 template<typename REG, typename... ARGS>
@@ -241,6 +244,8 @@ struct for_each_vp<REG, FIRST, REST...> {
             for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
         }
     };
+
+    enum { count = for_each_vp<REG, REST...>::count };
 
     static const void* resolve(const word* ssp, typename virtual_traits<FIRST>::type first, REST... rest) {
         return for_each_vp<REG, REST...>::resolve(ssp, rest...);
@@ -265,20 +270,7 @@ struct for_each_vp<REG, virtual_<FIRST>, REST...> {
         }
     };
 
-    static const void* resolve(
-        const word* ssp,
-        typename virtual_traits<FIRST>::type first,
-        typename virtual_traits<REST>::type... rest) {
-        return nullptr;
-        // return resolve_next(
-        //     ssp + 1,
-        //     details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pw,
-        //     rest...);
-    }
-
-    static const void* resolve_next(const word* ssp, const word* next, typename virtual_traits<FIRST>::type& first, REST... rest) {
-        return nullptr;
-    }
+    enum { count = 1 + for_each_vp<REG, REST...>::count };
 };
 
 template<typename REG>
@@ -292,6 +284,123 @@ struct for_each_vp<REG> {
         static void collect_class_info(std::vector<const class_info*>& vp) {
         }
     };
+
+    enum { count = 0 };
+};
+
+template<typename REG, int ARITY, typename... A>
+struct resolver;
+
+template<typename REG, typename FIRST, typename... REST>
+struct resolver<REG, 1, FIRST, REST...>
+{
+    static const void* resolve(
+        const word* ssp,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest) {
+        return resolver<REG, 1, REST...>::resolve(ssp, rest...);
+    }
+};
+
+template<typename REG, typename FIRST, typename... REST>
+struct resolver<REG, 1, virtual_<FIRST>, REST...>
+{
+    static const void* resolve(
+        const word* ssp,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest) {
+        _YOMM2_DEBUG(std::cerr << "  slot = " << ssp->i << " key = " << &typeid(first));
+        auto pf = details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pv;
+        _YOMM2_DEBUG(std::cerr << " pf = " << pf << "\n");
+        return pf;
+    }
+
+    static const void* resolve_next(
+        const word* ssp,
+        const word* dispatch,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest)
+    {
+        _YOMM2_DEBUG(std::cerr << "  key = " << &typeid(first));
+        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        _YOMM2_DEBUG(std::cerr << " mptr = " << mptr);
+        auto slot = ssp++->i;
+        _YOMM2_DEBUG(std::cerr << " slot = " << slot);
+        auto stride = ssp++->i;
+        _YOMM2_DEBUG(std::cerr << " stride = " << stride);
+        dispatch += mptr[slot].i * stride;
+        _YOMM2_DEBUG(std::cerr << " dispatch = " << dispatch);
+        auto pf = dispatch->pv;
+        _YOMM2_DEBUG(std::cerr << " pf = " << pf << "\n");
+        return pf;
+    }
+};
+
+template<typename REG, int ARITY, typename FIRST, typename... REST>
+struct resolver<REG, ARITY, FIRST, REST...>
+{
+    static const void* resolve(
+        const word* ssp,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest) {
+        return resolver<REG, ARITY, REST...>::resolve_first(ssp, rest...);
+    }
+
+    static const void* resolve_next(
+        const word* ssp,
+        const word* dispatch,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest)
+    {
+        return resolver<REG, ARITY, REST...>::resolve_next(ssp, dispatch, rest...);
+    }
+};
+
+template<typename REG, int ARITY, typename FIRST, typename... REST>
+struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
+{
+    static const void* resolve_first(
+        const word* ssp,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest)
+    {
+        _YOMM2_DEBUG(std::cerr << "  key = " << &typeid(first));
+        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        _YOMM2_DEBUG(std::cerr << " mptr = " << mptr);
+        auto slot = ssp++->i;
+        _YOMM2_DEBUG(std::cerr << " slot = " << slot);
+        auto dispatch = mptr[slot].pw;
+        _YOMM2_DEBUG(std::cerr << " dispatch = " << dispatch << "\n");
+        return resolver<REG, ARITY - 1, REST...>::resolve_next(
+            ssp, dispatch, rest...);
+    }
+
+    static const void* resolve_next(
+        const word* ssp,
+        const word* dispatch,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest)
+    {
+        _YOMM2_DEBUG(std::cerr << "  key = " << &typeid(first));
+        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        _YOMM2_DEBUG(std::cerr << " mptr = " << mptr);
+        auto slot = ssp++->i;
+        _YOMM2_DEBUG(std::cerr << " slot = " << slot);
+        auto stride = ssp++->i;
+        _YOMM2_DEBUG(std::cerr << " stride = " << stride);
+        dispatch += mptr[slot].i * stride;
+        _YOMM2_DEBUG(std::cerr << " dispatch = " << dispatch << "\n");
+        return resolver<REG, ARITY - 1, REST...>::resolve_next(
+            ssp, dispatch, rest...);
+    }
+
+    static const void* resolve(
+        const word* ssp,
+        typename virtual_traits<FIRST>::argument_type first,
+        typename virtual_traits<REST>::argument_type... rest)
+    {
+        return resolve_first(ssp, first, rest...);
+    }
 };
 
 template<class METHOD, class SPEC, typename F>
@@ -312,7 +421,8 @@ struct register_spec<METHOD, SPEC, void(ARGS...)>
 template<typename REG, typename ID, typename R, typename... A>
 struct method {
 
-    static method_info* _info;
+    static const word* slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
+
     static method_info& info();
 
     static R dispatch(typename virtual_traits<A>::type... a) {
@@ -322,8 +432,11 @@ struct method {
 
     using for_each_vp = for_each_vp<REG, A...>;
 
-    static const void* resolve(typename virtual_traits<A>::type... args) {
-        return for_each_vp::resolve(_info->gv_slots_strides, args...);
+    enum { arity = for_each_vp::count };
+
+    static const void* resolve(typename virtual_traits<A>::argument_type... args) {
+        _YOMM2_DEBUG(std::cerr << "call " << name() << " slots_strides = " << slots_strides << "\n");
+        return resolver<REG, arity, A...>::resolve(slots_strides, args...);
     }
 
 #if YOMM2_DEBUG
@@ -333,6 +446,7 @@ struct method {
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* name)) {
             _YOMM2_DEBUG(info().name = name);
+            info().slots_strides_p = &slots_strides;
             for_each_vp::collect_class_info(info().vp);
             registry::get<REG>().methods.push_back(&info());
         }
@@ -340,12 +454,11 @@ struct method {
 };
 
 template<typename REG, typename ID, typename R, typename... A>
-method_info* method<REG, ID, R, A...>::_info;
+const word* method<REG, ID, R, A...>::slots_strides;
 
 template<typename REG, typename ID, typename R, typename... A>
 method_info& method<REG, ID, R, A...>::info() {
     static method_info info;
-    _info = &info;
     return info;
 }
 

@@ -148,7 +148,7 @@ struct executive : employee {};
 struct founder : role {};
 
 struct expense {
-    ~expense() {}
+    virtual ~expense() {}
 };
 
 struct public_transport : expense {};
@@ -625,12 +625,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                            + 12);
 
         auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
-        BOOST_TEST(&*gv_iter == pay_method.info->gv_slots_strides);
+        BOOST_TEST(&*gv_iter == *pay_method.info->slots_strides_p);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
         // no fun* for 1-method
 
         // approve
-        BOOST_TEST(&*gv_iter == approve_method.info->gv_slots_strides);
+        BOOST_TEST(&*gv_iter == *approve_method.info->slots_strides_p);
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
         BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
@@ -708,17 +708,64 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     {
-        const role& r = employee();
-        const expense& exp = jet();
-        using approve_method = decltype(approve(discriminator(), r, exp, 0.));
-            // yorel::yomm2::method<
-            //     rolex::test,
-            // rolex::_yomm2_method_approve,
-            // bool,
-            // yorel::yomm2::virtual_<rolex::role>,
-            // yorel::yomm2::virtual_<rolex::expense>,
-            // double>;
-        BOOST_TEST(approve_method::resolve(r, exp, 0.) == nullptr);
+        const role& a_role = role();
+        const employee& a_employee = employee();
+        const employee& a_executive = executive();
+        const role& a_founder = founder();
+
+        const expense& a_expense = expense();
+        const expense& a_public_transport = public_transport();
+        const expense& a_bus = bus();
+        const expense& a_metro = metro();
+        const expense& a_taxi = taxi();
+        const expense& a_jet = jet();
+
+        using pay_method = decltype(pay(discriminator(), employee()));
+        BOOST_TEST(pay_method::arity == 1);
+        BOOST_TEST(pay_method::resolve(a_employee) == pay_employee->info->pf);
+        BOOST_TEST(&typeid(a_executive) == &typeid(executive));
+        BOOST_TEST(pay_method::resolve(a_executive) == pay_executive->info->pf);
+
+        using approve_method = decltype(approve(discriminator(), role(), expense(), 0.));
+        BOOST_TEST(approve_method::arity == 2);
+
+        BOOST_TEST(approve_method::resolve(a_role, a_expense, 0.) == approve_role_expense->info->pf);
+
+        {
+            std::vector<const role*> roles = {
+                &a_role,
+              &a_employee,
+              &a_executive,
+              &a_founder
+            };
+
+            std::vector<const expense*> expenses = {
+                &a_expense,
+              &a_public_transport,
+              &a_bus,
+              &a_metro,
+              &a_taxi,
+              &a_jet
+            };
+
+            int i = 0;
+
+            for (auto r : roles) {
+                int j = 0;
+                for (auto e : expenses) {
+                    BOOST_TEST_INFO("i = " << i << " j = " << j);
+                    auto expected =
+                        typeid(*r) == typeid(founder) ? approve_founder_expense :
+                        typeid(*r) == typeid(executive) ?
+                        (typeid(*e) == typeid(taxi) ? approve_executive_taxi : dynamic_cast<const public_transport*>(e) ? approve_employee_public : approve_role_expense) :
+                        typeid(*r) == typeid(employee) && dynamic_cast<const public_transport*>(e) ? approve_employee_public :
+                        approve_role_expense;
+                    BOOST_TEST(approve_method::resolve(*r, *e, 0.) == expected->info->pf);
+                    ++j;
+                }
+                ++i;
+            }
+        }
     }
 }
 }
