@@ -78,7 +78,6 @@ void runtime::update() {
 }
 
 runtime::runtime(registry& reg) : reg(reg) {
-    _YOMM2_DEBUG(active_log = &discard_log);
 }
 
 void runtime::augment_classes() {
@@ -490,8 +489,10 @@ void runtime::build_dispatch_table(
             auto specs = best(applicable);
 
             if (specs.size() > 1) {
+                _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "ambiguous\n");
                 m.dispatch_table.push_back(m.info->ambiguous_call);
             } else if (specs.empty()) {
+                _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "not implemented\n");
                 m.dispatch_table.push_back(m.info->not_implemented);
             } else {
                 m.dispatch_table.push_back(specs[0]->info->pf);
@@ -710,7 +711,7 @@ std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates
             }
         }
 
-        if (spec) {
+        if (candidate) {
             best.push_back(candidate);
         }
     }
@@ -754,6 +755,9 @@ std::ostream* runtime::log_off() {
     active_log = &discard_log;
     return prev;
 }
+
+std::ostringstream runtime::discard_log;
+std::ostream* runtime::active_log = &discard_log;
 
 #endif
 

@@ -138,7 +138,6 @@ BOOST_AUTO_TEST_CASE(registration)
     BOOST_TEST(registry.methods[2]->specs.size() == 2);
     BOOST_TEST(registry.methods[2]->vp.size() == 1);
 }
-
 }
 
 namespace rolex {
