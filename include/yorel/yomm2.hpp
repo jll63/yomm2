@@ -73,12 +73,19 @@
         BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
                         _YOMM2_PLIST, (__VA_ARGS__)));                        \
     R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                 \
-                             _YOMM2_PLIST, (__VA_ARGS__))) {                  \
-        return ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
-            ::dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),   \
-                                     _YOMM2_ALIST, (__VA_ARGS__))); }
+                         _YOMM2_PLIST, (__VA_ARGS__))) {                      \
+        return reinterpret_cast<R (*)(                                        \
+            BOOST_PP_REPEAT(                                                  \
+                BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                          \
+                _YOMM2_PLIST, (__VA_ARGS__)))>(                               \
+                    ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
+                    ::resolve(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), \
+                                                  _YOMM2_ALIST, (__VA_ARGS__)))) \
+                              (BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__), \
+                                               _YOMM2_ALIST, (__VA_ARGS__))); \
+    }
 
-#define YOMM2_DEFINE(RETURN_T, ID, ...)                                              \
+#define YOMM2_DEFINE(RETURN_T, ID, ...)                                       \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
     template<typename T> struct select_method;                                \
@@ -479,6 +486,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
     register_spec(_YOMM2_DEBUG(const char* name)) {
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
+        // si.pf = (const void*) SPEC::body;
         si.pf = (const void*) wrapper<
             RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
         >::body;
@@ -494,12 +502,12 @@ struct method {
 
     static method_info& info();
 
-    static R dispatch(virtual_arg_t<A>... args) {
-        return reinterpret_cast<R (*)(virtual_arg_t<A>...)>(
-            const_cast<void*>(resolve(args...)))(
-            args...
-            );
-    }
+    // static R dispatch(virtual_arg_t<A>... args) {
+    //     return reinterpret_cast<R (*)(virtual_arg_t<A>...)>(
+    //         const_cast<void*>(resolve(args...)))(
+    //         args...
+    //         );
+    // }
 
     using signature_t = R(A...);
     using for_each_vp_t = for_each_vp<REG, A...>;
@@ -541,3 +549,5 @@ void update_methods(registry& reg = registry::global());
 
 
 #endif
+
+// /usr/bin/g++-6    -I/home/jll/dev/yomm2/include -I/home/jll/dev/yomm2/extern/benchmark/include  -std=c++17 -E /home/jll/dev/yomm2/tests/blackbox.cpp > blackbox.i
