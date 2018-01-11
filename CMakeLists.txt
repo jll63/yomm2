@@ -38,6 +38,7 @@ add_subdirectory (tests)
 
 enable_testing()
 
-add_test (internals tests/internals)
+add_test (whitebox tests/whitebox)
+add_test (blackbox tests/blackbox)
 
 INSTALL (DIRECTORY include/yorel DESTINATION include)

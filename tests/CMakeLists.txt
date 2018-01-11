@@ -4,5 +4,8 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http:#www.boost.org/LICENSE_1_0.txt)
 
-add_executable(internals internals.cpp)
-target_link_libraries (internals yomm2)
+add_executable(whitebox whitebox.cpp)
+target_link_libraries (whitebox yomm2)
+
+add_executable(blackbox blackbox.cpp)
+target_link_libraries (blackbox yomm2)
