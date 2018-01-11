@@ -18,6 +18,7 @@ YOMM2_DECLARE(double, times, virtual_<const matrix&>, virtual_<const matrix&>);
 YOMM2_DECLARE(double, times, double, virtual_<const matrix&>);
 
 YOMM2_DEFINE(double, times, const matrix&, const matrix&) {
+    return 0;
 } YOMM2_END;
 
 YOMM2_DEFINE(double, times, const diagonal_matrix&, const diagonal_matrix&) {

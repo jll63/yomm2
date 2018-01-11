@@ -55,7 +55,7 @@ struct rt_method {
     std::vector<rt_spec> specs;
     std::vector<int> slots;
     std::vector<int> strides;
-    std::vector<const void*> dispatch_table;
+    std::vector<void*> dispatch_table;
     group_map first_dim;
     const word* gv_dispatch_table{nullptr};
 };
@@ -71,7 +71,7 @@ struct runtime {
     std::vector<rt_class*> layered_classes;
     std::vector<rt_method> methods;
     int class_visit{0};
-    std::vector<const void*> hash_table;
+    std::vector<void*> hash_table;
 
     struct metrics_t
     {

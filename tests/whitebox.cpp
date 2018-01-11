@@ -679,7 +679,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                 approve_method.dispatch_table.begin(),
                 approve_method.dispatch_table.end(),
                 gv_iter,
-                [](const void* pf, word w) { return w.pv == pf; }));
+                [](const void* pf, word w) { return w.pf == pf; }));
         gv_iter += approve_method.dispatch_table.size();
 
         auto opt_iter = gv_iter;
@@ -713,10 +713,10 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(opt_iter++->pw == 0 + approve_dispatch_table); // approve/0
         // employee
         BOOST_TEST(opt_iter++->pw == 1 + approve_dispatch_table); // approve/0
-        BOOST_TEST(opt_iter++->pv == pay_employee->info->pf); // pay
+        BOOST_TEST(opt_iter++->pf == pay_employee->info->pf); // pay
         // executive
         BOOST_TEST(opt_iter++->pw == 2 + approve_dispatch_table); // approve/0
-        BOOST_TEST(opt_iter++->pv == pay_executive->info->pf); // pay
+        BOOST_TEST(opt_iter++->pf == pay_executive->info->pf); // pay
         // owner
         BOOST_TEST(opt_iter++->pw == 3 + approve_dispatch_table); // approve/0
         // expense

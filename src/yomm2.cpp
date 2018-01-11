@@ -602,9 +602,9 @@ inline word make_word(int i) {
     return w;
 }
 
-inline word make_word(const void* pv) {
+inline word make_word(void* pf) {
     word w;
-    w.pv = pv;
+    w.pf = pf;
     return w;
 }
 
@@ -639,7 +639,7 @@ void runtime::install_gv() {
                 m.gv_dispatch_table = reg.gv.data() + reg.gv.size();
                 std::transform(
                     m.dispatch_table.begin(), m.dispatch_table.end(),
-                    std::back_inserter(reg.gv), [](const void* pf) {
+                    std::back_inserter(reg.gv), [](void* pf) {
                         return make_word(pf); });
             }
         }
@@ -681,7 +681,7 @@ void runtime::optimize() {
                     log() << "    " << cls->info->name
                     << ".mtbl[" << slot << "] = " << pf << " (function)"
                     << "\n");
-                cls->mptr[slot].pv = pf;
+                cls->mptr[slot].pf = pf;
             }
         } else {
             for (auto cls : m.vp[0]->conforming) {

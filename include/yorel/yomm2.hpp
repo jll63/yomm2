@@ -133,7 +133,7 @@ struct method_info;
 struct class_info;
 
 union word {
-    const void* pv;
+    void* pf;
     const word* pw;
     int i;
 };
@@ -251,7 +251,7 @@ struct init_class_info {
 struct spec_info {
     _YOMM2_DEBUG(const char* name);
     std::vector<const class_info*> vp;
-    const void* pf;
+    void* pf;
 };
 
 struct method_info {
@@ -293,7 +293,7 @@ struct for_each_vp<REG, FIRST, REST...> {
 
     enum { count = for_each_vp<REG, REST...>::count };
 
-    static const void* resolve(const word* ssp, virtual_base_t<FIRST> first, REST... rest) {
+    static void* resolve(const word* ssp, virtual_base_t<FIRST> first, REST... rest) {
         return for_each_vp<REG, REST...>::resolve(ssp, rest...);
     }
 };
@@ -340,7 +340,7 @@ struct resolver;
 template<typename REG, typename FIRST, typename... REST>
 struct resolver<REG, 1, FIRST, REST...>
 {
-    static const void* resolve(
+    static void* resolve(
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
@@ -351,17 +351,17 @@ struct resolver<REG, 1, FIRST, REST...>
 template<typename REG, typename FIRST, typename... REST>
 struct resolver<REG, 1, virtual_<FIRST>, REST...>
 {
-    static const void* resolve(
+    static void* resolve(
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
         _YOMM2_DEBUG(details::log() << "  slot = " << ssp->i << " key = " << &typeid(first));
-        auto pf = details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pv;
+        auto pf = details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pf;
         _YOMM2_DEBUG(details::log() << " pf = " << pf << "\n");
         return pf;
     }
 
-    static const void* resolve_next(
+    static void* resolve_next(
         const word* ssp,
         const word* dispatch,
         virtual_arg_t<FIRST> first,
@@ -376,7 +376,7 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         _YOMM2_DEBUG(details::log() << " stride = " << stride);
         dispatch += mptr[slot].i * stride;
         _YOMM2_DEBUG(details::log() << " dispatch = " << dispatch);
-        auto pf = dispatch->pv;
+        auto pf = dispatch->pf;
         _YOMM2_DEBUG(details::log() << " pf = " << pf << "\n");
         return pf;
     }
@@ -385,14 +385,14 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
 template<typename REG, int ARITY, typename FIRST, typename... REST>
 struct resolver<REG, ARITY, FIRST, REST...>
 {
-    static const void* resolve(
+    static void* resolve(
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
         return resolver<REG, ARITY, REST...>::resolve_first(ssp, rest...);
     }
 
-    static const void* resolve_next(
+    static void* resolve_next(
         const word* ssp,
         const word* dispatch,
         virtual_arg_t<FIRST> first,
@@ -405,7 +405,7 @@ struct resolver<REG, ARITY, FIRST, REST...>
 template<typename REG, int ARITY, typename FIRST, typename... REST>
 struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
 {
-    static const void* resolve_first(
+    static void* resolve_first(
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
@@ -421,7 +421,7 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
             ssp, dispatch, rest...);
     }
 
-    static const void* resolve_next(
+    static void* resolve_next(
         const word* ssp,
         const word* dispatch,
         virtual_arg_t<FIRST> first,
@@ -440,7 +440,7 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
             ssp, dispatch, rest...);
     }
 
-    static const void* resolve(
+    static void* resolve(
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
@@ -487,7 +487,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
         // si.pf = (const void*) SPEC::body;
-        si.pf = (const void*) wrapper<
+        si.pf = (void*) wrapper<
             RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
         >::body;
         METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
@@ -514,7 +514,7 @@ struct method {
 
     enum { arity = for_each_vp_t::count };
 
-    static const void* resolve(virtual_arg_t<A>... args) {
+    static void* resolve(virtual_arg_t<A>... args) {
         _YOMM2_DEBUG(details::log() << "call " << name() << " slots_strides = " << slots_strides << "\n");
         return resolver<REG, arity, A...>::resolve(slots_strides, args...);
     }
