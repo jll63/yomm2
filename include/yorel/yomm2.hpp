@@ -189,6 +189,12 @@ struct virtual_traits< virtual_<T&> > {
     }
 };
 
+template<typename T>
+using virtual_traits_type = typename virtual_traits<T>::type;
+
+template<typename T>
+using virtual_traits_argument_type = typename virtual_traits<T>::argument_type;
+
 namespace details {
 
 struct discriminator {};
@@ -281,7 +287,7 @@ struct for_each_vp<REG, FIRST, REST...> {
 
     enum { count = for_each_vp<REG, REST...>::count };
 
-    static const void* resolve(const word* ssp, typename virtual_traits<FIRST>::type first, REST... rest) {
+    static const void* resolve(const word* ssp, virtual_traits_type<FIRST> first, REST... rest) {
         return for_each_vp<REG, REST...>::resolve(ssp, rest...);
     }
 };
@@ -291,7 +297,7 @@ struct for_each_vp<REG, virtual_<FIRST>, REST...> {
 
     static void collect_class_info(std::vector<const class_info*>& vp) {
         vp.push_back(
-            &class_info::get<REG, typename virtual_traits<virtual_<FIRST>>::type>());
+            &class_info::get<REG, virtual_traits_type<virtual_<FIRST>>>());
         for_each_vp<REG, REST...>::collect_class_info(vp);
     }
 
@@ -299,7 +305,7 @@ struct for_each_vp<REG, virtual_<FIRST>, REST...> {
     struct for_spec {
         static void collect_class_info(std::vector<const class_info*>& vp) {
             vp.push_back(
-                &class_info::get<REG, typename virtual_traits<virtual_<SPEC_FIRST>>::type>());
+                &class_info::get<REG, virtual_traits_type<virtual_<SPEC_FIRST>>>());
             for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
         }
     };
@@ -330,8 +336,8 @@ struct resolver<REG, 1, FIRST, REST...>
 {
     static const void* resolve(
         const word* ssp,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest) {
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest) {
         return resolver<REG, 1, REST...>::resolve(ssp, rest...);
     }
 };
@@ -341,8 +347,8 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
 {
     static const void* resolve(
         const word* ssp,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest) {
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest) {
         _YOMM2_DEBUG(details::log() << "  slot = " << ssp->i << " key = " << &typeid(first));
         auto pf = details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pv;
         _YOMM2_DEBUG(details::log() << " pf = " << pf << "\n");
@@ -352,8 +358,8 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
     static const void* resolve_next(
         const word* ssp,
         const word* dispatch,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest)
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest)
     {
         _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
         auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
@@ -375,16 +381,16 @@ struct resolver<REG, ARITY, FIRST, REST...>
 {
     static const void* resolve(
         const word* ssp,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest) {
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest) {
         return resolver<REG, ARITY, REST...>::resolve_first(ssp, rest...);
     }
 
     static const void* resolve_next(
         const word* ssp,
         const word* dispatch,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest)
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest)
     {
         return resolver<REG, ARITY, REST...>::resolve_next(ssp, dispatch, rest...);
     }
@@ -395,8 +401,8 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
 {
     static const void* resolve_first(
         const word* ssp,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest)
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest)
     {
         _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
         auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
@@ -412,8 +418,8 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
     static const void* resolve_next(
         const word* ssp,
         const word* dispatch,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest)
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest)
     {
         _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
         auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
@@ -430,8 +436,8 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
 
     static const void* resolve(
         const word* ssp,
-        typename virtual_traits<FIRST>::argument_type first,
-        typename virtual_traits<REST>::argument_type... rest)
+        virtual_traits_argument_type<FIRST> first,
+        virtual_traits_argument_type<REST>... rest)
     {
         return resolve_first(ssp, first, rest...);
     }
@@ -447,7 +453,7 @@ struct register_spec<METHOD, SPEC, void(ARGS...)>
         static spec_info si;
         _YOMM2_DEBUG(si.name = name);
         si.pf = (const void*) SPEC::body;
-        METHOD::for_each_vp::template for_spec<ARGS...>::collect_class_info(si.vp);
+        METHOD::for_each_vp_t::template for_spec<ARGS...>::collect_class_info(si.vp);
         METHOD::info().specs.push_back(&si);
     }
 };
@@ -462,15 +468,13 @@ template<
     typename... SPEC_PARAM
     >
 struct wrapper<BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...), BASE_RETURN(SPEC_PARAM...)> {
-    static BASE_RETURN body(typename virtual_traits<BASE_PARAM>::argument_type... arg) {
+    static BASE_RETURN body(virtual_traits_argument_type<BASE_PARAM>... arg) {
     return FUNCTION::body(
-        // virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
-        //     arg, dynamic_cast_())...);
         virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
             arg,
             typename select_cast<
-                typename virtual_traits<BASE_PARAM>::type,
-                typename virtual_traits<SPEC_PARAM>::type>::type())...);
+                virtual_traits_type<BASE_PARAM>,
+                virtual_traits_type<SPEC_PARAM>>::type())...);
   }
 };
 
@@ -481,18 +485,18 @@ struct method {
 
     static method_info& info();
 
-    static R dispatch(typename virtual_traits<A>::argument_type... args) {
-        return reinterpret_cast<R (*)(typename virtual_traits<A>::argument_type...)>(
+    static R dispatch(virtual_traits_argument_type<A>... args) {
+        return reinterpret_cast<R (*)(virtual_traits_argument_type<A>...)>(
             const_cast<void*>(resolve(args...)))(
             args...
             );
     }
 
-    using for_each_vp = for_each_vp<REG, A...>;
+    using for_each_vp_t = for_each_vp<REG, A...>;
 
-    enum { arity = for_each_vp::count };
+    enum { arity = for_each_vp_t::count };
 
-    static const void* resolve(typename virtual_traits<A>::argument_type... args) {
+    static const void* resolve(virtual_traits_argument_type<A>... args) {
         _YOMM2_DEBUG(details::log() << "call " << name() << " slots_strides = " << slots_strides << "\n");
         return resolver<REG, arity, A...>::resolve(slots_strides, args...);
     }
@@ -505,7 +509,7 @@ struct method {
         init_method(_YOMM2_DEBUG(const char* name)) {
             _YOMM2_DEBUG(info().name = name);
             info().slots_strides_p = &slots_strides;
-            for_each_vp::collect_class_info(info().vp);
+            for_each_vp_t::collect_class_info(info().vp);
             registry::get<REG>().methods.push_back(&info());
         }
     };
