@@ -111,12 +111,12 @@ BOOST_AUTO_TEST_CASE(compilation)
     update_methods(registry);
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
-    // times(dense, dense);
-    // times(diag, diag);
-    // times(diag, dense);
-    // times(2, dense);
-    // times(dense, 2);
-    // times(diag, 2);
+    times(dense, dense);
+    times(diag, diag);
+    times(diag, dense);
+    times(2, dense);
+    times(dense, 2);
+    times(diag, 2);
 }
 
 BOOST_AUTO_TEST_CASE(registration)
@@ -165,18 +165,30 @@ struct get_this_mammal {
     }
 };
 
+struct get_this_carnivore {
+    static const void* body(const Carnivore& obj) {
+        return &obj;
+    }
+};
+
+struct get_this_dog {
+    static const void* body(const Dog& obj) {
+        return &obj;
+    }
+};
+
 BOOST_AUTO_TEST_CASE(casts) {
     static_assert(
-        is_same< select_cast<Animal, Mammal>::type, dynamic_cast_ >::value,
+        is_same< select_cast_t<Animal, Mammal>, dynamic_cast_ >::value,
         "use dynamic_cast");
     static_assert(
-        is_same< select_cast<Animal, Carnivore>::type, dynamic_cast_ >::value,
+        is_same< select_cast_t<Animal, Carnivore>, dynamic_cast_ >::value,
         "use dynamic_cast");
     static_assert(
-        is_same< select_cast<Mammal, Dog>::type, static_cast_ >::value,
+        is_same< select_cast_t<Mammal, Dog>, static_cast_ >::value,
         "use dynamic_cast");
     static_assert(
-        is_same< select_cast<Carnivore, Dog>::type, static_cast_ >::value,
+        is_same< select_cast_t<Carnivore, Dog>, static_cast_ >::value,
         "use dynamic_cast");
 
     Dog dog;
@@ -185,31 +197,48 @@ BOOST_AUTO_TEST_CASE(casts) {
     const Carnivore& carnivore = dog;
     BOOST_TEST(
         (&virtual_traits<virtual_<const Animal&>>::cast<const Mammal&>(
-            animal, select_cast<Animal, Mammal>::type()).m) == &dog.m);
+            animal, select_cast_t<Animal, Mammal>()).m) == &dog.m);
     BOOST_TEST(
         (&virtual_traits<virtual_<const Animal&>>::cast<const Carnivore&>(
-            animal, select_cast<Animal, Mammal>::type()).c) == &dog.c);
+            animal, select_cast_t<Animal, Mammal>()).c) == &dog.c);
     BOOST_TEST(
         (&virtual_traits<virtual_<const Animal&>>::cast<const Mammal&>(
-            animal, select_cast<Animal, Mammal>::type()).m) == &dog.m);
+            animal, select_cast_t<Animal, Mammal>()).m) == &dog.m);
     BOOST_TEST(
         (&virtual_traits<virtual_<const Animal&>>::cast<const Dog&>(
-            animal, select_cast<Animal, Mammal>::type()).d) == &dog.d);
+            animal, select_cast_t<Animal, Mammal>()).d) == &dog.d);
     BOOST_TEST(
         (&virtual_traits<virtual_<const Mammal&>>::cast<const Dog&>(
-            mammal, select_cast<Mammal, Dog>::type()).d) == &dog.d);
+            mammal, select_cast_t<Mammal, Dog>()).d) == &dog.d);
     BOOST_TEST(
         (&virtual_traits<virtual_<const Carnivore&>>::cast<const Dog&>(
-            carnivore, select_cast<Carnivore, Dog>::type()).c) == &dog.c);
-    using key = const void*;
-    using virtual_animal_t = virtual_traits< virtual_<const Animal&> >::type;
+            carnivore, select_cast_t<Carnivore, Dog>()).c) == &dog.c);
+
+    using voidp = const void*;
+    using virtual_animal_t = virtual_base_t< virtual_<const Animal&> >;
     static_assert(std::is_same<virtual_animal_t, Animal>::value, "animal");
-    using virtual_mammal_t = virtual_traits<const Mammal&>::type;
+    using virtual_mammal_t = virtual_base_t<const Mammal&>;
     static_assert(std::is_same<virtual_mammal_t, Mammal>::value, "mammal");
+
     BOOST_TEST(
-        (wrapper<key, get_this_mammal,
-         key(virtual_<const Animal&>), key(const Mammal&)>::
+        (wrapper<voidp, get_this_mammal,
+         voidp(virtual_<const Animal&>), voidp(const Mammal&)>::
          body(animal)) == &mammal);
+
+    BOOST_TEST(
+        (wrapper<voidp, get_this_carnivore,
+         voidp(virtual_<const Animal&>), voidp(const Carnivore&)>::
+         body(animal)) == &carnivore);
+
+    BOOST_TEST(
+        (wrapper<voidp, get_this_carnivore,
+         voidp(virtual_<const Animal&>), voidp(const Carnivore&)>::
+         body(animal)) == &carnivore);
+
+    BOOST_TEST(
+        (wrapper<voidp, get_this_dog,
+         voidp(virtual_<const Animal&>), voidp(const Dog&)>::
+         body(animal)) == &dog);
 }
 
 
