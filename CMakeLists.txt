@@ -18,6 +18,9 @@ set (YOMM2_VERSION_MINOR 0)
 include_directories ("${YOMM2_SOURCE_DIR}/include")
 link_directories ("${YOMM2_BINARY_DIR}/src")
 
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DYOMM2_DEBUG=1")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
@@ -33,6 +36,12 @@ endif()
 include(CTest)
 
 add_subdirectory (src)
+
+set(BENCHMARK_ENABLE_TESTING OFF)
+add_subdirectory(extern/benchmark)
+include_directories(extern/benchmark/include)
+set_target_properties(benchmark PROPERTIES FOLDER Extern)
+
 add_subdirectory (tests)
 #add_subdirectory (examples)
 

@@ -15,6 +15,9 @@ using namespace yomm2;
 using namespace details;
 
 std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
+#ifdef NDEBUG
+    return "n/a";
+#else
     std::ostringstream os;
     os << "{ ";
     const char* sep = "";
@@ -24,21 +27,23 @@ std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
     }
     os << " }";
     return os.str();
+#endif
 }
 
 std::string to_string(const std::unordered_set<rt_class*>& classes) {
+#ifdef NDEBUG
+    return "n/a";
+#else
     std::vector<rt_class*> vec(classes.begin(), classes.end());
     std::sort(vec.begin(), vec.end()); // sort by address = good
-    // std::sort(
-    //     vec.begin(), vec.end(),
-    //     [](rt_class* a, rt_class* b) {
-    //         std::cerr << a->info->name << " <=> " << b->info->name << "\n";
-    //         return strcmp(a->info->name, b->info->name) < 0;
-    //     });
     return to_string(vec);
+#endif
 }
 
 std::string to_string(const std::vector<const class_info*>& classes) {
+#ifdef NDEBUG
+    return "n/a";
+#else
     std::ostringstream os;
     os << "{ ";
     const char* sep = "";
@@ -48,6 +53,7 @@ std::string to_string(const std::vector<const class_info*>& classes) {
     }
     os << " }";
     return os.str();
+#endif
 }
 
 template<typename T>

@@ -33,14 +33,10 @@
 
 #if YOMM2_DEBUG
 
+#pragma(message, "Trace is enabled.")
+
 #define _YOMM2_DEBUG(X) X
 #define _YOMM2_COMMA_DEBUG(X) , X
-
-#define _YOMM2_INIT_METHOD(ID, R, ...)                                   \
-    namespace {                                                               \
-    namespace _YOMM2_NS {                                                     \
-    ::yorel::yomm2::method<_YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_method  \
-    init(#ID "(" #__VA_ARGS__ ")"); } }                                       \
 
 #include <iostream>
 #include <iterator>
@@ -48,7 +44,6 @@
 #else
 #define _YOMM2_DEBUG(ST)
 #define _YOMM2_COMMA_DEBUG(X)
-#define _YOMM2_INIT_METHOD(ID, R, ...)
 #endif
 
 #define _YOMM2_NS BOOST_PP_CAT(_YOMM2_NS_, __COUNTER__)
@@ -72,7 +67,7 @@
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
     ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_method \
-    init(_YOMM2_DEBUG(#ID "(" #__VA_ARGS__ ")")); } }         \
+      init _YOMM2_DEBUG( = #ID "(" #__VA_ARGS__ ")" ); } }                    \
     ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> ID( \
         ::yorel::yomm2::details::discriminator,                               \
         BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
@@ -101,7 +96,7 @@
 #define YOMM2_END                                                             \
     };                                                                        \
     ::yorel::yomm2::register_spec<_YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
-    init(_YOMM2_DEBUG(_YOMM2_NAME));                                   \
+    init _YOMM2_DEBUG( = _YOMM2_NAME  );                                   \
     } }
 
 #define _YOMM2_CLASS_NAME(CLASS, ...) \
@@ -112,7 +107,7 @@
     namespace _YOMM2_NS {                                                     \
     ::yorel::yomm2::                                                          \
     init_class_info<REG _YOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)) \
-                    > init(_YOMM2_CLASS_NAME(__VA_ARGS__)); } }
+        > init _YOMM2_DEBUG( { _YOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }
 
 #define YOMM2_CLASS(...)                                               \
     YOMM2_CLASS_(::yorel::yomm2::registry::global_, __VA_ARGS__)

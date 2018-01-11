@@ -96,9 +96,9 @@ void runtime::augment_classes() {
                 if (!base) {
                     throw std::runtime_error(
                         std::string("yomm2: derived class ")
-                        + rt_class.info->name
+                        _YOMM2_DEBUG(+ rt_class.info->name)
                         + " registered before its base "
-                        + ci->name);
+                        _YOMM2_DEBUG(+ ci->name));
                 }
                 return base;
             });
@@ -422,6 +422,7 @@ void runtime::build_dispatch_tables() {
                     cls->mtbl[m.slots[dim]] = group_num;
                 }
 #if YOMM2_DEBUG
+                {
                 auto mask = group_pair.first;
                 log()
                     << indent(2)
@@ -430,6 +431,7 @@ void runtime::build_dispatch_tables() {
                         group.begin(), group.end(),
                         [](const rt_class* c) { return c->info->name; })
                     << "\n";
+                }
 #endif
                 ++group_num;
             }
