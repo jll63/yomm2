@@ -103,12 +103,6 @@ struct runtime {
 
     static std::vector<const rt_spec*> best(std::vector<const rt_spec*> candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
-
-    _YOMM2_DEBUG(static std::ostream& log());
-    _YOMM2_DEBUG(static std::ostream* log_on(std::ostream* os));
-    _YOMM2_DEBUG(static std::ostream* log_off());
-    _YOMM2_DEBUG(static std::ostringstream discard_log);
-    _YOMM2_DEBUG(static std::ostream* active_log);
 };
 
 } // namespace yomm2

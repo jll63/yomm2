@@ -740,25 +740,27 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
 
 #if YOMM2_DEBUG
 
-std::ostream& runtime::log() {
+std::ostringstream discard_log;
+std::ostream* active_log = &discard_log;
+
+namespace details {
+std::ostream& log() {
     return *active_log;
 }
 
-std::ostream* runtime::log_on(std::ostream* os) {
+std::ostream* log_on(std::ostream* os) {
     auto prev = active_log;
     active_log = os;
     return prev;
 }
 
-std::ostream* runtime::log_off() {
+std::ostream* log_off() {
     auto prev = active_log;
     active_log = &discard_log;
     return prev;
 }
 
-std::ostringstream runtime::discard_log;
-std::ostream* runtime::active_log = &discard_log;
-
+} // namespace details
 #endif
 
 } // namespace yomm2
