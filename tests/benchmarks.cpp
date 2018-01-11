@@ -26,11 +26,11 @@ YOMM2_DEFINE(double, times, const diagonal_matrix&, const diagonal_matrix&) {
 } YOMM2_END;
 
 YOMM2_DEFINE(double, times, double a, const matrix& m) {
-    return a * a;
+    return 0;
 } YOMM2_END;
 
 YOMM2_DEFINE(double, times, double a, const diagonal_matrix& m) {
-    return a * a;
+    return 0;
 } YOMM2_END;
 
 void CallVirtualFunction(benchmark::State& state) {
