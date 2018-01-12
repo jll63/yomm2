@@ -38,3 +38,13 @@ double diagonal_matrix::times(const matrix& other) const {
 double diagonal_matrix::times2(const diagonal_matrix& other) const {
     return 2;
 }
+
+// -----------------------------------------------------------------------------
+
+double call_virtual_function(double s, const matrix& m) {
+    return m.times(s);
+}
+
+double call_uni_method(double s, const matrix& m){
+    return times(s, m);
+}
