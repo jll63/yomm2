@@ -62,8 +62,8 @@ struct rt_method {
 
 struct runtime {
 
-    // input & output
-    registry& reg;
+    const registry& reg;
+    dispatch_data& dd;
 
     // work
     std::unordered_map<const class_info*, rt_class*> class_map;
@@ -71,7 +71,6 @@ struct runtime {
     std::vector<rt_class*> layered_classes;
     std::vector<rt_method> methods;
     int class_visit{0};
-    std::vector<void*> hash_table;
 
     struct metrics_t
     {
@@ -82,7 +81,7 @@ struct runtime {
 
     metrics_t metrics;
 
-    runtime(registry& reg);
+    runtime(const registry& reg, struct dispatch_data& dd);
 
     void update();
 

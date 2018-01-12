@@ -60,7 +60,7 @@
     BOOST_PP_CAT(_yomm2_method_, ID)
 
 #define YOMM2_DECLARE(R, ID, ...) \
-    YOMM2_DECLARE_(::yorel::yomm2::registry::global_, R, ID, __VA_ARGS__)
+    YOMM2_DECLARE_(void, R, ID, __VA_ARGS__)
 
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ...)                                   \
     struct _YOMM2_DECLARE_KEY(ID);                                            \
@@ -110,7 +110,7 @@
         > init _YOMM2_DEBUG( { _YOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }
 
 #define YOMM2_CLASS(...)                                               \
-    YOMM2_CLASS_(::yorel::yomm2::registry::global_, __VA_ARGS__)
+    YOMM2_CLASS_(void, __VA_ARGS__)
 
 #define _YOMM2_CLIST(N, I, A) \
     , BOOST_PP_TUPLE_ELEM(I, A)
@@ -134,22 +134,24 @@ union word {
 struct registry {
     std::vector<const class_info*> classes;
     std::vector<method_info*> methods;
-    std::uintptr_t hash_mult;
-    std::size_t hash_shift;
-
-    // global vector:
-    std::vector<word> gv;
-
     template<typename T> static registry& get();
-
-    struct global_;
-    static registry& global() { return get<global_>(); }
 };
 
 template<typename T> registry& registry::get() {
     static registry r;
     return r;
 }
+
+struct dispatch_data {
+    // global vector:
+    std::vector<word> gv;
+    std::uintptr_t hash_mult;
+    std::size_t hash_shift;
+    template<typename T> static dispatch_data instance;
+};
+
+template<typename T>
+dispatch_data dispatch_data::instance;
 
 template<typename T>
 struct virtual_;
@@ -195,14 +197,14 @@ namespace details {
 
 struct discriminator {};
 
-inline std::size_t hash(const registry& reg, const void* p) {
+inline std::size_t hash(const dispatch_data& t, const void* p) {
     return static_cast<std::size_t>(
-        (reg.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
-        >> reg.hash_shift);
+        (t.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
+        >> t.hash_shift);
 }
 
-inline const word* mptr(const registry& reg, const std::type_info* ti) {
-    return reg.gv[hash(reg, ti)].pw;
+inline const word* mptr(const dispatch_data& t, const std::type_info* ti) {
+    return t.gv[hash(t, ti)].pw;
 }
 
 _YOMM2_DEBUG(std::ostream& log());
@@ -349,7 +351,7 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
         _YOMM2_DEBUG(details::log() << "  slot = " << ssp->i << " key = " << &typeid(first));
-        auto pf = details::mptr(registry::get<REG>(), &typeid(first))[ssp->i].pf;
+        auto pf = details::mptr(dispatch_data::instance<REG>, &typeid(first))[ssp->i].pf;
         _YOMM2_DEBUG(details::log() << " pf = " << pf << "\n");
         return pf;
     }
@@ -361,7 +363,7 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         virtual_arg_t<REST>... rest)
     {
         _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
-        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        auto mptr = details::mptr(dispatch_data::instance<REG>, &typeid(first));
         _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(details::log() << " slot = " << slot);
@@ -404,7 +406,7 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<REST>... rest)
     {
         _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
-        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        auto mptr = details::mptr(dispatch_data::instance<REG>, &typeid(first));
         _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(details::log() << " slot = " << slot);
@@ -535,7 +537,8 @@ method_info& method<REG, ID, R, A...>::info() {
     return info;
 }
 
-void update_methods(registry& reg = registry::global());
+void update_methods();
+void update_methods(const registry& reg, dispatch_data& dd);
 
 } // namespace yomm2
 } // namespace yorel

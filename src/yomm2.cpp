@@ -60,8 +60,12 @@ std::ostream& operator <<(std::ostream& os, const outseq_t<ITER, FUN>& s) {
 
 #endif
 
-void update_methods(registry& reg) {
-    runtime rt(reg);
+void update_methods() {
+    update_methods(registry::get<void>(), dispatch_data::instance<void>);
+}
+
+void update_methods(const registry& reg, dispatch_data& ht) {
+    runtime rt(reg, ht);
     rt.update();
 }
 
@@ -77,7 +81,7 @@ void runtime::update() {
     optimize();
 }
 
-runtime::runtime(registry& reg) : reg(reg) {
+runtime::runtime(const registry& reg, struct dispatch_data& dd) : reg(reg), dd(dd) {
 }
 
 void runtime::augment_classes() {
@@ -542,9 +546,9 @@ void runtime::find_hash_factor() {
             ++M;
         }
 
-        reg.hash_shift = 64 - M;
+        dd.hash_shift = 64 - M;
         auto hash_size = 1 << M;
-        hash_table.resize(hash_size);
+        dd.gv.resize(hash_size);
 
         _YOMM2_DEBUG(
             log() << indent(1) << "trying with M = " << M
@@ -558,10 +562,10 @@ void runtime::find_hash_factor() {
             ++attempts;
             ++total_attempts;
             found = true;
-            reg.hash_mult = uniform_dist(rnd) | 1;
+            dd.hash_mult = uniform_dist(rnd) | 1;
 
             for (auto key : keys) {
-                auto h = hash(reg, key);
+                auto h = hash(dd, key);
                 if (buckets[h]++) {
                     found = false;
                     break;
@@ -577,7 +581,7 @@ void runtime::find_hash_factor() {
 
         if (found) {
             _YOMM2_DEBUG(
-                log() << indent(1) << "found " << reg.hash_mult
+                log() << indent(1) << "found " << dd.hash_mult
                 << " after " << total_attempts << " attempts and "
                 << metrics.hash_search_time.count() * 1000 << " msecs\n");
             return;
@@ -614,32 +618,32 @@ void runtime::install_gv() {
     _YOMM2_DEBUG(log() << "   0 hash table\n");
 
     for (int pass = 0; pass != 2; ++pass) {
-        reg.gv.resize(metrics.hash_table_size);
+        dd.gv.resize(metrics.hash_table_size);
 
         for (auto& m : methods) {
-            *m.info->slots_strides_p = reg.gv.data() + reg.gv.size();
+            *m.info->slots_strides_p = dd.gv.data() + dd.gv.size();
             auto slot_iter = m.slots.begin();
             _YOMM2_DEBUG(
                 if (pass)
-                    log() << std::setw(4) << reg.gv.size()
+                    log() << std::setw(4) << dd.gv.size()
                           << ' ' << m.info->name << " slots and strides\n");
             auto stride_iter = m.strides.begin();
-            reg.gv.emplace_back(make_word(*slot_iter++));
+            dd.gv.emplace_back(make_word(*slot_iter++));
 
             while (slot_iter != m.slots.end()) {
-                reg.gv.emplace_back(make_word(*slot_iter++));
-                reg.gv.emplace_back(make_word(*stride_iter++));
+                dd.gv.emplace_back(make_word(*slot_iter++));
+                dd.gv.emplace_back(make_word(*stride_iter++));
             }
 
             if (m.info->vp.size() > 1) {
                 _YOMM2_DEBUG(
                     if (pass)
-                        log() << std::setw(4) << reg.gv.size()
+                        log() << std::setw(4) << dd.gv.size()
                               << ' ' << m.info->name << " dispatch table\n");
-                m.gv_dispatch_table = reg.gv.data() + reg.gv.size();
+                m.gv_dispatch_table = dd.gv.data() + dd.gv.size();
                 std::transform(
                     m.dispatch_table.begin(), m.dispatch_table.end(),
-                    std::back_inserter(reg.gv), [](void* pf) {
+                    std::back_inserter(dd.gv), [](void* pf) {
                         return make_word(pf); });
             }
         }
@@ -647,22 +651,22 @@ void runtime::install_gv() {
         for (auto& cls : classes) {
             _YOMM2_DEBUG(
                 if (pass)
-                    log() << std::setw(4) << reg.gv.size()
+                    log() << std::setw(4) << dd.gv.size()
                           << " mtbl for " << cls.info->name << "\n");
-            cls.mptr = reg.gv.data() + reg.gv.size();
+            cls.mptr = dd.gv.data() + dd.gv.size();
             std::transform(
                 cls.mtbl.begin(), cls.mtbl.end(),
-                std::back_inserter(reg.gv), [](int i) {
+                std::back_inserter(dd.gv), [](int i) {
                     return make_word(i); });
 
             for (auto tid : cls.info->ti_ptrs) {
-                reg.gv[hash(reg, tid)].pw = cls.mptr;
+                dd.gv[hash(dd, tid)].pw = cls.mptr;
 
             }
         }
     }
 
-    _YOMM2_DEBUG(log() << std::setw(4) << reg.gv.size() << " end\n");
+    _YOMM2_DEBUG(log() << std::setw(4) << dd.gv.size() << " end\n");
 }
 
 void runtime::optimize() {
@@ -688,7 +692,7 @@ void runtime::optimize() {
                 auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
                 _YOMM2_DEBUG(
                     log() << "    " << cls->info->name
-                    << ".mtbl[" << slot << "] = gv+" << (pw - reg.gv.data())
+                    << ".mtbl[" << slot << "] = gv+" << (pw - dd.gv.data())
                     << "\n");
                 cls->mptr[slot].pw = pw;
             }

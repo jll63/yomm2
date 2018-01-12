@@ -175,7 +175,9 @@ BOOST_AUTO_TEST_CASE(casts) {
 namespace rolex {
 
 struct test;
+
 auto& registry = yomm2::registry::get<test>();
+auto& dd = yomm2::dispatch_data::instance<test>;
 
 struct role {
     virtual ~role() {}
@@ -320,7 +322,7 @@ BOOST_AUTO_TEST_CASE(registration) {
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
 
-    runtime rt(registry);
+    runtime rt(registry, dd);
 
     //rt.log_on(&std::cerr);
 
@@ -657,12 +659,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         // pay
-        BOOST_TEST_REQUIRE(registry.gv.size() ==
+        BOOST_TEST_REQUIRE(dd.gv.size() ==
                            rt.metrics.hash_table_size
                            + 16
                            + 12);
 
-        auto gv_iter = registry.gv.data() + rt.metrics.hash_table_size;
+        auto gv_iter = dd.gv.data() + rt.metrics.hash_table_size;
         BOOST_TEST(&*gv_iter == *pay_method.info->slots_strides_p);
         BOOST_TEST(gv_iter++->i == 1); // slot for pay
         // no fun* for 1-method
@@ -732,17 +734,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // plane
         BOOST_TEST(opt_iter++->i == 0); // approve/1
 
-        BOOST_TEST(mptr(registry, &typeid(role)) == role_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(employee)) == employee_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(executive)) == executive_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(founder)) == founder_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(role)) == role_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(employee)) == employee_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(executive)) == executive_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(founder)) == founder_class->mptr);
 
-        BOOST_TEST(mptr(registry, &typeid(expense)) == expense_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(public_transport)) == public_transport_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(bus)) == bus_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(metro)) == metro_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(taxi)) == taxi_class->mptr);
-        BOOST_TEST(mptr(registry, &typeid(jet)) == jet_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(expense)) == expense_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(public_transport)) == public_transport_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(bus)) == bus_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(metro)) == metro_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(taxi)) == taxi_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(jet)) == jet_class->mptr);
     }
 
     {
@@ -815,7 +817,7 @@ namespace layer_mi {
 
 struct test;
 auto& registry = yomm2::registry::get<test>();
-
+auto& dd = yomm2::dispatch_data::instance<test>;
 
 struct A0 {};
 
@@ -831,7 +833,7 @@ YOMM2_CLASS_(test, B1, B0);
 YOMM2_CLASS_(test, A1B2, A0, B1);
 
 BOOST_AUTO_TEST_CASE(test_layer_mi) {
-    runtime rt(registry);
+    runtime rt(registry, dd);
     rt.augment_classes();
     rt.layer_classes();
     BOOST_TEST_REQUIRE(rt.layered_classes.size() == 4);
@@ -857,6 +859,7 @@ namespace multiple_inheritance {
 
 struct test;
 auto& registry = yomm2::registry::get<test>();
+auto& dd = yomm2::dispatch_data::instance<test>;
 
 // A   B
 //  \ / \
@@ -889,7 +892,7 @@ YOMM2_DECLARE_(test, void, c, virtual_<C&>);
 YOMM2_DECLARE_(test, void, d, virtual_<D&>);
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
-    runtime rt(registry);
+    runtime rt(registry, dd);
     rt.augment_classes();
     rt.layer_classes();
     rt.calculate_conforming_classes();
