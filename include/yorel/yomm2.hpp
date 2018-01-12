@@ -50,7 +50,7 @@
 
 #define _YOMM2_PLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>  \
+    ::yorel::yomm2::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>                  \
     BOOST_PP_CAT(a, I)
 
 #define _YOMM2_ALIST(N, I, ARGS) \
@@ -62,7 +62,7 @@
 #define YOMM2_DECLARE(R, ID, ...) \
     YOMM2_DECLARE_(void, R, ID, __VA_ARGS__)
 
-#define YOMM2_DECLARE_(REGISTRY, R, ID, ...)                                   \
+#define YOMM2_DECLARE_(REGISTRY, R, ID, ...)                                  \
     struct _YOMM2_DECLARE_KEY(ID);                                            \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
@@ -72,13 +72,13 @@
         ::yorel::yomm2::details::discriminator,                               \
         BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
                         _YOMM2_PLIST, (__VA_ARGS__)));                        \
-    R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                 \
+    inline R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),          \
                              _YOMM2_PLIST, (__VA_ARGS__))) {                  \
         return ::yorel::yomm2::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
             ::dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),   \
                                      _YOMM2_ALIST, (__VA_ARGS__))); }
 
-#define YOMM2_DEFINE(RETURN_T, ID, ...)                                              \
+#define YOMM2_DEFINE(RETURN_T, ID, ...)                                       \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
     template<typename T> struct select_method;                                \
@@ -480,13 +480,15 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
     register_spec(_YOMM2_DEBUG(const char* name)) {
         static spec_info si;
-        _YOMM2_DEBUG(si.name = name);
-        // si.pf = (const void*) SPEC::body;
-        si.pf = (void*) wrapper<
-            RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
-        >::body;
-        METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
-        METHOD::info().specs.push_back(&si);
+        if (si.vp.empty()) {
+            _YOMM2_DEBUG(si.name = name);
+            // si.pf = (const void*) SPEC::body;
+            si.pf = (void*) wrapper<
+                RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
+                >::body;
+            METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
+            METHOD::info().specs.push_back(&si);
+        }
     }
 };
 
@@ -520,10 +522,12 @@ struct method {
 
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* name)) {
-            _YOMM2_DEBUG(info().name = name);
-            info().slots_strides_p = &slots_strides;
-            for_each_vp_t::collect_class_info(info().vp);
-            registry::get<REG>().methods.push_back(&info());
+            if (info().vp.empty()) {
+                _YOMM2_DEBUG(info().name = name);
+                info().slots_strides_p = &slots_strides;
+                for_each_vp_t::collect_class_info(info().vp);
+                registry::get<REG>().methods.push_back(&info());
+            }
         }
     };
 };
