@@ -1,4 +1,4 @@
-# -*- compile-command: "cd build && make && make test" -*-
+# -*- compile-command: "cd build ; make && ctest" -*-
 
 # CMakeLists.txt
 # Copyright (c) 2013 Jean-Louis Leroy
@@ -6,20 +6,22 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http:#www.boost.org/LICENSE_1_0.txt)
 
-# for clang: cmake -DCMAKE_CXX_COMPILER=clang++ CMakeLists.txt
-
 cmake_minimum_required (VERSION 2.6)
 
 project (YOMM2)
 
-set (YOMM2_VERSION_MAJOR 0)
+set (YOMM2_VERSION_MAJOR 1)
 set (YOMM2_VERSION_MINOR 0)
+
+find_package(Boost)
 
 include_directories ("${YOMM2_SOURCE_DIR}/include")
 link_directories ("${YOMM2_BINARY_DIR}/src")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DYOMM2_DEBUG=1")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -37,7 +39,8 @@ include(CTest)
 
 add_subdirectory (src)
 
-set(BENCHMARK_ENABLE_TESTING OFF)
+set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
+set(BENCHMARK_ENABLE_GTEST_TESTS CACHE BOOL OFF)
 add_subdirectory(extern/benchmark)
 include_directories(extern/benchmark/include)
 set_target_properties(benchmark PROPERTIES FOLDER Extern)
