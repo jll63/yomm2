@@ -15,39 +15,44 @@ struct matrix {
     virtual ~matrix() {}
 };
 
-struct dense_matrix : matrix {};
+struct dense_matrix : virtual matrix {};
 struct diagonal_matrix : matrix {};
+
+enum Subtype {
+    SCALAR_MATRIX, SCALAR_DIAGONAL, MATRIX_SCALAR, DIAGONAL_SCALAR,
+  MATRIX_MATRIX, DIAGONAL_DIAGONAL
+};
 
 YOMM2_CLASS(matrix);
 YOMM2_CLASS(dense_matrix, matrix);
 YOMM2_CLASS(diagonal_matrix, matrix);
 
-YOMM2_DECLARE(void, times, virtual_<const matrix&>, virtual_<const matrix&>);
-YOMM2_DECLARE(void, times, double, virtual_<const matrix&>);
-YOMM2_DECLARE(void, times, virtual_<const matrix&>, double);
+YOMM2_DECLARE(Subtype, times, virtual_<const matrix&>, virtual_<const matrix&>);
+YOMM2_DECLARE(Subtype, times, double, virtual_<const matrix&>);
+YOMM2_DECLARE(Subtype, times, virtual_<const matrix&>, double);
 
-YOMM2_DEFINE(void, times, const matrix&, const matrix&) {
-    std::cout << "matrix * matrix\n";
+YOMM2_DEFINE(Subtype, times, const matrix&, const matrix&) {
+    return MATRIX_MATRIX;
 } YOMM2_END;
 
-YOMM2_DEFINE(void, times, const diagonal_matrix&, const diagonal_matrix&) {
-    std::cout << "diagonal_matrix * diagonal_matrix\n";
+YOMM2_DEFINE(Subtype, times, const diagonal_matrix&, const diagonal_matrix&) {
+    return DIAGONAL_DIAGONAL;
 } YOMM2_END;
 
-YOMM2_DEFINE(void, times, double a, const matrix& m) {
-    std::cout << "double * matrix\n";
+YOMM2_DEFINE(Subtype, times, double a, const matrix& m) {
+    return SCALAR_MATRIX;
 } YOMM2_END;
 
-YOMM2_DEFINE(void, times, double a, const diagonal_matrix& m) {
-    std::cout << "double * diagonal_matrix\n";
+YOMM2_DEFINE(Subtype, times, double a, const diagonal_matrix& m) {
+    return SCALAR_DIAGONAL;
 } YOMM2_END;
 
-YOMM2_DEFINE(void, times, const diagonal_matrix& m, double a) {
-    std::cout << "diagonal_matrix * double\n";
+YOMM2_DEFINE(Subtype, times, const diagonal_matrix& m, double a) {
+    return DIAGONAL_SCALAR;
 } YOMM2_END;
 
-YOMM2_DEFINE(void, times, const matrix& m, double a) {
-    std::cout << "matrix * double\n";
+YOMM2_DEFINE(Subtype, times, const matrix& m, double a) {
+    return MATRIX_SCALAR;
 } YOMM2_END;
 
 BOOST_AUTO_TEST_CASE(compilation)
@@ -57,12 +62,12 @@ BOOST_AUTO_TEST_CASE(compilation)
     //yorel::yomm2::details::log_off();
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
-    times(dense, dense);
-    times(diag, diag);
-    times(diag, dense);
-    times(2, dense);
-    times(dense, 2);
-    times(diag, 2);
+    BOOST_TEST(times(dense, dense) == MATRIX_MATRIX);
+    BOOST_TEST(times(diag, diag) == DIAGONAL_DIAGONAL);
+    BOOST_TEST(times(diag, dense) == MATRIX_MATRIX);
+    BOOST_TEST(times(2, dense) == SCALAR_MATRIX);
+    BOOST_TEST(times(dense, 2) == MATRIX_SCALAR);
+    BOOST_TEST(times(diag, 2) == DIAGONAL_SCALAR);
 }
 
 }
