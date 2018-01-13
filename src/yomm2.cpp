@@ -653,9 +653,9 @@ void runtime::install_gv() {
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
                           << " mtbl for " << cls.info->name << "\n");
-            cls.mptr = dd.gv.data() + dd.gv.size();
+            cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
             std::transform(
-                cls.mtbl.begin(), cls.mtbl.end(),
+                cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
                 std::back_inserter(dd.gv), [](int i) {
                     return make_word(i); });
 

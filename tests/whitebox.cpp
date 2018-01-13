@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     runtime rt(registry, dd);
 
-    details::log_on(&std::cerr);
+    //details::log_on(&std::cerr);
 
     rt.augment_classes();
 
@@ -870,10 +870,16 @@ auto& dd = yomm2::dispatch_data::instance<test>;
 //  |    |
 //  C    E
 
-struct A {};
+struct A {
+    virtual ~A() {}
+};
+
 YOMM2_CLASS_(test, A);
 
-struct B {};
+struct B {
+    virtual ~B() {}
+};
+
 YOMM2_CLASS_(test, B);
 
 struct AB : A, B {};
