@@ -16,6 +16,7 @@
 
 namespace yorel {
 namespace yomm2 {
+namespace detail {
 
 struct rt_method;
 
@@ -104,6 +105,7 @@ struct runtime {
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
 };
 
+} // namespace detail
 } // namespace yomm2
 } // namespace yorel
 

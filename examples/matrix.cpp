@@ -8,12 +8,13 @@ using yorel::yomm2::virtual_;
 
 struct matrix {
     virtual ~matrix() {}
+        // ...
 };
 
-struct dense_matrix : matrix {};
-struct diagonal_matrix : matrix {};
+struct dense_matrix : matrix { /* ... */ };
+struct diagonal_matrix : matrix { /* ... */ };
 
-//auto log = yorel::yomm2::details::log_on(&std::cerr);
+//auto log = yorel::yomm2::detail::log_on(&std::cerr);
 
 register_class(matrix);
 register_class(dense_matrix, matrix);

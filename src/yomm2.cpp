@@ -16,7 +16,11 @@
 namespace yorel {
 namespace yomm2 {
 
-using namespace details;
+void update_methods() {
+    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>);
+}
+
+namespace detail {
 
 #if YOMM2_DEBUG
 
@@ -59,10 +63,6 @@ std::ostream& operator <<(std::ostream& os, const outseq_t<ITER, FUN>& s) {
 }
 
 #endif
-
-void update_methods() {
-    update_methods(registry::get<void>(), dispatch_data::instance<void>);
-}
 
 void update_methods(const registry& reg, dispatch_data& ht) {
     runtime rt(reg, ht);
@@ -748,7 +748,6 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
 
 std::ostream* active_log = nullptr;
 
-namespace details {
 std::ostream& log() {
     static std::ostringstream discard_log;
     return active_log ? *active_log : discard_log;
@@ -766,8 +765,8 @@ std::ostream* log_off() {
     return prev;
 }
 
-} // namespace details
 #endif
 
+} // namespace detail
 } // namespace yomm2
 } // namespace yorel

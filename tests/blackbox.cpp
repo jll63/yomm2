@@ -57,9 +57,9 @@ YOMM2_DEFINE(Subtype, times, const matrix& m, double a) {
 
 BOOST_AUTO_TEST_CASE(compilation)
 {
-    //yorel::yomm2::details::log_on(&std::cerr);
+    //yorel::yomm2::detail::log_on(&std::cerr);
     yorel::yomm2::update_methods();
-    //yorel::yomm2::details::log_off();
+    //yorel::yomm2::detail::log_off();
     const matrix& dense = dense_matrix();
     const matrix& diag = diagonal_matrix();
     BOOST_TEST(times(dense, dense) == MATRIX_MATRIX);

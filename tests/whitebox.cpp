@@ -5,16 +5,13 @@
 #include <yorel/yomm2/runtime.hpp>
 
 #define BOOST_TEST_MODULE yomm2
-//#include <boost/test/unit_test.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 using std::is_same;
-namespace yomm2 = yorel::yomm2;
-using yomm2::virtual_;
-using namespace yomm2;
-using namespace details;
+using namespace yorel::yomm2;
+using namespace yorel::yomm2::detail;
 
-std::string to_string(const std::vector<yomm2::rt_class*>& classes) {
+std::string to_string(const std::vector<rt_class*>& classes) {
 #ifdef NDEBUG
     return "n/a";
 #else
@@ -176,8 +173,8 @@ namespace rolex {
 
 struct test;
 
-auto& registry = yomm2::registry::get<test>();
-auto& dd = yomm2::dispatch_data::instance<test>;
+auto& registry = registry::get<test>();
+auto& dd = dispatch_data::instance<test>;
 
 struct role {
     virtual ~role() {}
@@ -238,8 +235,6 @@ YOMM2_DEFINE(bool, approve, const founder& r, const expense& e, double amount) {
 const int num_classes = 10;
 
 BOOST_AUTO_TEST_CASE(registration) {
-    using yomm2::class_info;
-
     BOOST_TEST_REQUIRE(registry.classes.size() == num_classes);
 
     auto class_iter = registry.classes.begin();
@@ -324,7 +319,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     runtime rt(registry, dd);
 
-    //details::log_on(&std::cerr);
+    //detail::log_on(&std::cerr);
 
     rt.augment_classes();
 
@@ -819,8 +814,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 namespace layer_mi {
 
 struct test;
-auto& registry = yomm2::registry::get<test>();
-auto& dd = yomm2::dispatch_data::instance<test>;
+auto& registry = registry::get<test>();
+auto& dd = dispatch_data::instance<test>;
 
 struct A0 {};
 
@@ -861,8 +856,8 @@ BOOST_AUTO_TEST_CASE(test_layer_mi) {
 namespace multiple_inheritance {
 
 struct test;
-auto& registry = yomm2::registry::get<test>();
-auto& dd = yomm2::dispatch_data::instance<test>;
+auto& registry = registry::get<test>();
+auto& dd = dispatch_data::instance<test>;
 
 // A   B
 //  \ / \
