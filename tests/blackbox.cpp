@@ -15,7 +15,7 @@ struct matrix {
     virtual ~matrix() {}
 };
 
-struct dense_matrix : virtual matrix {};
+struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
 enum Subtype {
