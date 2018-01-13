@@ -179,13 +179,47 @@ template<typename T>
 struct virtual_traits< virtual_<T&> > {
     using base_type = typename std::remove_cv_t<T>;
     using argument_type = T&;
-    template<class DERIVED>
-    static DERIVED& cast(T& obj, static_cast_) {
-        return static_cast<DERIVED&>(obj);
+
+    static_assert(std::is_class<base_type>::value);
+    static_assert(std::is_polymorphic<base_type>::value);
+
+    static auto key(argument_type arg) {
+        return &typeid(arg);
     }
+
     template<class DERIVED>
-    static DERIVED& cast(T& obj, dynamic_cast_) {
-        return dynamic_cast<DERIVED&>(obj);
+    static DERIVED cast(T& obj, static_cast_) {
+        return static_cast<DERIVED>(obj);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(T& obj, dynamic_cast_) {
+        return dynamic_cast<DERIVED>(obj);
+    }
+};
+
+template<typename T>
+struct virtual_traits< virtual_<T*> > {
+    using base_type = typename std::remove_cv_t<T>;
+    using argument_type = T*;
+
+    static_assert(std::is_class<base_type>::value);
+    static_assert(std::is_polymorphic<base_type>::value);
+
+    static auto key(argument_type arg) {
+        return &typeid(*arg);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(T* obj, static_cast_) {
+        static_assert(std::is_pointer<DERIVED>::value);
+        return static_cast<DERIVED>(obj);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(T* obj, dynamic_cast_) {
+        static_assert(std::is_pointer<DERIVED>::value);
+        return dynamic_cast<DERIVED>(obj);
     }
 };
 
@@ -231,18 +265,23 @@ class_info& class_info::get() {
 
 template<typename REG, class CLASS, class... BASE>
 struct init_class_info {
-
     init_class_info(_YOMM2_DEBUG(const char* name)) {
         auto& info = class_info::get<REG, CLASS>();
         static int called;
         if (!called++) {
             _YOMM2_DEBUG(info.name = name);
-            info.direct_bases = { &class_info::get<REG, BASE>()... };
-            info.ti_ptrs.insert(&typeid(CLASS));
             registry::get<REG>().classes.push_back(&info);
+            info.direct_bases = { &class_info::get<REG, BASE>()... };
         }
+        auto inserted = info.ti_ptrs.insert(&typeid(CLASS));
+        _YOMM2_DEBUG(
+            if (inserted.second)
+                ::yorel::yomm2::details::log()
+                      << "Register " << name
+                      << " with &typeid " << &typeid(CLASS)
+                      << " (" << typeid(CLASS).name() << ")"
+                      << "\n");
     }
-
 };
 
 struct spec_info {
@@ -353,8 +392,12 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         const word* ssp,
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
-        _YOMM2_DEBUG(details::log() << "  slot = " << ssp->i << " key = " << &typeid(first));
-        auto pf = details::mptr(dispatch_data::instance<REG>, &typeid(first))[ssp->i].pf;
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
+        _YOMM2_DEBUG(
+            details::log() << "  slot = " << ssp->i << " key = " << key);
+        auto mptr = details::mptr(dispatch_data::instance<REG>, key);
+        _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
+        auto pf = mptr[ssp->i].pf;
         _YOMM2_DEBUG(details::log() << " pf = " << pf << "\n");
         return pf;
     }
@@ -365,8 +408,9 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
     {
-        _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
-        auto mptr = details::mptr(dispatch_data::instance<REG>, &typeid(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
+        _YOMM2_DEBUG(details::log() << "  key = " << key);
+        auto mptr = details::mptr(dispatch_data::instance<REG>, key);
         _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(details::log() << " slot = " << slot);
@@ -408,8 +452,9 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
     {
-        _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
-        auto mptr = details::mptr(dispatch_data::instance<REG>, &typeid(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
+        _YOMM2_DEBUG(details::log() << "  key = " << key);
+        auto mptr = details::mptr(dispatch_data::instance<REG>, key);
         _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(details::log() << " slot = " << slot);
@@ -425,8 +470,9 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
     {
-        _YOMM2_DEBUG(details::log() << "  key = " << &typeid(first));
-        auto mptr = details::mptr(registry::get<REG>(), &typeid(first));
+        auto key = virtual_traits<FIRST>::key(first);
+        _YOMM2_DEBUG(details::log() << "  key = " << key);
+        auto mptr = details::mptr(registry::get<REG>(), key);
         _YOMM2_DEBUG(details::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(details::log() << " slot = " << slot);
