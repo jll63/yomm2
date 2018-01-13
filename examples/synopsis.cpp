@@ -1,4 +1,7 @@
 #include <iostream>
+#include <memory>
+
+#include <yorel/yomm2/cute.hpp>
 
 class Animal {
   public:
@@ -9,9 +12,6 @@ class Dog     : public Animal {};
 class Bulldog : public Dog {};
 class Cat     : public Animal {};
 class Dolphin : public Animal {};
-
-#include <memory>
-#include <yorel/yomm2/cute.hpp>
 
 using yorel::yomm2::virtual_;
 
@@ -56,7 +56,7 @@ begin_method(std::string, meet, Cat& cat, Dog& dog) {
 
 int main()
 {
-    yorel::yomm2::update_methods(); // once per process - don't forget!
+    yorel::yomm2::update_methods();
 
     std::unique_ptr<Animal>
         hector = std::make_unique<Bulldog>(),
