@@ -6,6 +6,7 @@
 #include <typeindex>
 #include <type_traits>
 #include <unordered_set>
+#include <memory>
 
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -220,6 +221,46 @@ struct virtual_traits< virtual_<T*> > {
     static DERIVED cast(T* obj, dynamic_cast_) {
         static_assert(std::is_pointer<DERIVED>::value);
         return dynamic_cast<DERIVED>(obj);
+    }
+};
+
+template<typename T>
+struct shared_ptr_traits {
+    static const bool is_shared_ptr = false;
+};
+
+template<typename T>
+struct shared_ptr_traits< std::shared_ptr<T> > {
+    static const bool is_shared_ptr = true;
+    using base_type = T;
+};
+
+template<typename T>
+struct virtual_traits< virtual_< std::shared_ptr<T> > > {
+    using base_type = T;
+    using argument_type = std::shared_ptr<T>;
+
+    static_assert(std::is_class<base_type>::value);
+    static_assert(std::is_polymorphic<base_type>::value);
+
+    static auto key(argument_type arg) {
+        return &typeid(*arg);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(argument_type obj, static_cast_) {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
+        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(argument_type obj, dynamic_cast_) {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
+        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
     }
 };
 
