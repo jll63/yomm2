@@ -212,11 +212,11 @@ YOMM2_DECLARE_(test, double, pay, virtual_<const employee&>);
 YOMM2_DECLARE_(test, bool, approve, virtual_<const role&>, virtual_<const expense&>, double);
 
 YOMM2_DEFINE(double, pay, const employee&) {
-    return 2000;
+    return 3000;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, pay, const executive&) {
-    return 5000;
+YOMM2_DEFINE(double, pay, const executive& exec) {
+    return next(exec) + 2000;
 } YOMM2_END;
 
 YOMM2_DEFINE(bool, approve, const role& r, const expense& e, double amount) {
@@ -324,7 +324,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     runtime rt(registry, dd);
 
-    //rt.log_on(&std::cerr);
+    details::log_on(&std::cerr);
 
     rt.augment_classes();
 
@@ -568,8 +568,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
         {
             std::vector<const rt_spec*> expected = { &*approve_executive_taxi };
-            BOOST_TEST(expected ==
-                       runtime::best({ &*approve_role_expense, &*approve_executive_taxi }));
+            std::vector<const rt_spec*> specs = { &*approve_role_expense, &*approve_executive_taxi };
+            BOOST_TEST(expected == runtime::best(specs));
         }
     }
 
@@ -653,6 +653,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == jet_class->mtbl);
     }
 
+    BOOST_TEST_REQUIRE(pay_employee->info->next != nullptr);
+    BOOST_TEST_REQUIRE(pay_executive->info->next != nullptr);
+    BOOST_TEST(*pay_executive->info->next == pay_employee->info->pf);
 
     rt.find_hash_factor();
     rt.install_gv();
@@ -807,7 +810,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             }
         }
 
-        BOOST_TEST(pay(a_employee) == 2000);
+        BOOST_TEST(pay(a_employee) == 3000);
         BOOST_TEST(pay(a_executive) == 5000);
     }
 }

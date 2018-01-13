@@ -195,48 +195,6 @@ void runtime::layer_classes() {
         }
         _YOMM2_DEBUG(log() << "\n");
     }
-
-
-    // std::list<rt_class*> input;
-    // std::unordered_set<rt_class*> previous_layer;
-
-    // for (auto& cls : classes) {
-    //     if (cls.direct_bases.empty()) {
-    //         layered_classes.push_back(&cls);
-    //         previous_layer.insert(&cls);
-    //         _YOMM2_DEBUG(log() << sep << cls.info->name);
-    //         _YOMM2_DEBUG(sep = " ");
-    //     } else {
-    //         input.push_back(&cls);
-    //     }
-    // }
-
-    // _YOMM2_DEBUG(sep = "\n  ");
-
-    // while (input.size()) {
-    //     std::unordered_set<rt_class*> current_layer;
-
-    //     for (auto class_iter = input.begin(); class_iter != input.end(); ) {
-    //         auto cls = *class_iter;
-    //         if (std::any_of(
-    //                 cls->direct_bases.begin(), cls->direct_bases.end(),
-    //                 [&previous_layer](rt_class* base) {
-    //                     return previous_layer.find(base) != previous_layer.end();
-    //                 })
-    //             ) {
-    //             current_layer.insert(cls);
-    //             layered_classes.push_back(cls);
-    //             class_iter = input.erase(class_iter);
-    //             _YOMM2_DEBUG(log() << sep << cls->info->name);
-    //             _YOMM2_DEBUG(sep = " ");
-    //         } else {
-    //             ++class_iter;
-    //         }
-    //     }
-    //     previous_layer.swap(current_layer);
-    //     _YOMM2_DEBUG(sep = "\n  ");
-    // }
-    // _YOMM2_DEBUG(log() << "\n");
 }
 
 void runtime::calculate_conforming_classes() {
@@ -446,6 +404,27 @@ void runtime::build_dispatch_tables() {
         bitvec all(m.specs.size());
         all = ~all;
         build_dispatch_table(m, dims - 1, groups, all);
+
+        {
+            std::vector<const rt_spec*> specs;
+            std::transform(
+                m.specs.begin(), m.specs.end(),
+                std::back_inserter(specs),
+                [](const rt_spec& spec) { return &spec; });
+
+            for (auto& spec : m.specs) {
+            std::vector<const rt_spec*> candidates;
+            std::copy_if(
+                specs.begin(), specs.end(),
+                std::back_inserter(candidates),
+                [spec](const rt_spec* other) { return is_more_specific(&spec, other); });
+                auto nexts = best(candidates);
+
+                if (nexts.size() == 1) {
+                    *spec.info->next = nexts.front()->info->pf;
+                }
+            }
+        }
     }
 }
 
@@ -700,7 +679,7 @@ void runtime::optimize() {
     }
 }
 
-std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*> candidates) {
+std::vector<const rt_spec*> runtime::best(std::vector<const rt_spec*>& candidates) {
     std::vector<const rt_spec*> best;
 
     for (auto spec : candidates) {

@@ -90,13 +90,15 @@
     using _YOMM2_METHOD = select_method<void(__VA_ARGS__)>::type;             \
     using _YOMM2_SIGNATURE = void(__VA_ARGS__);                               \
     const char* _YOMM2_NAME = "(" #__VA_ARGS__ ")";                           \
+    RETURN_T (*next)(__VA_ARGS__);                                            \
     struct _YOMM2_SPEC {                                                      \
         static RETURN_T body(__VA_ARGS__)
 
 #define YOMM2_END                                                             \
     };                                                                        \
-    ::yorel::yomm2::register_spec<_YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
-    init _YOMM2_DEBUG( = _YOMM2_NAME  );                                   \
+    ::yorel::yomm2::register_spec<                                            \
+       _YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
+    init((void**)&next _YOMM2_COMMA_DEBUG(_YOMM2_NAME));              \
     } }
 
 #define _YOMM2_CLASS_NAME(CLASS, ...) \
@@ -247,6 +249,7 @@ struct spec_info {
     _YOMM2_DEBUG(const char* name);
     std::vector<const class_info*> vp;
     void* pf;
+    void** next;
 };
 
 struct method_info {
@@ -478,7 +481,7 @@ struct register_spec;
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
-    register_spec(_YOMM2_DEBUG(const char* name)) {
+    register_spec(void** next _YOMM2_COMMA_DEBUG(const char* name)) {
         static spec_info si;
         if (si.vp.empty()) {
             _YOMM2_DEBUG(si.name = name);
@@ -488,6 +491,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
                 >::body;
             METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
             METHOD::info().specs.push_back(&si);
+            si.next = next;
         }
     }
 };

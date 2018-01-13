@@ -100,7 +100,7 @@ struct runtime {
     void install_gv();
     void optimize();
 
-    static std::vector<const rt_spec*> best(std::vector<const rt_spec*> candidates);
+    static std::vector<const rt_spec*> best(std::vector<const rt_spec*>& candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
 };
 
