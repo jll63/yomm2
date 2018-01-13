@@ -73,7 +73,7 @@ int main()
         sylvester = std::make_unique<Cat>(),
         flipper = std::make_unique<Dolphin>();
   std::cout << "hector meets sylvester: " << meet(*hector, *sylvester) << "\n"; // chase
-  std::cout << "sylvester meets hector: " << meet(*sylvester, *hector) << "\n"; // chase
+  std::cout << "sylvester meets hector: " << meet(*sylvester, *hector) << "\n"; // run
   std::cout << "hector meets snoopy: " << meet(*hector, *snoopy) << "\n"; // wag tail
   std::cout << "hector meets flipper: " << meet(*hector, *flipper) << "\n"; // ignore
 }
