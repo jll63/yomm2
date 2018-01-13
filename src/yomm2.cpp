@@ -399,13 +399,15 @@ void runtime::build_dispatch_tables() {
             }
         }
 
-        _YOMM2_DEBUG(log() << indent(1) << "assign specs\n");
-
-        bitvec all(m.specs.size());
-        all = ~all;
-        build_dispatch_table(m, dims - 1, groups, all);
+        {
+            _YOMM2_DEBUG(log() << indent(1) << "assign specs\n");
+            bitvec all(m.specs.size());
+            all = ~all;
+            build_dispatch_table(m, dims - 1, groups, all);
+        }
 
         {
+            _YOMM2_DEBUG(log() << indent(1) << "assign next\n");
             std::vector<const rt_spec*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(),
@@ -413,15 +415,34 @@ void runtime::build_dispatch_tables() {
                 [](const rt_spec& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
-            std::vector<const rt_spec*> candidates;
-            std::copy_if(
-                specs.begin(), specs.end(),
-                std::back_inserter(candidates),
-                [spec](const rt_spec* other) { return is_more_specific(&spec, other); });
+                _YOMM2_DEBUG(log() << indent(2) << spec.info->name  << ":\n");
+                std::vector<const rt_spec*> candidates;
+                std::copy_if(
+                    specs.begin(), specs.end(),
+                    std::back_inserter(candidates),
+                    [spec](const rt_spec* other) { return is_more_specific(&spec, other); });
+
+#if YOMM2_DEBUG
+                log()
+                    << indent(3)
+                    << "select best of:\n";
+
+                for (auto& candidate : candidates) {
+                    log() << indent(4)
+                          << candidate->info->name << "\n";
+                }
+#endif
                 auto nexts = best(candidates);
 
                 if (nexts.size() == 1) {
-                    *spec.info->next = nexts.front()->info->pf;
+                    auto next = nexts.front()->info;
+                    _YOMM2_DEBUG(log() << indent(3) << "-> " << next->name << "\n");
+                    *spec.info->next = next->pf;
+                } else if (nexts.empty()) {
+                    _YOMM2_DEBUG(log() << indent(3) << "-> none\n");
+                } else if (nexts.empty()) {
+                    _YOMM2_DEBUG(log() << indent(3) << "->  ambiguous\n");
+
                 }
             }
         }

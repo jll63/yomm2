@@ -46,7 +46,7 @@ include_directories(extern/benchmark/include)
 set_target_properties(benchmark PROPERTIES FOLDER Extern)
 
 add_subdirectory (tests)
-#add_subdirectory (examples)
+add_subdirectory (examples)
 
 enable_testing()
 
