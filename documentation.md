@@ -45,7 +45,7 @@ classes derived from classes that are used as virtual arguments.
 
 #### Synopsis:
 ```
-declare_method(return_type, method_name, parameter_1, ..., parammeter_n)
+declare_method(return_type, method_name, (parameter_1, ..., parammeter_n))
 ```
 
 

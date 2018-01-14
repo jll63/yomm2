@@ -38,13 +38,13 @@ register_class(matrix);
 register_class(dense_matrix, matrix);
 register_class(diagonal_matrix, matrix);
 
-declare_method(string, to_json, virtual_<const matrix&>);
+declare_method(string, to_json, (virtual_<const matrix&>));
 
-begin_method(string, to_json, const dense_matrix& m) {
+begin_method(string, to_json, (const dense_matrix& m)) {
     return "json for dense matrix...";
 } end_method;
 
-begin_method(string, to_json, const diagonal_matrix& m) {
+begin_method(string, to_json, (const diagonal_matrix& m)) {
     return "json for diagonal matrix...";
 } end_method;
 
@@ -54,13 +54,13 @@ begin_method(string, to_json, const diagonal_matrix& m) {
 declare_method(
     shared_ptr<const matrix>,
     times,
-    virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>);
+    (virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>));
 
 // catch-all matrix * matrix -> dense_matrix
 begin_method(
     shared_ptr<const matrix>,
     times,
-    shared_ptr<const matrix> a, shared_ptr<const matrix> b) {
+    (shared_ptr<const matrix> a, shared_ptr<const matrix> b)) {
     return make_shared<dense_matrix>();
 } end_method;
 
@@ -68,7 +68,7 @@ begin_method(
 begin_method(
     shared_ptr<const matrix>,
     times,
-    shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b) {
+    (shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b)) {
     return make_shared<diagonal_matrix>();
 } end_method;
 
@@ -83,20 +83,20 @@ inline shared_ptr<const matrix> operator *(
 declare_method(
     shared_ptr<const matrix>,
     times,
-    double, virtual_<shared_ptr<const matrix>>);
+    (double, virtual_<shared_ptr<const matrix>>));
 
 // catch-all matrix * scalar -> dense_matrix
 begin_method(
     shared_ptr<const matrix>,
     times,
-    double a, shared_ptr<const matrix> b) {
+    (double a, shared_ptr<const matrix> b)) {
     return make_shared<dense_matrix>();
 } end_method;
 
 begin_method(
     shared_ptr<const matrix>,
     times,
-    double a, shared_ptr<const diagonal_matrix> b) {
+    (double a, shared_ptr<const diagonal_matrix> b)) {
     return make_shared<diagonal_matrix>();
 } end_method;
 

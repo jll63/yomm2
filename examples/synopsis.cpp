@@ -27,35 +27,35 @@ register_class(Cat, Animal);
 register_class(Dolphin, Animal);
 
 // open method with single argument <=> virtual function "from outside"
-declare_method(std::string, kick, virtual_<Animal&>);
+declare_method(std::string, kick, (virtual_<Animal&>));
 
 // implement 'kick' for dogs
-begin_method(std::string, kick, Dog& dog) {
+begin_method(std::string, kick, (Dog& dog)) {
   return "bark";
 } end_method;
 
 // implement 'kick' for bulldogs
-begin_method(std::string, kick, Bulldog& dog) {
+begin_method(std::string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
 } end_method;
 
 // multi-method
-declare_method(std::string, meet, virtual_<Animal&>, virtual_<Animal&>);
+declare_method(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 
 // 'meet' catch-all implementation
-begin_method(std::string, meet, Animal&, Animal&) {
+begin_method(std::string, meet, (Animal&, Animal&)) {
   return "ignore";
 } end_method;
 
-begin_method(std::string, meet, Dog& dog1, Dog& dog2) {
+begin_method(std::string, meet, (Dog& dog1, Dog& dog2)) {
   return "wag tail";
 } end_method;
 
-begin_method(std::string, meet, Dog& dog, Cat& cat) {
+begin_method(std::string, meet, (Dog& dog, Cat& cat)) {
   return "chase";
 } end_method;
 
-begin_method(std::string, meet, Cat& cat, Dog& dog) {
+begin_method(std::string, meet, (Cat& cat, Dog& dog)) {
   return "run";
 } end_method;
 

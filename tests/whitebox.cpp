@@ -210,30 +210,30 @@ YOMM2_CLASS_(test, metro, public_transport);
 YOMM2_CLASS_(test, taxi, expense);
 YOMM2_CLASS_(test, jet, expense);
 
-YOMM2_DECLARE_(test, double, pay, virtual_<const employee&>);
-YOMM2_DECLARE_(test, bool, approve, virtual_<const role&>, virtual_<const expense&>, double);
+YOMM2_DECLARE_(test, double, pay, (virtual_<const employee&>));
+YOMM2_DECLARE_(test, bool, approve, (virtual_<const role&>, virtual_<const expense&>, double));
 
-YOMM2_DEFINE(double, pay, const employee&) {
+YOMM2_DEFINE(double, pay, (const employee&)) {
     return 3000;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, pay, const executive& exec) {
+YOMM2_DEFINE(double, pay, (const executive& exec)) {
     return next(exec) + 2000;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const role& r, const expense& e, double amount) {
+YOMM2_DEFINE(bool, approve, (const role& r, const expense& e, double amount)) {
     return false;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const employee& r, const public_transport& e, double amount) {
+YOMM2_DEFINE(bool, approve, (const employee& r, const public_transport& e, double amount)) {
     return true;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const executive& r, const taxi& e, double amount) {
+YOMM2_DEFINE(bool, approve, (const executive& r, const taxi& e, double amount)) {
     return true;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, const founder& r, const expense& e, double amount) {
+YOMM2_DEFINE(bool, approve, (const founder& r, const expense& e, double amount)) {
     return true;
 } YOMM2_END;
 
@@ -894,11 +894,11 @@ YOMM2_CLASS_(test, D, B);
 struct E : D {};
 YOMM2_CLASS_(test, E, D);
 
-YOMM2_DECLARE_(test, void, a, virtual_<A&>);
-YOMM2_DECLARE_(test, void, b, virtual_<B&>);
-YOMM2_DECLARE_(test, void, ab, virtual_<A&>, virtual_<B&>);
-YOMM2_DECLARE_(test, void, c, virtual_<C&>);
-YOMM2_DECLARE_(test, void, d, virtual_<D&>);
+YOMM2_DECLARE_(test, void, a, (virtual_<A&>));
+YOMM2_DECLARE_(test, void, b, (virtual_<B&>));
+YOMM2_DECLARE_(test, void, ab, (virtual_<A&>, virtual_<B&>));
+YOMM2_DECLARE_(test, void, c, (virtual_<C&>));
+YOMM2_DECLARE_(test, void, d, (virtual_<D&>));
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime rt(registry, dd);

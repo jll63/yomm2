@@ -32,31 +32,31 @@ YOMM2_CLASS(matrix);
 YOMM2_CLASS(dense_matrix, matrix);
 YOMM2_CLASS(diagonal_matrix, matrix);
 
-YOMM2_DECLARE(Subtype, times, virtual_<const matrix&>, virtual_<const matrix&>);
-YOMM2_DECLARE(Subtype, times, double, virtual_<const matrix&>);
-YOMM2_DECLARE(Subtype, times, virtual_<const matrix&>, double);
+YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>));
+YOMM2_DECLARE(Subtype, times, (double, virtual_<const matrix&>));
+YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, double));
 
-YOMM2_DEFINE(Subtype, times, const matrix&, const matrix&) {
+YOMM2_DEFINE(Subtype, times, (const matrix&, const matrix&)) {
     return MATRIX_MATRIX;
 } YOMM2_END;
 
-YOMM2_DEFINE(Subtype, times, const diagonal_matrix&, const diagonal_matrix&) {
+YOMM2_DEFINE(Subtype, times, (const diagonal_matrix&, const diagonal_matrix&)) {
     return DIAGONAL_DIAGONAL;
 } YOMM2_END;
 
-YOMM2_DEFINE(Subtype, times, double a, const matrix& m) {
+YOMM2_DEFINE(Subtype, times, (double a, const matrix& m)) {
     return SCALAR_MATRIX;
 } YOMM2_END;
 
-YOMM2_DEFINE(Subtype, times, double a, const diagonal_matrix& m) {
+YOMM2_DEFINE(Subtype, times, (double a, const diagonal_matrix& m)) {
     return SCALAR_DIAGONAL;
 } YOMM2_END;
 
-YOMM2_DEFINE(Subtype, times, const diagonal_matrix& m, double a) {
+YOMM2_DEFINE(Subtype, times, (const diagonal_matrix& m, double a)) {
     return DIAGONAL_SCALAR;
 } YOMM2_END;
 
-YOMM2_DEFINE(Subtype, times, const matrix& m, double a) {
+YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
     return MATRIX_SCALAR;
 } YOMM2_END;
 

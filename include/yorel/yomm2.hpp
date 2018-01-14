@@ -12,15 +12,15 @@
 #include <unordered_set>
 #include <vector>
 
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/control/if.hpp>
-#include <boost/preprocessor/punctuation/comma_if.hpp>
-#include <boost/preprocessor/repetition/repeat.hpp>
-#include <boost/preprocessor/stringize.hpp>
-#include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/tuple/size.hpp>
-#include <boost/preprocessor/variadic/elem.hpp>
-#include <boost/preprocessor/variadic/to_tuple.hpp>
+#include <boost/preprocessor.hpp>
+// #include <boost/preprocessor/control/if.hpp>
+// #include <boost/preprocessor/punctuation/comma_if.hpp>
+// #include <boost/preprocessor/repetition/repeat.hpp>
+// #include <boost/preprocessor/stringize.hpp>
+// #include <boost/preprocessor/tuple/elem.hpp>
+// #include <boost/preprocessor/tuple/size.hpp>
+// #include <boost/preprocessor/variadic/elem.hpp>
+// #include <boost/preprocessor/variadic/to_tuple.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
@@ -60,40 +60,44 @@
 #define _YOMM2_DECLARE_KEY(ID)                                                \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
-#define YOMM2_DECLARE(R, ID, ...) \
-    YOMM2_DECLARE_(void, R, ID, __VA_ARGS__)
+#define YOMM2_DECLARE(R, ID, ARGS) \
+    YOMM2_DECLARE_(void, R, ID, ARGS)
 
-#define YOMM2_DECLARE_(REGISTRY, R, ID, ...)                                  \
+#define _YOMM2_EXPAND(...) __VA_ARGS__
+
+#define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
     struct _YOMM2_DECLARE_KEY(ID);                                            \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
-    ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__>::init_method \
-      init _YOMM2_DEBUG( = #ID "(" #__VA_ARGS__ ")" ); } }                    \
-    ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> ID( \
-        ::yorel::yomm2::detail::discriminator,                               \
-        BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),                  \
-                        _YOMM2_PLIST, (__VA_ARGS__)));                        \
-    inline R ID(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),          \
-                             _YOMM2_PLIST, (__VA_ARGS__))) {                  \
-        return ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R, __VA_ARGS__> \
-            ::dispatch(BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(__VA_ARGS__),   \
-                                     _YOMM2_ALIST, (__VA_ARGS__))); }
+    ::yorel::yomm2::detail::method<REGISTRY,                                  \
+                                   _YOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
+    init _YOMM2_DEBUG( = #ID  #ARGS ); } }                                    \
+    ::yorel::yomm2::detail::method<REGISTRY,                                  \
+                                   _YOMM2_DECLARE_KEY(ID), R ARGS> ID(        \
+                                       ::yorel::yomm2::detail::discriminator, \
+                                       BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), \
+                        _YOMM2_PLIST, ARGS));                        \
+    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
+                                _YOMM2_PLIST, ARGS)) {                      \
+        return ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R ARGS> \
+            ::dispatch(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),   \
+                                     _YOMM2_ALIST, ARGS)); }
 
-#define YOMM2_DEFINE(RETURN_T, ID, ...)                                       \
+#define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
     namespace {                                                               \
     namespace _YOMM2_NS {                                                     \
     template<typename T> struct select_method;                                \
     template<typename... A> struct select_method<void(A...)> {                \
-        using type = decltype(ID(::yorel::yomm2::detail::discriminator(),    \
+        using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
                                  std::declval<A>()...));                      \
     };                                                                        \
     using _YOMM2_RETURN_T = RETURN_T;                                         \
-    using _YOMM2_METHOD = select_method<void(__VA_ARGS__)>::type;             \
-    using _YOMM2_SIGNATURE = void(__VA_ARGS__);                               \
-    const char* _YOMM2_NAME = "(" #__VA_ARGS__ ")";                           \
-    RETURN_T (*next)(__VA_ARGS__);                                            \
+    using _YOMM2_METHOD = select_method<void ARGS>::type;             \
+    using _YOMM2_SIGNATURE = void ARGS;                                       \
+    const char* _YOMM2_NAME = #ARGS;                                          \
+    RETURN_T (*next)ARGS;                                                     \
     struct _YOMM2_SPEC {                                                      \
-        static RETURN_T body(__VA_ARGS__)
+        static RETURN_T body ARGS
 
 #define YOMM2_END                                                             \
     };                                                                        \
@@ -583,8 +587,11 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
     }
 };
 
+template<typename REG, typename ID, typename SIG>
+struct method;
+
 template<typename REG, typename ID, typename R, typename... A>
-struct method {
+struct method<REG, ID, R(A...)> {
 
     static const word* slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
@@ -624,10 +631,10 @@ struct method {
 };
 
 template<typename REG, typename ID, typename R, typename... A>
-const word* method<REG, ID, R, A...>::slots_strides;
+const word* method<REG, ID, R(A...)>::slots_strides;
 
 template<typename REG, typename ID, typename R, typename... A>
-method_info& method<REG, ID, R, A...>::info() {
+method_info& method<REG, ID, R(A...)>::info() {
     static method_info info;
     return info;
 }

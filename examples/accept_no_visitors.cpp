@@ -44,45 +44,45 @@ register_class(Plus, Node);
 register_class(Times, Node);
 register_class(Integer, Node);
 
-declare_method(int, value, virtual_<const Node&>);
+declare_method(int, value, (virtual_<const Node&>));
 
-begin_method(int, value, const Plus& expr) {
+begin_method(int, value, (const Plus& expr)) {
   return value(*expr.left) + value(*expr.right);
 } end_method;
 
-begin_method(int, value, const Times& expr) {
+begin_method(int, value, (const Times& expr)) {
   return value(*expr.left) * value(*expr.right);
 } end_method;
 
-begin_method(int, value, const Integer& expr) {
+begin_method(int, value, (const Integer& expr)) {
   return expr.value;
 } end_method;
 
-declare_method(string, as_forth, virtual_<const Node&>);
+declare_method(string, as_forth, (virtual_<const Node&>));
 
-begin_method(string, as_forth, const Plus& expr) {
+begin_method(string, as_forth, (const Plus& expr)) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " +";
 } end_method;
 
-begin_method(string, as_forth, const Times& expr) {
+begin_method(string, as_forth, (const Times& expr)) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " *";
 } end_method;
 
-begin_method(string, as_forth, const Integer& expr) {
+begin_method(string, as_forth, (const Integer& expr)) {
     return std::to_string(expr.value);
 } end_method;
 
-declare_method(string, as_lisp, virtual_<const Node&>);
+declare_method(string, as_lisp, (virtual_<const Node&>));
 
-begin_method(string, as_lisp, const Plus& expr) {
+begin_method(string, as_lisp, (const Plus& expr)) {
     return "(plus " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 } end_method;
 
-begin_method(string, as_lisp, const Times& expr) {
+begin_method(string, as_lisp, (const Times& expr)) {
     return "(times " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 } end_method;
 
-begin_method(string, as_lisp, const Integer& expr) {
+begin_method(string, as_lisp, (const Integer& expr)) {
     return std::to_string(expr.value);
 } end_method;
 
