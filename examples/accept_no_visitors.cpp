@@ -44,6 +44,9 @@ register_class(Plus, Node);
 register_class(Times, Node);
 register_class(Integer, Node);
 
+// -----------------------------------------------------------------------------
+// evaluate
+
 declare_method(int, value, (virtual_<const Node&>));
 
 begin_method(int, value, (const Plus& expr)) {
@@ -57,6 +60,9 @@ begin_method(int, value, (const Times& expr)) {
 begin_method(int, value, (const Integer& expr)) {
   return expr.value;
 } end_method;
+
+// -----------------------------------------------------------------------------
+// render as Forth
 
 declare_method(string, as_forth, (virtual_<const Node&>));
 
@@ -72,6 +78,9 @@ begin_method(string, as_forth, (const Integer& expr)) {
     return std::to_string(expr.value);
 } end_method;
 
+// -----------------------------------------------------------------------------
+// render as Lisp
+
 declare_method(string, as_lisp, (virtual_<const Node&>));
 
 begin_method(string, as_lisp, (const Plus& expr)) {
@@ -86,6 +95,8 @@ begin_method(string, as_lisp, (const Integer& expr)) {
     return std::to_string(expr.value);
 } end_method;
 
+// -----------------------------------------------------------------------------
+
 int main()
 {
     yorel::yomm2::update_methods();
@@ -96,6 +107,11 @@ int main()
                 make_shared<Integer>(3),
                 make_shared<Integer>(4)));
 
-    cout << as_forth(*expr) << " = " << as_lisp(*expr) << " = " << value(*expr) << "\n";
+    cout << as_forth(*expr)
+         << " = " << as_lisp(*expr)
+         << " = " << value(*expr) << "\n";
+    // output:
+    // 2 3 4 + * = (times 2 (plus 3 4)) = 14
+
     return 0;
 }
