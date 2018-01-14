@@ -10,3 +10,7 @@ add_test (synopsis synopsis)
 add_executable(matrix matrix.cpp)
 target_link_libraries (matrix yomm2)
 add_test (matrix matrix)
+
+add_executable(accept_no_visitors accept_no_visitors.cpp)
+target_link_libraries (accept_no_visitors yomm2)
+add_test (accept_no_visitors accept_no_visitors)
