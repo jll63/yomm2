@@ -17,16 +17,11 @@ find_package(Boost)
 include_directories ("${YOMM2_SOURCE_DIR}/include")
 link_directories ("${YOMM2_BINARY_DIR}/src")
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -DYOMM2_DEBUG=1")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Boost_INCLUDE_DIRS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Boost_INCLUDE_DIRS}")
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
@@ -34,22 +29,33 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "-D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
-include(CTest)
-
 add_subdirectory (src)
 
-set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
-set(BENCHMARK_ENABLE_GTEST_TESTS CACHE BOOL OFF)
-add_subdirectory(extern/benchmark)
-include_directories(extern/benchmark/include)
-set_target_properties(benchmark PROPERTIES FOLDER Extern)
-
-add_subdirectory (tests)
 add_subdirectory (examples)
 
-enable_testing()
+if (NOT DEFINED(YOMM2_ENABLE_TESTS))
+  set(YOMM2_ENABLE_TESTS CACHE BOOL ON)
+endif()
 
-add_test (whitebox tests/whitebox)
-add_test (blackbox tests/blackbox)
+if (${YOMM2_ENABLE_TESTS})
+  message(STATUS "Tests enabled.")
+  include(CTest)
+  add_subdirectory (tests)
+  enable_testing()
+  add_test (whitebox tests/whitebox)
+  add_test (blackbox tests/blackbox)
+endif()
+
+if (EXISTS("extern/benchmark/CMakeLists.txt"))
+  message(STATUS "Benchmarks enabled.")
+  set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
+  set(BENCHMARK_ENABLE_GTEST_TESTS CACHE BOOL OFF)
+  add_subdirectory(extern/benchmark)
+  include_directories(extern/benchmark/include)
+  set_target_properties(benchmark PROPERTIES FOLDER Extern)
+  add_executable(benchmarks benchmarks.cpp benchmarks_vfuncs.cpp )
+  set_source_files_properties(benchmarks.cpp PROPERTIES COMPILE_FLAGS -O2)
+  target_link_libraries (benchmarks yomm2 benchmark)
+endif()
 
 INSTALL (DIRECTORY include/yorel DESTINATION include)
