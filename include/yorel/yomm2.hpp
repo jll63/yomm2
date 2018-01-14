@@ -6,28 +6,23 @@
 #ifndef YOREL_YOMM2_INCLUDED
 #define YOREL_YOMM2_INCLUDED
 
-#include <vector>
-#include <typeinfo>
-#include <typeindex>
-#include <type_traits>
-#include <unordered_set>
 #include <memory>
+#include <type_traits>
+#include <typeinfo>
+#include <unordered_set>
+#include <vector>
 
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/control/if.hpp>
+#include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
-#include <boost/preprocessor/punctuation/comma_if.hpp>
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/control/expr_if.hpp>
-#include <boost/preprocessor/control/if.hpp>
 #include <boost/preprocessor/variadic/elem.hpp>
-#include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
-#include <boost/preprocessor/comparison/greater.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
-
-#include <boost/mpl/and.hpp>
 
 #ifndef YOMM2_DEBUG
 #ifdef NDEBUG

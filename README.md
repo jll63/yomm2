@@ -110,22 +110,38 @@ Methods can have more than one virtual argument. This is handy in certain
 situations, for example to implement binary operations on matrices:
 
 ```c++
+
+// -----------------------------------------------------------------------------
+// matrix * matrix
+
 declare_method(
     shared_ptr<const matrix>,
     times,
     virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>);
 
+// catch-all matrix * matrix -> dense_matrix
 begin_method(
     shared_ptr<const matrix>,
     times,
-    shared_ptr<const dense_matrix>, shared_ptr<const dense_matrix>) {
-    return make_shared<dense_matrix>(/* ... */);
+    shared_ptr<const matrix> a, shared_ptr<const matrix> b) {
+    return make_shared<dense_matrix>();
 } end_method;
 
+// diagonal_matrix * diagonal_matrix -> diagonal_matrix
 begin_method(
     shared_ptr<const matrix>,
     times,
-    shared_ptr<const diagonal_matrix>, shared_ptr<const diagonal_matrix>) {
-    return make_shared<diagonal_matrix>(/* ... */);
+    shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b) {
+    return make_shared<diagonal_matrix>();
 } end_method;
 ```
+
+## Going Further
+
+The documentation is [here](documentation.md).
+
+The library comes with a series of examples:
+
+* [The complete `matrix` example](examples/matrix.cpp)
+
+* [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
