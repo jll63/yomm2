@@ -35,8 +35,8 @@ struct diagonal_matrix : INHERITANCE matrix {
     virtual double times2(const diagonal_matrix& other) const;
 };
 
-YOMM2_DECLARE(double, times, double, yorel::yomm2::virtual_<const matrix&>);
-YOMM2_DECLARE(double, times, yorel::yomm2::virtual_<const matrix&>, yorel::yomm2::virtual_<const matrix&>);
+YOMM2_DECLARE(double, times, (double, yorel::yomm2::virtual_<const matrix&>));
+YOMM2_DECLARE(double, times, (yorel::yomm2::virtual_<const matrix&>, yorel::yomm2::virtual_<const matrix&>));
 
 #ifdef MAIN
 
@@ -46,21 +46,21 @@ YOMM2_CLASS(matrix);
 YOMM2_CLASS(dense_matrix, matrix);
 YOMM2_CLASS(diagonal_matrix, matrix);
 
-YOMM2_DEFINE(double, times, double a, const matrix& m) {
+YOMM2_DEFINE(double, times, (double a, const matrix& m)) {
     return 0;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, times, double a, const diagonal_matrix& m) {
+YOMM2_DEFINE(double, times, (double a, const diagonal_matrix& m)) {
     return 0;
 } YOMM2_END;
 
 // -----------------------------------------------------------------------------
 
-YOMM2_DEFINE(double, times, const matrix&, const matrix&) {
+YOMM2_DEFINE(double, times, (const matrix&, const matrix&)) {
     return 1;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, times, const diagonal_matrix&, const diagonal_matrix&) {
+YOMM2_DEFINE(double, times, (const diagonal_matrix&, const diagonal_matrix&)) {
     return 2;
 } YOMM2_END;
 
