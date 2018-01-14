@@ -1,9 +1,4 @@
-# Documentation
-
-There is very little to know in terms of functions, types, etc. The API of
-yomm2 consists of two headers, five pseudo keywords, and one function.
-
-It is however very important to understand the semantics of method dispatch.
+# Reference
 
 ### header yorel/yomm2.hpp
 

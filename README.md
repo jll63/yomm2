@@ -138,7 +138,7 @@ begin_method(
 
 ## Going Further
 
-The documentation is [here](documentation.md).
+The Reference is [here](REFERENCE.md).
 
 The library comes with a series of examples:
 
