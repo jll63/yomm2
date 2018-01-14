@@ -51,27 +51,27 @@ g++ (Ubuntu 7.2.0-8ubuntu3) 7.2.0
 -----------------------------------------------------------------------------------
 Benchmark                                            Time           CPU Iterations
 -----------------------------------------------------------------------------------
-virtual function call                                2 ns          2 ns  393105986
-uni-method call                                      2 ns          2 ns  339690614
-double dispatch                                      2 ns          2 ns  395433996
-multi-method call                                    3 ns          3 ns  212230988
-virtual function call (virtual inheritance)          2 ns          2 ns  394559425
-uni-method call (virtual inheritance)                2 ns          2 ns  298056685
-double dispatch(virtual inheritance)                 2 ns          2 ns  341053349
-multi-method call (virtual inheritance)              3 ns          3 ns  212678531
+virtual function call                                2 ns          2 ns  388352068
+uni-method call                                      2 ns          2 ns  338950548
+double dispatch                                      2 ns          2 ns  296939274
+multi-method call                                    3 ns          3 ns  213681025
+virtual function call (virtual inheritance)          2 ns          2 ns  394059985
+uni-method call (virtual inheritance)                2 ns          2 ns  336223393
+double dispatch(virtual inheritance)                 3 ns          3 ns  259119960
+multi-method call (virtual inheritance)              3 ns          3 ns  211531198
 
 ===================================================================================
 clang version 5.0.0-3 (tags/RELEASE_500/final)
 -----------------------------------------------------------------------------------
 Benchmark                                            Time           CPU Iterations
 -----------------------------------------------------------------------------------
-virtual function call                                2 ns          2 ns  393459076
-uni-method call                                      2 ns          2 ns  335140869
-double dispatch                                      2 ns          2 ns  296683771
-multi-method call                                    3 ns          3 ns  208823581
-virtual function call (virtual inheritance)          2 ns          2 ns  392972597
-uni-method call (virtual inheritance)                2 ns          2 ns  296582445
-double dispatch(virtual inheritance)                 2 ns          2 ns  340165177
-multi-method call (virtual inheritance)              3 ns          3 ns  203740055
+virtual function call                                2 ns          2 ns  391357163
+uni-method call                                      2 ns          2 ns  296146799
+double dispatch                                      2 ns          2 ns  297146675
+multi-method call                                    3 ns          3 ns  205128046
+virtual function call (virtual inheritance)          2 ns          2 ns  395366829
+uni-method call (virtual inheritance)                2 ns          2 ns  297651918
+double dispatch(virtual inheritance)                 2 ns          2 ns  297348013
+multi-method call (virtual inheritance)              3 ns          3 ns  204995332
 
 #endif

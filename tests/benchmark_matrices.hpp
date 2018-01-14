@@ -68,6 +68,8 @@ YOMM2_DEFINE(double, times, (const diagonal_matrix&, const diagonal_matrix&)) {
 
 double call_virtual_function(double s, const matrix& m);
 double call_uni_method(double s, const matrix& m);
+double call_double_dispatch(const matrix& a, const matrix& b);
+double call_multi_method(const matrix& a, const matrix& b);
 
 void virtual_function(benchmark::State& state) {
     const matrix& m = dense_matrix();
@@ -87,7 +89,7 @@ void double_dispatch(benchmark::State& state) {
     const matrix& a = dense_matrix();
     const matrix& b = diagonal_matrix();
     for (auto _ : state) {
-        a.times(b);
+        call_double_dispatch(a, b);
     }
 }
 
@@ -95,7 +97,7 @@ void multi_method(benchmark::State& state) {
     const matrix& a = dense_matrix();
     const matrix& b = diagonal_matrix();
     for (auto _ : state) {
-        times(a, b);
+        call_multi_method(a, b);
     }
 }
 
@@ -147,6 +149,14 @@ double call_virtual_function(double s, const matrix& m) {
 
 double call_uni_method(double s, const matrix& m){
     return times(s, m);
+}
+
+double call_double_dispatch(const matrix& a, const matrix& b) {
+    return a.times(b);
+}
+
+double call_multi_method(const matrix& a, const matrix& b) {
+    return times(a, b);
 }
 
 #endif
