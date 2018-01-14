@@ -134,7 +134,18 @@ struct virtual_;
 
 void update_methods();
 
+struct method_call_error {
+    enum type { not_implemented = 0, ambiguous = 1 } code;
+    _YOMM2_DEBUG(const char* method_name);
+};
+
+using method_call_error_handler = void (*)(const method_call_error& error);
+
+method_call_error_handler set_method_call_error_handler(method_call_error_handler handler);
+
 namespace detail {
+
+extern method_call_error_handler call_error_handler;
 
 struct method_info;
 struct class_info;
@@ -340,10 +351,9 @@ struct method_info {
     _YOMM2_DEBUG(const char* name);
     std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
-    void* ambiguous_call;
+    void* ambiguous;
     void* not_implemented;
     const word** slots_strides_p{nullptr};
-
 };
 
 template<typename BASE, typename DERIVED>
@@ -618,6 +628,20 @@ struct method<REG, ID, R(A...)> {
     static const char* name() { return info().name; }
 #endif
 
+    static void not_implemented(virtual_arg_t<A>...) {
+        method_call_error error;
+        error.code = method_call_error::not_implemented;
+        _YOMM2_DEBUG(error.method_name = info().name);
+        detail::call_error_handler(error);
+    }
+
+    static void ambiguous(virtual_arg_t<A>...) {
+        method_call_error error;
+        error.code = method_call_error::ambiguous;
+        _YOMM2_DEBUG(error.method_name = info().name);
+        detail::call_error_handler(error);
+    }
+
     struct init_method {
         init_method(_YOMM2_DEBUG(const char* name)) {
             if (info().vp.empty()) {
@@ -625,6 +649,8 @@ struct method<REG, ID, R(A...)> {
                 info().slots_strides_p = &slots_strides;
                 for_each_vp_t::collect_class_info(info().vp);
                 registry::get<REG>().methods.push_back(&info());
+                info().not_implemented = (void*) not_implemented;
+                info().ambiguous = (void*) ambiguous;
             }
         }
     };
@@ -640,7 +666,6 @@ method_info& method<REG, ID, R(A...)>::info() {
 }
 
 void update_methods(const registry& reg, dispatch_data& dd);
-
 
 } // namespace detail
 } // namespace yomm2

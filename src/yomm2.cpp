@@ -13,12 +13,12 @@
 #include <list>
 #include <random>
 
+#if YOMM2_DEBUG
+#include <iostream>
+#endif
+
 namespace yorel {
 namespace yomm2 {
-
-void update_methods() {
-    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>);
-}
 
 namespace detail {
 
@@ -440,9 +440,10 @@ void runtime::build_dispatch_tables() {
                     *spec.info->next = next->pf;
                 } else if (nexts.empty()) {
                     _YOMM2_DEBUG(log() << indent(3) << "-> none\n");
+                    *spec.info->next = m.info->not_implemented;
                 } else if (nexts.empty()) {
                     _YOMM2_DEBUG(log() << indent(3) << "->  ambiguous\n");
-
+                    *spec.info->next = m.info->ambiguous;
                 }
             }
         }
@@ -496,7 +497,7 @@ void runtime::build_dispatch_table(
 
             if (specs.size() > 1) {
                 _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "ambiguous\n");
-                m.dispatch_table.push_back(m.info->ambiguous_call);
+                m.dispatch_table.push_back(m.info->ambiguous);
             } else if (specs.empty()) {
                 _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "not implemented\n");
                 m.dispatch_table.push_back(m.info->not_implemented);
@@ -767,6 +768,27 @@ std::ostream* log_off() {
 
 #endif
 
+void default_method_call_error_handler(const method_call_error& error) {
+#if YOMM2_DEBUG
+    const char* explanation[] = { "no applicable definition", "ambiguous call" };
+    std::cerr << explanation[error.code] << "while calling " << error.method_name << "\n";
+#endif
+    exit(1);
+}
+
+method_call_error_handler call_error_handler;
+
 } // namespace detail
+
+void update_methods() {
+    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>);
+}
+
+method_call_error_handler set_method_call_error_handler(method_call_error_handler handler) {
+    auto prev = detail::call_error_handler;
+    detail::call_error_handler = handler;
+    return prev;
+}
+
 } // namespace yomm2
 } // namespace yorel

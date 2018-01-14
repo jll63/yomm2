@@ -60,7 +60,7 @@ YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
     return MATRIX_SCALAR;
 } YOMM2_END;
 
-BOOST_AUTO_TEST_CASE(compilation)
+BOOST_AUTO_TEST_CASE(simple)
 {
     //yorel::yomm2::detail::log_on(&std::cerr);
     yorel::yomm2::update_methods();
@@ -73,6 +73,54 @@ BOOST_AUTO_TEST_CASE(compilation)
     BOOST_TEST(times(2, dense) == SCALAR_MATRIX);
     BOOST_TEST(times(dense, 2) == MATRIX_SCALAR);
     BOOST_TEST(times(diag, 2) == DIAGONAL_SCALAR);
+}
+
+}
+
+namespace errors {
+
+struct matrix {
+    virtual ~matrix() {}
+};
+
+struct dense_matrix : matrix {};
+struct diagonal_matrix : matrix {};
+
+YOMM2_CLASS(matrix);
+YOMM2_CLASS(dense_matrix, matrix);
+YOMM2_CLASS(diagonal_matrix, matrix);
+
+YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
+
+YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
+} YOMM2_END;
+
+YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
+} YOMM2_END;
+
+int error_code = -1;
+_YOMM2_DEBUG(std::string method_name);
+
+void test_handler(const yorel::yomm2::method_call_error& error) {
+    error_code = error.code;
+    _YOMM2_DEBUG(method_name = error.method_name);
+}
+
+BOOST_AUTO_TEST_CASE(error_handling)
+{
+    yorel::yomm2::update_methods();
+    yorel::yomm2::set_method_call_error_handler(test_handler);
+    times(dense_matrix(), dense_matrix());
+    BOOST_TEST(error_code == yorel::yomm2::method_call_error::not_implemented);
+    _YOMM2_DEBUG(
+        BOOST_TEST(
+            method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
+    _YOMM2_DEBUG(method_name = "");
+    times(diagonal_matrix(), diagonal_matrix());
+    BOOST_TEST(error_code == yorel::yomm2::method_call_error::ambiguous);
+    _YOMM2_DEBUG(
+        BOOST_TEST(
+            method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
 }
 
 }
