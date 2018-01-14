@@ -45,18 +45,14 @@ classes derived from classes that are used as virtual arguments.
 
 #### Synopsis:
 ```
-YOMM2_DECLARE(return_type, method_name, (parameters));
+YOMM2_DECLARE(return_type, name, (parameter_types));
 ```
 
-Declare a method called `method_name`, which takes the specified argument list
-`parameters` and returns the specified `return_type`. `parameters` consists in
-a comma separated list of types. At least one of them must be marked with the `virtual_` template (see below).
-
-Create an inline function that has the specifie dname and return type. The
-parameters of the function consist of the types passed in `parameters` with the `virtual_` marker removed.
-
-The generated function is an ordinary inline function: it may be placed in a
-header, its address can be taken and it can be overloaded.
+Declare a method. Create an inline function that has the specified name and
+return type. The parameters of the function consist of the types passed in
+`parameter_types` with the `virtual_` marker removed. The dynamic type of the
+arguments corresponding to a virtual parameter are taken into account to select
+the most specialized definition to call.
 
 `declare_method` is an alias for `YOMM2_DECLARE` created by header
 `yorel/yomm2/cute.hpp`.
@@ -82,7 +78,27 @@ Declare function `std::string meet(Animal&, Animal&)`, which calls the most spec
 
 #### Synopsis:
 ```
+virtual_<polymorphic_type>
 ```
+
+
+
+### Examples:
+```
+struct Animal {
+    virtual ~Animal();
+};
+
+declare_method(void, kick, (virtual_<Animal*>));
+declare_method(void, kick, (virtual_<Animal&>));
+declare_method(void, kick, (virtual_<shared_ptr<Animal>>));
+declare_method(void, kick, (virtual_<const Animal*>));
+declare_method(void, kick, (virtual_<const Animal&>));
+declare_method(void, kick, (virtual_<shared_ptr<const Animal>>));
+
+```
+Given a polymorphic class `Animal`, these are all the valid ways of specifying a virtual Animal argument in a method declaration.
+
 
 ### macros begin_method, YOMM2_METHOD
 
