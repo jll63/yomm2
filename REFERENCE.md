@@ -1,11 +1,6 @@
 # Reference
 
-There is very little to know in terms of functions, types, etc. The API of
-yomm2 consists of two headers, five pseudo keywords, and one function.
-
-It is however very important to understand the semantics of method dispatch.
-
-### header yorel/yomm2.hpp
+## header yorel/yomm2.hpp
 
 #### Synopsis:
 ```
@@ -15,16 +10,41 @@ It is however very important to understand the semantics of method dispatch.
 This is the library's main header. It defines the YOMM2_* macros, and namespace
 yorel::yomm2 and its content.
 
-### header yorel/yomm2/cute.hpp
+## header yorel/yomm2/cute.hpp
 
 #### Synopsis:
 ```
 #include <yorel/yomm2/cute.hpp>
 ```
 
-### namespace yorel::yomm2
+Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 
-### yorel::yomm2::update_methods()
+* `register_class` for `YOMM2_CLASS`
+* `declare_method` for `YOMM2_DECLARE`
+* `begin_method` for `YOMM2_BEGIN`
+* `end_method` for `YOMM2_END`
+
+It is recommended to use the "cute" names unless they clash with names used in
+existing code.
+
+## namespace yorel::yomm2
+
+#### Synopsis:
+```
+using yorel::yomm2::virtual_;
+```
+
+This is the library's public namespace. It contains only a five public names:
+* template `virtual_`
+* function `update_methods`
+* struct `method_call_error`
+* typedef `method_call_error_handler`
+* function `set_method_call_error_handler`
+
+There is little point in `using namespace yorel::yomm2`. It is recommended to
+alias `virtual_` and access the other symbols by their fully qualified name.
+
+## function yorel::yomm2::update_methods()
 
 #### Synopsis:
 ```
@@ -34,57 +54,46 @@ int main(int argc, const char** argv) {
 }
 ```
 
-Create the tables used during method dispatch.
+Create tables used during method dispatch.
 
 This function must be called before any method is called (typically in
 `main`). It must also be called after a shared library is dynamically loaded or
 unloaded, if the library adds method declarations, method definitions, or
 classes derived from classes that are used as virtual arguments.
 
-### macros YOMM2_DECLARE, declare_method
+## macros YOMM2_CLASS, register_class
 
 #### Synopsis:
 ```
-YOMM2_DECLARE(return_type, method, (type...));
-
-return_type rv = method(unmarked_type... arg);
-
+YOMM2_CLASS(polymorphic_class);
+YOMM2_CLASS(polymorphic_class, polymorphic_base_class...);
 ```
 
-Declare a method.
+Register a class.
 
-Create an inline function `method` that returns a `return type` and takes an
-argument list of `unmarked_type...`.  At least one `type` (but not necessarily
-all) must be marked with `virtual_`.
+Every class that is used as a virtual parameter, and its subclasses, must be
+registered with `YOMM2_CLASS`, along with its base classes.
 
-The `unmarked_type...` consist of `type...` without the `virtual_` marker.
-
-When `method` is called, the dynamic types of the arguments marked with
-`virtual_` are examined, and the most specific definition compatible with
-`unmarked_type...` is called. If no compatible definition exists, or if
-several compatible definitions exist but none of them is more specific than
-all the others, the call is illegal and an error handler is executed. By
-default it writes a diagnostic on `std::cerr ` and terminates the program via
-`abort`. The handler can be customized.
-
-`declare_method` is an alias for `YOMM2_DECLARE` created by header
+`register_class` is an alias for `YOMM2_CLASS` created by header
 `yorel/yomm2/cute.hpp`.
 
-NOTE:
-
-* The parameter list `type...` _must_ be surrounded by parentheses.
-
-* The parameters in `type...` consist of _just_ a type, e.g. `int` is correct
-  but `int i` is not.
-
-### Examples:
+#### Examples:
 ```
-declare_method(std::string, kick, (virtual_<Animal&>));
-declare_method(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
-declare_method(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
+struct Animal {
+    virtual ~Animal() {}
+};
+
+struct Mammal    : virtual Animal { ... };
+struct Carnivore : virtual Animal { ... };
+struct Dog       : Mammal, Carnivore { .. };
+
+YOMM2_CLASS(Animal);
+YOMM2_CLASS(Carnivore, Animal);
+YOMM2_CLASS(Mammal, Animal);
+YOMM2_CLASS(Dog, Carnivore, Mammal);
 ```
 
-### template virtual_
+## template virtual_
 
 #### Synopsis:
 ```
@@ -93,9 +102,9 @@ virtual_<type>
 Mark a parameter as virtual. Meaningful only inside a method declaration parameter list.
 
 `type` must be a reference, a pointer or a `std::shared_ptr` to a polymorphic
-type, perhaps qualified with `const`.
+type, possibly qualified with `const`.
 
-### Examples:
+## Examples:
 ```
 using yorel::yomm2::virtual_;
 
@@ -114,10 +123,52 @@ YOMM2_DECLARE(void, kick, (virtual_<shared_ptr<const Animal>>));
 
 Given a polymorphic class `Animal`, these are all the valid ways of specifying
 a virtual Animal argument in a method declaration. NOTE that
-virtual_<shared_ptr<const Animal>&> is _not_ in this list and is _not_
+`virtual_<const shared_ptr<Animal>&>` is _not_ in this list and is _not_
 supported; passing shared_ptrs by const reference is a bad idea anyway.
 
-### macros YOMM2_METHOD, YOMM2_END, begin_method, end_method
+## macros YOMM2_DECLARE, declare_method
+
+#### Synopsis:
+```
+YOMM2_DECLARE(return_type, method, (type...));
+
+return_type rv = method(unmarked_type... arg);
+
+```
+
+Declare a method.
+
+Create an inline function `method` that returns a `return type` and takes an
+argument list of `unmarked_type...`, which consist of `type...` without the
+`virtual_` marker. At least one `type` (but not necessarily all) must be marked
+with `virtual_`.
+
+When `method` is called, the dynamic types of the arguments marked with
+`virtual_` are examined, and the most specific definition compatible with
+`unmarked_type...` is called. If no compatible definition exists, or if
+several compatible definitions exist but none of them is more specific than
+all the others, the call is illegal and an error handler is executed. By
+default it writes a diagnostic on `std::cerr ` and terminates the program via
+`abort`. The handler can be customized.
+
+NOTE:
+
+* The parameter list `type...` _must_ be surrounded by parentheses.
+
+* The parameters in `type...` consist of _just_ a type, e.g. `int` is correct
+  but `int i` is not.
+
+`declare_method` is an alias for `YOMM2_DECLARE` created by header
+`yorel/yomm2/cute.hpp`.
+
+## Examples:
+```
+YOMM2_DECLARE(std::string, kick, (virtual_<Animal&>));
+YOMM2_DECLARE(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
+YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
+```
+
+## macros YOMM2_METHOD, YOMM2_END, begin_method, end_method
 
 #### Synopsis:
 ```
@@ -132,7 +183,10 @@ Locate a method that can be called with the specified `type...` list and add
 the definition to the method's list of definitions. The method must exist and
 must be unique.
 
-### Examples:
+`begin_method` and `end_method` are aliases for `YOMM2_BEGIN` and `YOMM2_END`
+created by header `yorel/yomm2/cute.hpp`.
+
+## Examples:
 ```
 // implement 'kick' for dogs
 YOMM2_BEGIN(std::string, kick, (Dog& dog)) {
@@ -162,7 +216,7 @@ YOMM2_BEGIN(std::string, meet, (Cat& cat, Dog& dog)) {
 } YOMM2_END;
 ```
 
-### next
+## function next
 
 #### Synopsis:
 ```
@@ -173,7 +227,18 @@ YOMM2_BEGIN(return_type, name, (type... arg)) {
 } YOMM2_END;
 ```
 
-Call the next most specific implementation. Valid only inside a method.
+Call the next most specific implementation, if it exists. Valid only inside a
+method implementation.
+
+`next` calls the implementation that would have been called if the calling
+implementation had not been added. The next implementation may not exist,
+either because no implementation was registered for a less specific set of
+virtual arguments, or because several such implementations exist but none of
+them is more specific than all the others. In such cases, calling next is
+illegal and an error handler is executed. By default it writes a diagnostic on
+`std::cerr` and terminates the program via `abort`. The handler can be
+customized. Note that if is _not_ possible to detect whether calling `next` is
+legal by testing `next` against `nullptr`.
 
 #### Example:
 
@@ -193,21 +258,40 @@ const Employee& elon = Executive();
 double paycheck = pay(elon); // 3000 + 2000
 ```
 
-### macros register_class, YOMM2_CLASS
+## struct method_call_error
 
-#### Synopsis:
+If a method call cannot be dispatched, an error handler is called with a
+reference to a `method_call_error` structure. It contains one documented
+field - `code` - that can take two values: `not_implemented` and `ambiguous`,
+which are symbolic constant declared inside `method_call_error`.
+
+## type method_call_error_handler
+
+This is the type of the function called in case a method call fails.
+
+## function set_method_call_error_handler
+
+Set the function to call in case a method cannot be dispatcher. Take a `method_call_error_handler` and return the previous `method_call_error_handler`.
+
+The signature of the handler must be `void(const yorel::yomm2::method_call_error& error)`.
+
+The handler _may_ _not_ return; it must either terminate the process, or throw an exception.
+
+#### Example
 ```
-YOMM2_CLASS(polymorphic_type);
-YOMM2_CLASS(polymorphic_type, polymorphic_base_type...);
-```
+void my_handler(const yorel::yomm2::method_call_error& error) {
+    if (error_code == yorel::yomm2::method_call_error::not_implemented) {
+        throw(std::runtime_error("not implemented!"));
+    } else {
+        // error_code == yorel::yomm2::method_call_error::ambiguous
+        throw(std::runtime_error("ambiguous!"));
+    }
+}
 
-Register a class.
-
-Every class that is used as a virtual parameter, and its subclasses, must be
-registered with `YOMM2_CLASS`.
-
-#### Examples:
-```
-YOMM2_CLASS(Animal);
-YOMM2_CLASS(Dog, Animal);
+BOOST_AUTO_TEST_CASE(error_handling)
+{
+    yorel::yomm2::update_methods();
+    yorel::yomm2::set_method_call_error_handler(test_handler);
+    // ...
+}
 ```
