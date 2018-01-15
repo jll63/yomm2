@@ -29,8 +29,8 @@ You can stick a virtual `to_json` function in the `Matrix` base class and
 override it in the subclasses. It is an easy solution but it has severe
 drawbacks. It requires you to change the Matrix class and its subclasses, and
 recompile the library. And now all the applications that use it will contain
-the `to_json` functions even if they don't need it, because of the way virtual
-functions are implemented.
+the `to_json` functions even if they don't need them, because of the way
+virtual functions are implemented.
 
 Or you may resort on a "type switch": have the application test for each
 category and generate the JSON accordingly. This is tedious, error prone and,
