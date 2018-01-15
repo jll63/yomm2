@@ -773,7 +773,7 @@ void default_method_call_error_handler(const method_call_error& error) {
     const char* explanation[] = { "no applicable definition", "ambiguous call" };
     std::cerr << explanation[error.code] << "while calling " << error.method_name << "\n";
 #endif
-    exit(1);
+    abort();
 }
 
 method_call_error_handler call_error_handler;
