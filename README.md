@@ -1,7 +1,7 @@
 # YOMM2
 
 This is a complete rewrite of YOMM11, which is now deprecated. This library is
-much better, see [here](yomm11-yomm2.md) to find out more.
+much better, see [here](yomm11-yomm2.md) to find out why.
 
 ## TL;DR
 
@@ -136,6 +136,10 @@ begin_method(
 } end_method;
 ```
 
+## Performance
+
+Don't worry about it. Open methods are almost as fast as ordinary virtual member functions once you turn on optimization (-O3). Both with clang and gcc, dispatching call to a method with one virtual argument is only 10-15% slower than calling the equivalent virtual member function. See the implementation notes for benchmarks and assembly listings.
+
 ## Going Further
 
 The Reference is [here](REFERENCE.md).
@@ -145,3 +149,13 @@ The library comes with a series of examples:
 * [The complete `matrix` example](examples/matrix.cpp)
 
 * [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
+
+## Dependencies
+
+* a C++17 capable compiler
+
+* The following Boost libraries: Preprocessor, DynamicBitset, TypeTraits
+
+* For tests: Boost.Test version 1.65
+
+* cmake version 3.5
