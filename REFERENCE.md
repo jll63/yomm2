@@ -172,16 +172,18 @@ YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 
 #### Synopsis:
 ```
-YOMM2_BEGIN(return_type, name, (type... argument)) {
+YOMM2_BEGIN(return_type, name, (unmarked_type... argument)) {
     ....
 } YOMM2_END;
 ```
 
 Add an implementation to a method.
 
-Locate a method that can be called with the specified `type...` list and add
-the definition to the method's list of definitions. The method must exist and
-must be unique.
+Locate a method that can be called with the specified `unmarked_type...` list
+and add the definition to the method's list of definitions. The method must
+exist and must be unique.
+
+NOTE that the types of the arguments are _not_ marked with `virtual_`.
 
 `begin_method` and `end_method` are aliases for `YOMM2_BEGIN` and `YOMM2_END`
 created by header `yorel/yomm2/cute.hpp`.
