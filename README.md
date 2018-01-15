@@ -145,6 +145,66 @@ than calling the equivalent virtual member function. If the body of the method
 does any amount of work, the difference is unnoticeable. See the implementation
 notes for benchmarks and assembly listings.
 
+## Building and Installing
+
+Make sure that you have the following dependencies:
+
+* a C++17 capable compiler
+
+* The following Boost libraries: Preprocessor, DynamicBitset, TypeTraits -
+  version 1.65 or above is recommended
+
+* For tests: Boost.Test version 1.65 or above
+
+* cmake version 3.5 or above
+
+Clone the repository:
+
+```
+git clone https://github.com/jll63/yomm2.git
+cd yomm2
+```
+
+If you want to run the benchmarks, fetch the Google Benchmark submodule:
+
+```
+git submodule init
+git submodule update
+```
+
+Create a build directory and run cmake then make:
+
+```
+mkdir build
+cd build
+cmake ..
+make
+```
+
+If you want to run the tests:
+
+```
+cmake .. -DYOMM2_ENABLE_TESTS=1
+make && ctest
+```
+
+If you want to also run the benchmarks (and in this case you really want a release
+build):
+
+```
+cmake .. -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
+make && tests/benchmarks # wow it's fast!
+```
+
+Finally, if you like it and you want to install it:
+
+```
+# either:
+sudo make install
+# or:
+make install DESTDIR=/path/to/my/libs
+```
+
 ## Going Further
 
 The Reference is [here](REFERENCE.md).
@@ -154,13 +214,3 @@ The library comes with a series of examples:
 * [The complete `matrix` example](examples/matrix.cpp)
 
 * [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
-
-## Dependencies
-
-* a C++17 capable compiler
-
-* The following Boost libraries: Preprocessor, DynamicBitset, TypeTraits
-
-* For tests: Boost.Test version 1.65
-
-* cmake version 3.5
