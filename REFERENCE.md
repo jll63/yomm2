@@ -178,18 +178,18 @@ Call the next most specific implementation. Valid only inside a method.
 #### Example:
 
 ```
-// executive is-a employee
+// Executive is-a Employee
 
-YOMM2_DEFINE(double, pay, (const employee&)) {
+YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, pay, (const executive& exec)) {
-    return next(exec) // call pay(const employee&)
+YOMM2_DEFINE(double, pay, (const Executive& exec)) {
+    return next(exec) // call pay(const Employee&)
            + 2000;    // bonus
 } YOMM2_END;
 
-const employee& elon = executive();
+const Employee& elon = Executive();
 double paycheck = pay(elon); // 3000 + 2000
 ```
 

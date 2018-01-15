@@ -181,59 +181,59 @@ struct test;
 auto& registry = registry::get<test>();
 auto& dd = dispatch_data::instance<test>;
 
-struct role {
-    virtual ~role() {}
+struct Role {
+    virtual ~Role() {}
 };
 
-struct employee : role {};
-struct executive : employee {};
-struct founder : role {};
+struct Employee : Role {};
+struct Executive : Employee {};
+struct Founder : Role {};
 
-struct expense {
-    virtual ~expense() {}
+struct Expense {
+    virtual ~Expense() {}
 };
 
-struct public_transport : expense {};
-struct bus : public_transport {};
-struct metro : public_transport {};
-struct taxi : expense {};
-struct jet : expense {};
+struct Public_transport : Expense {};
+struct Bus : Public_transport {};
+struct Metro : Public_transport {};
+struct Taxi : Expense {};
+struct Jet : Expense {};
 
-YOMM2_CLASS_(test, role);
-YOMM2_CLASS_(test, employee, role);
-YOMM2_CLASS_(test, executive, employee);
-YOMM2_CLASS_(test, founder, role);
-YOMM2_CLASS_(test, expense);
-YOMM2_CLASS_(test, public_transport, expense);
-YOMM2_CLASS_(test, bus, public_transport);
-YOMM2_CLASS_(test, metro, public_transport);
-YOMM2_CLASS_(test, taxi, expense);
-YOMM2_CLASS_(test, jet, expense);
+YOMM2_CLASS_(test, Role);
+YOMM2_CLASS_(test, Employee, Role);
+YOMM2_CLASS_(test, Executive, Employee);
+YOMM2_CLASS_(test, Founder, Role);
+YOMM2_CLASS_(test, Expense);
+YOMM2_CLASS_(test, Public_transport, Expense);
+YOMM2_CLASS_(test, Bus, Public_transport);
+YOMM2_CLASS_(test, Metro, Public_transport);
+YOMM2_CLASS_(test, Taxi, Expense);
+YOMM2_CLASS_(test, Jet, Expense);
 
-YOMM2_DECLARE_(test, double, pay, (virtual_<const employee&>));
-YOMM2_DECLARE_(test, bool, approve, (virtual_<const role&>, virtual_<const expense&>, double));
+YOMM2_DECLARE_(test, double, pay, (virtual_<const Employee&>));
+YOMM2_DECLARE_(test, bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double));
 
-YOMM2_DEFINE(double, pay, (const employee&)) {
+YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
 } YOMM2_END;
 
-YOMM2_DEFINE(double, pay, (const executive& exec)) {
+YOMM2_DEFINE(double, pay, (const Executive& exec)) {
     return next(exec) + 2000;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, (const role& r, const expense& e, double amount)) {
+YOMM2_DEFINE(bool, approve, (const Role& r, const Expense& e, double amount)) {
     return false;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, (const employee& r, const public_transport& e, double amount)) {
+YOMM2_DEFINE(bool, approve, (const Employee& r, const Public_transport& e, double amount)) {
     return true;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, (const executive& r, const taxi& e, double amount)) {
+YOMM2_DEFINE(bool, approve, (const Executive& r, const Taxi& e, double amount)) {
     return true;
 } YOMM2_END;
 
-YOMM2_DEFINE(bool, approve, (const founder& r, const expense& e, double amount)) {
+YOMM2_DEFINE(bool, approve, (const Founder& r, const Expense& e, double amount)) {
     return true;
 } YOMM2_END;
 
@@ -243,59 +243,59 @@ BOOST_AUTO_TEST_CASE(registration) {
     BOOST_TEST_REQUIRE(registry.classes.size() == num_classes);
 
     auto class_iter = registry.classes.begin();
-    auto role_class = *class_iter++;
-    auto employee_class = *class_iter++;
-    auto executive_class = *class_iter++;
-    auto founder_class = *class_iter++;
-    auto expense_class = *class_iter++;
-    auto public_transport_class = *class_iter++;
-    auto bus_class = *class_iter++;
-    auto metro_class = *class_iter++;
-    auto taxi_class = *class_iter++;
-    auto jet_class = *class_iter++;
+    auto Role_class = *class_iter++;
+    auto Employee_class = *class_iter++;
+    auto Executive_class = *class_iter++;
+    auto Founder_class = *class_iter++;
+    auto Expense_class = *class_iter++;
+    auto Public_transport_class = *class_iter++;
+    auto Bus_class = *class_iter++;
+    auto Metro_class = *class_iter++;
+    auto Taxi_class = *class_iter++;
+    auto Jet_class = *class_iter++;
 
     BOOST_CHECK(class_iter == registry.classes.end());
 
-    BOOST_TEST(role_class->direct_bases.size() == 0);
+    BOOST_TEST(Role_class->direct_bases.size() == 0);
 
     {
-        std::vector<const class_info*> expected = { role_class };
-        BOOST_TEST_REQUIRE(employee_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Role_class };
+        BOOST_TEST_REQUIRE(Employee_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { employee_class };
-        BOOST_TEST(executive_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Employee_class };
+        BOOST_TEST(Executive_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { role_class };
-        BOOST_TEST(founder_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Role_class };
+        BOOST_TEST(Founder_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { expense_class };
-        BOOST_TEST_REQUIRE(public_transport_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Expense_class };
+        BOOST_TEST_REQUIRE(Public_transport_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { public_transport_class };
-        BOOST_TEST_REQUIRE(bus_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Public_transport_class };
+        BOOST_TEST_REQUIRE(Bus_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { public_transport_class };
-        BOOST_TEST_REQUIRE(metro_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Public_transport_class };
+        BOOST_TEST_REQUIRE(Metro_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { expense_class };
-        BOOST_TEST(taxi_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Expense_class };
+        BOOST_TEST(Taxi_class->direct_bases == expected);
     }
 
     {
-        std::vector<const class_info*> expected = { expense_class };
-        BOOST_TEST_REQUIRE(jet_class->direct_bases == expected);
+        std::vector<const class_info*> expected = { Expense_class };
+        BOOST_TEST_REQUIRE(Jet_class->direct_bases == expected);
     }
 
     auto pay_method = registry.methods[0];
@@ -303,21 +303,21 @@ BOOST_AUTO_TEST_CASE(registration) {
     BOOST_TEST(pay_method->specs.size() == 2);
 
     auto pay_method_iter = pay_method->specs.begin();
-    auto pay_employee = *pay_method_iter++;
-    BOOST_TEST_REQUIRE(pay_employee->vp.size() == 1);
-    BOOST_TEST(pay_employee->vp[0] == employee_class);
+    auto pay_Employee = *pay_method_iter++;
+    BOOST_TEST_REQUIRE(pay_Employee->vp.size() == 1);
+    BOOST_TEST(pay_Employee->vp[0] == Employee_class);
 
-    auto pay_executive = pay_method_iter++;
-    auto pay_founder = pay_method_iter++;
+    auto pay_Executive = pay_method_iter++;
+    auto pay_Founder = pay_method_iter++;
 
     auto approve_method = registry.methods[1];
     BOOST_TEST(approve_method->vp.size() == 2);
     BOOST_TEST(approve_method->specs.size() == 4);
 
-    auto approve_employee_public = approve_method->specs[1];
-    BOOST_TEST_REQUIRE(approve_employee_public->vp.size() == 2);
-    BOOST_TEST(approve_employee_public->vp[0] == employee_class);
-    BOOST_TEST(approve_employee_public->vp[1] == public_transport_class);
+    auto approve_Employee_public = approve_method->specs[1];
+    BOOST_TEST_REQUIRE(approve_Employee_public->vp.size() == 2);
+    BOOST_TEST(approve_Employee_public->vp[0] == Employee_class);
+    BOOST_TEST(approve_Employee_public->vp[1] == Public_transport_class);
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
@@ -340,95 +340,95 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     auto class_iter = rt.classes.begin();
-    auto role_class = &*class_iter++;
-    auto employee_class = &*class_iter++;
-    auto executive_class = &*class_iter++;
-    auto founder_class = &*class_iter++;
-    auto expense_class = &*class_iter++;
-    auto public_transport_class = &*class_iter++;
-    auto bus_class = &*class_iter++;
-    auto metro_class = &*class_iter++;
-    auto taxi_class = &*class_iter++;
-    auto jet_class = &*class_iter++;
+    auto Role_class = &*class_iter++;
+    auto Employee_class = &*class_iter++;
+    auto Executive_class = &*class_iter++;
+    auto Founder_class = &*class_iter++;
+    auto Expense_class = &*class_iter++;
+    auto Public_transport_class = &*class_iter++;
+    auto Bus_class = &*class_iter++;
+    auto Metro_class = &*class_iter++;
+    auto Taxi_class = &*class_iter++;
+    auto Jet_class = &*class_iter++;
 
     BOOST_CHECK(class_iter == rt.classes.end());
 
-    BOOST_TEST(role_class->direct_bases.size() == 0);
+    BOOST_TEST(Role_class->direct_bases.size() == 0);
 
     {
-        std::vector<rt_class*> expected = { role_class };
-        BOOST_TEST(employee_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Role_class };
+        BOOST_TEST(Employee_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { employee_class };
-        BOOST_TEST(executive_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Employee_class };
+        BOOST_TEST(Executive_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { role_class };
-        BOOST_TEST(founder_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Role_class };
+        BOOST_TEST(Founder_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST(public_transport_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Expense_class };
+        BOOST_TEST(Public_transport_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { public_transport_class };
-        BOOST_TEST(bus_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Public_transport_class };
+        BOOST_TEST(Bus_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { public_transport_class };
-        BOOST_TEST(metro_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Public_transport_class };
+        BOOST_TEST(Metro_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST(taxi_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Expense_class };
+        BOOST_TEST(Taxi_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { expense_class };
-        BOOST_TEST(jet_class->direct_bases == expected);
+        std::vector<rt_class*> expected = { Expense_class };
+        BOOST_TEST(Jet_class->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { employee_class, founder_class };
-        BOOST_TEST(role_class->direct_derived == expected);
+        std::vector<rt_class*> expected = { Employee_class, Founder_class };
+        BOOST_TEST(Role_class->direct_derived == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { executive_class };
-        BOOST_TEST(employee_class->direct_derived == expected);
+        std::vector<rt_class*> expected = { Executive_class };
+        BOOST_TEST(Employee_class->direct_derived == expected);
     }
 
     {
         std::vector<rt_class*> expected = {
-            public_transport_class, taxi_class, jet_class
+            Public_transport_class, Taxi_class, Jet_class
         };
-        BOOST_TEST(expense_class->direct_derived == expected);
+        BOOST_TEST(Expense_class->direct_derived == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { bus_class, metro_class };
-        BOOST_TEST(public_transport_class->direct_derived == expected);
+        std::vector<rt_class*> expected = { Bus_class, Metro_class };
+        BOOST_TEST(Public_transport_class->direct_derived == expected);
     }
 
-    BOOST_TEST(bus_class->direct_derived.size() == 0);
-    BOOST_TEST(metro_class->direct_derived.size() == 0);
-    BOOST_TEST(taxi_class->direct_derived.size() == 0);
-    BOOST_TEST(jet_class->direct_derived.size() == 0);
+    BOOST_TEST(Bus_class->direct_derived.size() == 0);
+    BOOST_TEST(Metro_class->direct_derived.size() == 0);
+    BOOST_TEST(Taxi_class->direct_derived.size() == 0);
+    BOOST_TEST(Jet_class->direct_derived.size() == 0);
 
     rt.layer_classes();
 
     {
         std::vector<rt_class*> expected = {
-          role_class, expense_class,
-          employee_class, founder_class, public_transport_class, taxi_class, jet_class,
-          executive_class, bus_class, metro_class,
+          Role_class, Expense_class,
+          Employee_class, Founder_class, Public_transport_class, Taxi_class, Jet_class,
+          Executive_class, Bus_class, Metro_class,
         };
         BOOST_TEST_INFO("result   = " + to_string(rt.layered_classes));
         BOOST_TEST_INFO("expected = " + to_string(expected));
@@ -439,41 +439,41 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         std::unordered_set<rt_class*> expected = {
-            role_class, employee_class, founder_class, executive_class
+            Role_class, Employee_class, Founder_class, Executive_class
         };
 
-        BOOST_TEST_INFO("result   = " + to_string(role_class->conforming));
+        BOOST_TEST_INFO("result   = " + to_string(Role_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(role_class->conforming == expected);
+        BOOST_TEST(Role_class->conforming == expected);
     }
 
     {
-        std::unordered_set<rt_class*> expected = { founder_class };
+        std::unordered_set<rt_class*> expected = { Founder_class };
 
-        BOOST_TEST_INFO("result   = " + to_string(founder_class->conforming));
+        BOOST_TEST_INFO("result   = " + to_string(Founder_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(founder_class->conforming == expected);
-    }
-
-    {
-        std::unordered_set<rt_class*> expected = {
-          expense_class, public_transport_class, taxi_class, jet_class,
-          bus_class, metro_class,
-        };
-
-        BOOST_TEST_INFO("result   = " + to_string(expense_class->conforming));
-        BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(expense_class->conforming == expected);
+        BOOST_TEST(Founder_class->conforming == expected);
     }
 
     {
         std::unordered_set<rt_class*> expected = {
-          public_transport_class, bus_class, metro_class,
+          Expense_class, Public_transport_class, Taxi_class, Jet_class,
+          Bus_class, Metro_class,
         };
 
-        BOOST_TEST_INFO("result   = " + to_string(public_transport_class->conforming));
+        BOOST_TEST_INFO("result   = " + to_string(Expense_class->conforming));
         BOOST_TEST_INFO("expected = " + to_string(expected));
-        BOOST_TEST(public_transport_class->conforming == expected);
+        BOOST_TEST(Expense_class->conforming == expected);
+    }
+
+    {
+        std::unordered_set<rt_class*> expected = {
+          Public_transport_class, Bus_class, Metro_class,
+        };
+
+        BOOST_TEST_INFO("result   = " + to_string(Public_transport_class->conforming));
+        BOOST_TEST_INFO("expected = " + to_string(expected));
+        BOOST_TEST(Public_transport_class->conforming == expected);
     }
 
     rt.augment_methods();
@@ -485,14 +485,14 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     rt_method& approve_method = rt.methods[1];
 
     {
-        std::vector<rt_class*> expected = { employee_class };
+        std::vector<rt_class*> expected = { Employee_class };
         BOOST_TEST_INFO("result   = " + to_string(pay_method.vp));
         BOOST_TEST_INFO("expected = " + to_string(expected));
         BOOST_TEST(pay_method.vp == expected);
     }
 
     {
-        std::vector<rt_class*> expected = { role_class, expense_class };
+        std::vector<rt_class*> expected = { Role_class, Expense_class };
         BOOST_TEST_INFO("result   = " << to_string(approve_method.vp));
         BOOST_TEST_INFO("expected = " << to_string(expected));
         BOOST_TEST(approve_method.vp == expected);
@@ -512,17 +512,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         }
     }
 
-    BOOST_TEST_REQUIRE(role_class->vp.size() == 1);
-    BOOST_TEST(role_class->vp[0].method == &approve_method);
-    BOOST_TEST(role_class->vp[0].param == 0);
+    BOOST_TEST_REQUIRE(Role_class->vp.size() == 1);
+    BOOST_TEST(Role_class->vp[0].method == &approve_method);
+    BOOST_TEST(Role_class->vp[0].param == 0);
 
-    BOOST_TEST_REQUIRE(employee_class->vp.size() == 1);
-    BOOST_TEST(employee_class->vp[0].method == &pay_method);
-    BOOST_TEST(employee_class->vp[0].param == 0);
+    BOOST_TEST_REQUIRE(Employee_class->vp.size() == 1);
+    BOOST_TEST(Employee_class->vp[0].method == &pay_method);
+    BOOST_TEST(Employee_class->vp[0].param == 0);
 
-    BOOST_TEST_REQUIRE(expense_class->vp.size() == 1);
-    BOOST_TEST(expense_class->vp[0].method == &approve_method);
-    BOOST_TEST(expense_class->vp[0].param == 1);
+    BOOST_TEST_REQUIRE(Expense_class->vp.size() == 1);
+    BOOST_TEST(Expense_class->vp[0].method == &approve_method);
+    BOOST_TEST(Expense_class->vp[0].param == 1);
 
     rt.allocate_slots();
 
@@ -536,39 +536,39 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == approve_method.slots);
     }
 
-    BOOST_TEST_REQUIRE(role_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(employee_class->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(executive_class->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(founder_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Role_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Employee_class->mtbl.size() == 2);
+    BOOST_TEST_REQUIRE(Executive_class->mtbl.size() == 2);
+    BOOST_TEST_REQUIRE(Founder_class->mtbl.size() == 1);
 
-    BOOST_TEST_REQUIRE(expense_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(public_transport_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(bus_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(metro_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(taxi_class->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(jet_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Expense_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Public_transport_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Bus_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Metro_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Taxi_class->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(Jet_class->mtbl.size() == 1);
 
     auto pay_method_iter = pay_method.specs.begin();
-    auto pay_employee = pay_method_iter++;
-    auto pay_executive = pay_method_iter++;
+    auto pay_Employee = pay_method_iter++;
+    auto pay_Executive = pay_method_iter++;
 
     auto spec_iter = approve_method.specs.begin();
-    auto approve_role_expense = spec_iter++;
-    auto approve_employee_public = spec_iter++;
-    auto approve_executive_taxi = spec_iter++;
-    auto approve_founder_expense = spec_iter++;
+    auto approve_Role_Expense = spec_iter++;
+    auto approve_Employee_public = spec_iter++;
+    auto approve_Executive_Taxi = spec_iter++;
+    auto approve_Founder_Expense = spec_iter++;
 
     {
         BOOST_TEST(
-            runtime::is_more_specific(&*approve_founder_expense, &*approve_role_expense));
+            runtime::is_more_specific(&*approve_Founder_Expense, &*approve_Role_Expense));
         BOOST_TEST(
-            runtime::is_more_specific(&*approve_executive_taxi, &*approve_role_expense));
+            runtime::is_more_specific(&*approve_Executive_Taxi, &*approve_Role_Expense));
         BOOST_TEST(
-            !runtime::is_more_specific(&*approve_role_expense, &*approve_role_expense));
+            !runtime::is_more_specific(&*approve_Role_Expense, &*approve_Role_Expense));
 
         {
-            std::vector<const rt_spec*> expected = { &*approve_executive_taxi };
-            std::vector<const rt_spec*> specs = { &*approve_role_expense, &*approve_executive_taxi };
+            std::vector<const rt_spec*> expected = { &*approve_Executive_Taxi };
+            std::vector<const rt_spec*> specs = { &*approve_Role_Expense, &*approve_Executive_Taxi };
             BOOST_TEST(expected == runtime::best(specs));
         }
     }
@@ -577,8 +577,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
-        BOOST_TEST(pay_method.dispatch_table[0] == pay_employee->info->pf);
-        BOOST_TEST(pay_method.dispatch_table[1] == pay_executive->info->pf);
+        BOOST_TEST(pay_method.dispatch_table[0] == pay_Employee->info->pf);
+        BOOST_TEST(pay_method.dispatch_table[1] == pay_Executive->info->pf);
     }
 
     {
@@ -589,73 +589,73 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(approve_method.strides[0] == 4);
 
         auto dp_iter = approve_method.dispatch_table.begin();
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_role_expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_executive_taxi->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_founder_expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Executive_Taxi->info->pf);
+        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
     }
 
     {
         const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == role_class->mtbl);
+        BOOST_TEST(expected == Role_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 1, 0 };
-        BOOST_TEST(expected == employee_class->mtbl);
+        BOOST_TEST(expected == Employee_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 2, 1 };
-        BOOST_TEST(expected == executive_class->mtbl);
+        BOOST_TEST(expected == Executive_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 3 };
-        BOOST_TEST(expected == founder_class->mtbl);
+        BOOST_TEST(expected == Founder_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == expense_class->mtbl);
+        BOOST_TEST(expected == Expense_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 1 };
-        BOOST_TEST(expected == public_transport_class->mtbl);
+        BOOST_TEST(expected == Public_transport_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 1 };
-        BOOST_TEST(expected == bus_class->mtbl);
+        BOOST_TEST(expected == Bus_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 1 };
-        BOOST_TEST(expected == metro_class->mtbl);
+        BOOST_TEST(expected == Metro_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 2 };
-        BOOST_TEST(expected == taxi_class->mtbl);
+        BOOST_TEST(expected == Taxi_class->mtbl);
     }
 
     {
         const std::vector<int> expected = { 0 };
-        BOOST_TEST(expected == jet_class->mtbl);
+        BOOST_TEST(expected == Jet_class->mtbl);
     }
 
-    BOOST_TEST_REQUIRE(pay_employee->info->next != nullptr);
-    BOOST_TEST_REQUIRE(pay_executive->info->next != nullptr);
-    BOOST_TEST(*pay_executive->info->next == pay_employee->info->pf);
+    BOOST_TEST_REQUIRE(pay_Employee->info->next != nullptr);
+    BOOST_TEST_REQUIRE(pay_Executive->info->next != nullptr);
+    BOOST_TEST(*pay_Executive->info->next == pay_Employee->info->pf);
 
     rt.find_hash_factor();
     rt.install_gv();
@@ -689,120 +689,120 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
         auto opt_iter = gv_iter;
 
-        // role
+        // Role
         BOOST_TEST(gv_iter++->i == 0); // approve/0
-        // employee
+        // Employee
         BOOST_TEST(gv_iter++->i == 1); // approve/0
         BOOST_TEST(gv_iter++->i == 0); // pay
-        // executive
+        // Executive
         BOOST_TEST(gv_iter++->i == 2); // approve/0
         BOOST_TEST(gv_iter++->i == 1); // pay
         // owner
         BOOST_TEST(gv_iter++->i == 3); // approve/0
-        // expense
+        // Expense
         BOOST_TEST(gv_iter++->i == 0); // approve/1
-        // public_transport
+        // Public_transport
         BOOST_TEST(gv_iter++->i == 1); // approve/1
-        // bus
+        // Bus
         BOOST_TEST(gv_iter++->i == 1); // approve/1
-        // metro
+        // Metro
         BOOST_TEST(gv_iter++->i == 1); // approve/1
-        // taxi
+        // Taxi
         BOOST_TEST(gv_iter++->i == 2); // approve/1
-        // plane
+        // Plane
         BOOST_TEST(gv_iter++->i == 0); // approve/1
 
         rt.optimize();
 
-        // role
+        // Role
         BOOST_TEST(opt_iter++->pw == 0 + approve_dispatch_table); // approve/0
-        // employee
+        // Employee
         BOOST_TEST(opt_iter++->pw == 1 + approve_dispatch_table); // approve/0
-        BOOST_TEST(opt_iter++->pf == pay_employee->info->pf); // pay
-        // executive
+        BOOST_TEST(opt_iter++->pf == pay_Employee->info->pf); // pay
+        // Executive
         BOOST_TEST(opt_iter++->pw == 2 + approve_dispatch_table); // approve/0
-        BOOST_TEST(opt_iter++->pf == pay_executive->info->pf); // pay
+        BOOST_TEST(opt_iter++->pf == pay_Executive->info->pf); // pay
         // owner
         BOOST_TEST(opt_iter++->pw == 3 + approve_dispatch_table); // approve/0
-        // expense
+        // Expense
         BOOST_TEST(opt_iter++->i == 0); // approve/1
-        // public_transport
+        // Public_transport
         BOOST_TEST(opt_iter++->i == 1); // approve/1
-        // bus
+        // Bus
         BOOST_TEST(opt_iter++->i == 1); // approve/1
-        // metro
+        // Metro
         BOOST_TEST(opt_iter++->i == 1); // approve/1
-        // taxi
+        // Taxi
         BOOST_TEST(opt_iter++->i == 2); // approve/1
-        // plane
+        // Plane
         BOOST_TEST(opt_iter++->i == 0); // approve/1
 
-        BOOST_TEST(mptr(dd, &typeid(role)) == role_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(employee)) == employee_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(executive)) == executive_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(founder)) == founder_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Role)) == Role_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Employee)) == Employee_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Executive)) == Executive_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Founder)) == Founder_class->mptr);
 
-        BOOST_TEST(mptr(dd, &typeid(expense)) == expense_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(public_transport)) == public_transport_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(bus)) == bus_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(metro)) == metro_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(taxi)) == taxi_class->mptr);
-        BOOST_TEST(mptr(dd, &typeid(jet)) == jet_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Expense)) == Expense_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Public_transport)) == Public_transport_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Bus)) == Bus_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Metro)) == Metro_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Taxi)) == Taxi_class->mptr);
+        BOOST_TEST(mptr(dd, &typeid(Jet)) == Jet_class->mptr);
     }
 
     {
-        const role& a_role = role();
-        const employee& a_employee = employee();
-        const employee& a_executive = executive();
-        const role& a_founder = founder();
+        const Role& role = Role();
+        const Employee& employee = Employee();
+        const Employee& executive = Executive();
+        const Role& founder = Founder();
 
-        const expense& a_expense = expense();
-        const expense& a_public_transport = public_transport();
-        const expense& a_bus = bus();
-        const expense& a_metro = metro();
-        const expense& a_taxi = taxi();
-        const expense& a_jet = jet();
+        const Expense& expense = Expense();
+        const Expense& public_transport = Public_transport();
+        const Expense& bus = Bus();
+        const Expense& metro = Metro();
+        const Expense& taxi = Taxi();
+        const Expense& jet = Jet();
 
-        using pay_method = decltype(pay(discriminator(), employee()));
+        using pay_method = decltype(pay(discriminator(), Employee()));
         BOOST_TEST(pay_method::arity == 1);
-        BOOST_TEST(pay_method::resolve(a_employee) == pay_employee->info->pf);
-        BOOST_TEST(&typeid(a_executive) == &typeid(executive));
-        BOOST_TEST(pay_method::resolve(a_executive) == pay_executive->info->pf);
+        BOOST_TEST(pay_method::resolve(employee) == pay_Employee->info->pf);
+        BOOST_TEST(&typeid(executive) == &typeid(Executive));
+        BOOST_TEST(pay_method::resolve(executive) == pay_Executive->info->pf);
 
-        using approve_method = decltype(approve(discriminator(), role(), expense(), 0.));
+        using approve_method = decltype(approve(discriminator(), Role(), Expense(), 0.));
         BOOST_TEST(approve_method::arity == 2);
 
-        BOOST_TEST(approve_method::resolve(a_role, a_expense, 0.) == approve_role_expense->info->pf);
+        BOOST_TEST(approve_method::resolve(role, expense, 0.) == approve_Role_Expense->info->pf);
 
         {
-            std::vector<const role*> roles = {
-                &a_role,
-              &a_employee,
-              &a_executive,
-              &a_founder
+            std::vector<const Role*> Roles = {
+                &role,
+              &employee,
+              &executive,
+              &founder
             };
 
-            std::vector<const expense*> expenses = {
-                &a_expense,
-              &a_public_transport,
-              &a_bus,
-              &a_metro,
-              &a_taxi,
-              &a_jet
+            std::vector<const Expense*> Expenses = {
+                &expense,
+              &public_transport,
+              &bus,
+              &metro,
+              &taxi,
+              &jet
             };
 
             int i = 0;
 
-            for (auto r : roles) {
+            for (auto r : Roles) {
                 int j = 0;
-                for (auto e : expenses) {
+                for (auto e : Expenses) {
                     BOOST_TEST_INFO("i = " << i << " j = " << j);
                     auto expected =
-                        typeid(*r) == typeid(founder) ? approve_founder_expense :
-                        typeid(*r) == typeid(executive) ?
-                        (typeid(*e) == typeid(taxi) ? approve_executive_taxi : dynamic_cast<const public_transport*>(e) ? approve_employee_public : approve_role_expense) :
-                        typeid(*r) == typeid(employee) && dynamic_cast<const public_transport*>(e) ? approve_employee_public :
-                        approve_role_expense;
+                        typeid(*r) == typeid(Founder) ? approve_Founder_Expense :
+                        typeid(*r) == typeid(Executive) ?
+                        (typeid(*e) == typeid(Taxi) ? approve_Executive_Taxi : dynamic_cast<const Public_transport*>(e) ? approve_Employee_public : approve_Role_Expense) :
+                        typeid(*r) == typeid(Employee) && dynamic_cast<const Public_transport*>(e) ? approve_Employee_public :
+                        approve_Role_Expense;
                     BOOST_TEST(approve_method::resolve(*r, *e, 0.) == expected->info->pf);
                     ++j;
                 }
@@ -810,8 +810,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             }
         }
 
-        BOOST_TEST(pay(a_employee) == 3000);
-        BOOST_TEST(pay(a_executive) == 5000);
+        BOOST_TEST(pay(employee) == 3000);
+        BOOST_TEST(pay(executive) == 5000);
     }
 }
 }
