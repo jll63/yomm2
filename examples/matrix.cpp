@@ -108,6 +108,9 @@ inline shared_ptr<const matrix> times(shared_ptr<const matrix> a, double b) {
     return times(b, a);
 }
 
+// -----------------------------------------------------------------------------
+// main
+
 #define check(expr) {if (!(expr)) {cerr << #expr << " failed\n";}}
 
 int main() {
