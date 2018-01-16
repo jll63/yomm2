@@ -103,6 +103,7 @@ begin_method(string, as_lisp, (const Integer& expr)) {
 int main()
 {
     yorel::yomm2::update_methods();
+
     shared_ptr<Node> expr =
         make_shared<Times>(
             make_shared<Integer>(2),
