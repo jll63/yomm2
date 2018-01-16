@@ -18,6 +18,9 @@ class Bulldog : public Dog {};
 class Cat     : public Animal {};
 class Dolphin : public Animal {};
 
+// -----------------------------------------------------------------------------
+// add behavior to existing classes, without changing them
+
 using yorel::yomm2::virtual_;
 
 register_class(Animal);
