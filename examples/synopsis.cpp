@@ -3,11 +3,6 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <iostream>
-#include <memory>
-
-#include <yorel/yomm2/cute.hpp>
-
 class Animal {
   public:
     virtual ~Animal() {}
@@ -21,6 +16,8 @@ class Dolphin : public Animal {};
 // =============================================================================
 // add behavior to existing classes, without changing them
 
+#include <yorel/yomm2/cute.hpp>
+
 using yorel::yomm2::virtual_;
 
 register_class(Animal);
@@ -29,7 +26,7 @@ register_class(Bulldog, Dog);
 register_class(Cat, Animal);
 register_class(Dolphin, Animal);
 
-// open method with single argument <=> virtual function "from outside"
+// open method with single virtual argument <=> virtual function "from outside"
 declare_method(std::string, kick, (virtual_<Animal&>));
 
 // implement 'kick' for dogs
@@ -62,6 +59,12 @@ begin_method(std::string, meet, (Cat& cat, Dog& dog)) {
   return "run";
 } end_method;
 
+// -----------------------------------------------------------------------------
+// main
+
+#include <iostream>
+#include <memory>
+
 int main()
 {
     yorel::yomm2::update_methods();
@@ -69,12 +72,14 @@ int main()
     std::unique_ptr<Animal>
         hector = std::make_unique<Bulldog>(),
         snoopy = std::make_unique<Dog>();
+
     std::cout << "kick snoopy: " << kick(*snoopy) << "\n"; // bark
     std::cout << "kick hector: " << kick(*hector) << "\n"; // bark and bite
 
     std::unique_ptr<Animal>
         sylvester = std::make_unique<Cat>(),
         flipper = std::make_unique<Dolphin>();
+
   std::cout << "hector meets sylvester: " << meet(*hector, *sylvester) << "\n"; // chase
   std::cout << "sylvester meets hector: " << meet(*sylvester, *hector) << "\n"; // run
   std::cout << "hector meets snoopy: " << meet(*hector, *snoopy) << "\n"; // wag tail
