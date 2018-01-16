@@ -8,9 +8,9 @@ me to completely rewrite yomm11. Here are the improvements:
 ## Only one mode: orthogonal _and_ fast
 
 Yomm11 method dispatch is very fast, provided that you instrument all the
-classes that partake in method calls. This means adding macro calls in several
-places, and sometimes adding constructors. The purpose is to add a pointer to a
-method table, which plays a role very similar to the virtual function table
+classes that partake in method calls. This means adding macro calls inside
+classes, and sometimes adding constructors. The purpose is to add a pointer to
+a method table, which plays a role very similar to the virtual function table
 created by the compiler.
 
 As an alternative, yomm11 supports an orthogonal mode: the method table pointer
