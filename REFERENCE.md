@@ -267,7 +267,7 @@ double paycheck = pay(elon); // 3000 + 2000
 If a method call cannot be dispatched, an error handler is called with a
 reference to a `method_call_error` structure. It contains one documented
 field - `code` - that can take two values: `not_implemented` and `ambiguous`,
-which are symbolic constant declared inside `method_call_error`.
+which are symbolic constants declared inside `method_call_error`.
 
 ## type method_call_error_handler
 
