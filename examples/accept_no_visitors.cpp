@@ -39,7 +39,7 @@ struct Integer : Node {
     int value;
 };
 
-// -----------------------------------------------------------------------------
+// =============================================================================
 // add behavior to existing classes, without changing them
 
 register_class(Node);
