@@ -39,6 +39,9 @@ struct Integer : Node {
     int value;
 };
 
+// -----------------------------------------------------------------------------
+// add behavior to existing classes, without changing them
+
 register_class(Node);
 register_class(Plus, Node);
 register_class(Times, Node);
