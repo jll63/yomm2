@@ -188,7 +188,7 @@ cmake .. -DYOMM2_ENABLE_TESTS=1
 make && ctest
 ```
 
-If you want to also run the benchmarks (and in this case you really want a release
+If you also want to run the benchmarks (and in this case you really want a release
 build):
 
 ```
