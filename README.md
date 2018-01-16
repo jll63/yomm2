@@ -139,7 +139,7 @@ begin_method(
 ## Performance
 
 Don't worry about it. Open methods are almost as fast as ordinary virtual
-member functions once you turn on optimization (-O3). Both with clang and gcc,
+member functions once you turn on optimization (-O3). With both clang and gcc,
 dispatching a call to a method with one virtual argument is only 10-15% slower
 than calling the equivalent virtual member function. If the body of the method
 does any amount of work, the difference is unnoticeable. See the implementation
