@@ -521,9 +521,9 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<FIRST>::key(first);
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         _YOMM2_DEBUG(detail::log() << "  key = " << key);
-        auto mptr = detail::mptr(registry::get<REG>(), key);
+        auto mptr = detail::mptr(dispatch_data::instance<REG>, key);
         _YOMM2_DEBUG(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         _YOMM2_DEBUG(detail::log() << " slot = " << slot);

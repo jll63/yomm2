@@ -14,3 +14,7 @@ add_test (matrix matrix)
 add_executable(accept_no_visitors accept_no_visitors.cpp)
 target_link_libraries (accept_no_visitors yomm2)
 add_test (accept_no_visitors accept_no_visitors)
+
+add_executable(adventure adventure.cpp)
+target_link_libraries (adventure yomm2)
+add_test (adventure adventure)
