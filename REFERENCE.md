@@ -236,7 +236,7 @@ method implementation.
 implementation had not been added. The next implementation may not exist,
 either because no implementation was registered for a less specific set of
 virtual arguments, or because several such implementations exist but none of
-them is more specific than all the others. In such cases, calling next is
+them is more specific than all the others. In such cases, calling `next` is
 illegal and an error handler is executed. By default it writes a diagnostic on
 `std::cerr` and terminates the program via `abort`. The handler can be
 customized. Note that if is _not_ possible to detect whether calling `next` is
