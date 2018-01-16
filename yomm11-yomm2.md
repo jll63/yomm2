@@ -32,9 +32,8 @@ In yomm11, methods are called via a function object created by the
 would create two objects with the same name.
 
 In Yomm2, declaring a method creates a plain inline function. Thus it is
-perfectly acceptable to create several methods that have the same name and
-differ only by their argument lists. It is also possible to take a pointer to a
-method.
+possible to create several methods that have the same name and differ only by
+their signature. It is also possible to take a pointer to a method.
 
 ## Support for smart pointers
 
