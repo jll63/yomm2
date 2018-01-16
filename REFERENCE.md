@@ -71,8 +71,10 @@ YOMM2_CLASS(polymorphic_class, polymorphic_base_class...);
 
 Register a class.
 
-Every class that is used as a virtual parameter, and its subclasses, must be
-registered with `YOMM2_CLASS`, along with its base classes.
+Every class that potentially takes part in a method call must be registered
+with `YOMM2_CLASS`. This means all classes that are marked with `virtual_`, and
+all their subclasses. Each class registration must list the base classes that
+may be involved in method calls.
 
 `register_class` is an alias for `YOMM2_CLASS` created by header
 `yorel/yomm2/cute.hpp`.
