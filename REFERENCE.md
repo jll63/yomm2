@@ -273,7 +273,9 @@ This is the type of the function called in case a method call fails.
 
 ## function set_method_call_error_handler
 
-Set the function to call in case a method cannot be dispatcher. Take a `method_call_error_handler` and return the previous `method_call_error_handler`.
+Set the function to call in case a method cannot be dispatched. Take a
+`method_call_error_handler` and return the previous
+`method_call_error_handler`.
 
 The signature of the handler must be `void(const yorel::yomm2::method_call_error& error)`.
 
