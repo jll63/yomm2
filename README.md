@@ -16,16 +16,16 @@ You have a matrix math library. It deals with all sort of matrices: dense,
 diagonal, tri-diagonal, etc. Each matrix subtype has a corresponding class in a
 hierarchy rooted in Matrix.
 
-Now you would like to render Matrix objects as JSON strings. The
-representation will vary depending on the exact type of the object; for
-example, if the matrix is a DiagonalMatrix, you only need to store the
-diagonal - the other elements are all zeroes.
+Now you would like to render Matrix objects as JSON strings. The representation
+will vary depending on the exact type of the object; for example, if a matrix
+is a DiagonalMatrix, you only need to store the diagonal - the other elements
+are all zeroes.
 
 This is an example of a "cutting concern". How do you do it?
 
 It turns out that OOP doesn't offer a good solution to this.
 
-You can stick a virtual `to_json` function in the `Matrix` base class and
+You can stick a pure virtual `to_json` function in the `Matrix` base class and
 override it in the subclasses. It is an easy solution but it has severe
 drawbacks. It requires you to change the Matrix class and its subclasses, and
 recompile the library. And now all the applications that use it will contain
