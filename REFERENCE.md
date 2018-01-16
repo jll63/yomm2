@@ -291,11 +291,4 @@ void my_handler(const yorel::yomm2::method_call_error& error) {
         throw(std::runtime_error("ambiguous!"));
     }
 }
-
-BOOST_AUTO_TEST_CASE(error_handling)
-{
-    yorel::yomm2::update_methods();
-    yorel::yomm2::set_method_call_error_handler(test_handler);
-    // ...
-}
 ```
