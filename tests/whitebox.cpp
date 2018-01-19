@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST_REQUIRE(pay_Executive->info->next != nullptr);
     BOOST_TEST(*pay_Executive->info->next == pay_Employee->info->pf);
 
-    rt.find_hash_factor();
+    rt.find_hash_function(rt.classes, rt.dd.hash, rt.metrics);
     rt.install_gv();
 
     {

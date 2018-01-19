@@ -169,11 +169,21 @@ template<typename T> registry& registry::get() {
     return r;
 }
 
+struct hash_function {
+    std::uintptr_t mult;
+    std::size_t shift;
+
+    std::size_t operator ()(const void* p) const {
+        return static_cast<std::size_t>(
+            (mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
+            >> shift);
+    }
+};
+
 struct dispatch_data {
     // global vector:
     std::vector<word> gv;
-    std::uintptr_t hash_mult;
-    std::size_t hash_shift;
+    hash_function hash;
     template<typename T> static dispatch_data instance;
 };
 
@@ -293,14 +303,8 @@ using virtual_arg_t = typename virtual_traits<T>::argument_type;
 
 struct discriminator {};
 
-inline std::size_t hash(const dispatch_data& t, const void* p) {
-    return static_cast<std::size_t>(
-        (t.hash_mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
-        >> t.hash_shift);
-}
-
 inline const word* mptr(const dispatch_data& t, const std::type_info* ti) {
-    return t.gv[hash(t, ti)].pw;
+    return t.gv[t.hash(ti)].pw;
 }
 
 _YOMM2_DEBUG(std::ostream& log());

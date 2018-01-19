@@ -76,7 +76,7 @@ void runtime::update() {
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    find_hash_factor();
+    find_hash_function(classes, dd.hash, metrics);
     install_gv();
     optimize();
 }
@@ -521,7 +521,10 @@ void runtime::build_dispatch_table(
 
 }
 
-void runtime::find_hash_factor() {
+void runtime::find_hash_function(
+    const std::vector<rt_class>& classes,
+        hash_function& hash,
+        metrics_t& metrics) {
     std::vector<const void*> keys;
     auto start_time = std::chrono::steady_clock::now();
 
@@ -547,9 +550,8 @@ void runtime::find_hash_factor() {
             ++M;
         }
 
-        dd.hash_shift = 64 - M;
+        hash.shift = 64 - M;
         auto hash_size = 1 << M;
-        dd.gv.resize(hash_size);
 
         _YOMM2_DEBUG(
             log() << indent(1) << "trying with M = " << M
@@ -563,10 +565,10 @@ void runtime::find_hash_factor() {
             ++attempts;
             ++total_attempts;
             found = true;
-            dd.hash_mult = uniform_dist(rnd) | 1;
+            hash.mult = uniform_dist(rnd) | 1;
 
             for (auto key : keys) {
-                auto h = hash(dd, key);
+                auto h = hash(key);
                 if (buckets[h]++) {
                     found = false;
                     break;
@@ -582,7 +584,7 @@ void runtime::find_hash_factor() {
 
         if (found) {
             _YOMM2_DEBUG(
-                log() << indent(1) << "found " << dd.hash_mult
+                log() << indent(1) << "found " << hash.mult
                 << " after " << total_attempts << " attempts and "
                 << metrics.hash_search_time.count() * 1000 << " msecs\n");
             return;
@@ -661,7 +663,7 @@ void runtime::install_gv() {
                     return make_word(i); });
 
             for (auto tid : cls.info->ti_ptrs) {
-                dd.gv[hash(dd, tid)].pw = cls.mptr;
+                dd.gv[dd.hash(tid)].pw = cls.mptr;
 
             }
         }

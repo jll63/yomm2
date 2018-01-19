@@ -102,10 +102,13 @@ struct runtime {
     void build_dispatch_table(
         rt_method& m, size_t dim, const std::vector<group_map>& groups,
         const bitvec& candidates);
-    void find_hash_factor();
     void install_gv();
     void optimize();
 
+    static void find_hash_function(
+        const std::vector<rt_class>& classes,
+        hash_function& hash,
+        metrics_t& metrics);
     static std::vector<const rt_spec*> best(std::vector<const rt_spec*>& candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
 };
