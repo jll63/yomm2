@@ -9,6 +9,9 @@ target_link_libraries (whitebox yomm2)
 add_executable(blackbox blackbox.cpp)
 target_link_libraries (blackbox yomm2)
 
+add_executable(boost_type_erasure boost_type_erasure.cpp)
+target_link_libraries (boost_type_erasure yomm2)
+
 if (${YOMM2_ENABLE_BENCHMARKS})
   add_executable(benchmarks benchmarks.cpp benchmarks_vfuncs.cpp )
   target_link_libraries (benchmarks yomm2 benchmark)
