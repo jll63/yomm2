@@ -10,6 +10,7 @@
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <boost/preprocessor/punctuation/comma_if.hpp>
@@ -70,12 +71,19 @@
                                    _YOMM2_DECLARE_KEY(ID), R ARGS> ID(        \
                                        ::yorel::yomm2::detail::discriminator, \
                                        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), \
-                        _YOMM2_PLIST, ARGS));                        \
+                                                       _YOMM2_PLIST, ARGS));  \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
-                                _YOMM2_PLIST, ARGS)) {                      \
-        return ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R ARGS> \
-            ::dispatch(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),   \
-                                     _YOMM2_ALIST, ARGS)); }
+                                _YOMM2_PLIST, ARGS)) {                        \
+        return reinterpret_cast<R (*)(                                        \
+            BOOST_PP_REPEAT(                                                  \
+                BOOST_PP_TUPLE_SIZE(ARGS),                                    \
+                _YOMM2_PLIST, ARGS))>(                                        \
+                    ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R ARGS> \
+                    ::resolve(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),      \
+                                              _YOMM2_ALIST, ARGS)))           \
+            (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
+                             _YOMM2_ALIST, ARGS));                            \
+    }
 
 #define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
     namespace {                                                               \
@@ -555,7 +563,7 @@ struct wrapper<BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...), BASE_RETURN(SP
     static BASE_RETURN body(virtual_arg_t<BASE_PARAM>... arg) {
     return FUNCTION::body(
         virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
-            arg,
+            std::forward<virtual_arg_t<BASE_PARAM>>(arg),
             typename select_cast<
                 virtual_base_t<BASE_PARAM>,
                 virtual_base_t<SPEC_PARAM>>::type())...);
@@ -565,14 +573,6 @@ struct wrapper<BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...), BASE_RETURN(SP
 template<typename RETURN_T, class METHOD, class SPEC, typename F>
 struct register_spec;
 
-// template<
-//     typename BASE_RETURN,
-//     class FUNCTION,
-//     typename... BASE_PARAM,
-//     typename... SPEC_PARAM
-//     >
-// struct wrapper<BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...), BASE_RETURN(SPEC_PARAM...)> {
-
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
@@ -580,7 +580,6 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
         static spec_info si;
         if (si.vp.empty()) {
             _YOMM2_DEBUG(si.name = name);
-            // si.pf = (const void*) SPEC::body;
             si.pf = (void*) wrapper<
                 RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
                 >::body;
@@ -600,13 +599,6 @@ struct method<REG, ID, R(A...)> {
     static const word* slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
     static method_info& info();
-
-    static R dispatch(virtual_arg_t<A>... args) {
-        return reinterpret_cast<R (*)(virtual_arg_t<A>...)>(
-            const_cast<void*>(resolve(args...)))(
-            args...
-            );
-    }
 
     using signature_t = R(A...);
     using for_each_vp_t = for_each_vp<REG, A...>;
