@@ -1,0 +1,29 @@
+language: cpp
+
+before_install:
+    - sudo apt-get -y install cmake libboost-dev libboost-test-dev
+
+dist: bionic
+sudo: required
+
+compiler:
+    - clang
+    - gcc
+
+env:
+    - CONFIG=Debug
+    - CONFIG=Release
+    - CONFIG=ReleaseDebug
+    - CONFIG=DebugRelease
+
+notifications:
+ email:
+   on_success: change
+   on_failure: always
+
+script:
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_CXX_COMPILER=$1 -DCMAKE_BUILD_TYPE=$CONFIG -DYOMM2_ENABLE_TESTS=1
+    - make -j
+    - ctest --output-on-failure
