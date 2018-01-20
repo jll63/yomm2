@@ -11,6 +11,5 @@ target_link_libraries (blackbox yomm2)
 
 if (${YOMM2_ENABLE_BENCHMARKS})
   add_executable(benchmarks benchmarks.cpp benchmarks_vfuncs.cpp )
-  set_source_files_properties(benchmarks.cpp PROPERTIES COMPILE_FLAGS -O2)
   target_link_libraries (benchmarks yomm2 benchmark)
 endif()

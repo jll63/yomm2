@@ -64,6 +64,7 @@ begin_method(std::string, meet, (Cat& cat, Dog& dog)) {
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 int main()
 {

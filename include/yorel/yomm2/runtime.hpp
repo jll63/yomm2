@@ -81,7 +81,7 @@ struct runtime {
     struct metrics_t
     {
         size_t method_table_size, dispatch_table_size, hash_table_size;
-        ulong hash_search_attempts;
+        int hash_search_attempts;
         std::chrono::duration<double> hash_search_time;
     };
 

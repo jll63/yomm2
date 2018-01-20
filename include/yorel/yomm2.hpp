@@ -30,8 +30,6 @@
 
 #if YOMM2_DEBUG
 
-#pragma(message, "Trace is enabled.")
-
 #define _YOMM2_DEBUG(X) X
 #define _YOMM2_COMMA_DEBUG(X) , X
 

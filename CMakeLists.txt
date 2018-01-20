@@ -19,14 +19,14 @@ link_directories ("${YOMM2_BINARY_DIR}/src")
 
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${Boost_INCLUDE_DIRS}")
+include_directories("${Boost_INCLUDE_DIR}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 endif()
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "-D_SCL_SECURE_NO_WARNINGS /EHsc")
+    set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
 add_subdirectory (src)
