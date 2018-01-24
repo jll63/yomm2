@@ -23,6 +23,9 @@ include_directories("${Boost_INCLUDE_DIR}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
+  endif ()
 endif()
 
 if(MSVC)
