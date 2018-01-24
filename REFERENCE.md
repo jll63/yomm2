@@ -21,7 +21,7 @@ Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 
 * `register_class` for `YOMM2_CLASS`
 * `declare_method` for `YOMM2_DECLARE`
-* `define_method` for `YOMM2_BEGIN`
+* `define_method` for `YOMM2_DEFINE`
 * `end_method` for `YOMM2_END`
 
 It is recommended to use the "cute" names unless they clash with names used in
@@ -170,11 +170,11 @@ YOMM2_DECLARE(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 ```
 
-## macros YOMM2_METHOD, YOMM2_END, define_method, end_method
+## macros YOMM2_METHOD, define_method
 
 #### Synopsis:
 ```
-YOMM2_BEGIN(return_type, name, (unmarked_type... argument)) {
+YOMM2_DEFINE(return_type, name, (unmarked_type... argument)) {
     ....
 }
 ```
@@ -183,39 +183,40 @@ Add an implementation to a method.
 
 Locate a method that can be called with the specified `unmarked_type...` list
 and add the definition to the method's list of definitions. The method must
-exist and must be unique.
+exist and must be unique. `return_type` must be covariant with the method's
+return type. `return_type` may be `auto`.
 
 NOTE that the types of the arguments are _not_ marked with `virtual_`.
 
-`define_method` and `end_method` are aliases for `YOMM2_BEGIN` and `YOMM2_END`
+`define_method` is an aliases for `YOMM2_DEFINE` and `YOMM2_END`
 created by header `yorel/yomm2/cute.hpp`.
 
 ## Examples:
 ```
 // implement 'kick' for dogs
-YOMM2_BEGIN(std::string, kick, (Dog& dog)) {
+YOMM2_DEFINE(std::string, kick, (Dog& dog)) {
   return "bark";
 }
 
 // implement 'kick' for bulldogs
-YOMM2_BEGIN(std::string, kick, (Bulldog& dog)) {
+YOMM2_DEFINE(std::string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
 }
 
 // 'meet' catch-all implementation
-YOMM2_BEGIN(std::string, meet, (Animal&, Animal&)) {
+YOMM2_DEFINE(std::string, meet, (Animal&, Animal&)) {
   return "ignore";
 }
 
-YOMM2_BEGIN(std::string, meet, (Dog& dog1, Dog& dog2)) {
+YOMM2_DEFINE(std::string, meet, (Dog& dog1, Dog& dog2)) {
   return "wag tail";
 }
 
-YOMM2_BEGIN(std::string, meet, (Dog& dog, Cat& cat)) {
+YOMM2_DEFINE(std::string, meet, (Dog& dog, Cat& cat)) {
   return "chase";
 }
 
-YOMM2_BEGIN(std::string, meet, (Cat& cat, Dog& dog)) {
+YOMM2_DEFINE(std::string, meet, (Cat& cat, Dog& dog)) {
   return "run";
 }
 ```
@@ -224,7 +225,7 @@ YOMM2_BEGIN(std::string, meet, (Cat& cat, Dog& dog)) {
 
 #### Synopsis:
 ```
-YOMM2_BEGIN(return_type, name, (type... arg)) {
+YOMM2_DEFINE(return_type, name, (type... arg)) {
     ....
     next(arg...);
     ...
