@@ -1,0 +1,4 @@
+COMPILER=$1
+BUILD=$2
+TARGET=$3
+cd build/$COMPILER/$BUILD && make $TARGET && find . -name $TARGET -exec {} \;
