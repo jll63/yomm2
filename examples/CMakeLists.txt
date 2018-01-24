@@ -18,3 +18,7 @@ add_test (accept_no_visitors accept_no_visitors)
 add_executable(adventure adventure.cpp)
 target_link_libraries (adventure yomm2)
 add_test (adventure adventure)
+
+add_executable(next next.cpp)
+target_link_libraries (next yomm2)
+add_test (next next)
