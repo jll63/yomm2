@@ -95,14 +95,12 @@
         using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
                                  std::declval<A>()...));                      \
     };                                                                        \
-    using _YOMM2_RETURN_T = RETURN_T;                                         \
     using _YOMM2_METHOD = select_method<void ARGS>::type;                     \
+    using _YOMM2_RETURN_T = _YOMM2_METHOD::return_type;                       \
     using _YOMM2_SIGNATURE = void ARGS;                                       \
     const char* _YOMM2_NAME = #ARGS;                                          \
-    RETURN_T (*next) ARGS;                                                    \
-    struct _YOMM2_SPEC {                                                      \
-        static RETURN_T body ARGS;                                            \
-    };                                                                        \
+    _YOMM2_RETURN_T (*next) ARGS;                                             \
+    struct _YOMM2_SPEC { static RETURN_T body ARGS; };                        \
     ::yorel::yomm2::detail::                                                  \
     register_spec<_YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
     init((void**)&next _YOMM2_COMMA_DEBUG(_YOMM2_NAME));                      \
@@ -586,7 +584,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
         if (si.vp.empty()) {
             _YOMM2_DEBUG(si.name = name);
             si.pf = (void*) wrapper<
-                RETURN_T, SPEC, typename METHOD::signature_t, RETURN_T(SPEC_ARGS...)
+                RETURN_T, SPEC, typename METHOD::signature_type, RETURN_T(SPEC_ARGS...)
                 >::body;
             METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
             METHOD::info().specs.push_back(&si);
@@ -605,7 +603,8 @@ struct method<REG, ID, R(A...)> {
 
     static method_info& info();
 
-    using signature_t = R(A...);
+    using signature_type = R(A...);
+    using return_type = R;
     using for_each_vp_t = for_each_vp<REG, A...>;
 
     enum { arity = for_each_vp_t::count };
