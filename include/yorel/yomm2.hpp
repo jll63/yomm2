@@ -43,53 +43,58 @@
 #define YOMM2_TRACE_COMMA(X)
 #endif
 
-#define yOMM2_NS(REF) \
-    BOOST_PP_CAT(YoMm2_nS_, BOOST_PP_SUB(__COUNTER__, REF))
+#define yOMM2_WITH_GENSYM(MACRO, ...)                                             \
+    MACRO(BOOST_PP_CAT(YoMm2_nS_, __COUNTER__), __VA_ARGS__)
 
-#define yOMM2_PLIST(N, I, A)                                                 \
+#define yOMM2_PLIST(N, I, A)                                                  \
     BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>                  \
+    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>          \
     BOOST_PP_CAT(a, I)
 
-#define yOMM2_ALIST(N, I, ARGS) \
+#define yOMM2_ALIST(N, I, ARGS)                                               \
     BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
 
-#define yOMM2_DECLARE_KEY(ID)                                                \
+#define yOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
-#define YOMM2_DECLARE(R, ID, ARGS) \
+#define YOMM2_DECLARE(R, ID, ARGS)                                            \
     YOMM2_DECLARE_(void, R, ID, ARGS)
 
-#define yOMM2_EXPAND(...) __VA_ARGS__
-
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
-    struct yOMM2_DECLARE_KEY(ID);                                            \
+    yOMM2_WITH_GENSYM(yOMM2_DECLARE2, REGISTRY, R, ID, ARGS)
+
+#define yOMM2_DECLARE2(NS, REGISTRY, R, ID, ARGS)                             \
+    struct yOMM2_DECLARE_KEY(ID);                                             \
     namespace {                                                               \
-    namespace yOMM2_NS(0) {                                                  \
-    ::yorel::yomm2::detail::method<REGISTRY,                                  \
-                                   yOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
-    init YOMM2_TRACE( = #ID  #ARGS ); } }                                    \
-    ::yorel::yomm2::detail::method<REGISTRY,                                  \
-                                   yOMM2_DECLARE_KEY(ID), R ARGS> ID(        \
-                                       ::yorel::yomm2::detail::discriminator, \
-                                       BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), \
-                                                       yOMM2_PLIST, ARGS));  \
+    namespace NS {                                                            \
+    ::yorel::yomm2::detail::method                                            \
+    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
+    init YOMM2_TRACE( = #ID  #ARGS ); } }                                     \
+    ::yorel::yomm2::detail::method                                            \
+    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS> ID(                             \
+        ::yorel::yomm2::detail::discriminator,                                \
+        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                            \
+                                                       yOMM2_PLIST, ARGS));   \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
-                                yOMM2_PLIST, ARGS)) {                        \
+                                yOMM2_PLIST, ARGS)) {                         \
         return reinterpret_cast<R (*)(                                        \
             BOOST_PP_REPEAT(                                                  \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                    \
-                yOMM2_PLIST, ARGS))>(                                        \
-                    ::yorel::yomm2::detail::method<REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS> \
+                yOMM2_PLIST, ARGS))>(                                         \
+                    ::yorel::yomm2::detail::method                            \
+                    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS>                 \
                     ::resolve(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),      \
-                                              yOMM2_ALIST, ARGS)))           \
+                                              yOMM2_ALIST, ARGS)))            \
             (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
-                             yOMM2_ALIST, ARGS));                            \
+                             yOMM2_ALIST, ARGS));                             \
     }
 
 #define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
+    yOMM2_WITH_GENSYM(yOMM2_DEFINE, RETURN_T, ID, ARGS)
+
+#define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
     namespace {                                                               \
-    namespace yOMM2_NS(0) {                                                   \
+    namespace NS {                                                            \
         template<typename T> struct _yOMM2_select;                            \
     template<typename... A> struct _yOMM2_select<void(A...)> {                \
         using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
@@ -103,14 +108,17 @@
     register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
           _yOMM2_init((void**)&next YOMM2_TRACE_COMMA(#ARGS));                \
     } }                                                                       \
-       RETURN_T yOMM2_NS(1)::_yOMM2_spec::body ARGS
+       RETURN_T NS::_yOMM2_spec::body ARGS
 
 #define yOMM2_CLASS_NAME(CLASS, ...) \
     #CLASS
 
-#define YOMM2_CLASS_(REG, ...)                                                \
-       namespace {                                                            \
-       namespace yOMM2_NS(0) {                                                \
+#define YOMM2_CLASS_(...)                                                     \
+    yOMM2_WITH_GENSYM(yOMM2_CLASS2, __VA_ARGS__)
+
+#define yOMM2_CLASS2(NS, REG, ...)                                            \
+    namespace {                                                               \
+       namespace NS {                                                \
            ::yorel::yomm2::detail::                                           \
            init_class_info                                                    \
            <REG yOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))     \
