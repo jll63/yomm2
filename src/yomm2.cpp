@@ -13,7 +13,7 @@
 #include <list>
 #include <random>
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
 #include <iostream>
 #endif
 
@@ -22,7 +22,7 @@ namespace yomm2 {
 
 namespace detail {
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
 
 struct indent {
     indent(int n) : n(n) {
@@ -100,9 +100,9 @@ void runtime::augment_classes() {
                 if (!base) {
                     throw std::runtime_error(
                         std::string("yomm2: derived class ")
-                        _YOMM2_DEBUG(+ rt_class.info->name)
+                        YOMM2_TRACE(+ rt_class.info->name)
                         + " registered before its base "
-                        _YOMM2_DEBUG(+ ci->name));
+                        YOMM2_TRACE(+ ci->name));
                 }
                 return base;
             });
@@ -155,7 +155,7 @@ void runtime::augment_methods() {
 
 void runtime::layer_classes() {
 
-    _YOMM2_DEBUG(log() << "Layering...\n");
+    YOMM2_TRACE(log() << "Layering...\n");
 
     layered_classes.reserve(classes.size());
     std::list<rt_class*> input;
@@ -164,7 +164,7 @@ void runtime::layer_classes() {
         [](rt_class& cls) { return &cls; });
 
     for (int layer = 1; !input.empty(); ++layer) {
-        _YOMM2_DEBUG(const char* sep = "");
+        YOMM2_TRACE(const char* sep = "");
 
         for (auto class_iter = input.begin(); class_iter != input.end(); ) {
             auto seen_all_bases = true;
@@ -186,14 +186,14 @@ void runtime::layer_classes() {
             if (seen_all_bases && in_this_layer) {
                 layered_classes.push_back(*class_iter);
                 (*class_iter)->layer = layer;
-                _YOMM2_DEBUG(log() << sep << (*class_iter)->info->name);
-                _YOMM2_DEBUG(sep = " ");
+                YOMM2_TRACE(log() << sep << (*class_iter)->info->name);
+                YOMM2_TRACE(sep = " ");
                 class_iter = input.erase(class_iter);
             } else {
                 ++class_iter;
             }
         }
-        _YOMM2_DEBUG(log() << "\n");
+        YOMM2_TRACE(log() << "\n");
     }
 }
 
@@ -213,17 +213,17 @@ void runtime::calculate_conforming_classes() {
 }
 
 void runtime::allocate_slots() {
-    _YOMM2_DEBUG(log() << "Allocating slots...\n");
+    YOMM2_TRACE(log() << "Allocating slots...\n");
 
     for (auto& c : classes) {
         if (!c.vp.empty()) {
-            _YOMM2_DEBUG(log() << c.info->name << "...\n");
+            YOMM2_TRACE(log() << c.info->name << "...\n");
         }
 
         for (const auto& mp : c.vp) {
             int slot = c.next_slot++;
 
-            _YOMM2_DEBUG(
+            YOMM2_TRACE(
                 log()
                 << "  for " << mp.method->info->name << "#" << mp.param
                 << ": "
@@ -245,7 +245,7 @@ void runtime::allocate_slots() {
                 allocate_slot_down(derived, slot);
             }
 
-            _YOMM2_DEBUG(log() << "\n");
+            YOMM2_TRACE(log() << "\n");
         }
     }
 
@@ -261,7 +261,7 @@ void runtime::allocate_slot_down(rt_class* cls, int slot) {
 
     cls->visited = class_visit;
 
-    _YOMM2_DEBUG(log() << "\n    " << cls->info->name);
+    YOMM2_TRACE(log() << "\n    " << cls->info->name);
 
     assert(slot >= cls->next_slot);
 
@@ -287,7 +287,7 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
 
     cls->visited = class_visit;
 
-    _YOMM2_DEBUG(log() << "\n    " << cls->info->name);
+    YOMM2_TRACE(log() << "\n    " << cls->info->name);
 
     assert(slot >= cls->next_slot);
 
@@ -304,7 +304,7 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
 
 void runtime::build_dispatch_tables() {
     for (auto& m : methods) {
-        _YOMM2_DEBUG(
+        YOMM2_TRACE(
             log() << "Building dispatch table for " << m.info->name << "\n");
 
         auto dims = m.vp.size();
@@ -318,14 +318,14 @@ void runtime::build_dispatch_tables() {
             for (auto vp : m.vp) {
                 auto& dim_group = groups[dim];
 
-                _YOMM2_DEBUG(log()
+                YOMM2_TRACE(log()
                              << indent(1)
                              << "make groups for param #" << dim
                              << ", class " << vp->info->name
                              << "\n");
 
                 for  (auto conforming : vp->conforming) {
-                    _YOMM2_DEBUG(log()
+                    YOMM2_TRACE(log()
                                  << indent(2)
                                  << "specs applicable to "
                                  << conforming->info->name
@@ -338,7 +338,7 @@ void runtime::build_dispatch_tables() {
                     for (auto& spec : m.specs) {
                         if (spec.vp[dim]->conforming.find(conforming)
                             != spec.vp[dim]->conforming.end()) {
-                            _YOMM2_DEBUG(log()
+                            YOMM2_TRACE(log()
                                          << indent(3)
                                          << spec.info->name << "\n");
                             mask[spec_index] = 1;
@@ -348,7 +348,7 @@ void runtime::build_dispatch_tables() {
 
                     dim_group[mask].push_back(conforming);
 
-                    _YOMM2_DEBUG(
+                    YOMM2_TRACE(
                         log() << "      bit mask = " << mask
                         // << " group = "
                         // << std::distance(dim_group.begin(), dim_group.find(mask))
@@ -366,7 +366,7 @@ void runtime::build_dispatch_tables() {
 
             for (int dim = 1; dim < m.vp.size(); ++dim) {
                 stride *= groups[dim - 1].size();
-                _YOMM2_DEBUG(
+                YOMM2_TRACE(
                     log() << "    stride for dim " <<  dim
                     << " = " << stride << "\n");
                 m.strides.push_back(stride);
@@ -376,14 +376,14 @@ void runtime::build_dispatch_tables() {
         m.first_dim = groups[0];
 
         for (int dim = 0; dim < m.vp.size(); ++dim) {
-            _YOMM2_DEBUG(log()<< indent(1) << "groups for dim " << dim  << ":\n");
+            YOMM2_TRACE(log()<< indent(1) << "groups for dim " << dim  << ":\n");
             int group_num = 0;
             for (auto& group_pair : groups[dim]) {
                 auto& group = group_pair.second;
                 for (auto cls : group) {
                     cls->mtbl[m.slots[dim]] = group_num;
                 }
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
                 {
                 auto mask = group_pair.first;
                 log()
@@ -400,14 +400,14 @@ void runtime::build_dispatch_tables() {
         }
 
         {
-            _YOMM2_DEBUG(log() << indent(1) << "assign specs\n");
+            YOMM2_TRACE(log() << indent(1) << "assign specs\n");
             bitvec all(m.specs.size());
             all = ~all;
             build_dispatch_table(m, dims - 1, groups, all);
         }
 
         {
-            _YOMM2_DEBUG(log() << indent(1) << "assign next\n");
+            YOMM2_TRACE(log() << indent(1) << "assign next\n");
             std::vector<const rt_spec*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(),
@@ -415,14 +415,14 @@ void runtime::build_dispatch_tables() {
                 [](const rt_spec& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
-                _YOMM2_DEBUG(log() << indent(2) << spec.info->name  << ":\n");
+                YOMM2_TRACE(log() << indent(2) << spec.info->name  << ":\n");
                 std::vector<const rt_spec*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(),
                     std::back_inserter(candidates),
                     [spec](const rt_spec* other) { return is_more_specific(&spec, other); });
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
                 log()
                     << indent(3)
                     << "select best of:\n";
@@ -436,13 +436,13 @@ void runtime::build_dispatch_tables() {
 
                 if (nexts.size() == 1) {
                     auto next = nexts.front()->info;
-                    _YOMM2_DEBUG(log() << indent(3) << "-> " << next->name << "\n");
+                    YOMM2_TRACE(log() << indent(3) << "-> " << next->name << "\n");
                     *spec.info->next = next->pf;
                 } else if (nexts.empty()) {
-                    _YOMM2_DEBUG(log() << indent(3) << "-> none\n");
+                    YOMM2_TRACE(log() << indent(3) << "-> none\n");
                     *spec.info->next = m.info->not_implemented;
                 } else if (nexts.empty()) {
-                    _YOMM2_DEBUG(log() << indent(3) << "->  ambiguous\n");
+                    YOMM2_TRACE(log() << indent(3) << "->  ambiguous\n");
                     *spec.info->next = m.info->ambiguous;
                 }
             }
@@ -460,7 +460,7 @@ void runtime::build_dispatch_table(
         auto mask = candidates & group_pair.first;
         auto& group = group_pair.second;
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
         log()
             << indent(m.vp.size() - dim + 1)
             << "group " << dim << "/" << group_index
@@ -482,7 +482,7 @@ void runtime::build_dispatch_table(
                 ++i;
             }
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
             log()
                 << indent(m.vp.size() - dim + 2)
                 << "select best of:\n";
@@ -496,14 +496,14 @@ void runtime::build_dispatch_table(
             auto specs = best(applicable);
 
             if (specs.size() > 1) {
-                _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "ambiguous\n");
+                YOMM2_TRACE(log() << indent(m.vp.size() - dim + 2) << "ambiguous\n");
                 m.dispatch_table.push_back(m.info->ambiguous);
             } else if (specs.empty()) {
-                _YOMM2_DEBUG(log() << indent(m.vp.size() - dim + 2) << "not implemented\n");
+                YOMM2_TRACE(log() << indent(m.vp.size() - dim + 2) << "not implemented\n");
                 m.dispatch_table.push_back(m.info->not_implemented);
             } else {
                 m.dispatch_table.push_back(specs[0]->info->pf);
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
                 log()
                     << indent(m.vp.size() - dim + 2)
                     << outseq(
@@ -536,7 +536,7 @@ void runtime::find_hash_function(
 
     const auto N = keys.size();
 
-    _YOMM2_DEBUG(log() << "Finding hash factor for " << N << " ti*\n");
+    YOMM2_TRACE(log() << "Finding hash factor for " << N << " ti*\n");
 
     std::default_random_engine rnd(13081963);
     int total_attempts = 0;
@@ -553,7 +553,7 @@ void runtime::find_hash_function(
         hash.shift = 64 - M;
         auto hash_size = 1 << M;
 
-        _YOMM2_DEBUG(
+        YOMM2_TRACE(
             log() << indent(1) << "trying with M = " << M
             << ", " << hash_size << " buckets\n");
 
@@ -583,7 +583,7 @@ void runtime::find_hash_function(
         metrics.hash_table_size = hash_size;
 
         if (found) {
-            _YOMM2_DEBUG(
+            YOMM2_TRACE(
                 log() << indent(1) << "found " << hash.mult
                 << " after " << total_attempts << " attempts and "
                 << metrics.hash_search_time.count() * 1000 << " msecs\n");
@@ -617,8 +617,8 @@ inline word make_word(void* pf) {
 
 void runtime::install_gv() {
 
-    _YOMM2_DEBUG(log() << "Initializing global vector\n");
-    _YOMM2_DEBUG(log() << "   0 hash table\n");
+    YOMM2_TRACE(log() << "Initializing global vector\n");
+    YOMM2_TRACE(log() << "   0 hash table\n");
 
     for (int pass = 0; pass != 2; ++pass) {
         dd.gv.resize(metrics.hash_table_size);
@@ -626,7 +626,7 @@ void runtime::install_gv() {
         for (auto& m : methods) {
             *m.info->slots_strides_p = dd.gv.data() + dd.gv.size();
             auto slot_iter = m.slots.begin();
-            _YOMM2_DEBUG(
+            YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
                           << ' ' << m.info->name << " slots and strides\n");
@@ -639,7 +639,7 @@ void runtime::install_gv() {
             }
 
             if (m.info->vp.size() > 1) {
-                _YOMM2_DEBUG(
+                YOMM2_TRACE(
                     if (pass)
                         log() << std::setw(4) << dd.gv.size()
                               << ' ' << m.info->name << " dispatch table\n");
@@ -652,7 +652,7 @@ void runtime::install_gv() {
         }
 
         for (auto& cls : classes) {
-            _YOMM2_DEBUG(
+            YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
                           << " mtbl for " << cls.info->name << "\n");
@@ -669,14 +669,14 @@ void runtime::install_gv() {
         }
     }
 
-    _YOMM2_DEBUG(log() << std::setw(4) << dd.gv.size() << " end\n");
+    YOMM2_TRACE(log() << std::setw(4) << dd.gv.size() << " end\n");
 }
 
 void runtime::optimize() {
-    _YOMM2_DEBUG(log() << "Optimizing\n");
+    YOMM2_TRACE(log() << "Optimizing\n");
 
     for (auto& m : methods) {
-        _YOMM2_DEBUG(
+        YOMM2_TRACE(
             log() << "  "
             << m.info->name
             << "\n");
@@ -684,7 +684,7 @@ void runtime::optimize() {
         if (m.vp.size() == 1) {
             for (auto cls : m.vp[0]->conforming) {
                 auto pf = m.dispatch_table[cls->mptr[slot].i];
-                _YOMM2_DEBUG(
+                YOMM2_TRACE(
                     log() << "    " << cls->info->name
                     << ".mtbl[" << slot << "] = " << pf << " (function)"
                     << "\n");
@@ -693,7 +693,7 @@ void runtime::optimize() {
         } else {
             for (auto cls : m.vp[0]->conforming) {
                 auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
-                _YOMM2_DEBUG(
+                YOMM2_TRACE(
                     log() << "    " << cls->info->name
                     << ".mtbl[" << slot << "] = gv+" << (pw - dd.gv.data())
                     << "\n");
@@ -747,7 +747,7 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
     return result;
 }
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
 
 std::ostream* active_log = nullptr;
 
@@ -771,7 +771,7 @@ std::ostream* log_off() {
 #endif
 
 void default_method_call_error_handler(const method_call_error& error) {
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
     const char* explanation[] = { "no applicable definition", "ambiguous call" };
     std::cerr << explanation[error.code] << "while calling " << error.method_name << "\n";
 #endif

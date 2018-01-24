@@ -99,11 +99,11 @@ YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
 int error_code = -1;
-_YOMM2_DEBUG(std::string method_name);
+YOMM2_TRACE(std::string method_name);
 
 void test_handler(const yorel::yomm2::method_call_error& error) {
     error_code = error.code;
-    _YOMM2_DEBUG(method_name = error.method_name);
+    YOMM2_TRACE(method_name = error.method_name);
 }
 
 BOOST_AUTO_TEST_CASE(error_handling)
@@ -112,13 +112,13 @@ BOOST_AUTO_TEST_CASE(error_handling)
     yorel::yomm2::set_method_call_error_handler(test_handler);
     times(dense_matrix(), dense_matrix());
     BOOST_TEST(error_code == yorel::yomm2::method_call_error::not_implemented);
-    _YOMM2_DEBUG(
+    YOMM2_TRACE(
         BOOST_TEST(
             method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
-    _YOMM2_DEBUG(method_name = "");
+    YOMM2_TRACE(method_name = "");
     times(diagonal_matrix(), diagonal_matrix());
     BOOST_TEST(error_code == yorel::yomm2::method_call_error::ambiguous);
-    _YOMM2_DEBUG(
+    YOMM2_TRACE(
         BOOST_TEST(
             method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
 }

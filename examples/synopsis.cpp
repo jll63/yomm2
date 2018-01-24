@@ -68,6 +68,7 @@ define_method(std::string, meet, (Cat& cat, Dog& dog)) {
 
 int main()
 {
+    yorel::yomm2::detail::log_on(&std::cerr);
     yorel::yomm2::update_methods();
 
     std::unique_ptr<Animal>

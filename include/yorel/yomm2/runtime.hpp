@@ -15,7 +15,7 @@
 
 #include <boost/dynamic_bitset.hpp>
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
 #include <sstream>
 #endif
 

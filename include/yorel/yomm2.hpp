@@ -22,110 +22,109 @@
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
-#ifndef YOMM2_DEBUG
+#ifndef YOMM2_ENABLE_TRACE
 #ifdef NDEBUG
-#define YOMM2_DEBUG 0
+#define YOMM2_ENABLE_TRACE 0
 #else
-#define YOMM2_DEBUG 1
+#define YOMM2_ENABLE_TRACE 1
 #endif
 #endif
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
 
-#define _YOMM2_DEBUG(X) X
-#define _YOMM2_COMMA_DEBUG(X) , X
+#define YOMM2_TRACE(X) X
+#define YOMM2_TRACE_COMMA(X) , X
 
 #include <iostream>
 #include <iterator>
 
 #else
-#define _YOMM2_DEBUG(ST)
-#define _YOMM2_COMMA_DEBUG(X)
+#define YOMM2_TRACE(ST)
+#define YOMM2_TRACE_COMMA(X)
 #endif
 
-#define _YOMM2_NS(REF) \
-    BOOST_PP_CAT(_YOMM2_NS_, BOOST_PP_SUB(__COUNTER__, REF))
+#define yOMM2_NS(REF) \
+    BOOST_PP_CAT(YoMm2_nS_, BOOST_PP_SUB(__COUNTER__, REF))
 
-#define _YOMM2_PLIST(N, I, A)                                                 \
+#define yOMM2_PLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
     ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>                  \
     BOOST_PP_CAT(a, I)
 
-#define _YOMM2_ALIST(N, I, ARGS) \
+#define yOMM2_ALIST(N, I, ARGS) \
     BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
 
-#define _YOMM2_DECLARE_KEY(ID)                                                \
+#define yOMM2_DECLARE_KEY(ID)                                                \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
 #define YOMM2_DECLARE(R, ID, ARGS) \
     YOMM2_DECLARE_(void, R, ID, ARGS)
 
-#define _YOMM2_EXPAND(...) __VA_ARGS__
+#define yOMM2_EXPAND(...) __VA_ARGS__
 
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
-    struct _YOMM2_DECLARE_KEY(ID);                                            \
+    struct yOMM2_DECLARE_KEY(ID);                                            \
     namespace {                                                               \
-    namespace _YOMM2_NS(0) {                                                  \
+    namespace yOMM2_NS(0) {                                                  \
     ::yorel::yomm2::detail::method<REGISTRY,                                  \
-                                   _YOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
-    init _YOMM2_DEBUG( = #ID  #ARGS ); } }                                    \
+                                   yOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
+    init YOMM2_TRACE( = #ID  #ARGS ); } }                                    \
     ::yorel::yomm2::detail::method<REGISTRY,                                  \
-                                   _YOMM2_DECLARE_KEY(ID), R ARGS> ID(        \
+                                   yOMM2_DECLARE_KEY(ID), R ARGS> ID(        \
                                        ::yorel::yomm2::detail::discriminator, \
                                        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), \
-                                                       _YOMM2_PLIST, ARGS));  \
+                                                       yOMM2_PLIST, ARGS));  \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
-                                _YOMM2_PLIST, ARGS)) {                        \
+                                yOMM2_PLIST, ARGS)) {                        \
         return reinterpret_cast<R (*)(                                        \
             BOOST_PP_REPEAT(                                                  \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                    \
-                _YOMM2_PLIST, ARGS))>(                                        \
-                    ::yorel::yomm2::detail::method<REGISTRY, _YOMM2_DECLARE_KEY(ID), R ARGS> \
+                yOMM2_PLIST, ARGS))>(                                        \
+                    ::yorel::yomm2::detail::method<REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS> \
                     ::resolve(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),      \
-                                              _YOMM2_ALIST, ARGS)))           \
+                                              yOMM2_ALIST, ARGS)))           \
             (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
-                             _YOMM2_ALIST, ARGS));                            \
+                             yOMM2_ALIST, ARGS));                            \
     }
 
 #define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
     namespace {                                                               \
-    namespace _YOMM2_NS(0) {                                                  \
-    template<typename T> struct select_method;                                \
-    template<typename... A> struct select_method<void(A...)> {                \
+    namespace yOMM2_NS(0) {                                                   \
+        template<typename T> struct _yOMM2_select;                            \
+    template<typename... A> struct _yOMM2_select<void(A...)> {                \
         using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
                                  std::declval<A>()...));                      \
     };                                                                        \
-    using _YOMM2_METHOD = select_method<void ARGS>::type;                     \
-    using _YOMM2_RETURN_T = _YOMM2_METHOD::return_type;                       \
-    using _YOMM2_SIGNATURE = void ARGS;                                       \
-    const char* _YOMM2_NAME = #ARGS;                                          \
-    _YOMM2_RETURN_T (*next) ARGS;                                             \
-    struct _YOMM2_SPEC { static RETURN_T body ARGS; };                        \
+    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                     \
+    using _yOMM2_return_t = _yOMM2_method::return_type;                       \
+    _yOMM2_return_t (*next) ARGS;                                             \
+    struct _yOMM2_spec { static RETURN_T body ARGS; };                        \
     ::yorel::yomm2::detail::                                                  \
-    register_spec<_YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
-    init((void**)&next _YOMM2_COMMA_DEBUG(_YOMM2_NAME));                      \
+    register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
+          _yOMM2_init((void**)&next YOMM2_TRACE_COMMA(#ARGS));                \
     } }                                                                       \
-       RETURN_T _YOMM2_NS(1)::_YOMM2_SPEC::body ARGS
+       RETURN_T yOMM2_NS(1)::_yOMM2_spec::body ARGS
 
-#define _YOMM2_CLASS_NAME(CLASS, ...) \
+#define yOMM2_CLASS_NAME(CLASS, ...) \
     #CLASS
 
 #define YOMM2_CLASS_(REG, ...)                                                \
-    namespace {                                                               \
-    namespace _YOMM2_NS(0) {                                                  \
-    ::yorel::yomm2::detail::                                                          \
-    init_class_info<REG _YOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)) \
-        > init _YOMM2_DEBUG( { _YOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }
+       namespace {                                                            \
+       namespace yOMM2_NS(0) {                                                \
+           ::yorel::yomm2::detail::                                           \
+           init_class_info                                                    \
+           <REG yOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))     \
+            > init YOMM2_TRACE( { yOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }
 
-#define YOMM2_CLASS(...)                                               \
+#define YOMM2_CLASS(...)                                                      \
     YOMM2_CLASS_(void, __VA_ARGS__)
 
-#define _YOMM2_CLIST(N, I, A) \
+#define yOMM2_CLIST(N, I, A)                                                  \
     , BOOST_PP_TUPLE_ELEM(I, A)
 
-#define _YOMM2_CLASS_LIST(TUPLE)                                              \
+#define yOMM2_CLASS_LIST(TUPLE)                                               \
     BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(TUPLE),                               \
-                    _YOMM2_CLIST, TUPLE)                                      \
+                    yOMM2_CLIST, TUPLE)                                       \
 
 namespace yorel {
 namespace yomm2 {
@@ -137,7 +136,7 @@ void update_methods();
 
 struct method_call_error {
     enum type { not_implemented = 0, ambiguous = 1 } code;
-    _YOMM2_DEBUG(const char* method_name);
+    YOMM2_TRACE(const char* method_name);
 };
 
 using method_call_error_handler = void (*)(const method_call_error& error);
@@ -306,13 +305,13 @@ inline const word* mptr(const dispatch_data& t, const std::type_info* ti) {
     return t.gv[t.hash(ti)].pw;
 }
 
-_YOMM2_DEBUG(std::ostream& log());
-_YOMM2_DEBUG(std::ostream* log_on(std::ostream* os));
-_YOMM2_DEBUG(std::ostream* log_off());
+YOMM2_TRACE(std::ostream& log());
+YOMM2_TRACE(std::ostream* log_on(std::ostream* os));
+YOMM2_TRACE(std::ostream* log_off());
 
 struct class_info {
     std::vector<const class_info*> direct_bases;
-    _YOMM2_DEBUG(const char* name);
+    YOMM2_TRACE(const char* name);
     std::unordered_set<const void*> ti_ptrs;
 
     template<typename REG, class CLASS> static class_info& get();
@@ -326,16 +325,16 @@ class_info& class_info::get() {
 
 template<typename REG, class CLASS, class... BASE>
 struct init_class_info {
-    init_class_info(_YOMM2_DEBUG(const char* name)) {
+    init_class_info(YOMM2_TRACE(const char* name)) {
         auto& info = class_info::get<REG, CLASS>();
         static int called;
         if (!called++) {
-            _YOMM2_DEBUG(info.name = name);
+            YOMM2_TRACE(info.name = name);
             registry::get<REG>().classes.push_back(&info);
             info.direct_bases = { &class_info::get<REG, BASE>()... };
         }
         auto inserted = info.ti_ptrs.insert(&typeid(CLASS));
-        _YOMM2_DEBUG(
+        YOMM2_TRACE(
             if (inserted.second)
                 ::yorel::yomm2::detail::log()
                       << "Register " << name
@@ -346,14 +345,14 @@ struct init_class_info {
 };
 
 struct spec_info {
-    _YOMM2_DEBUG(const char* name);
+    YOMM2_TRACE(const char* name);
     std::vector<const class_info*> vp;
     void* pf;
     void** next;
 };
 
 struct method_info {
-    _YOMM2_DEBUG(const char* name);
+    YOMM2_TRACE(const char* name);
     std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
     void* ambiguous;
@@ -453,12 +452,12 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         virtual_arg_t<FIRST> first,
         virtual_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
-        _YOMM2_DEBUG(
+        YOMM2_TRACE(
             detail::log() << "  slot = " << ssp->i << " key = " << key);
         auto mptr = detail::mptr(dispatch_data::instance<REG>, key);
-        _YOMM2_DEBUG(detail::log() << " mptr = " << mptr);
+        YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto pf = mptr[ssp->i].pf;
-        _YOMM2_DEBUG(detail::log() << " pf = " << pf << "\n");
+        YOMM2_TRACE(detail::log() << " pf = " << pf << "\n");
         return pf;
     }
 
@@ -469,17 +468,17 @@ struct resolver<REG, 1, virtual_<FIRST>, REST...>
         virtual_arg_t<REST>... rest)
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
-        _YOMM2_DEBUG(detail::log() << "  key = " << key);
+        YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::mptr(dispatch_data::instance<REG>, key);
-        _YOMM2_DEBUG(detail::log() << " mptr = " << mptr);
+        YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
-        _YOMM2_DEBUG(detail::log() << " slot = " << slot);
+        YOMM2_TRACE(detail::log() << " slot = " << slot);
         auto stride = ssp++->i;
-        _YOMM2_DEBUG(detail::log() << " stride = " << stride);
+        YOMM2_TRACE(detail::log() << " stride = " << stride);
         dispatch += mptr[slot].i * stride;
-        _YOMM2_DEBUG(detail::log() << " dispatch = " << dispatch);
+        YOMM2_TRACE(detail::log() << " dispatch = " << dispatch);
         auto pf = dispatch->pf;
-        _YOMM2_DEBUG(detail::log() << " pf = " << pf << "\n");
+        YOMM2_TRACE(detail::log() << " pf = " << pf << "\n");
         return pf;
     }
 };
@@ -513,13 +512,13 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<REST>... rest)
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
-        _YOMM2_DEBUG(detail::log() << "  key = " << key);
+        YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::mptr(dispatch_data::instance<REG>, key);
-        _YOMM2_DEBUG(detail::log() << " mptr = " << mptr);
+        YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
-        _YOMM2_DEBUG(detail::log() << " slot = " << slot);
+        YOMM2_TRACE(detail::log() << " slot = " << slot);
         auto dispatch = mptr[slot].pw;
-        _YOMM2_DEBUG(detail::log() << " dispatch = " << dispatch << "\n");
+        YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<REG, ARITY - 1, REST...>::resolve_next(
             ssp, dispatch, rest...);
     }
@@ -531,15 +530,15 @@ struct resolver<REG, ARITY, virtual_<FIRST>, REST...>
         virtual_arg_t<REST>... rest)
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
-        _YOMM2_DEBUG(detail::log() << "  key = " << key);
+        YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::mptr(dispatch_data::instance<REG>, key);
-        _YOMM2_DEBUG(detail::log() << " mptr = " << mptr);
+        YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
-        _YOMM2_DEBUG(detail::log() << " slot = " << slot);
+        YOMM2_TRACE(detail::log() << " slot = " << slot);
         auto stride = ssp++->i;
-        _YOMM2_DEBUG(detail::log() << " stride = " << stride);
+        YOMM2_TRACE(detail::log() << " stride = " << stride);
         dispatch += mptr[slot].i * stride;
-        _YOMM2_DEBUG(detail::log() << " dispatch = " << dispatch << "\n");
+        YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<REG, ARITY - 1, REST...>::resolve_next(
             ssp, dispatch, rest...);
     }
@@ -579,10 +578,10 @@ struct register_spec;
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
-    register_spec(void** next _YOMM2_COMMA_DEBUG(const char* name)) {
+    register_spec(void** next YOMM2_TRACE_COMMA(const char* name)) {
         static spec_info si;
         if (si.vp.empty()) {
-            _YOMM2_DEBUG(si.name = name);
+            YOMM2_TRACE(si.name = name);
             si.pf = (void*) wrapper<
                 RETURN_T, SPEC, typename METHOD::signature_type, RETURN_T(SPEC_ARGS...)
                 >::body;
@@ -610,32 +609,32 @@ struct method<REG, ID, R(A...)> {
     enum { arity = for_each_vp_t::count };
 
     static void* resolve(virtual_arg_t<A>... args) {
-        _YOMM2_DEBUG(detail::log() << "call " << name() << " slots_strides = " << slots_strides << "\n");
+        YOMM2_TRACE(detail::log() << "call " << name() << " slots_strides = " << slots_strides << "\n");
         return resolver<REG, arity, A...>::resolve(slots_strides, args...);
     }
 
-#if YOMM2_DEBUG
+#if YOMM2_ENABLE_TRACE
     static const char* name() { return info().name; }
 #endif
 
     static void not_implemented(virtual_arg_t<A>...) {
         method_call_error error;
         error.code = method_call_error::not_implemented;
-        _YOMM2_DEBUG(error.method_name = info().name);
+        YOMM2_TRACE(error.method_name = info().name);
         detail::call_error_handler(error);
     }
 
     static void ambiguous(virtual_arg_t<A>...) {
         method_call_error error;
         error.code = method_call_error::ambiguous;
-        _YOMM2_DEBUG(error.method_name = info().name);
+        YOMM2_TRACE(error.method_name = info().name);
         detail::call_error_handler(error);
     }
 
     struct init_method {
-        init_method(_YOMM2_DEBUG(const char* name)) {
+        init_method(YOMM2_TRACE(const char* name)) {
             if (info().vp.empty()) {
-                _YOMM2_DEBUG(info().name = name);
+                YOMM2_TRACE(info().name = name);
                 info().slots_strides_p = &slots_strides;
                 for_each_vp_t::collect_class_info(info().vp);
                 registry::get<REG>().methods.push_back(&info());
