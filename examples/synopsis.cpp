@@ -30,34 +30,34 @@ register_class(Dolphin, Animal);
 declare_method(std::string, kick, (virtual_<Animal&>));
 
 // implement 'kick' for dogs
-begin_method(std::string, kick, (Dog& dog)) {
+define_method(std::string, kick, (Dog& dog)) {
   return "bark";
-} end_method;
+}
 
 // implement 'kick' for bulldogs
-begin_method(std::string, kick, (Bulldog& dog)) {
+define_method(std::string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
-} end_method;
+}
 
 // multi-method
 declare_method(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 
 // 'meet' catch-all implementation
-begin_method(std::string, meet, (Animal&, Animal&)) {
+define_method(std::string, meet, (Animal&, Animal&)) {
   return "ignore";
-} end_method;
+}
 
-begin_method(std::string, meet, (Dog& dog1, Dog& dog2)) {
+define_method(std::string, meet, (Dog& dog1, Dog& dog2)) {
   return "wag tail";
-} end_method;
+}
 
-begin_method(std::string, meet, (Dog& dog, Cat& cat)) {
+define_method(std::string, meet, (Dog& dog, Cat& cat)) {
   return "chase";
-} end_method;
+}
 
-begin_method(std::string, meet, (Cat& cat, Dog& dog)) {
+define_method(std::string, meet, (Cat& cat, Dog& dog)) {
   return "run";
-} end_method;
+}
 
 // -----------------------------------------------------------------------------
 // main

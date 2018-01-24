@@ -21,7 +21,7 @@ Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 
 * `register_class` for `YOMM2_CLASS`
 * `declare_method` for `YOMM2_DECLARE`
-* `begin_method` for `YOMM2_BEGIN`
+* `define_method` for `YOMM2_BEGIN`
 * `end_method` for `YOMM2_END`
 
 It is recommended to use the "cute" names unless they clash with names used in
@@ -170,13 +170,13 @@ YOMM2_DECLARE(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 ```
 
-## macros YOMM2_METHOD, YOMM2_END, begin_method, end_method
+## macros YOMM2_METHOD, YOMM2_END, define_method, end_method
 
 #### Synopsis:
 ```
 YOMM2_BEGIN(return_type, name, (unmarked_type... argument)) {
     ....
-} YOMM2_END;
+}
 ```
 
 Add an implementation to a method.
@@ -187,7 +187,7 @@ exist and must be unique.
 
 NOTE that the types of the arguments are _not_ marked with `virtual_`.
 
-`begin_method` and `end_method` are aliases for `YOMM2_BEGIN` and `YOMM2_END`
+`define_method` and `end_method` are aliases for `YOMM2_BEGIN` and `YOMM2_END`
 created by header `yorel/yomm2/cute.hpp`.
 
 ## Examples:
@@ -195,29 +195,29 @@ created by header `yorel/yomm2/cute.hpp`.
 // implement 'kick' for dogs
 YOMM2_BEGIN(std::string, kick, (Dog& dog)) {
   return "bark";
-} YOMM2_END;
+}
 
 // implement 'kick' for bulldogs
 YOMM2_BEGIN(std::string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
-} YOMM2_END;
+}
 
 // 'meet' catch-all implementation
 YOMM2_BEGIN(std::string, meet, (Animal&, Animal&)) {
   return "ignore";
-} YOMM2_END;
+}
 
 YOMM2_BEGIN(std::string, meet, (Dog& dog1, Dog& dog2)) {
   return "wag tail";
-} YOMM2_END;
+}
 
 YOMM2_BEGIN(std::string, meet, (Dog& dog, Cat& cat)) {
   return "chase";
-} YOMM2_END;
+}
 
 YOMM2_BEGIN(std::string, meet, (Cat& cat, Dog& dog)) {
   return "run";
-} YOMM2_END;
+}
 ```
 
 ## function next
@@ -228,7 +228,7 @@ YOMM2_BEGIN(return_type, name, (type... arg)) {
     ....
     next(arg...);
     ...
-} YOMM2_END;
+}
 ```
 
 Call the next most specific implementation, if it exists. Valid only inside a
@@ -251,12 +251,12 @@ legal by testing `next` against `nullptr`.
 
 YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(double, pay, (const Executive& exec)) {
     return next(exec) // call pay(const Employee&)
            + 2000;    // bonus
-} YOMM2_END;
+}
 
 const Employee& elon = Executive();
 double paycheck = pay(elon); // 3000 + 2000

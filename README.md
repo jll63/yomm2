@@ -65,13 +65,13 @@ register_class(diagonal_matrix, matrix);
 
 declare_method(string, to_json, (virtual_<const matrix&>));
 
-begin_method(string, to_json, (const dense_matrix& m)) {
+define_method(string, to_json, (const dense_matrix& m)) {
     return "json for dense matrix...";
-} end_method;
+}
 
-begin_method(string, to_json, (const diagonal_matrix& m)) {
+define_method(string, to_json, (const diagonal_matrix& m)) {
     return "json for diagonal matrix...";
-} end_method;
+}
 
 int main() {
     yorel::yomm2::update_methods();
@@ -97,7 +97,7 @@ as you want without modifying the classes.
 NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 permitted.
 
-The following two `begin_method ... end_method` blocks define two
+The following two `define_method ... end_method` blocks define two
 implementations for the `to_json` method: one for dense matrices, and one for
 diagonal matrices.
 
@@ -120,20 +120,20 @@ declare_method(
     (virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>));
 
 // catch-all matrix * matrix -> dense_matrix
-begin_method(
+define_method(
     shared_ptr<const matrix>,
     times,
     (shared_ptr<const matrix> a, shared_ptr<const matrix> b)) {
     return make_shared<dense_matrix>();
-} end_method;
+}
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
-begin_method(
+define_method(
     shared_ptr<const matrix>,
     times,
     (shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b)) {
     return make_shared<diagonal_matrix>();
-} end_method;
+}
 ```
 
 ## Performance

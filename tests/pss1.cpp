@@ -24,13 +24,13 @@ register_class(D, B, C);
 
 declare_method(string, foobar, (virtual_<A&>));
 
-begin_method(string, foobar, (A&)) {
+define_method(string, foobar, (A&)) {
     return "foobar(A)";
-} end_method;
+}
 
-begin_method(string, foobar, (C&)) {
+define_method(string, foobar, (C&)) {
     return "foobar(C)";
-} end_method;
+}
 
 #include <iostream>
 #include <memory>

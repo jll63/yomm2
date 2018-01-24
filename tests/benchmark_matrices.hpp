@@ -48,21 +48,21 @@ YOMM2_CLASS(diagonal_matrix, matrix);
 
 YOMM2_DEFINE(double, times, (double a, const matrix& m)) {
     return 0;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(double, times, (double a, const diagonal_matrix& m)) {
     return 0;
-} YOMM2_END;
+}
 
 // -----------------------------------------------------------------------------
 
 YOMM2_DEFINE(double, times, (const matrix&, const matrix&)) {
     return 1;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(double, times, (const diagonal_matrix&, const diagonal_matrix&)) {
     return 2;
-} YOMM2_END;
+}
 
 // -----------------------------------------------------------------------------
 

@@ -47,25 +47,25 @@ declare_method(
     fight,
     (virtual_<Character&>, virtual_<Creature&>, virtual_<Device&>));
 
-begin_method(std::string, fight, (Character& x, Creature& y, Banana& z)) {
+define_method(std::string, fight, (Character& x, Creature& y, Banana& z)) {
   return "are you insane?";
-} end_method;
+}
 
-begin_method(std::string, fight, (Character& x, Creature& y, Axe& z)) {
+define_method(std::string, fight, (Character& x, Creature& y, Axe& z)) {
   return "not agile enough to wield";
-} end_method;
+}
 
-begin_method(std::string, fight, (Warrior& x, Creature& y, Axe& z)) {
+define_method(std::string, fight, (Warrior& x, Creature& y, Axe& z)) {
   return "and cuts it into pieces";
-} end_method;
+}
 
-begin_method(std::string, fight, (Warrior& x,  Dragon& y, Axe& z)) {
+define_method(std::string, fight, (Warrior& x,  Dragon& y, Axe& z)) {
   return "and dies a honorable death";
-} end_method;
+}
 
-begin_method(std::string, fight, (Character& x, Dragon& y, Hands& z)) {
+define_method(std::string, fight, (Character& x, Dragon& y, Hands& z)) {
   return "you just killed a dragon with your bare hands. Incredible isn't it?";
-} end_method;
+}
 
 int main()
 {

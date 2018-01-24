@@ -215,27 +215,27 @@ YOMM2_DECLARE_(test, bool, approve, (virtual_<const Role&>, virtual_<const Expen
 
 YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(double, pay, (const Executive& exec)) {
     return next(exec) + 2000;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(bool, approve, (const Role& r, const Expense& e, double amount)) {
     return false;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(bool, approve, (const Employee& r, const Public_transport& e, double amount)) {
     return true;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(bool, approve, (const Executive& r, const Taxi& e, double amount)) {
     return true;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(bool, approve, (const Founder& r, const Expense& e, double amount)) {
     return true;
-} YOMM2_END;
+}
 
 const int num_classes = 10;
 

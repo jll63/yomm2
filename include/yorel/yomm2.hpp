@@ -13,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -42,7 +43,8 @@
 #define _YOMM2_COMMA_DEBUG(X)
 #endif
 
-#define _YOMM2_NS BOOST_PP_CAT(_YOMM2_NS_, __COUNTER__)
+#define _YOMM2_NS(REF) \
+    BOOST_PP_CAT(_YOMM2_NS_, BOOST_PP_SUB(__COUNTER__, REF))
 
 #define _YOMM2_PLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
@@ -63,7 +65,7 @@
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
     struct _YOMM2_DECLARE_KEY(ID);                                            \
     namespace {                                                               \
-    namespace _YOMM2_NS {                                                     \
+    namespace _YOMM2_NS(0) {                                                  \
     ::yorel::yomm2::detail::method<REGISTRY,                                  \
                                    _YOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
     init _YOMM2_DEBUG( = #ID  #ARGS ); } }                                    \
@@ -87,33 +89,32 @@
 
 #define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
     namespace {                                                               \
-    namespace _YOMM2_NS {                                                     \
+    namespace _YOMM2_NS(0) {                                                  \
     template<typename T> struct select_method;                                \
     template<typename... A> struct select_method<void(A...)> {                \
         using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
                                  std::declval<A>()...));                      \
     };                                                                        \
     using _YOMM2_RETURN_T = RETURN_T;                                         \
-    using _YOMM2_METHOD = select_method<void ARGS>::type;             \
+    using _YOMM2_METHOD = select_method<void ARGS>::type;                     \
     using _YOMM2_SIGNATURE = void ARGS;                                       \
     const char* _YOMM2_NAME = #ARGS;                                          \
-    RETURN_T (*next)ARGS;                                                     \
+    RETURN_T (*next) ARGS;                                                    \
     struct _YOMM2_SPEC {                                                      \
-        static RETURN_T body ARGS
-
-#define YOMM2_END                                                             \
+        static RETURN_T body ARGS;                                            \
     };                                                                        \
-    ::yorel::yomm2::detail::register_spec<                                            \
-       _YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
-    init((void**)&next _YOMM2_COMMA_DEBUG(_YOMM2_NAME));              \
-    } }
+    ::yorel::yomm2::detail::                                                  \
+    register_spec<_YOMM2_RETURN_T, _YOMM2_METHOD, _YOMM2_SPEC, _YOMM2_SIGNATURE> \
+    init((void**)&next _YOMM2_COMMA_DEBUG(_YOMM2_NAME));                      \
+    } }                                                                       \
+       RETURN_T _YOMM2_NS(1)::_YOMM2_SPEC::body ARGS
 
 #define _YOMM2_CLASS_NAME(CLASS, ...) \
     #CLASS
 
 #define YOMM2_CLASS_(REG, ...)                                                \
     namespace {                                                               \
-    namespace _YOMM2_NS {                                                     \
+    namespace _YOMM2_NS(0) {                                                  \
     ::yorel::yomm2::detail::                                                          \
     init_class_info<REG _YOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__)) \
         > init _YOMM2_DEBUG( { _YOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }

@@ -38,27 +38,27 @@ YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, double));
 
 YOMM2_DEFINE(Subtype, times, (const matrix&, const matrix&)) {
     return MATRIX_MATRIX;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(Subtype, times, (const diagonal_matrix&, const diagonal_matrix&)) {
     return DIAGONAL_DIAGONAL;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(Subtype, times, (double a, const matrix& m)) {
     return SCALAR_MATRIX;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(Subtype, times, (double a, const diagonal_matrix& m)) {
     return SCALAR_DIAGONAL;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(Subtype, times, (const diagonal_matrix& m, double a)) {
     return DIAGONAL_SCALAR;
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
     return MATRIX_SCALAR;
-} YOMM2_END;
+}
 
 BOOST_AUTO_TEST_CASE(simple)
 {
@@ -93,10 +93,10 @@ YOMM2_CLASS(diagonal_matrix, matrix);
 YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
 YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
-} YOMM2_END;
+}
 
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
-} YOMM2_END;
+}
 
 int error_code = -1;
 _YOMM2_DEBUG(std::string method_name);
