@@ -1,0 +1,4 @@
+COMPILER=$1
+BUILD=$2
+shift 2
+cd build/$COMPILER/$BUILD && make -j4 && ctest $*
