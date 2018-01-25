@@ -609,6 +609,12 @@ inline word make_word(int i) {
     return w;
 }
 
+inline word make_word(unsigned long ul) {
+    word w;
+    w.ul = ul;
+    return w;
+}
+
 inline word make_word(void* pf) {
     word w;
     w.pf = pf;
@@ -617,19 +623,24 @@ inline word make_word(void* pf) {
 
 void runtime::install_gv() {
 
-    YOMM2_TRACE(log() << "Initializing global vector\n");
-    YOMM2_TRACE(log() << "   0 hash table\n");
-
     for (int pass = 0; pass != 2; ++pass) {
         dd.gv.resize(metrics.hash_table_size);
 
+        YOMM2_TRACE(
+            if (pass)
+                log() << "Initializing global vector at " << dd.gv.data() << "\n"
+                      << "   0 hash table\n");
+
         for (auto& m : methods) {
             *m.info->slots_strides_p = dd.gv.data() + dd.gv.size();
-            auto slot_iter = m.slots.begin();
             YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
-                          << ' ' << m.info->name << " slots and strides\n");
+                          << ' ' << m.info->name << "\n");
+            dd.gv.emplace_back(make_word(dd.gv.data()));
+            dd.gv.emplace_back(make_word(dd.hash.mult));
+            dd.gv.emplace_back(make_word(dd.hash.shift));
+            auto slot_iter = m.slots.begin();
             auto stride_iter = m.strides.begin();
             dd.gv.emplace_back(make_word(*slot_iter++));
 
@@ -652,11 +663,12 @@ void runtime::install_gv() {
         }
 
         for (auto& cls : classes) {
+            cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
             YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
-                          << " mtbl for " << cls.info->name << "\n");
-            cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
+                          << " mtbl for " << cls.info->name
+                          << ": " << cls.mptr << "\n");
             std::transform(
                 cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
                 std::back_inserter(dd.gv), [](int i) {
