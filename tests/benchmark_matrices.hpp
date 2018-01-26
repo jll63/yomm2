@@ -6,7 +6,7 @@
 #include <yorel/yomm2.hpp>
 #include <benchmark/benchmark.h>
 
-using yorel::yomm2::virtual_;
+using namespace yorel::yomm2;
 
 #define PREFIXED(ID) BOOST_PP_CAT(PREFIX, BOOST_PP_CAT(_, ID))
 
@@ -35,8 +35,17 @@ struct diagonal_matrix : INHERITANCE matrix {
     virtual double times2(const diagonal_matrix& other) const;
 };
 
-YOMM2_DECLARE(double, times, (double, yorel::yomm2::virtual_<const matrix&>));
-YOMM2_DECLARE(double, times, (yorel::yomm2::virtual_<const matrix&>, yorel::yomm2::virtual_<const matrix&>));
+YOMM2_DECLARE(
+    double,
+    times,
+    (double, yorel::yomm2::virtual_<const matrix&>),
+    POLICY);
+
+YOMM2_DECLARE(
+    double,
+    times,
+    (yorel::yomm2::virtual_<const matrix&>, yorel::yomm2::virtual_<const matrix&>),
+    POLICY);
 
 #ifdef MAIN
 
@@ -162,3 +171,12 @@ double call_multi_method(const matrix& a, const matrix& b) {
 #endif
 
 }
+
+#ifndef hash_in_gv_policy_defined
+#define hash_in_gv_policy_defined
+
+struct hash_in_gv_policy {
+    using hash_factors_placement = policy::hash_factors_in_vector;
+};
+
+#endif

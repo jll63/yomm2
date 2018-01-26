@@ -14,6 +14,7 @@
 #include <vector>
 
 #include <boost/preprocessor/arithmetic/sub.hpp>
+#include <boost/preprocessor/facilities/overload.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
@@ -57,34 +58,46 @@
 #define yOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
-#define YOMM2_DECLARE(R, ID, ARGS)                                            \
-    YOMM2_DECLARE_(void, R, ID, ARGS)
-
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
-    yOMM2_WITH_GENSYM(yOMM2_DECLARE2, REGISTRY, R, ID, ARGS)
+    yOMM2_WITH_GENSYM(yOMM2_DECLARE, REGISTRY, R, ID, ARGS,                   \
+                      ::yorel::yomm2::default_policy)
 
-#define yOMM2_DECLARE2(NS, REGISTRY, R, ID, ARGS)                             \
+#if !BOOST_PP_VARIADICS_MSVC
+#define YOMM2_DECLARE(...)                                                    \
+    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__)
+#else
+#define YOMM2_DECLARE(...)                                                    \
+    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__) \
+                 (__VA_ARGS__), BOOST_PP_EMPTY())
+#endif
+
+#define YOMM2_DECLARE_3(R, ID, ARGS)                                \
+    yOMM2_WITH_GENSYM(yOMM2_DECLARE, void, R, ID, ARGS,             \
+                      ::yorel::yomm2::default_policy)
+
+#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                  \
+    yOMM2_WITH_GENSYM(yOMM2_DECLARE, void, R, ID, ARGS, POLICY)
+
+#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                     \
     struct yOMM2_DECLARE_KEY(ID);                                             \
     namespace {                                                               \
     namespace NS {                                                            \
-    ::yorel::yomm2::detail::method                                            \
-    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS>::init_method \
-    init YOMM2_TRACE( = #ID  #ARGS ); } }                                     \
-    ::yorel::yomm2::detail::method                                            \
-    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS> ID(                             \
+    using _yOMM2_method = ::yorel::yomm2::detail::method                      \
+        <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                    \
+    _yOMM2_method::init_method init YOMM2_TRACE( = #ID  #ARGS ); } }          \
+    NS::_yOMM2_method ID(                                                     \
         ::yorel::yomm2::detail::discriminator,                                \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                            \
-                                                       yOMM2_PLIST, ARGS));   \
+                        yOMM2_PLIST, ARGS));                                  \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
                                 yOMM2_PLIST, ARGS)) {                         \
         return reinterpret_cast<R (*)(                                        \
             BOOST_PP_REPEAT(                                                  \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                    \
                 yOMM2_PLIST, ARGS))>(                                         \
-                    ::yorel::yomm2::detail::method                            \
-                    <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS>                 \
-                    ::resolve(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),      \
-                                              yOMM2_ALIST, ARGS)))            \
+                    NS::_yOMM2_method::resolve( \
+                        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),            \
+                                        yOMM2_ALIST, ARGS)))                  \
             (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
                              yOMM2_ALIST, ARGS));                             \
     }
@@ -150,6 +163,15 @@ struct method_call_error {
 using method_call_error_handler = void (*)(const method_call_error& error);
 
 method_call_error_handler set_method_call_error_handler(method_call_error_handler handler);
+
+struct policy {
+    struct hash_factors_in_globals {};
+    struct hash_factors_in_vector {};
+};
+
+struct default_policy : policy {
+    using hash_factors_placement = hash_factors_in_globals;
+};
 
 namespace detail {
 
@@ -374,6 +396,7 @@ struct method_info {
     void* ambiguous;
     void* not_implemented;
     const word** slots_strides_p{nullptr};
+    const std::type_info* hash_factors_placement;
 };
 
 template<typename BASE, typename DERIVED>
@@ -641,11 +664,11 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
     }
 };
 
-template<typename REG, typename ID, typename SIG>
+template<typename REG, typename ID, typename SIG, class POLICY>
 struct method;
 
-template<typename REG, typename ID, typename R, typename... A>
-struct method<REG, ID, R(A...)> {
+template<typename REG, typename ID, typename R, typename... A, typename POLICY>
+struct method<REG, ID, R(A...), POLICY> {
 
     static const word* slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
@@ -657,7 +680,21 @@ struct method<REG, ID, R(A...)> {
 
     enum { arity = for_each_vp_t::count };
 
-    static void* resolve(virtual_arg_t<A>... args) {
+    static  void* resolve(virtual_arg_t<A>... args) {
+        return resolve(typename POLICY::hash_factors_placement(), args...);
+    }
+
+    static  void* resolve(policy::hash_factors_in_globals, virtual_arg_t<A>... args) {
+        YOMM2_TRACE(detail::log() << "call " << name()
+                    << " slots_strides = " << slots_strides << "\n");
+        return resolver<arity, A...>::resolve(
+            dispatch_data::instance<REG>.gv.data(),
+            dispatch_data::instance<REG>.hash.mult,
+            dispatch_data::instance<REG>.hash.shift,
+            slots_strides, args...);
+    }
+
+    static void* resolve(policy::hash_factors_in_vector, virtual_arg_t<A>... args) {
         auto ssp = slots_strides;
         auto hash_table = ssp++->pw;
         auto hash_mult = ssp++->ul;
@@ -691,21 +728,24 @@ struct method<REG, ID, R(A...)> {
         init_method(YOMM2_TRACE(const char* name)) {
             if (info().vp.empty()) {
                 YOMM2_TRACE(info().name = name);
-                info().slots_strides_p = &slots_strides;
-                for_each_vp_t::collect_class_info(info().vp);
-                registry::get<REG>().methods.push_back(&info());
-                info().not_implemented = (void*) not_implemented;
-                info().ambiguous = (void*) ambiguous;
+                auto& inf = info();
+                inf.slots_strides_p = &slots_strides;
+                for_each_vp_t::collect_class_info(inf.vp);
+                registry::get<REG>().methods.push_back(&inf);
+                inf.not_implemented = (void*) not_implemented;
+                inf.ambiguous = (void*) ambiguous;
+                inf.hash_factors_placement =
+                    &typeid(typename POLICY::hash_factors_placement);
             }
         }
     };
 };
 
-template<typename REG, typename ID, typename R, typename... A>
-const word* method<REG, ID, R(A...)>::slots_strides;
+template<typename REG, typename ID, typename R, typename... A, typename POLICY>
+const word* method<REG, ID, R(A...), POLICY>::slots_strides;
 
-template<typename REG, typename ID, typename R, typename... A>
-method_info& method<REG, ID, R(A...)>::info() {
+template<typename REG, typename ID, typename R, typename... A, typename POLICY>
+method_info& method<REG, ID, R(A...), POLICY>::info() {
     static method_info info;
     return info;
 }

@@ -637,9 +637,13 @@ void runtime::install_gv() {
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
                           << ' ' << m.info->name << "\n");
-            dd.gv.emplace_back(make_word(dd.gv.data()));
-            dd.gv.emplace_back(make_word(dd.hash.mult));
-            dd.gv.emplace_back(make_word(dd.hash.shift));
+
+            if (*m.info->hash_factors_placement == typeid(policy::hash_factors_in_vector)) {
+                dd.gv.emplace_back(make_word(dd.gv.data()));
+                dd.gv.emplace_back(make_word(dd.hash.mult));
+                dd.gv.emplace_back(make_word(dd.hash.shift));
+            }
+
             auto slot_iter = m.slots.begin();
             auto stride_iter = m.strides.begin();
             dd.gv.emplace_back(make_word(*slot_iter++));
