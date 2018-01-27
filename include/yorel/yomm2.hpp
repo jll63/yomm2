@@ -6,6 +6,7 @@
 #ifndef YOREL_YOMM2_INCLUDED
 #define YOREL_YOMM2_INCLUDED
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 #include <typeinfo>
@@ -363,24 +364,47 @@ class_info& class_info::get() {
 
 template<typename REG, class CLASS, class... BASE>
 struct init_class_info {
+    static int refs;
     init_class_info(YOMM2_TRACE(const char* name)) {
         auto& info = class_info::get<REG, CLASS>();
-        static int called;
-        if (!called++) {
+        if (!refs++) {
             YOMM2_TRACE(info.name = name);
             registry::get<REG>().classes.push_back(&info);
             info.direct_bases = { &class_info::get<REG, BASE>()... };
         }
         auto inserted = info.ti_ptrs.insert(&typeid(CLASS));
-        YOMM2_TRACE(
-            if (inserted.second)
+        if (inserted.second)
+            YOMM2_TRACE(
                 ::yorel::yomm2::detail::log()
                       << "Register " << name
                       << " with &typeid " << &typeid(CLASS)
-                      << " (" << typeid(CLASS).name() << ")"
                       << "\n");
     }
+
+    ~init_class_info() {
+        auto& info = class_info::get<REG, CLASS>();
+        auto iter = info.ti_ptrs.find(&typeid(CLASS));
+
+        if (iter != info.ti_ptrs.end()) {
+            YOMM2_TRACE(
+                ::yorel::yomm2::detail::log()
+                << "Un-register " << info.name
+                << " with &typeid " << &typeid(CLASS)
+                << "\n");
+
+            info.ti_ptrs.erase(iter);
+        }
+
+        if (!--refs) {
+            auto& info = class_info::get<REG, CLASS>();
+            auto& classes = registry::get<REG>().classes;
+            classes.erase(std::find(classes.begin(), classes.end(), &info));
+        }
+    }
 };
+
+template<typename REG, class CLASS, class... BASE>
+int init_class_info<REG, CLASS, BASE...>::refs;
 
 struct spec_info {
     YOMM2_TRACE(const char* name);
@@ -650,10 +674,15 @@ struct register_spec;
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
+    static spec_info* this_;
+
     register_spec(void** next YOMM2_TRACE_COMMA(const char* name)) {
         static spec_info si;
         if (si.vp.empty()) {
+            this_ = &si;
             YOMM2_TRACE(si.name = name);
+            YOMM2_TRACE(
+                log() << METHOD::info().name << ": add spec " << name << "\n");
             si.pf = (void*) wrapper<
                 RETURN_T, SPEC, typename METHOD::signature_type, RETURN_T(SPEC_ARGS...)
                 >::body;
@@ -662,7 +691,21 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
             si.next = next;
         }
     }
+
+    ~register_spec() {
+        auto& specs = METHOD::info().specs;
+        auto iter = std::find(specs.begin(), specs.end(), this_);
+        if (iter != specs.end()) {
+            YOMM2_TRACE(
+                log() << METHOD::info().name << ": remove spec "
+                << (*iter)->name << "\n");
+            specs.erase(iter);
+        }
+    }
 };
+
+template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
+spec_info* register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>::this_;
 
 template<typename REG, typename ID, typename SIG, class POLICY>
 struct method;
@@ -728,6 +771,7 @@ struct method<REG, ID, R(A...), POLICY> {
         init_method(YOMM2_TRACE(const char* name)) {
             if (info().vp.empty()) {
                 YOMM2_TRACE(info().name = name);
+                YOMM2_TRACE(log() << "Register method " << name << "\n");
                 auto& inf = info();
                 inf.slots_strides_p = &slots_strides;
                 for_each_vp_t::collect_class_info(inf.vp);
@@ -736,6 +780,15 @@ struct method<REG, ID, R(A...), POLICY> {
                 inf.ambiguous = (void*) ambiguous;
                 inf.hash_factors_placement =
                     &typeid(typename POLICY::hash_factors_placement);
+            }
+        }
+
+        ~init_method() {
+            auto& methods = registry::get<REG>().methods;
+            auto iter = std::find(methods.begin(), methods.end(), &info());
+            if (iter != methods.end()) {
+                YOMM2_TRACE(log() << "Un-register method " << info().name << "\n");
+                methods.erase(iter);
             }
         }
     };
@@ -755,6 +808,5 @@ void update_methods(const registry& reg, dispatch_data& dd);
 } // namespace detail
 } // namespace yomm2
 } // namespace yorel
-
 
 #endif
