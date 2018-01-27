@@ -324,8 +324,6 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     runtime rt(registry, dd);
 
-    //detail::log_on(&std::cerr);
-
     rt.augment_classes();
 
     BOOST_TEST_REQUIRE(rt.classes.size() == num_classes);

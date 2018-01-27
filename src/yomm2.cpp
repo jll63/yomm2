@@ -769,6 +769,11 @@ std::ostream* active_log = nullptr;
 
 std::ostream& log() {
     static std::ostringstream discard_log;
+
+    if (getenv("YOMM2_ENABLE_TRACE")) {
+        log_on(&std::cerr);
+    }
+
     return active_log ? *active_log : discard_log;
 }
 

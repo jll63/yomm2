@@ -32,8 +32,6 @@ struct diagonal_matrix : matrix {
     }
 };
 
-//auto log = yorel::yomm2::detail::log_on(&cerr);
-
 register_class(matrix);
 register_class(dense_matrix, matrix);
 register_class(diagonal_matrix, matrix);
