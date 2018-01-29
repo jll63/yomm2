@@ -60,17 +60,57 @@ YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
     return MATRIX_SCALAR;
 }
 
+YOMM2_DECLARE(int, times, (virtual_<matrix&&>, virtual_<matrix&&>));
+YOMM2_DECLARE(int, times, (double, virtual_<matrix&&>));
+YOMM2_DECLARE(int, times, (virtual_<matrix&&>, double));
+
+YOMM2_DEFINE(int, times, (matrix&&, matrix&&)) {
+    return -MATRIX_MATRIX;
+}
+
+YOMM2_DEFINE(int, times, (diagonal_matrix&&, diagonal_matrix&&)) {
+    return -DIAGONAL_DIAGONAL;
+}
+
+YOMM2_DEFINE(int, times, (double a, matrix&& m)) {
+    return -SCALAR_MATRIX;
+}
+
+YOMM2_DEFINE(int, times, (double a, diagonal_matrix&& m)) {
+    return -SCALAR_DIAGONAL;
+}
+
+YOMM2_DEFINE(int, times, (diagonal_matrix&& m, double a)) {
+    return -DIAGONAL_SCALAR;
+}
+
+YOMM2_DEFINE(int, times, (matrix&& m, double a)) {
+    return -MATRIX_SCALAR;
+}
+
 BOOST_AUTO_TEST_CASE(simple)
 {
     yorel::yomm2::update_methods();
-    const matrix& dense = dense_matrix();
-    const matrix& diag = diagonal_matrix();
-    BOOST_TEST(times(dense, dense) == MATRIX_MATRIX);
-    BOOST_TEST(times(diag, diag) == DIAGONAL_DIAGONAL);
-    BOOST_TEST(times(diag, dense) == MATRIX_MATRIX);
-    BOOST_TEST(times(2, dense) == SCALAR_MATRIX);
-    BOOST_TEST(times(dense, 2) == MATRIX_SCALAR);
-    BOOST_TEST(times(diag, 2) == DIAGONAL_SCALAR);
+
+    {
+        const matrix& dense = dense_matrix();
+        const matrix& diag = diagonal_matrix();
+        BOOST_TEST(times(dense, dense) == MATRIX_MATRIX);
+        BOOST_TEST(times(diag, diag) == DIAGONAL_DIAGONAL);
+        BOOST_TEST(times(diag, dense) == MATRIX_MATRIX);
+        BOOST_TEST(times(2, dense) == SCALAR_MATRIX);
+        BOOST_TEST(times(dense, 2) == MATRIX_SCALAR);
+        BOOST_TEST(times(diag, 2) == DIAGONAL_SCALAR);
+    }
+
+    {
+        BOOST_TEST(times(dense_matrix(), dense_matrix()) == -MATRIX_MATRIX);
+        BOOST_TEST(times(diagonal_matrix(), diagonal_matrix()) == -DIAGONAL_DIAGONAL);
+        BOOST_TEST(times(diagonal_matrix(), dense_matrix()) == -MATRIX_MATRIX);
+        BOOST_TEST(times(2, dense_matrix()) == -SCALAR_MATRIX);
+        BOOST_TEST(times(dense_matrix(), 2) == -MATRIX_SCALAR);
+        BOOST_TEST(times(diagonal_matrix(), 2) == -DIAGONAL_SCALAR);
+    }
 }
 
 }

@@ -103,8 +103,8 @@ virtual_<type>
 ```
 Mark a parameter as virtual. Meaningful only inside a method declaration parameter list.
 
-`type` must be a reference, a pointer or a `std::shared_ptr` to a polymorphic
-type, possibly qualified with `const`.
+`type` must be a reference, a rvalue reference, a pointer or a
+`std::shared_ptr` to a polymorphic type, possibly qualified with `const`.
 
 ## Examples:
 ```
@@ -116,6 +116,7 @@ struct Animal {
 
 YOMM2_DECLARE(void, kick, (virtual_<Animal*>));
 YOMM2_DECLARE(void, kick, (virtual_<Animal&>));
+YOMM2_DECLARE(void, kick, (virtual_<Animal&&>));
 YOMM2_DECLARE(void, kick, (virtual_<shared_ptr<Animal>>));
 YOMM2_DECLARE(void, kick, (virtual_<const Animal*>));
 YOMM2_DECLARE(void, kick, (virtual_<const Animal&>));
@@ -124,9 +125,9 @@ YOMM2_DECLARE(void, kick, (virtual_<shared_ptr<const Animal>>));
 ```
 
 Given a polymorphic class `Animal`, these are all the valid ways of specifying
-a virtual Animal argument in a method declaration. NOTE that
-`virtual_<const shared_ptr<Animal>&>` is _not_ in this list and is _not_
-supported; passing shared_ptrs by const reference is a bad idea anyway.
+a virtual Animal argument in a method declaration. NOTE that `virtual_<const
+shared_ptr<Animal>&>` is _not_ in this list and is thus _not_ supported;
+passing shared_ptrs by const reference is a bad idea anyway.
 
 ## macros YOMM2_DECLARE, declare_method
 
