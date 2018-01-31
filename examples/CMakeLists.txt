@@ -23,6 +23,10 @@ add_executable(next next.cpp)
 target_link_libraries (next yomm2)
 add_test (next next)
 
+add_executable(asteroids asteroids.cpp)
+target_link_libraries (asteroids yomm2)
+add_test (asteroids asteroids)
+
 if(NOT MSVC)
   add_executable(dl_main dl_main.cpp)
   add_library( dl_shared SHARED dl_shared.cpp )
