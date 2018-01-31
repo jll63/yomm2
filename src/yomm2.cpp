@@ -540,17 +540,17 @@ void runtime::find_hash_function(
 
     std::default_random_engine rnd(13081963);
     int total_attempts = 0;
-    int M = 0;
+    int M = 1;
+
+    for (auto size = N * 5 / 4; size >>= 1; ) {
+        ++M;
+    }
+
     std::uniform_int_distribution<std::uintptr_t> uniform_dist;
 
-    for (int room = 2; room <= 6; ++room) {
-        M = 1;
+    for (int pass = 0; pass < 4; ++pass, ++M) {
 
-        while ((1 << M) < room * N / 2) {
-            ++M;
-        }
-
-        hash.shift = 64 - M;
+        hash.shift = 8 * sizeof(std::uintptr_t) - M;
         auto hash_size = 1 << M;
 
         YOMM2_TRACE(
