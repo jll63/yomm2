@@ -10,7 +10,7 @@ by reading code, go directly to [the synopsis](examples/synopsis.cpp)
 
 ## Open Methods in a Nutshell
 
-### Cutting Concerns
+### Cross-cutting Concerns
 
 You have a matrix math library. It deals with all sort of matrices: dense,
 diagonal, tri-diagonal, etc. Each matrix subtype has a corresponding class in a
@@ -21,7 +21,7 @@ will vary depending on the exact type of the object; for example, if a matrix
 is a DiagonalMatrix, you only need to store the diagonal - the other elements
 are all zeroes.
 
-This is an example of a "cutting concern". How do you do it?
+This is an example of a "cross-cutting concern". How do you do it?
 
 It turns out that OOP doesn't offer a good solution to this.
 
