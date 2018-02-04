@@ -10,7 +10,7 @@ by reading code, go directly to [the synopsis](examples/synopsis.cpp)
 
 ## Open Methods in a Nutshell
 
-### Cross-cutting Concerns
+### Cross-cutting Concerns and the Expression Problem
 
 You have a matrix math library. It deals with all sort of matrices: dense,
 diagonal, tri-diagonal, etc. Each matrix subtype has a corresponding class in a
@@ -21,7 +21,8 @@ will vary depending on the exact type of the object; for example, if a matrix
 is a DiagonalMatrix, you only need to store the diagonal - the other elements
 are all zeroes.
 
-This is an example of a "cross-cutting concern". How do you do it?
+This is an example of a ["cross-cutting
+concern"](http://wiki.c2.com/?CrossCuttingConcern). How do you do it?
 
 It turns out that OOP doesn't offer a good solution to this.
 
@@ -35,10 +36,22 @@ virtual functions are implemented.
 Or you may resort on a "type switch": have the application test for each
 category and generate the JSON accordingly. This is tedious, error prone and,
 above all, not extensible. Adding a new matrix subclass requires updating all
-the type switches. The Visitor pattern also suffers from this problem.
+the type switches. The Visitor pattern also suffers from this flaw.
 
-Open methods provide a simple, elegant and efficient solution to this
-problem. Let's look at an example:
+Wouldn't it be nice if you could add behavior to existing types, just as easily
+and unintrusively as you can extend existing class hierarchies via derivation?
+What if you could solve the so-called [Expression
+Problem](http://wiki.c2.com/?ExpressionProblem):
+
+```
+behaviors += types
+types += behaviors
+```
+
+This is exactly what Open Methods are all about: solving the Expression
+Problem.
+
+Let's look at an example.
 
 ```c++
 // -----------------------------------------------------------------------------
@@ -139,8 +152,8 @@ define_method(
 ## Performance
 
 Don't worry about it. Open methods are almost as fast as ordinary virtual
-member functions once you turn on optimization (-O3). With both clang and gcc,
-dispatching a call to a method with one virtual argument is only 10-15% slower
+member functions once you turn on optimization (-O2). With both clang and gcc,
+dispatching a call to a method with one virtual argument is only 15-30% slower
 than calling the equivalent virtual member function. If the body of the method
 does any amount of work, the difference is unnoticeable. See the implementation
 notes for benchmarks and assembly listings.
@@ -212,6 +225,8 @@ The Reference is [here](REFERENCE.md).
 The library comes with a series of examples:
 
 * [The complete `matrix` example](examples/matrix.cpp)
+
+* [The Asteroids example used in Wikipedia's article on Multiple Dispatch](examples/asteroids.cpp)
 
 * [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
 
