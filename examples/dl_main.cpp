@@ -4,14 +4,6 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-/* compile with the following commands:
-   g++ -std=c++11 -I../include -c dl_main.cpp
-   g++ -std=c++11 -I../include -c ../src/multi_methods.cpp
-   g++ dl_main.o multi_methods.o -o dl_main -ldl -rdynamic
-   g++ -std=c++11 -I../include -fPIC -c -o dl_shared.o dl_shared.cpp
-   g++ -shared -Wl,-soname,dl_shared.so -o dl_shared.so dl_shared.o
-*/
-
 #include <iostream>
 #include <dlfcn.h>
 
