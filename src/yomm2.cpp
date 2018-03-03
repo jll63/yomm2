@@ -609,9 +609,9 @@ inline word make_word(int i) {
     return w;
 }
 
-inline word make_word(unsigned long ul) {
+inline word make_word(uintptr_t value) {
     word w;
-    w.ul = ul;
+    w.ul = value;
     return w;
 }
 
