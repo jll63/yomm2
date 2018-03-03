@@ -221,11 +221,14 @@ struct dispatch_data {
     // global vector:
     std::vector<word> gv;
     hash_function hash;
-    template<typename T> static dispatch_data instance;
+    template<typename T>
+    struct instance {
+        static dispatch_data _;
+    };
 };
 
 template<typename T>
-dispatch_data dispatch_data::instance;
+dispatch_data dispatch_data::instance<T>::_;
 
 struct dynamic_cast_ {};
 struct static_cast_ {};
@@ -767,9 +770,9 @@ struct method<REG, ID, R(A...), POLICY> {
         YOMM2_TRACE(detail::log() << "call " << name()
                     << " slots_strides = " << slots_strides << "\n");
         return resolver<arity, A...>::resolve(
-            dispatch_data::instance<REG>.gv.data(),
-            dispatch_data::instance<REG>.hash.mult,
-            dispatch_data::instance<REG>.hash.shift,
+            dispatch_data::instance<REG>::_.gv.data(),
+            dispatch_data::instance<REG>::_.hash.mult,
+            dispatch_data::instance<REG>::_.hash.shift,
             slots_strides,
             std::forward<virtual_arg_t<A>>(args)...);
     }

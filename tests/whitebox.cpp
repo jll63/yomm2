@@ -179,7 +179,7 @@ namespace rolex {
 struct test;
 
 auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>;
+auto& dd = dispatch_data::instance<test>::_;
 
 struct Role {
     virtual ~Role() {}
@@ -818,7 +818,7 @@ namespace layer_mi {
 
 struct test;
 auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>;
+auto& dd = dispatch_data::instance<test>::_;
 
 struct A0 {};
 
@@ -860,7 +860,7 @@ namespace multiple_inheritance {
 
 struct test;
 auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>;
+auto& dd = dispatch_data::instance<test>::_;
 
 // A   B
 //  \ / \
