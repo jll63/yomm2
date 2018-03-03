@@ -76,14 +76,14 @@
                  (__VA_ARGS__), BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_DECLARE_3(R, ID, ARGS)                                \
+#define YOMM2_DECLARE_3(R, ID, ARGS)                           \
     yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS,             \
-                      ::yorel::yomm2::default_policy)
+                  ::yorel::yomm2::default_policy)
 
 #define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                  \
     yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS, POLICY)
 
-#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                     \
+#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                      \
     struct yOMM2_DECLARE_KEY(ID);                                             \
     namespace {                                                               \
     namespace NS {                                                            \
@@ -128,25 +128,24 @@
     } }                                                                       \
        RETURN_T NS::_yOMM2_spec::body ARGS
 
-//#define yOMM2_CLASS_NAME(CLASS, ...) \
-//    #CLASS
-
 #define YOMM2_CLASS(...)                                                      \
-    yOMM2_CLASS2(yOMM2_GENSYM, \
-		BOOST_PP_TUPLE_PUSH_FRONT(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), void))
+    yOMM2_CLASS2(yOMM2_GENSYM,                                                \
+                 BOOST_PP_TUPLE_PUSH_FRONT(                                   \
+                     BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), void))
 
 #define YOMM2_CLASS_(REG, ...)                                                     \
     yOMM2_CLASS2(yOMM2_GENSYM, \
 		BOOST_PP_TUPLE_PUSH_FRONT(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), REG))
 
-#define yOMM2_CLASS2(NS, TUPLE)                                            \
+#define yOMM2_CLASS2(NS, TUPLE)                                               \
     namespace {                                                               \
-       namespace NS {						                                  \
-           ::yorel::yomm2::detail::                                           \
-           init_class_info                                                    \
-           <BOOST_PP_TUPLE_REM(BOOST_PP_TUPLE_SIZE(TUPLE))TUPLE> init											  \
-           YOMM2_TRACE( { \
-               BOOST_PP_STRINGIZE(BOOST_PP_TUPLE_ELEM(BOOST_PP_TUPLE_SIZE(TUPLE), 1, TUPLE)) }); } }
+    namespace NS {                                                            \
+    ::yorel::yomm2::detail::                                                  \
+    init_class_info                                                           \
+    <BOOST_PP_TUPLE_REM(BOOST_PP_TUPLE_SIZE(TUPLE))TUPLE> init                \
+    YOMM2_TRACE( {                                                            \
+            BOOST_PP_STRINGIZE(                                               \
+                BOOST_PP_TUPLE_ELEM(BOOST_PP_TUPLE_SIZE(TUPLE), 1, TUPLE)) }); } }
 
 namespace yorel {
 namespace yomm2 {
