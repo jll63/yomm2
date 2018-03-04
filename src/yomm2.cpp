@@ -609,9 +609,9 @@ inline word make_word(int i) {
     return w;
 }
 
-inline word make_word(unsigned long ul) {
+inline word make_word(uintptr_t value) {
     word w;
-    w.ul = ul;
+    w.ul = value;
     return w;
 }
 
@@ -804,7 +804,7 @@ method_call_error_handler call_error_handler;
 } // namespace detail
 
 void update_methods() {
-    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>);
+    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>::_);
 }
 
 method_call_error_handler set_method_call_error_handler(method_call_error_handler handler) {

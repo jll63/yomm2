@@ -18,9 +18,13 @@
 #include <boost/preprocessor/facilities/overload.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
+#include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/tuple/push_front.hpp>
+#include <boost/preprocessor/tuple/rem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
+#include <boost/preprocessor/variadic/elem.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
@@ -45,8 +49,7 @@
 #define YOMM2_TRACE_COMMA(X)
 #endif
 
-#define yOMM2_WITH_GENSYM(MACRO, ...)                                         \
-    MACRO(BOOST_PP_CAT(YoMm2_nS_, __COUNTER__), __VA_ARGS__)
+#define yOMM2_GENSYM BOOST_PP_CAT(YoMm2_nS_, __COUNTER__)
 
 #define yOMM2_PLIST(N, I, A)                                                  \
     BOOST_PP_COMMA_IF(I)                                                      \
@@ -58,12 +61,14 @@
     std::forward<::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>> \
     (BOOST_PP_CAT(a, I))
 
+#define yOMM2_RLIST(N, I, A)                                                  \
+    BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
+
 #define yOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
 #define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
-    yOMM2_WITH_GENSYM(yOMM2_DECLARE, REGISTRY, R, ID, ARGS,                   \
-                      ::yorel::yomm2::default_policy)
+    yOMM2_DECLARE(yOMM2_GENSYM, REGISTRY, R, ID, ARGS, ::yorel::yomm2::default_policy)
 
 #if !BOOST_PP_VARIADICS_MSVC
 #define YOMM2_DECLARE(...)                                                    \
@@ -74,14 +79,14 @@
                  (__VA_ARGS__), BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_DECLARE_3(R, ID, ARGS)                                \
-    yOMM2_WITH_GENSYM(yOMM2_DECLARE, void, R, ID, ARGS,             \
-                      ::yorel::yomm2::default_policy)
+#define YOMM2_DECLARE_3(R, ID, ARGS)                           \
+    yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS,             \
+                  ::yorel::yomm2::default_policy)
 
 #define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                  \
-    yOMM2_WITH_GENSYM(yOMM2_DECLARE, void, R, ID, ARGS, POLICY)
+    yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS, POLICY)
 
-#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                     \
+#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                      \
     struct yOMM2_DECLARE_KEY(ID);                                             \
     namespace {                                                               \
     namespace NS {                                                            \
@@ -94,19 +99,19 @@
                         yOMM2_PLIST, ARGS));                                  \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
                                 yOMM2_PLIST, ARGS)) {                         \
-        return reinterpret_cast<R (*)(                                        \
+        auto pf = reinterpret_cast<R (*)(                                     \
             BOOST_PP_REPEAT(                                                  \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                    \
                 yOMM2_PLIST, ARGS))>(                                         \
-                    NS::_yOMM2_method::resolve( \
+                    NS::_yOMM2_method::resolve(                               \
                         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),            \
-                                        yOMM2_ALIST, ARGS)))                  \
-            (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
+                                        yOMM2_RLIST, ARGS)));                 \
+            return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),              \
                              yOMM2_ALIST, ARGS));                             \
     }
 
 #define YOMM2_DEFINE(RETURN_T, ID, ARGS)                                      \
-    yOMM2_WITH_GENSYM(yOMM2_DEFINE, RETURN_T, ID, ARGS)
+    yOMM2_DEFINE(yOMM2_GENSYM, RETURN_T, ID, ARGS)
 
 #define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
     namespace {                                                               \
@@ -126,29 +131,24 @@
     } }                                                                       \
        RETURN_T NS::_yOMM2_spec::body ARGS
 
-#define yOMM2_CLASS_NAME(CLASS, ...) \
-    #CLASS
-
-#define YOMM2_CLASS_(...)                                                     \
-    yOMM2_WITH_GENSYM(yOMM2_CLASS2, __VA_ARGS__)
-
-#define yOMM2_CLASS2(NS, REG, ...)                                            \
-    namespace {                                                               \
-       namespace NS {                                                \
-           ::yorel::yomm2::detail::                                           \
-           init_class_info                                                    \
-           <REG yOMM2_CLASS_LIST(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))     \
-            > init YOMM2_TRACE( { yOMM2_CLASS_NAME(__VA_ARGS__ ) } ); } }
-
 #define YOMM2_CLASS(...)                                                      \
-    YOMM2_CLASS_(void, __VA_ARGS__)
+    yOMM2_CLASS2(yOMM2_GENSYM,                                                \
+                 BOOST_PP_TUPLE_PUSH_FRONT(                                   \
+                     BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), void))
 
-#define yOMM2_CLIST(N, I, A)                                                  \
-    , BOOST_PP_TUPLE_ELEM(I, A)
+#define YOMM2_CLASS_(REG, ...)                                                     \
+    yOMM2_CLASS2(yOMM2_GENSYM, \
+		BOOST_PP_TUPLE_PUSH_FRONT(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), REG))
 
-#define yOMM2_CLASS_LIST(TUPLE)                                               \
-    BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(TUPLE),                               \
-                    yOMM2_CLIST, TUPLE)                                       \
+#define yOMM2_CLASS2(NS, TUPLE)                                               \
+    namespace {                                                               \
+    namespace NS {                                                            \
+    ::yorel::yomm2::detail::                                                  \
+    init_class_info                                                           \
+    <BOOST_PP_TUPLE_REM(BOOST_PP_TUPLE_SIZE(TUPLE))TUPLE> init                \
+    YOMM2_TRACE( {                                                            \
+            BOOST_PP_STRINGIZE(                                               \
+                BOOST_PP_TUPLE_ELEM(BOOST_PP_TUPLE_SIZE(TUPLE), 1, TUPLE)) }); } }
 
 namespace yorel {
 namespace yomm2 {
@@ -223,11 +223,14 @@ struct dispatch_data {
     // global vector:
     std::vector<word> gv;
     hash_function hash;
-    template<typename T> static dispatch_data instance;
+    template<typename T>
+    struct instance {
+        static dispatch_data _;
+    };
 };
 
 template<typename T>
-dispatch_data dispatch_data::instance;
+dispatch_data dispatch_data::instance<T>::_;
 
 struct dynamic_cast_ {};
 struct static_cast_ {};
@@ -236,6 +239,7 @@ template<typename T>
 struct virtual_traits {
     using base_type = typename std::remove_cv_t<std::remove_reference_t<T>>;
     using argument_type = T;
+    using resolve_type = const T&;
     template<typename>
     static T cast(T val, static_cast_) {
         return val;
@@ -250,11 +254,12 @@ template<typename T>
 struct virtual_traits< virtual_<T&> > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = T&;
+    using resolve_type = T&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
@@ -273,11 +278,12 @@ template<typename T>
 struct virtual_traits< virtual_<T&&> > {
     using base_type = T;
     using argument_type = T&&;
+    using resolve_type = T&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
@@ -296,11 +302,12 @@ template<typename T>
 struct virtual_traits< virtual_<T*> > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = T*;
+    using resolve_type = const T*;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
@@ -332,11 +339,12 @@ template<typename T>
 struct virtual_traits< virtual_< std::shared_ptr<T> > > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = std::shared_ptr<T>;
+    using resolve_type = const std::shared_ptr<T>&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
@@ -362,6 +370,9 @@ using virtual_base_t = typename virtual_traits<T>::base_type;
 
 template<typename T>
 using virtual_arg_t = typename virtual_traits<T>::argument_type;
+
+template<typename T>
+using resolve_arg_t = typename virtual_traits<T>::resolve_type;
 
 struct discriminator {};
 
@@ -476,10 +487,6 @@ struct for_each_vp<REG, FIRST, REST...> {
     };
 
     enum { count = for_each_vp<REG, REST...>::count };
-
-    static void* resolve(const word* ssp, virtual_base_t<FIRST> first, REST... rest) {
-        return for_each_vp<REG, REST...>::resolve(ssp, rest...);
-    }
 };
 
 template<typename REG, typename FIRST, typename... REST>
@@ -529,11 +536,10 @@ struct resolver<1, FIRST, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolver<1, REST...>::resolve(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, rest...);
     }
 };
 
@@ -545,10 +551,9 @@ struct resolver<1, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(
             detail::log() << "hash_table = " << hash_table
             << " slot = " << ssp->i << " key = " << key);
@@ -566,11 +571,10 @@ struct resolver<1, virtual_<FIRST>, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -595,11 +599,10 @@ struct resolver<ARITY, FIRST, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolver<ARITY, REST...>::resolve_first(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, rest...);
     }
 
     static void* resolve_next(
@@ -608,12 +611,11 @@ struct resolver<ARITY, FIRST, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
         return resolver<ARITY, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 };
 
@@ -625,11 +627,10 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -639,8 +640,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         auto dispatch = mptr[slot].pw;
         YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<ARITY - 1, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 
     static void* resolve_next(
@@ -649,11 +649,10 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -665,8 +664,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         dispatch += mptr[slot].i * stride;
         YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<ARITY - 1, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 
     static void* resolve(
@@ -674,13 +672,11 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
         return resolve_first(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<FIRST>>(first),
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, first, rest...);
     }
 };
 
@@ -759,24 +755,22 @@ struct method<REG, ID, R(A...), POLICY> {
 
     enum { arity = for_each_vp_t::count };
 
-    static  void* resolve(virtual_arg_t<A>... args) {
+    static  void* resolve(resolve_arg_t<A>... args) {
         return resolve(
-            typename POLICY::hash_factors_placement(),
-            std::forward<virtual_arg_t<A>>(args)...);
+            typename POLICY::hash_factors_placement(), args...);
     }
 
-    static  void* resolve(policy::hash_factors_in_globals, virtual_arg_t<A>... args) {
+    static  void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
         YOMM2_TRACE(detail::log() << "call " << name()
                     << " slots_strides = " << slots_strides << "\n");
         return resolver<arity, A...>::resolve(
-            dispatch_data::instance<REG>.gv.data(),
-            dispatch_data::instance<REG>.hash.mult,
-            dispatch_data::instance<REG>.hash.shift,
-            slots_strides,
-            std::forward<virtual_arg_t<A>>(args)...);
+            dispatch_data::instance<REG>::_.gv.data(),
+            dispatch_data::instance<REG>::_.hash.mult,
+            dispatch_data::instance<REG>::_.hash.shift,
+            slots_strides, args...);
     }
 
-    static void* resolve(policy::hash_factors_in_vector, virtual_arg_t<A>... args) {
+    static void* resolve(policy::hash_factors_in_vector, resolve_arg_t<A>... args) {
         auto ssp = slots_strides;
         auto hash_table = ssp++->pw;
         auto hash_mult = ssp++->ul;
@@ -785,8 +779,7 @@ struct method<REG, ID, R(A...), POLICY> {
         YOMM2_TRACE(detail::log() << "call " << name()
                     << " slots_strides = " << slots_strides << "\n");
         return resolver<arity, A...>::resolve(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<A>>(args)...);
+            hash_table, hash_mult, hash_shift, ssp, args...);
     }
 
 #if YOMM2_ENABLE_TRACE
