@@ -99,14 +99,14 @@
                         yOMM2_PLIST, ARGS));                                  \
     inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
                                 yOMM2_PLIST, ARGS)) {                         \
-        return reinterpret_cast<R (*)(                                        \
+        auto pf = reinterpret_cast<R (*)(                                     \
             BOOST_PP_REPEAT(                                                  \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                    \
                 yOMM2_PLIST, ARGS))>(                                         \
-                    NS::_yOMM2_method::resolve( \
+                    NS::_yOMM2_method::resolve(                               \
                         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),            \
-                                        yOMM2_RLIST, ARGS)))                  \
-            (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
+                                        yOMM2_RLIST, ARGS)));                 \
+            return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),              \
                              yOMM2_ALIST, ARGS));                             \
     }
 
