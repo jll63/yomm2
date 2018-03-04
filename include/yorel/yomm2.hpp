@@ -61,6 +61,9 @@
     std::forward<::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>> \
     (BOOST_PP_CAT(a, I))
 
+#define yOMM2_RLIST(N, I, A)                                                  \
+    BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
+
 #define yOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
@@ -102,7 +105,7 @@
                 yOMM2_PLIST, ARGS))>(                                         \
                     NS::_yOMM2_method::resolve( \
                         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),            \
-                                        yOMM2_ALIST, ARGS)))                  \
+                                        yOMM2_RLIST, ARGS)))                  \
             (BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                       \
                              yOMM2_ALIST, ARGS));                             \
     }
@@ -236,6 +239,7 @@ template<typename T>
 struct virtual_traits {
     using base_type = typename std::remove_cv_t<std::remove_reference_t<T>>;
     using argument_type = T;
+    using resolve_type = const T&;
     template<typename>
     static T cast(T val, static_cast_) {
         return val;
@@ -250,11 +254,12 @@ template<typename T>
 struct virtual_traits< virtual_<T&> > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = T&;
+    using resolve_type = T&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
@@ -273,11 +278,12 @@ template<typename T>
 struct virtual_traits< virtual_<T&&> > {
     using base_type = T;
     using argument_type = T&&;
+    using resolve_type = T&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
@@ -296,11 +302,12 @@ template<typename T>
 struct virtual_traits< virtual_<T*> > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = T*;
+    using resolve_type = const T*;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
@@ -332,11 +339,12 @@ template<typename T>
 struct virtual_traits< virtual_< std::shared_ptr<T> > > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = std::shared_ptr<T>;
+    using resolve_type = const std::shared_ptr<T>&;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
 
-    static auto key(argument_type arg) {
+    static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
@@ -362,6 +370,9 @@ using virtual_base_t = typename virtual_traits<T>::base_type;
 
 template<typename T>
 using virtual_arg_t = typename virtual_traits<T>::argument_type;
+
+template<typename T>
+using resolve_arg_t = typename virtual_traits<T>::resolve_type;
 
 struct discriminator {};
 
@@ -476,10 +487,6 @@ struct for_each_vp<REG, FIRST, REST...> {
     };
 
     enum { count = for_each_vp<REG, REST...>::count };
-
-    static void* resolve(const word* ssp, virtual_base_t<FIRST> first, REST... rest) {
-        return for_each_vp<REG, REST...>::resolve(ssp, rest...);
-    }
 };
 
 template<typename REG, typename FIRST, typename... REST>
@@ -529,11 +536,10 @@ struct resolver<1, FIRST, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolver<1, REST...>::resolve(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, rest...);
     }
 };
 
@@ -545,10 +551,9 @@ struct resolver<1, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(
             detail::log() << "hash_table = " << hash_table
             << " slot = " << ssp->i << " key = " << key);
@@ -566,11 +571,10 @@ struct resolver<1, virtual_<FIRST>, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -595,11 +599,10 @@ struct resolver<ARITY, FIRST, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest) {
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolver<ARITY, REST...>::resolve_first(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, rest...);
     }
 
     static void* resolve_next(
@@ -608,12 +611,11 @@ struct resolver<ARITY, FIRST, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
         return resolver<ARITY, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 };
 
@@ -625,11 +627,10 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -639,8 +640,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         auto dispatch = mptr[slot].pw;
         YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<ARITY - 1, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 
     static void* resolve_next(
@@ -649,11 +649,10 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::size_t hash_shift,
         const word* ssp,
         const word* dispatch,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
-        auto key = virtual_traits<virtual_<FIRST>>::key(
-            std::forward<virtual_arg_t<FIRST>>(first));
+        auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr =
             hash_table[detail::hash(hash_mult, hash_shift, key)].pw;
@@ -665,8 +664,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         dispatch += mptr[slot].i * stride;
         YOMM2_TRACE(detail::log() << " dispatch = " << dispatch << "\n");
         return resolver<ARITY - 1, REST...>::resolve_next(
-            hash_table, hash_mult, hash_shift, ssp, dispatch,
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 
     static void* resolve(
@@ -674,13 +672,11 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         std::uintptr_t hash_mult,
         std::size_t hash_shift,
         const word* ssp,
-        virtual_arg_t<FIRST> first,
-        virtual_arg_t<REST>... rest)
+        resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest)
     {
         return resolve_first(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<FIRST>>(first),
-            std::forward<virtual_arg_t<REST>>(rest)...);
+            hash_table, hash_mult, hash_shift, ssp, first, rest...);
     }
 };
 
@@ -759,24 +755,22 @@ struct method<REG, ID, R(A...), POLICY> {
 
     enum { arity = for_each_vp_t::count };
 
-    static  void* resolve(virtual_arg_t<A>... args) {
+    static  void* resolve(resolve_arg_t<A>... args) {
         return resolve(
-            typename POLICY::hash_factors_placement(),
-            std::forward<virtual_arg_t<A>>(args)...);
+            typename POLICY::hash_factors_placement(), args...);
     }
 
-    static  void* resolve(policy::hash_factors_in_globals, virtual_arg_t<A>... args) {
+    static  void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
         YOMM2_TRACE(detail::log() << "call " << name()
                     << " slots_strides = " << slots_strides << "\n");
         return resolver<arity, A...>::resolve(
             dispatch_data::instance<REG>::_.gv.data(),
             dispatch_data::instance<REG>::_.hash.mult,
             dispatch_data::instance<REG>::_.hash.shift,
-            slots_strides,
-            std::forward<virtual_arg_t<A>>(args)...);
+            slots_strides, args...);
     }
 
-    static void* resolve(policy::hash_factors_in_vector, virtual_arg_t<A>... args) {
+    static void* resolve(policy::hash_factors_in_vector, resolve_arg_t<A>... args) {
         auto ssp = slots_strides;
         auto hash_table = ssp++->pw;
         auto hash_mult = ssp++->ul;
@@ -785,8 +779,7 @@ struct method<REG, ID, R(A...), POLICY> {
         YOMM2_TRACE(detail::log() << "call " << name()
                     << " slots_strides = " << slots_strides << "\n");
         return resolver<arity, A...>::resolve(
-            hash_table, hash_mult, hash_shift, ssp,
-            std::forward<virtual_arg_t<A>>(args)...);
+            hash_table, hash_mult, hash_shift, ssp, args...);
     }
 
 #if YOMM2_ENABLE_TRACE
