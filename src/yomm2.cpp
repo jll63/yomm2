@@ -632,7 +632,9 @@ void runtime::install_gv() {
                       << "   0 hash table\n");
 
         for (auto& m : methods) {
-            *m.info->slots_strides_p = dd.gv.data() + dd.gv.size();
+            if (m.info->vp.size() > 1) {
+                m.info->slots_strides_p->pw = dd.gv.data() + dd.gv.size();
+            }
             YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
@@ -644,16 +646,15 @@ void runtime::install_gv() {
                 dd.gv.emplace_back(make_word(dd.hash.shift));
             }
 
-            auto slot_iter = m.slots.begin();
-            auto stride_iter = m.strides.begin();
-            dd.gv.emplace_back(make_word(*slot_iter++));
-
-            while (slot_iter != m.slots.end()) {
-                dd.gv.emplace_back(make_word(*slot_iter++));
-                dd.gv.emplace_back(make_word(*stride_iter++));
-            }
-
             if (m.info->vp.size() > 1) {
+                auto slot_iter = m.slots.begin();
+                auto stride_iter = m.strides.begin();
+                dd.gv.emplace_back(make_word(*slot_iter++));
+
+                while (slot_iter != m.slots.end()) {
+                    dd.gv.emplace_back(make_word(*slot_iter++));
+                    dd.gv.emplace_back(make_word(*stride_iter++));
+                }
                 YOMM2_TRACE(
                     if (pass)
                         log() << std::setw(4) << dd.gv.size()
@@ -663,6 +664,8 @@ void runtime::install_gv() {
                     m.dispatch_table.begin(), m.dispatch_table.end(),
                     std::back_inserter(dd.gv), [](void* pf) {
                         return make_word(pf); });
+            } else {
+                m.info->slots_strides_p->i = m.slots[0];
             }
         }
 

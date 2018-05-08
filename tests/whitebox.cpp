@@ -662,16 +662,14 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // pay
         BOOST_TEST_REQUIRE(dd.gv.size() ==
                            rt.metrics.hash_table_size
-                           + 16
-                           + 12);
+                           + 15    // approve: 3 slots and 12 cells for dispatch table
+                           + 12);  // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for Expenses
 
         auto gv_iter = dd.gv.data() + rt.metrics.hash_table_size;
-        BOOST_TEST(&*gv_iter == *pay_method.info->slots_strides_p);
-        BOOST_TEST(gv_iter++->i == 1); // slot for pay
-        // no fun* for 1-method
+        // no slots nor fun* for 1-method
 
         // approve
-        BOOST_TEST(&*gv_iter == *approve_method.info->slots_strides_p);
+        BOOST_TEST(&*gv_iter == approve_method.info->slots_strides_p->pw);
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
         BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
         BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
