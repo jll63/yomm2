@@ -162,3 +162,37 @@ BOOST_AUTO_TEST_CASE(error_handling)
 }
 
 }
+
+namespace across_namespaces {
+
+namespace animals {
+
+class Animal {
+  public:
+    virtual ~Animal() {}
+};
+
+YOMM2_CLASS(Animal);
+
+YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>));
+
+}
+
+namespace more_animals {
+
+class Dog : public animals::Animal {};
+
+YOMM2_CLASS(Dog, animals::Animal);
+
+YOMM2_DEFINE(std::string, kick, (const Dog& dog)) {
+  return "bark";
+}
+
+}
+
+BOOST_AUTO_TEST_CASE(across_namespaces) {
+    const animals::Animal& animal= more_animals::Dog();
+    BOOST_TEST("bark" == kick(animal));
+}
+
+}
