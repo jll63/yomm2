@@ -52,7 +52,7 @@ define_method(string, to_json, (const diagonal_matrix& m)) {
 declare_method(
     shared_ptr<const matrix>,
     times,
-    (virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>));
+    (virtual_<const shared_ptr<const matrix>&>, virtual_<const shared_ptr<const matrix>&>));
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
@@ -81,7 +81,7 @@ inline shared_ptr<const matrix> operator *(
 declare_method(
     shared_ptr<const matrix>,
     times,
-    (double, virtual_<shared_ptr<const matrix>>));
+    (double, virtual_<const shared_ptr<const matrix>&>));
 
 // catch-all matrix * scalar -> dense_matrix
 define_method(auto, times, (double a, shared_ptr<const matrix> b)) {

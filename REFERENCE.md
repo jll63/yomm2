@@ -118,16 +118,16 @@ YOMM2_DECLARE(void, kick, (virtual_<Animal*>));
 YOMM2_DECLARE(void, kick, (virtual_<Animal&>));
 YOMM2_DECLARE(void, kick, (virtual_<Animal&&>));
 YOMM2_DECLARE(void, kick, (virtual_<shared_ptr<Animal>>));
+YOMM2_DECLARE(void, kick, (virtual_<const shared_ptr<Animal>&>));
 YOMM2_DECLARE(void, kick, (virtual_<const Animal*>));
 YOMM2_DECLARE(void, kick, (virtual_<const Animal&>));
 YOMM2_DECLARE(void, kick, (virtual_<shared_ptr<const Animal>>));
+YOMM2_DECLARE(void, kick, (virtual_<const shared_ptr<const Animal>&>));
 
 ```
 
 Given a polymorphic class `Animal`, these are all the valid ways of specifying
-a virtual Animal argument in a method declaration. NOTE that `virtual_<const
-shared_ptr<Animal>&>` is _not_ in this list and is thus _not_ supported;
-passing shared_ptrs by const reference is a bad idea anyway.
+a virtual Animal argument in a method declaration.
 
 ## macros YOMM2_DECLARE, declare_method
 

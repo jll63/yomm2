@@ -366,6 +366,36 @@ struct virtual_traits< virtual_< std::shared_ptr<T> > > {
 };
 
 template<typename T>
+struct virtual_traits< virtual_< const std::shared_ptr<T>& > > {
+    using base_type = std::remove_cv_t<T>;
+    using argument_type = const std::shared_ptr<T>&;
+    using resolve_type = const std::shared_ptr<T>&;
+
+    static_assert(std::is_class<base_type>::value);
+    static_assert(std::is_polymorphic<base_type>::value);
+
+    static auto key(resolve_type arg) {
+        return &typeid(*arg);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(argument_type obj, static_cast_) {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
+        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+    }
+
+    template<class DERIVED>
+    static DERIVED cast(argument_type obj, dynamic_cast_) {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
+        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+    }
+};
+
+template<typename T>
 using virtual_base_t = typename virtual_traits<T>::base_type;
 
 template<typename T>
