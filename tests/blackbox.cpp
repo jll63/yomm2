@@ -14,6 +14,53 @@
 
 using yorel::yomm2::virtual_;
 
+namespace states {
+
+using std::string;
+
+struct Animal {
+    Animal(const Animal&) = delete;
+    Animal() : name("wrong") { }
+    virtual ~Animal() {}
+    std::string name;
+};
+
+struct Dog : Animal {
+    Dog(string n) {
+        name = n;
+    }
+};
+
+struct Cat : virtual Animal {
+    Cat(string n) {
+        name = n;
+    }
+};
+
+YOMM2_CLASS(Animal);
+YOMM2_CLASS(Dog, Animal);
+YOMM2_CLASS(Cat, Animal);
+
+YOMM2_DECLARE(string, name, (virtual_<const Animal&>));
+
+YOMM2_DEFINE(string, name, (const Dog& dog)) {
+    return "dog " + dog.name;
+}
+
+YOMM2_DEFINE(string, name, (const Cat& cat)) {
+    return "cat " + cat.name;
+}
+
+BOOST_AUTO_TEST_CASE(states) {
+    yorel::yomm2::update_methods();
+    const Animal& dog= Dog("spot");
+    BOOST_TEST("dog spot" == name(dog));
+    const Animal& cat= Cat("felix");
+    BOOST_TEST("cat felix" == name(cat));
+}
+
+}
+
 namespace matrices {
 
 struct matrix {
