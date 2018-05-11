@@ -13,6 +13,7 @@
 #include <boost/mpl/vector.hpp>
 #include <iostream>
 #include <vector>
+#include <exception>
 
 #include <yorel/yomm2/cute.hpp>
 
@@ -66,21 +67,48 @@ using std::string;
 
 using Any = any<mpl::vector<copy_constructible<>, typeid_<>, relaxed> >;
 
-declare_method(string, type, (virtual_<Any>));
-
-begin_method(string, type, (int value)) {
-    return "int " + std::to_string(value);
-} end_method;
+struct Dog {
+};
 
 register_class(Any);
 register_class(int, Any);
+register_class(Dog, Any);
 
-struct Animal {};
+declare_method(string, getType, (virtual_<Any>));
 
-BOOST_AUTO_TEST_CASE(type_erasure)
+begin_method(string, getType, (int value)) {
+    return "int " + std::to_string(value);
+} end_method;
+
+begin_method(string, getType, (Dog value)) {
+    return "dog";
+} end_method;
+
+declare_method(string, add, (virtual_<Any>, virtual_<Any>));
+
+begin_method(string, add, (int a, int b)) {
+    return std::to_string(a + b);
+} end_method;
+
+begin_method(string, add, (Dog a, Dog b)) {
+    return "puppies";
+} end_method;
+
+BOOST_AUTO_TEST_CASE(getType_erasure)
 {
-    //yorel::yomm2::detail::log_on(&std::cerr);
-    yorel::yomm2::update_methods();
-    Any x(10);
-    BOOST_TEST(type(x) == "int 10");
+    using namespace yorel::yomm2;
+    update_methods();
+
+    Any x(10), y(32), tramp((Dog())), lady((Dog()));
+
+    BOOST_TEST(getType(x) == "int 10");
+    BOOST_TEST(getType(tramp) == "dog");
+
+    BOOST_TEST("42" == add(x, y));
+    BOOST_TEST("puppies" == add(tramp, lady));
+
+    set_method_call_error_handler([](const yorel::yomm2::method_call_error& error) {
+            throw std::runtime_error("nope"); });
+
+    BOOST_CHECK_THROW(add(tramp, x), std::runtime_error);
 }
