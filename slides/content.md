@@ -4,7 +4,7 @@
 
 Jean-Louis Leroy
 
-Bloomberg LP / ENG
+Bloomberg Engineering
 
 ===
 

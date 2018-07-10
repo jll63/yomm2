@@ -231,3 +231,5 @@ The library comes with a series of examples:
 * [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
 
 * [Adventure: a 3-method example](examples/adventure.cpp)
+
+* [The Presentation](slides)
