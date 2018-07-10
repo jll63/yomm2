@@ -232,4 +232,4 @@ The library comes with a series of examples:
 
 * [Adventure: a 3-method example](examples/adventure.cpp)
 
-* [The Presentation](slides)
+* [The Presentation](https://jll63.github.io/yomm2/slides/)
