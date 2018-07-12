@@ -172,8 +172,7 @@ struct Node {
 ```C++
 struct Number : Node {
   // as before
-  void visit(Visitor& viz) override { viz.accept(*this);
-  }
+  void visit(Visitor& viz) override { viz.accept(*this); }
 };
 
 struct Plus : Node {
@@ -318,17 +317,24 @@ register_class(Number, Node);
 ```C++
 using yorel::yomm2::virtual_;
 
-declare_method(string, toRPN, (virtual_<const Node&>));
+declare_method(string, toRPN, (virtual_<Node&>));
 
-define_method(string, toRPN, (const Number& expr)) {
-  return std::to_string(expr.val);
+define_method(string, toRPN, (Number& expr)) {
+  return to_string(expr.val);
 }
 
-define_method(string, toRPN, (const Plus& expr)) {
+define_method(string, toRPN, (Plus& expr)) {
   return toRPN(expr.left) + " " + toRPN(expr.right) + " +";
 }
 
 // same for Times
+```
+
+call it like an ordinary function:
+
+```
+    cout << toRPN(expr) << expr->value() << "\n";
+    // 2 3 4 * + = 14
 ```
 
 ---
@@ -340,17 +346,17 @@ define_method(string, toRPN, (const Plus& expr)) {
 * the AST classes should _only_ represent the tree
 
 ```C++
-declare_method(int, value, (virtual_<const Node&>));
+declare_method(int, value, (virtual_<Node&>));
 
-define_method(int, value, (const Number&& expr)) {
+define_method(int, value, (Number&& expr)) {
   return expr.val;
 }
 
-define_method(int, value, (const Plus& expr)) {
+define_method(int, value, (Plus& expr)) {
   return value(expr.left) + value(expr.right);
 }
 
-define_method(int, value, (const Times& expr)) {
+define_method(int, value, (Times& expr)) {
   return value(expr.left) * value(expr.right);
 }
 ```
@@ -386,16 +392,16 @@ fight(Human, Dragon, Hands)    -> you just killed a dragon
 Just use `virtual_<>` on several arguments:
 
 ```C++
-declare_method(std::string, fight,
+declare_method(string, fight,
   (virtual_<Character&>, virtual_<Creature&>,
    virtual_<Device&>));
 
-define_method(std::string, fight,
+define_method(string, fight,
   (Human& x, Creature& y, Axe& z)) {
   return "not agile enough to wield";
 }
 
-define_method(std::string, fight,
+define_method(string, fight,
   (Human& x, Dragon& y, Hands& z)) {
   return "you just killed a dragon with your bare hands."
          " Incredible isn't it?";
@@ -419,11 +425,11 @@ define_method(std::string, fight,
 calls the next most specific override
 
 ```c++
-define_method(std::string, kick, (Dog& dog)) {
+define_method(string, kick, (Dog& dog)) {
   return "bark";
 }
 
-define_method(std::string, kick, (Bulldog& dog)) {
+define_method(string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
 }
 ```
@@ -504,27 +510,6 @@ define_method(double, pay, (Manager& manager)) {
 
 ---
 
-## the `approve` (Multi-) Method
-
-```C++
-declare_method(bool, approve,
-  (virtual_<Role&>, virtual_<Expense&>, double));
-define_method(bool, approve,
-  (Role& r, Expense& e, double amount))
-{ return false; }
-define_method(bool, approve,
-  (Employee& r, Public& e, double amount))
-{ return true; }
-define_method(bool, approve,
-  (Manager& r, Taxi& e, double amount))
-{ return true; }
-define_method(bool, approve,
-  (Founder& r, Expense& e, double amount))
-{ return true; }
-```
-
----
-
 ## declare_method
 
 ```C++
@@ -581,7 +566,7 @@ namespace { namespace YoMm2_nS_12 {
 template <typename T> struct select;
 template <typename... A> struct select<void(A...)> {
   using type = decltype(
-    pay(discriminator(), std::declval<A>()...));
+    pay(discriminator(), declval<A>()...));
 };
 
 using _yOMM2_method =
@@ -662,13 +647,13 @@ mtbls[ H(&typeid(Manager&)) ] = {
 ## Dispatching a 1-Method
 
 ```C++
-pay(employee)
+pay(bill)
 ```
 =>
 ```C++
-mtbls[ H(&typeid(employee)) ]      // mtable for type
+mtbls[ H(&typeid(bill)) ]          // mtable for type
   [ method<pay>::slots_strides.i ] // pointer to fun
-(employee)                         // call
+(bill)                             // call
 ```
 
 ---
@@ -690,6 +675,27 @@ imulq   mtbls+24(%rip), %rsi                   ; * M
 shrq	%cl, %rsi                              ; >> S
 movq	(%rax,%rsi,8), %rax                    ; method table
 jmpq	*(%rax,%rdx,8)                         ; call
+```
+
+---
+
+## the `approve` (Multi-) Method
+
+```C++
+declare_method(bool, approve,
+  (virtual_<Role&>, virtual_<Expense&>, double));
+
+define_method(bool, approve,
+  (Role& r, Expense& e, double amount))    { return false; }
+
+define_method(bool, approve,
+  (Employee& r, Public& e, double amount)) { return true; }
+
+define_method(bool, approve,
+  (Manager& r, Taxi& e, double amount))    { return true; }
+
+define_method(bool, approve,
+  (Founder& r, Expense& e, double amount)) { return true; }
 ```
 
 ---
@@ -747,19 +753,19 @@ mtbls[ H(&typeid(Cab))     ] = { 2 };
 ## Dispatching a Multi-Method
 
 ```C++
-approve(role, expense, amount)
+approve(bill, ticket, 5000)
 ```
 =>
 ```C++
 word* slots_strides = method<approve>::.slots_strides.pw;
 
-mtbls[ H(&typeid(r)) ]      // method table for 'r'
-  [ slots_strides.pw[0].i ] // ptr to cell in 1st column
-  [ mtbls [ H(&typeid(x)) ] // method table for 'x'
-    [ slots_strides[2].i *  // column
-      slots_strides[1].i ]  // stride
-  ]                         // pointer to function
-(role, expense, amount)     // call
+mtbls[ H(&typeid(bill)) ]        // method table for bill
+  [ slots_strides[0].i ]         // ptr to cell in 1st column
+  [ mtbls [ H(&typeid(ticket)) ] // method table for ticket
+    [ slots_strides[2].i ]       // column
+    * slots_strides[1].i         // stride
+  ]                              // pointer to function
+(bill, ticket, 5000)             // call
 ```
 
 ---
