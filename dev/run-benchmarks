@@ -1,7 +1,6 @@
 cd ./build/$1/Release
 make -j4 benchmarks
-tests/benchmarks --benchmark_color=false --benchmark_repetitions=5
-0 | perl -ne "$(cat <<'PERCENTS'
+tests/benchmarks --benchmark_color=false --benchmark_repetitions=5 | perl -ne "$(cat <<'PERCENTS'
 if (s/_median//) {
   if ($n0) {
      s{(ns\s+(\d+$))}{$1 . sprintf " %2.1f%%\n", ($n0 / $2 - 1) * 100}e;
