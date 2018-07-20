@@ -305,6 +305,11 @@ register_class(Node);
 register_class(Plus, Node);
 register_class(Times, Node);
 register_class(Number, Node);
+
+int main() {
+  yorel::yomm2::update_methods();
+  // ...
+}
 ```
 
 (the boring part)
@@ -348,7 +353,7 @@ call it like an ordinary function:
 ```C++
 declare_method(int, value, (virtual_<Node&>));
 
-define_method(int, value, (Number&& expr)) {
+define_method(int, value, (Number& expr)) {
   return expr.val;
 }
 
