@@ -5,6 +5,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <iostream>
+#include <cstring>
 #include <dlfcn.h>
 
 #include <yorel/yomm2.hpp>
@@ -18,10 +19,6 @@ YOMM2_DEFINE(string, encounter, (const Animal&, const Animal&)) {
   return "ignore";
 }
 
-YOMM2_DEFINE(string, encounter, (const Herbivore&, const Carnivore&)) {
-  return "run";
-}
-
 int main() {
   yorel::yomm2::update_methods();
 
@@ -29,13 +26,17 @@ int main() {
   cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
   cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
 
-  void* handle = dlopen(
+  char dl_path[4096];
+  dl_path[readlink("/proc/self/exe", dl_path, sizeof(dl_path))] = 0;
+  *strrchr(dl_path, '/') = 0;
+
 #ifdef __APPLE__
-      "libdl_shared.dylib"
+  strcat(dl_path, "/libdl_shared.dylib");
 #else
-      "libdl_shared.so"
+  strcat(dl_path, "/libdl_shared.so");
 #endif
-      , RTLD_NOW);
+
+  void* handle = dlopen(dl_path, RTLD_NOW);
 
   if (!handle) {
     cout << "dlopen() failed: " << dlerror() << "\n";

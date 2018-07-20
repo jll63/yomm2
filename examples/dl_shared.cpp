@@ -13,6 +13,10 @@
 using namespace std;
 using yorel::yomm2::virtual_;
 
+YOMM2_DEFINE(string, encounter, (const Herbivore&, const Carnivore&)) {
+  return "run";
+}
+
 struct Tiger : Carnivore {
 };
 
