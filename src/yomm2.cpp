@@ -297,8 +297,12 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
         cls->first_used_slot = slot;
     }
 
+    for (auto b : cls->direct_bases) {
+        allocate_slot_up(b, slot);
+    }
+
     for (auto d : cls->direct_derived) {
-        allocate_slot_up(d, slot);
+        allocate_slot_down(d, slot);
     }
 }
 
