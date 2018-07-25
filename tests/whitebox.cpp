@@ -176,10 +176,14 @@ BOOST_AUTO_TEST_CASE(casts) {
 
 namespace rolex {
 
-struct test;
+struct test_registry;
 
-auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>::_;
+struct test_policy : default_policy {
+    using registry = test_registry;
+};
+
+auto& registry = registry::get<test_registry>();
+auto& dd = dispatch_data::instance<test_registry>::_;
 
 struct Role {
     virtual ~Role() {}
@@ -199,19 +203,19 @@ struct Metro : Public {};
 struct Taxi : Expense {};
 struct Jet : Expense {};
 
-YOMM2_CLASS_(test, Role);
-YOMM2_CLASS_(test, Employee, Role);
-YOMM2_CLASS_(test, Manager, Employee);
-YOMM2_CLASS_(test, Founder, Role);
-YOMM2_CLASS_(test, Expense);
-YOMM2_CLASS_(test, Public, Expense);
-YOMM2_CLASS_(test, Bus, Public);
-YOMM2_CLASS_(test, Metro, Public);
-YOMM2_CLASS_(test, Taxi, Expense);
-YOMM2_CLASS_(test, Jet, Expense);
+YOMM2_CLASS_(test_registry, Role);
+YOMM2_CLASS_(test_registry, Employee, Role);
+YOMM2_CLASS_(test_registry, Manager, Employee);
+YOMM2_CLASS_(test_registry, Founder, Role);
+YOMM2_CLASS_(test_registry, Expense);
+YOMM2_CLASS_(test_registry, Public, Expense);
+YOMM2_CLASS_(test_registry, Bus, Public);
+YOMM2_CLASS_(test_registry, Metro, Public);
+YOMM2_CLASS_(test_registry, Taxi, Expense);
+YOMM2_CLASS_(test_registry, Jet, Expense);
 
-YOMM2_DECLARE_(test, double, pay, (virtual_<const Employee&>));
-YOMM2_DECLARE_(test, bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double));
+YOMM2_DECLARE(double, pay, (virtual_<const Employee&>), test_policy);
+YOMM2_DECLARE(bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double), test_policy);
 
 YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
@@ -814,9 +818,14 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
 namespace layer_mi {
 
-struct test;
-auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>::_;
+struct test_registry;
+
+struct test_policy : default_policy {
+    using registry = test_registry;
+};
+
+auto& registry = registry::get<test_registry>();
+auto& dd = dispatch_data::instance<test_registry>::_;
 
 struct A0 {};
 
@@ -826,10 +835,10 @@ struct B1 : B0 {};
 
 struct A1B2 : A0, B1 {};
 
-YOMM2_CLASS_(test, A0);
-YOMM2_CLASS_(test, B0);
-YOMM2_CLASS_(test, B1, B0);
-YOMM2_CLASS_(test, A1B2, A0, B1);
+YOMM2_CLASS_(test_registry, A0);
+YOMM2_CLASS_(test_registry, B0);
+YOMM2_CLASS_(test_registry, B1, B0);
+YOMM2_CLASS_(test_registry, A1B2, A0, B1);
 
 BOOST_AUTO_TEST_CASE(test_layer_mi) {
     runtime rt(registry, dd);
@@ -856,9 +865,14 @@ BOOST_AUTO_TEST_CASE(test_layer_mi) {
 
 namespace multiple_inheritance {
 
-struct test;
-auto& registry = registry::get<test>();
-auto& dd = dispatch_data::instance<test>::_;
+struct test_registry;
+
+struct test_policy : default_policy {
+    using registry = test_registry;
+};
+
+auto& registry = registry::get<test_registry>();
+auto& dd = dispatch_data::instance<test_registry>::_;
 
 // A   B
 //  \ / \
@@ -870,31 +884,31 @@ struct A {
     virtual ~A() {}
 };
 
-YOMM2_CLASS_(test, A);
+YOMM2_CLASS_(test_registry, A);
 
 struct B {
     virtual ~B() {}
 };
 
-YOMM2_CLASS_(test, B);
+YOMM2_CLASS_(test_registry, B);
 
 struct AB : A, B {};
-YOMM2_CLASS_(test, AB, A, B);
+YOMM2_CLASS_(test_registry, AB, A, B);
 
 struct C : AB {};
-YOMM2_CLASS_(test, C, AB);
+YOMM2_CLASS_(test_registry, C, AB);
 
 struct D : B {};
-YOMM2_CLASS_(test, D, B);
+YOMM2_CLASS_(test_registry, D, B);
 
 struct E : D {};
-YOMM2_CLASS_(test, E, D);
+YOMM2_CLASS_(test_registry, E, D);
 
-YOMM2_DECLARE_(test, void, a, (virtual_<A&>));
-YOMM2_DECLARE_(test, void, b, (virtual_<B&>));
-YOMM2_DECLARE_(test, void, ab, (virtual_<A&>, virtual_<B&>));
-YOMM2_DECLARE_(test, void, c, (virtual_<C&>));
-YOMM2_DECLARE_(test, void, d, (virtual_<D&>));
+YOMM2_DECLARE(void, a, (virtual_<A&>), test_policy);
+YOMM2_DECLARE(void, b, (virtual_<B&>), test_policy);
+YOMM2_DECLARE(void, ab, (virtual_<A&>, virtual_<B&>), test_policy);
+YOMM2_DECLARE(void, c, (virtual_<C&>), test_policy);
+YOMM2_DECLARE(void, d, (virtual_<D&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime rt(registry, dd);

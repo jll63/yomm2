@@ -811,7 +811,7 @@ method_call_error_handler call_error_handler;
 } // namespace detail
 
 void update_methods() {
-    update_methods(detail::registry::get<void>(), detail::dispatch_data::instance<void>::_);
+    update_methods(detail::registry::get<default_registry>(), detail::dispatch_data::instance<default_registry>::_);
 }
 
 method_call_error_handler set_method_call_error_handler(method_call_error_handler handler) {

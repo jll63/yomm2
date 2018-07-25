@@ -177,6 +177,7 @@ double call_multi_method(const matrix& a, const matrix& b) {
 
 struct hash_in_gv_policy {
     using hash_factors_placement = policy::hash_factors_in_vector;
+    using registry = default_registry;
 };
 
 #endif

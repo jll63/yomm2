@@ -67,9 +67,6 @@
 #define yOMM2_DECLARE_KEY(ID)                                                 \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
-#define YOMM2_DECLARE_(REGISTRY, R, ID, ARGS)                                 \
-    yOMM2_DECLARE(yOMM2_GENSYM, REGISTRY, R, ID, ARGS, ::yorel::yomm2::default_policy)
-
 #if !BOOST_PP_VARIADICS_MSVC
 #define YOMM2_DECLARE(...)                                                    \
     BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__)
@@ -80,18 +77,18 @@
 #endif
 
 #define YOMM2_DECLARE_3(R, ID, ARGS)                           \
-    yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS,             \
+    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS,                   \
                   ::yorel::yomm2::default_policy)
 
 #define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                  \
-    yOMM2_DECLARE(yOMM2_GENSYM, void, R, ID, ARGS, POLICY)
+    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, POLICY)
 
-#define yOMM2_DECLARE(NS, REGISTRY, R, ID, ARGS, POLICY)                      \
+#define yOMM2_DECLARE(NS, R, ID, ARGS, POLICY)                                \
     struct yOMM2_DECLARE_KEY(ID);                                             \
     namespace {                                                               \
     namespace NS {                                                            \
     using _yOMM2_method = ::yorel::yomm2::detail::method                      \
-        <REGISTRY, yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                    \
+        <yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                              \
     _yOMM2_method::init_method init YOMM2_TRACE( = #ID  #ARGS ); } }          \
     NS::_yOMM2_method ID(                                                     \
         ::yorel::yomm2::detail::discriminator,                                \
@@ -134,9 +131,10 @@
 #define YOMM2_CLASS(...)                                                      \
     yOMM2_CLASS2(yOMM2_GENSYM,                                                \
                  BOOST_PP_TUPLE_PUSH_FRONT(                                   \
-                     BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), void))
+                     BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__),                 \
+                     ::yorel::yomm2::default_registry))
 
-#define YOMM2_CLASS_(REG, ...)                                                     \
+#define YOMM2_CLASS_(REG, ...) \
     yOMM2_CLASS2(yOMM2_GENSYM, \
 		BOOST_PP_TUPLE_PUSH_FRONT(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), REG))
 
@@ -167,6 +165,8 @@ using method_call_error_handler = void (*)(const method_call_error& error);
 
 method_call_error_handler set_method_call_error_handler(method_call_error_handler handler);
 
+struct default_registry;
+
 struct policy {
     struct hash_factors_in_globals {};
     struct hash_factors_in_vector {};
@@ -174,6 +174,7 @@ struct policy {
 
 struct default_policy : policy {
     using hash_factors_placement = hash_factors_in_globals;
+    using registry = default_registry;
 };
 
 namespace detail {
@@ -834,11 +835,11 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 spec_info* register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>::this_;
 
-template<typename REG, typename ID, typename SIG, class POLICY>
+template<typename ID, typename SIG, class POLICY>
 struct method;
 
-template<typename REG, typename ID, typename R, typename... A, typename POLICY>
-struct method<REG, ID, R(A...), POLICY> {
+template<typename ID, typename R, typename... A, typename POLICY>
+struct method<ID, R(A...), POLICY> {
 
     static word slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
@@ -846,6 +847,7 @@ struct method<REG, ID, R(A...), POLICY> {
 
     using signature_type = R(A...);
     using return_type = R;
+    using REG = typename POLICY::registry;
     using for_each_vp_t = for_each_vp<REG, A...>;
 
     enum { arity = for_each_vp_t::count };
@@ -920,11 +922,11 @@ struct method<REG, ID, R(A...), POLICY> {
     };
 };
 
-template<typename REG, typename ID, typename R, typename... A, typename POLICY>
-word method<REG, ID, R(A...), POLICY>::slots_strides;
+template<typename ID, typename R, typename... A, typename POLICY>
+word method<ID, R(A...), POLICY>::slots_strides;
 
-template<typename REG, typename ID, typename R, typename... A, typename POLICY>
-method_info& method<REG, ID, R(A...), POLICY>::info() {
+template<typename ID, typename R, typename... A, typename POLICY>
+method_info& method<ID, R(A...), POLICY>::info() {
     static method_info info;
     return info;
 }
