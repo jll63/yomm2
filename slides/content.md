@@ -2,7 +2,11 @@
 
 # Open Is Good
 
-Jean-Louis Leroy
+## yomm2: fast, orthogonal open methods
+
+<br><br>
+
+Jean-Louis Leroy - jl@leroy.nyc
 
 Bloomberg Engineering
 
@@ -293,6 +297,8 @@ types += behavior
 
 # yomm2
 
+# Open Methods
+
 
 ---
 
@@ -338,7 +344,7 @@ define_method(string, toRPN, (Plus& expr)) {
 call it like an ordinary function:
 
 ```
-    cout << toRPN(expr) << expr->value() << "\n";
+    cout << toRPN(expr) << " = " << expr->value() << "\n";
     // 2 3 4 * + = 14
 ```
 
@@ -563,7 +569,7 @@ pay(Employee & a0) {
 ## define_method
 
 ```C++
-    define_method(double, pay, (Employee&)) { return 3000; }
+define_method(double, pay, (Employee&)) { return 3000; }
 ```
 
 ```C++
@@ -585,7 +591,7 @@ _yOMM2_return_t (*next)(Employee &);
 ## define_method
 
 ```C++
-    define_method(double, pay, (Employee&)) { return 3000; }
+define_method(double, pay, (Employee&)) { return 3000; }
 ```
 
 ```C++
@@ -684,7 +690,7 @@ jmpq	*(%rax,%rdx,8)                         ; call
 
 ---
 
-## the `approve` (Multi-) Method
+## `approve` Multi-Method
 
 ```C++
 declare_method(bool, approve,
@@ -734,6 +740,14 @@ define_method(bool, approve,
 
 ---
 
+## Building the Compressed Dispatch Table
+
+* [Fast Algorithms for Compressed Multi-Method Dispatch, Eric Amiel, Eric Dujardin, Eric Simon, 1996](https://hal.inria.fr/inria-00073721/document)
+
+* [Open Multi-Methods for C++11, Part 3 - Inside Yomm11: Data Structures and Algorithms, Jean-Louis Leroy, 2013](https://www.codeproject.com/Articles/859492/Open-Multi-Methods-for-Cplusplus-Part-Inside-Yomm)
+
+---
+
 ## Dispatching a Multi-Method
 
 ```C++
@@ -775,7 +789,7 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 
 ---
 
-## Performance Summary
+## Benchmarks
 
 <!-- .slide: style="font-size: 22pt;"> -->
 
@@ -790,7 +804,7 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 
 ===
 
-## yomm2 vs other systems
+## yomm2 vs other implementations
 
 * Pirkelbauer - Solodkyi - Stroustrup (PSS)
 
@@ -806,9 +820,9 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 
 ## yomm2 vs PSS
 
-* Solodon's papers on open methods etc:
+* Solodkyi's  papers on open methods etc:
   * [Open Multi-Methods for C++](http://www.stroustrup.com/multimethods.pdf)
-  * [Design and evaluation of C++ open multi-methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
+  * [Design and Evaluation of C++ Open Multi-Methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
   * [Simplifying the Analysis of C++ Programs](http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf)
 
 * yomm2 overrides are not available for overloading
