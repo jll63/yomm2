@@ -113,7 +113,7 @@
 #define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
     namespace {                                                               \
     namespace NS {                                                            \
-        template<typename T> struct _yOMM2_select;                            \
+    template<typename T> struct _yOMM2_select;                                \
     template<typename... A> struct _yOMM2_select<void(A...)> {                \
         using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
                                  std::declval<A>()...));                      \
