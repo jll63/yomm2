@@ -111,6 +111,7 @@ struct runtime {
         metrics_t& metrics);
     static std::vector<const rt_spec*> best(std::vector<const rt_spec*>& candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
+    static bool is_base(const rt_spec* a, const rt_spec* b);
 };
 
 } // namespace detail

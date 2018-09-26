@@ -412,6 +412,7 @@ void runtime::build_dispatch_tables() {
 
         {
             YOMM2_TRACE(log() << indent(1) << "assign next\n");
+
             std::vector<const rt_spec*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(),
@@ -424,7 +425,9 @@ void runtime::build_dispatch_tables() {
                 std::copy_if(
                     specs.begin(), specs.end(),
                     std::back_inserter(candidates),
-                    [spec](const rt_spec* other) { return is_more_specific(&spec, other); });
+                    [spec](const rt_spec* other) {
+                        return is_base(other, &spec);
+                    });
 
 #if YOMM2_ENABLE_TRACE
                 log()
@@ -763,6 +766,25 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b)
                 result = true;
             } else if ((*a_iter)->conforming.find(*b_iter) != (*a_iter)->conforming.end()) {
                 return false;
+            }
+        }
+    }
+
+    return result;
+}
+
+bool runtime::is_base(const rt_spec* a, const rt_spec* b)
+{
+    bool result = false;
+
+    auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
+
+    for (; a_iter != a_last; ++a_iter, ++b_iter) {
+        if (*a_iter != *b_iter) {
+            if ((*a_iter)->conforming.find(*b_iter) == (*a_iter)->conforming.end()) {
+                return false;
+            } else {
+                result = true;
             }
         }
     }

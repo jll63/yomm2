@@ -575,6 +575,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         }
     }
 
+    {
+        BOOST_TEST(
+            runtime::is_base(&*approve_Role_Expense, &*approve_Founder_Expense));
+        BOOST_TEST(
+            !runtime::is_base(&*approve_Role_Expense, &*approve_Role_Expense));
+    }
+
     rt.build_dispatch_tables();
 
     {
