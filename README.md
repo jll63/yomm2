@@ -232,4 +232,4 @@ The library comes with a series of examples:
 
 * [Adventure: a 3-method example](examples/adventure.cpp)
 
-I presented the library at CppCon 2018. Here is a link to the [video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/)
+I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
