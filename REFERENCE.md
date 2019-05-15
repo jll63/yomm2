@@ -289,10 +289,10 @@ The handler _may_ _not_ return; it must either terminate the process, or throw a
 ```
 void my_handler(const yorel::yomm2::method_call_error& error) {
     if (error_code == yorel::yomm2::method_call_error::not_implemented) {
-        throw(std::runtime_error("not implemented!"));
+        throw std::runtime_error("not implemented!");
     } else {
         // error_code == yorel::yomm2::method_call_error::ambiguous
-        throw(std::runtime_error("ambiguous!"));
+        throw std::runtime_error("ambiguous!");
     }
 }
 ```
