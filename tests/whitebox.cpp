@@ -324,6 +324,10 @@ BOOST_AUTO_TEST_CASE(registration) {
     BOOST_TEST(approve_Employee_public->vp[1] == Public_class);
 }
 
+inline const word* mptr(const dispatch_data& t, const std::type_info* ti) {
+    return t.gv[(t.hash(ti) + 1) * hash_entry_size - 1].pw;
+}
+
 BOOST_AUTO_TEST_CASE(runtime_test) {
 
     runtime rt(registry, dd);
@@ -672,11 +676,11 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         // pay
         BOOST_TEST_REQUIRE(dd.gv.size() ==
-                           rt.metrics.hash_table_size
+                           rt.metrics.hash_table_size * hash_entry_size
                            + 15    // approve: 3 slots and 12 cells for dispatch table
                            + 12);  // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for Expenses
 
-        auto gv_iter = dd.gv.data() + rt.metrics.hash_table_size;
+        auto gv_iter = dd.gv.data() + rt.metrics.hash_table_size * hash_entry_size;
         // no slots nor fun* for 1-method
 
         // approve

@@ -130,6 +130,14 @@ void runtime::augment_methods() {
             meth_iter->vp.begin(),
             [this, meth_iter, &param_index](const class_info* ci) {
                 auto rt_class = class_map[ci];
+                if (!rt_class) {
+                    YOMM2_TRACE(
+                        std::cerr << meth_iter->info->name
+                        << " parameter " << (param_index + 1)
+                        << ": ");
+                    std::cerr << "unregistered class\n";
+                    abort();
+                }
                 rt_arg param = { &*meth_iter,  param_index++ };
                 rt_class->vp.push_back(param);
                 return class_map[ci];
@@ -143,11 +151,22 @@ void runtime::augment_methods() {
         for (; spec_info_iter != spec_info_end; ++spec_info_iter, ++spec_iter) {
             spec_iter->info = *spec_info_iter;
             spec_iter->vp.resize((*spec_info_iter)->vp.size());
+            int param_index = 0;
             std::transform(
                 (*spec_info_iter)->vp.begin(), (*spec_info_iter)->vp.end(),
                 spec_iter->vp.begin(),
-                [this](const class_info* ci) {
-                    return class_map[ci];
+                [this, meth_iter, spec_iter, &param_index](const class_info* ci) {
+                    auto rt_class = class_map[ci];
+                    if (!rt_class) {
+                        YOMM2_TRACE(
+                            std::cerr << meth_iter->info->name
+                            << ": spec " << spec_iter->info->name
+                            << ": parameter " << (param_index + 1) << ": ");
+                        std::cerr << "unregistered class\n";
+                        abort();
+                    }
+                    ++param_index;
+                    return rt_class;
                 });
         }
     }
@@ -631,7 +650,7 @@ inline word make_word(void* pf) {
 void runtime::install_gv() {
 
     for (int pass = 0; pass != 2; ++pass) {
-        dd.gv.resize(metrics.hash_table_size);
+        dd.gv.resize(metrics.hash_table_size * hash_entry_size);
 
         YOMM2_TRACE(
             if (pass)
@@ -689,8 +708,11 @@ void runtime::install_gv() {
                     return make_word(i); });
 
             for (auto tid : cls.info->ti_ptrs) {
-                dd.gv[dd.hash(tid)].pw = cls.mptr;
-
+                auto entry = dd.gv.begin() + (dd.hash(tid) * hash_entry_size);
+#ifndef NDEBUG
+                entry++->pt = tid;
+#endif
+                entry->pw = cls.mptr;
             }
         }
     }
@@ -829,6 +851,12 @@ void default_method_call_error_handler(const method_call_error& error) {
 }
 
 method_call_error_handler call_error_handler;
+
+void unregistered_class_error(const std::type_info* pt) {
+    std::cerr << "unregistered class: " << pt->name() << "\n";
+    abort();
+}
+
 
 } // namespace detail
 
