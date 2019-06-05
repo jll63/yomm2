@@ -39,6 +39,7 @@
 #if YOMM2_ENABLE_TRACE
 
 #define YOMM2_TRACE(X) X
+#define YOMM2_TRACE_ELSE(X, Y) X
 #define YOMM2_TRACE_COMMA(X) , X
 
 #include <iostream>
@@ -46,6 +47,7 @@
 
 #else
 #define YOMM2_TRACE(ST)
+#define YOMM2_TRACE_ELSE(X, Y) Y
 #define YOMM2_TRACE_COMMA(X)
 #endif
 
@@ -89,7 +91,8 @@
     namespace NS {                                                            \
     using _yOMM2_method = ::yorel::yomm2::detail::method                      \
         <yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                              \
-    _yOMM2_method::init_method init YOMM2_TRACE( = #ID  #ARGS ); } }          \
+    _yOMM2_method::init_method init = #ID  #ARGS;                             \
+    } }                                                                       \
     NS::_yOMM2_method ID(                                                     \
         ::yorel::yomm2::detail::discriminator,                                \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                            \
@@ -124,7 +127,8 @@
     struct _yOMM2_spec { static RETURN_T body ARGS; };                        \
     ::yorel::yomm2::detail::                                                  \
     register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
-          _yOMM2_init((void**)&next YOMM2_TRACE_COMMA(#ARGS));                \
+    _yOMM2_init(                                                              \
+        (void**)&next, YOMM2_TRACE_ELSE(#ARGS, typeid(_yOMM2_spec).name()));  \
     } }                                                                       \
        RETURN_T NS::_yOMM2_spec::body ARGS
 
@@ -189,7 +193,8 @@ union word {
     const word* pw;
     int i;
     unsigned long ul;
-    const void* pt;
+    const word* control_table;
+    const void* ti;
 };
 
 struct registry {
@@ -221,27 +226,10 @@ inline std::size_t hash(std::uintptr_t mult, std::size_t shift, const void* p) {
         >> shift);
 }
 
-#ifdef NDEBUG
-
-const int hash_entry_size = 1;
-
-#else
-
-const int hash_entry_size = 2;
-
-void unregistered_class_error(const std::type_info* ti);
-
-inline void check_declared_class(const word*& entry, const std::type_info* pt) {
-    if (entry++->pt != pt) {
-        unregistered_class_error(pt);
-    }
-}
-
-#endif
-
 struct dispatch_data {
     // global vector:
     std::vector<word> gv;
+    word* hash_table;
     hash_function hash;
     template<typename T>
     struct instance {
@@ -251,6 +239,23 @@ struct dispatch_data {
 
 template<typename T>
 dispatch_data dispatch_data::instance<T>::_;
+
+#ifndef NDEBUG
+void unregistered_class_error(const std::type_info* ti);
+#endif
+
+inline const word* get_mptr(
+    const word* hash_table, std::uintptr_t hash_mult, std::size_t hash_shift,
+    const std::type_info* ti) {
+    auto index = detail::hash(hash_mult, hash_shift, ti);
+        auto mptr = hash_table[index].pw;
+#ifndef NDEBUG
+        if (!mptr || hash_table[-1].control_table[index].ti != ti) {
+            unregistered_class_error(ti);
+        }
+#endif
+        return mptr;
+}
 
 struct dynamic_cast_ {};
 struct static_cast_ {};
@@ -426,13 +431,13 @@ using resolve_arg_t = typename virtual_traits<T>::resolve_type;
 
 struct discriminator {};
 
-YOMM2_TRACE(std::ostream& log());
-YOMM2_TRACE(std::ostream* log_on(std::ostream* os));
-YOMM2_TRACE(std::ostream* log_off());
+std::ostream& log();
+std::ostream* log_on(std::ostream* os);
+std::ostream* log_off();
 
 struct class_info {
     std::vector<const class_info*> direct_bases;
-    YOMM2_TRACE(const char* name);
+    const char* name;
     std::unordered_set<const void*> ti_ptrs;
 
     template<typename REG, class CLASS> static class_info& get();
@@ -450,7 +455,7 @@ struct init_class_info {
     init_class_info(YOMM2_TRACE(const char* name)) {
         auto& info = class_info::get<REG, CLASS>();
         if (!refs++) {
-            YOMM2_TRACE(info.name = name);
+            info.name = YOMM2_TRACE_ELSE(name, typeid(CLASS).name());
             registry::get<REG>().classes.push_back(&info);
             info.direct_bases = { &class_info::get<REG, BASE>()... };
         }
@@ -489,14 +494,14 @@ template<typename REG, class CLASS, class... BASE>
 int init_class_info<REG, CLASS, BASE...>::refs;
 
 struct spec_info {
-    YOMM2_TRACE(const char* name);
+    const char* name;
     std::vector<const class_info*> vp;
     void* pf;
     void** next;
 };
 
 struct method_info {
-    YOMM2_TRACE(const char* name);
+    const char* name = "(a method)";
     std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
     void* ambiguous;
@@ -615,12 +620,7 @@ struct resolver<1, virtual_<FIRST>, REST...>
         YOMM2_TRACE(
             detail::log() << "hash_table = " << hash_table
             << " slot = " << ss.i << " key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto pf = mptr[ss.i].pf;
         YOMM2_TRACE(detail::log() << " pf = " << pf << "\n");
@@ -638,12 +638,7 @@ struct resolver<1, virtual_<FIRST>, REST...>
         YOMM2_TRACE(
             detail::log() << "hash_table = " << hash_table
             << " slot = " << ssp->i << " key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto pf = mptr[ssp->i].pf;
         YOMM2_TRACE(detail::log() << " pf = " << pf << "\n");
@@ -661,12 +656,7 @@ struct resolver<1, virtual_<FIRST>, REST...>
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         YOMM2_TRACE(detail::log() << " slot = " << slot);
@@ -721,12 +711,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         YOMM2_TRACE(detail::log() << " slot = " << slot);
@@ -747,12 +732,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
         auto ssp = ss.pw;
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         YOMM2_TRACE(detail::log() << " slot = " << slot);
@@ -773,12 +753,7 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
     {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
-        auto entry = hash_table
-            + detail::hash(hash_mult, hash_shift, key) * hash_entry_size;
-#ifndef NDEBUG
-        detail::check_declared_class(entry, key);
-#endif
-        auto mptr = entry->pw;
+        auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto slot = ssp++->i;
         YOMM2_TRACE(detail::log() << " slot = " << slot);
@@ -843,11 +818,11 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 {
     static spec_info* this_;
 
-    register_spec(void** next YOMM2_TRACE_COMMA(const char* name)) {
+    register_spec(void** next, const char* name) {
         static spec_info si;
         if (si.vp.empty()) {
             this_ = &si;
-            YOMM2_TRACE(si.name = name);
+            si.name = name;
             YOMM2_TRACE(
                 log() << METHOD::info().name << ": add spec " << name << "\n");
             si.pf = (void*) wrapper<
@@ -899,7 +874,7 @@ struct method<ID, R(A...), POLICY> {
     static  void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
         YOMM2_TRACE(detail::log() << "call " << name() << "\n");
         return resolver<arity, A...>::resolve(
-            dispatch_data::instance<REG>::_.gv.data(),
+            dispatch_data::instance<REG>::_.hash_table,
             dispatch_data::instance<REG>::_.hash.mult,
             dispatch_data::instance<REG>::_.hash.shift,
             slots_strides, args...);
@@ -935,9 +910,9 @@ struct method<ID, R(A...), POLICY> {
     }
 
     struct init_method {
-        init_method(YOMM2_TRACE(const char* name)) {
+        init_method(const char* name) {
             if (info().vp.empty()) {
-                YOMM2_TRACE(info().name = name);
+                info().name = name;
                 YOMM2_TRACE(log() << "Register method " << name << "\n");
                 auto& inf = info();
                 inf.slots_strides_p = &slots_strides;

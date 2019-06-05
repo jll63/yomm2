@@ -79,6 +79,7 @@ void runtime::update() {
     find_hash_function(classes, dd.hash, metrics);
     install_gv();
     optimize();
+    YOMM2_TRACE(log() << "Finished\n");
 }
 
 runtime::runtime(const registry& reg, struct dispatch_data& dd) : reg(reg), dd(dd) {
@@ -650,12 +651,40 @@ inline word make_word(void* pf) {
 void runtime::install_gv() {
 
     for (int pass = 0; pass != 2; ++pass) {
-        dd.gv.resize(metrics.hash_table_size * hash_entry_size);
+        dd.gv.resize(0);
 
         YOMM2_TRACE(
             if (pass)
-                log() << "Initializing global vector at " << dd.gv.data() << "\n"
-                      << "   0 hash table\n");
+                log()
+                    << "Initializing global vector at " << dd.gv.data() << "\n");
+
+        YOMM2_TRACE(
+            if (pass)
+                log()
+                    << std::setw(4) << dd.gv.size()
+                    << " pointer to control table\n");
+
+        {
+            word w;
+            w.control_table = nullptr;
+            dd.gv.push_back(w);
+        }
+
+        YOMM2_TRACE(
+            if (pass)
+                log()
+                    << std::setw(4) << dd.gv.size()
+                    << " hash table\n");
+
+        dd.gv.resize(dd.gv.size() + metrics.hash_table_size);
+
+        YOMM2_TRACE(
+            if (pass)
+                log()
+                    << std::setw(4) << dd.gv.size()
+                    << " control table\n");
+
+        dd.gv.resize(dd.gv.size() + metrics.hash_table_size);
 
         for (auto& m : methods) {
             if (m.info->vp.size() > 1) {
@@ -667,7 +696,7 @@ void runtime::install_gv() {
                           << ' ' << m.info->name << "\n");
 
             if (*m.info->hash_factors_placement == typeid(policy::hash_factors_in_vector)) {
-                dd.gv.emplace_back(make_word(dd.gv.data()));
+                dd.gv.emplace_back(make_word(dd.hash_table));
                 dd.gv.emplace_back(make_word(dd.hash.mult));
                 dd.gv.emplace_back(make_word(dd.hash.shift));
             }
@@ -695,6 +724,12 @@ void runtime::install_gv() {
             }
         }
 
+        auto hash_table = dd.gv.data() + 1;
+        dd.hash_table = hash_table;
+
+        auto control_table = hash_table + metrics.hash_table_size;
+        dd.gv[0].control_table = control_table;
+
         for (auto& cls : classes) {
             cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
             YOMM2_TRACE(
@@ -708,11 +743,9 @@ void runtime::install_gv() {
                     return make_word(i); });
 
             for (auto tid : cls.info->ti_ptrs) {
-                auto entry = dd.gv.begin() + (dd.hash(tid) * hash_entry_size);
-#ifndef NDEBUG
-                entry++->pt = tid;
-#endif
-                entry->pw = cls.mptr;
+                auto index = dd.hash(tid);
+                dd.hash_table[index].pw = cls.mptr;
+                control_table[index].ti = tid;
             }
         }
     }
@@ -743,7 +776,7 @@ void runtime::optimize() {
                 auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
                 YOMM2_TRACE(
                     log() << "    " << cls->info->name
-                    << ".mtbl[" << slot << "] = gv+" << (pw - dd.gv.data())
+                    << ".mtbl[" << slot << "] = gv+" << (pw - dd.hash_table)
                     << "\n");
                 cls->mptr[slot].pw = pw;
             }
@@ -814,8 +847,6 @@ bool runtime::is_base(const rt_spec* a, const rt_spec* b)
     return result;
 }
 
-#if YOMM2_ENABLE_TRACE
-
 std::ostream* active_log = nullptr;
 
 std::ostream& log() {
@@ -839,8 +870,6 @@ std::ostream* log_off() {
     active_log = nullptr;
     return prev;
 }
-
-#endif
 
 void default_method_call_error_handler(const method_call_error& error) {
 #if YOMM2_ENABLE_TRACE

@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(registration) {
 }
 
 inline const word* mptr(const dispatch_data& t, const std::type_info* ti) {
-    return t.gv[(t.hash(ti) + 1) * hash_entry_size - 1].pw;
+    return t.hash_table[t.hash(ti)].pw;
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
@@ -676,11 +676,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         // pay
         BOOST_TEST_REQUIRE(dd.gv.size() ==
-                           rt.metrics.hash_table_size * hash_entry_size
+                           1       // ptr to control table
+                           + rt.metrics.hash_table_size // mptr table
+                           + rt.metrics.hash_table_size // control table
                            + 15    // approve: 3 slots and 12 cells for dispatch table
                            + 12);  // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for Expenses
 
-        auto gv_iter = dd.gv.data() + rt.metrics.hash_table_size * hash_entry_size;
+        auto gv_iter = dd.hash_table + 2 * rt.metrics.hash_table_size;
         // no slots nor fun* for 1-method
 
         // approve
