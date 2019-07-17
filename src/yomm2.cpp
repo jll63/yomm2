@@ -742,10 +742,12 @@ void runtime::install_gv() {
                 std::back_inserter(dd.gv), [](int i) {
                     return make_word(i); });
 
-            for (auto tid : cls.info->ti_ptrs) {
-                auto index = dd.hash(tid);
-                dd.hash_table[index].pw = cls.mptr;
-                control_table[index].ti = tid;
+            if (pass) {
+                for (auto tid : cls.info->ti_ptrs) {
+                    auto index = dd.hash(tid);
+                    hash_table[index].pw = cls.mptr;
+                    control_table[index].ti = tid;
+                }
             }
         }
     }
