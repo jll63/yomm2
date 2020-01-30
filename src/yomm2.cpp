@@ -737,11 +737,12 @@ void runtime::install_gv() {
                     log() << std::setw(4) << dd.gv.size()
                           << " mtbl for " << cls.info->name
                           << ": " << cls.mptr << "\n");
-            std::transform(
-                cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
-                std::back_inserter(dd.gv), [](int i) {
-                    return make_word(i); });
-
+            if (cls.first_used_slot != -1) {
+                std::transform(
+                    cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
+                    std::back_inserter(dd.gv), [](int i) {
+                        return make_word(i); });
+            }
             if (pass) {
                 for (auto tid : cls.info->ti_ptrs) {
                     auto index = dd.hash(tid);
