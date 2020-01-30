@@ -90,19 +90,19 @@ struct Dog : Mammal, Carnivore {
 };
 
 struct get_this_mammal {
-    static const void* body(const Mammal& obj) {
+    static const void* yOMM2_body(const Mammal& obj) {
         return &obj;
     }
 };
 
 struct get_this_carnivore {
-    static const void* body(const Carnivore& obj) {
+    static const void* yOMM2_body(const Carnivore& obj) {
         return &obj;
     }
 };
 
 struct get_this_dog {
-    static const void* body(const Dog& obj) {
+    static const void* yOMM2_body(const Dog& obj) {
         return &obj;
     }
 };

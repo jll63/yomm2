@@ -124,13 +124,45 @@
     using _yOMM2_method = _yOMM2_select<void ARGS>::type;                     \
     using _yOMM2_return_t = _yOMM2_method::return_type;                       \
     _yOMM2_return_t (*next) ARGS;                                             \
-    struct _yOMM2_spec { static RETURN_T body ARGS; };                        \
+    struct _yOMM2_spec { static RETURN_T yOMM2_body ARGS; };                  \
     ::yorel::yomm2::detail::                                                  \
     register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
     _yOMM2_init(                                                              \
         (void**)&next, YOMM2_TRACE_ELSE(#ARGS, typeid(_yOMM2_spec).name()));  \
     } }                                                                       \
-       RETURN_T NS::_yOMM2_spec::body ARGS
+    RETURN_T NS::_yOMM2_spec::yOMM2_body ARGS
+
+#define YOMM2_DECLARE_NAMED_METHOD(CONTAINER) struct CONTAINER
+
+#define YOMM2_FRIEND_NAMED_METHOD(CONTAINER) friend struct CONTAINER
+
+#define YOMM2_NAMED_DEFINE(CONTAINER, RETURN_T, ID, ARGS)                     \
+    yOMM2_NAMED_DEFINE(yOMM2_GENSYM, CONTAINER, RETURN_T, ID, ARGS)
+
+#define YOMM2_CALL_NAMED_METHOD(CONTAINER, ARGS) CONTAINER::yOMM2_body ARGS
+
+#define yOMM2_NAMED_DEFINE(NS, CONTAINER, RETURN_T, ID, ARGS)                 \
+    namespace { namespace NS {                                                \
+    template<typename T> struct _yOMM2_select;                                \
+    template<typename... A> struct _yOMM2_select<void(A...)> {                \
+        using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
+                                 std::declval<A>()...));                      \
+    };                                                                        \
+    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                     \
+    using _yOMM2_return_t = _yOMM2_method::return_type;                       \
+    } }                                                                       \
+    struct CONTAINER {                                                        \
+        static NS::_yOMM2_return_t (*next) ARGS;                              \
+        static RETURN_T yOMM2_body ARGS;                                      \
+    };                                                                        \
+    NS::_yOMM2_return_t (*CONTAINER::next) ARGS;                              \
+    namespace { namespace NS {                                                \
+    ::yorel::yomm2::detail::                                                  \
+    register_spec<_yOMM2_return_t, _yOMM2_method, CONTAINER, void ARGS>       \
+    _yOMM2_init(                                                              \
+        (void**)&CONTAINER::next, YOMM2_TRACE_ELSE(#ARGS, typeid(CONTAINER).name())); \
+    } }                                                                       \
+    RETURN_T CONTAINER::yOMM2_body ARGS
 
 #define YOMM2_CLASS(...)                                                      \
     yOMM2_CLASS2(yOMM2_GENSYM,                                                \
@@ -801,7 +833,7 @@ template<
     >
 struct wrapper<BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...), BASE_RETURN(SPEC_PARAM...)> {
     static BASE_RETURN body(virtual_arg_t<BASE_PARAM>... arg) {
-    return FUNCTION::body(
+    return FUNCTION::yOMM2_body(
         virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
             std::forward<virtual_arg_t<BASE_PARAM>>(arg),
             typename select_cast<
