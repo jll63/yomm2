@@ -12,10 +12,10 @@
 
 #define declare_method YOMM2_DECLARE
 #define define_method YOMM2_DEFINE
+#define define_method_inline YOMM2_DEFINE_INLINE
 
-#define declare_named_method YOMM2_DECLARE_NAMED_METHOD
-#define define_named_method YOMM2_NAMED_DEFINE
-#define call_named_method YOMM2_CALL_NAMED_METHOD
-#define friend_named_method YOMM2_FRIEND_NAMED_METHOD
+#define method_container YOMM2_DECLARE_METHOD_CONTAINER
+#define friend_method YOMM2_FRIEND
+#define method_definition YOMM2_DEFINITION
 
 #endif

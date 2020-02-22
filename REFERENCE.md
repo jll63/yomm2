@@ -76,7 +76,7 @@ with `YOMM2_CLASS`. This means all classes that are marked with `virtual_`, and
 all their subclasses. Each class registration must list the base classes that
 may be involved in method calls.
 
-`register_class` is an alias for `YOMM2_CLASS` created by header
+`register_class` is an alias for `YOMM2_CLASS` provided by header
 `yorel/yomm2/cute.hpp`.
 
 #### Examples:
@@ -135,20 +135,20 @@ a virtual Animal argument in a method declaration.
 ```
 YOMM2_DECLARE(return_type, method, (type...));
 
-return_type rv = method(unmarked_type... arg);
+return_type rv = method(unspecified_type... arg);
 
 ```
 
 Declare a method.
 
 Create an inline function `method` that returns a `return type` and takes an
-argument list of `unmarked_type...`, which consist of `type...` without the
+argument list of `unspecified_type...`, which consist of `type...` without the
 `virtual_` marker. At least one `type` (but not necessarily all) must be marked
 with `virtual_`.
 
 When `method` is called, the dynamic types of the arguments marked with
 `virtual_` are examined, and the most specific definition compatible with
-`unmarked_type...` is called. If no compatible definition exists, or if
+`unspecified_type...` is called. If no compatible definition exists, or if
 several compatible definitions exist but none of them is more specific than
 all the others, the call is illegal and an error handler is executed. By
 default it writes a diagnostic on `std::cerr ` and terminates the program via
@@ -161,7 +161,7 @@ NOTE:
 * The parameters in `type...` consist of _just_ a type, e.g. `int` is correct
   but `int i` is not.
 
-`declare_method` is an alias for `YOMM2_DECLARE` created by header
+`declare_method` is an alias for `YOMM2_DECLARE` provided by header
 `yorel/yomm2/cute.hpp`.
 
 ## Examples:
@@ -175,22 +175,31 @@ YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 
 #### Synopsis:
 ```
-YOMM2_DEFINE(return_type, name, (unmarked_type... argument)) {
+YOMM2_DEFINE(return_type, name, (unspecified_type... argument)) {
+    ....
+}
+
+YOMM2_DEFINE(container, return_type, name, (unspecified_type... argument)) {
     ....
 }
 ```
 
 Add an implementation to a method.
 
-Locate a method that can be called with the specified `unmarked_type...` list
+Locate a method that can be called with the specified `unspecified_type...` list
 and add the definition to the method's list of definitions. The method must
 exist and must be unique. `return_type` must be covariant with the method's
 return type. `return_type` may be `auto`.
 
 NOTE that the types of the arguments are _not_ marked with `virtual_`.
 
-`define_method` is an aliases for `YOMM2_DEFINE` and `YOMM2_END`
-created by header `yorel/yomm2/cute.hpp`.
+If `container` is specified, the method definition is placed inside the said
+container, which must have been declared with `YOMM2_DECLARE_METHOD_CONTAINER`
+or `method_container`. See the documentation of
+`YOMM2_DECLARE_METHOD_CONTAINER` for more information on method containers.
+
+`define_method` is an alias for `YOMM2_DEFINE`, provided by header
+`yorel/yomm2/cute.hpp`.
 
 ## Examples:
 ```
@@ -222,11 +231,108 @@ YOMM2_DEFINE(std::string, meet, (Cat& cat, Dog& dog)) {
 }
 ```
 
+## macros YOMM2_METHOD_INLINE, define_method_inline
+
+#### Synopsis:
+```
+YOMM2_DEFINE_INLINE(container, return_type, name, (unspecified_type... argument)) {
+    ....
+}
+```
+
+Add an implementation to a method, inside a container, and make it inline.
+
+Like the `YOMM2_DEFINE(container, ...)` macro, define a method inside the
+specified container, which must have been declared with
+`YOMM2_DECLARE_METHOD_CONTAINER` or `method_container`. The definition has the
+`inline` storage class, and thus can be placed in a header file and is a
+potential candidate for inlining.
+
+See the documentation of `YOMM2_DECLARE_METHOD_CONTAINER` for more information
+on method containers.
+
+`define_method_inline` is an alias for `YOMM2_DEFINE_INLINE`, provided by
+header `yorel/yomm2/cute.hpp`.
+
+## macros YOMM2_DECLARE_METHOD_CONTAINER, method_container
+
+#### Synopsis:
+
+```
+YOMM2_DECLARE_METHOD_CONTAINER(container)
+YOMM2_DECLARE_METHOD_CONTAINER(container, return_type, name, (unspecified_type... argument))
+```
+
+Declare a method container, and optionally a method definition inside that
+container.
+
+Method containers are collections of method definitions that can be addressed
+by their name, return type and signature. This makes it possible for a class to
+grant friendship to all the methods inside a container, or to a single method
+with a specific name, return type and signature - see `YOMM2_FRIEND`. It also
+makes it possible to retrieve a specific method, in order to call it or create
+a pointer to it - see `YOMM2_DEFINITION`. See [containers](examples/containers)
+for an example.
+
+This macro only creates declarations, and thus can be placed in a header
+file. The four argument form makes it possible to access a method definition
+across translation units.
+
+Method containers are implemented as templates, and method definitions scoped
+inside containers are implemented as template specializations. Thus methods can
+only be added to a container defined in the same namespace, or a namespace
+nested inside the namespace where the container has been declared.
+
+`method_container` is an alias for `YOMM2_DECLARE_METHOD_CONTAINER`, provided
+by header `yorel/yomm2/cute.hpp`.
+
+## macros YOMM2_FRIEND, friend_method
+
+#### Synopsis:
+
+```
+YOMM2_FRIEND(container)
+YOMM2_FRIEND(container, return_type, (unspecified_type... argument))
+```
+
+Grant friendship to all the methods inside a container friend of a class, or to
+a specific method. See [containers](examples/containers) for an example.
+
+`friend_method_container` is an alias for `YOMM2_FRIEND`, provided by header
+`yorel/yomm2/cute.hpp`.
+
+## macros YOMM2_DEFINITION, method_definition
+
+#### Synopsis:
+
+```
+YOMM2_DEFINITION(container, return_type, (unspecified_type... argument))
+```
+
+Retrieve a method definition with a given return type and signature from a
+container.
+
+The resulting method can be used as a normal function reference. It can be
+called, or its address can be taken. In particular, this makes it possible for
+a method definition to call a base method as part of its implementation, in the
+same manner as an ordinary virtual function can call a specific base function
+by prefixing its name with a base class name.
+
+Note that the preferred way of calling the overriden method is via `next`. In
+normal circumstances, a method definition cannot assume which "super" or "base"
+function is the best choice, since the set of methods pertaining to the same
+declaration is open.
+
+See [containers](examples/containers) for an example.
+
+`method_definition` is an alias for `YOMM2_DEFINITION`, provided by header
+`yorel/yomm2/cute.hpp`.
+
 ## function next
 
 #### Synopsis:
 ```
-YOMM2_DEFINE(return_type, name, (type... arg)) {
+YOMM2_DEFINE(return_type, name, (unspecified_type... arg)) {
     ....
     next(arg...);
     ...

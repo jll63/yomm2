@@ -69,7 +69,7 @@ if (${YOMM2_ENABLE_TESTS})
   add_test (adventure examples/adventure)
   add_test (next examples/next)
   add_test (asteroids examples/asteroids)
-  add_test (friendship examples/friendship)
+  add_test (containers examples/containers/containers)
 endif()
 
 if (NOT DEFINED(YOMM2_ENABLE_BENCHMARKS))

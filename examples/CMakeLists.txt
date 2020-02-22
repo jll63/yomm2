@@ -27,9 +27,8 @@ add_executable(asteroids asteroids.cpp)
 target_link_libraries (asteroids yomm2)
 add_test (asteroids asteroids)
 
-add_executable(friendship friendship.cpp)
-target_link_libraries (friendship yomm2)
-add_test (friendship friendship)
+add_subdirectory (containers)
+add_test (containers containers)
 
 if(NOT MSVC)
   set(CMAKE_SKIP_BUILD_RPATH TRUE)

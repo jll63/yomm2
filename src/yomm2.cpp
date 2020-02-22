@@ -25,7 +25,7 @@ namespace detail {
 #if YOMM2_ENABLE_TRACE
 
 struct indent {
-    indent(int n) : n(n) {
+    explicit indent(int n) : n(n) {
         assert(n >= 0);
     }
     int n;

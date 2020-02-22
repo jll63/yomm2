@@ -153,22 +153,22 @@ BOOST_AUTO_TEST_CASE(casts) {
     BOOST_TEST(
         (wrapper<voidp, get_this_mammal,
          voidp(virtual_<const Animal&>), voidp(const Mammal&)>::
-         body(animal)) == &mammal);
+         call(animal)) == &mammal);
 
     BOOST_TEST(
         (wrapper<voidp, get_this_carnivore,
          voidp(virtual_<const Animal&>), voidp(const Carnivore&)>::
-         body(animal)) == &carnivore);
+         call(animal)) == &carnivore);
 
     BOOST_TEST(
         (wrapper<voidp, get_this_carnivore,
          voidp(virtual_<const Animal&>), voidp(const Carnivore&)>::
-         body(animal)) == &carnivore);
+         call(animal)) == &carnivore);
 
     BOOST_TEST(
         (wrapper<voidp, get_this_dog,
          voidp(virtual_<const Animal&>), voidp(const Dog&)>::
-         body(animal)) == &dog);
+         call(animal)) == &dog);
 }
 
 
