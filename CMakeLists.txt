@@ -5,12 +5,9 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 
-project (YOMM2)
-
-set (YOMM2_VERSION_MAJOR 1)
-set (YOMM2_VERSION_MINOR 0)
+project (YOMM2 VERSION 1.0)
 
 find_package(Boost)
 
