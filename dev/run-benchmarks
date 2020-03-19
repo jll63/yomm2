@@ -3,10 +3,11 @@ make -j4 benchmarks
 tests/benchmarks --benchmark_color=false --benchmark_repetitions=5 | perl -ne "$(cat <<'PERCENTS'
 if (s/_median//) {
   if ($n0) {
-     s{(ns\s+(\d+$))}{$1 . sprintf " %2.1f%%\n", ($n0 / $2 - 1) * 100}e;
+     s{\d+\.\d+ ns\s+(\d+\.\d+) ns.*}{$1 . sprintf " ns %+2.1f%%\n", ($1 - $n0) / $n0 * 100}e or die;
      $n0 = 0;
   } else {
-    ($n0) = /.*ns\s+(\d+)/;
+    s/\d+\.\d+ ns\s+(\d+\.\d+) ns.*/$1 ns/;
+    $n0 = $1
   }
   print;
 }
