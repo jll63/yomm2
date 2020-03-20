@@ -87,32 +87,34 @@ runtime::runtime(const registry& reg, struct dispatch_data& dd) : reg(reg), dd(d
 
 void runtime::augment_classes() {
     classes.resize(reg.classes.size());
-    auto class_iter = reg.classes.begin();
+
+    // scope
+    {
+        auto class_iter = reg.classes.begin();
+
+        for (auto& rt_class : classes) {
+            rt_class.info = *class_iter++;
+            class_map[rt_class.info] = &rt_class;
+        }
+    }
 
     for (auto& rt_class : classes) {
-        rt_class.info = *class_iter;
-        class_map[*class_iter] = &rt_class;
-        std::transform(
-            (*class_iter)->direct_bases.begin(),
-            (*class_iter)->direct_bases.end(),
-            std::back_inserter(rt_class.direct_bases),
-            [this, rt_class](const class_info* ci) {
-                auto base = class_map[ci];
-                if (!base) {
-                    throw std::runtime_error(
-                        std::string("yomm2: derived class ")
-                        YOMM2_TRACE(+ rt_class.info->name)
-                        + " registered before its base "
-                        YOMM2_TRACE(+ ci->name));
-                }
-                return base;
-            });
+        rt_class.direct_bases.resize(rt_class.info->direct_bases.size());
+        auto base_iter = rt_class.info->direct_bases.begin();
+
+        for (auto& rt_base : rt_class.direct_bases) {
+            rt_base = class_map[*base_iter++];
+            if (!rt_base) {
+                throw std::runtime_error(
+                    std::string("yomm2: base class of ")
+                    YOMM2_TRACE(+ rt_class.info->name)
+                    + " not registered");
+            }
+        }
 
         for (auto rt_base : rt_class.direct_bases) {
             rt_base->direct_derived.push_back(&rt_class);
         }
-
-        ++class_iter;
     }
 }
 
