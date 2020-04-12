@@ -14,17 +14,14 @@
 #include <utility>
 #include <vector>
 
-#include <boost/preprocessor/arithmetic/sub.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/tuple/push_front.hpp>
-#include <boost/preprocessor/tuple/rem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
-#include <boost/preprocessor/variadic/to_tuple.hpp>
 #include <boost/preprocessor/variadic/elem.hpp>
+#include <boost/preprocessor/variadic/to_tuple.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
@@ -193,8 +190,8 @@
 #define YOMM2_FRIEND(...)                                                     \
     BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__)
 #else
-#define YOMM2_FRIEND(...)                                                    \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)               \
+#define YOMM2_FRIEND(...)                                                     \
+    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)                \
                  (__VA_ARGS__), BOOST_PP_EMPTY())
 #endif
 
@@ -204,18 +201,14 @@
 #define YOMM2_FRIEND_3(CONTAINER, RETURN_T, ARGS)                             \
     friend struct CONTAINER<RETURN_T ARGS>
 
-#define YOMM2_DEFINITION(CONTAINER, RETURN_T, ARGS)                          \
+#define YOMM2_DEFINITION(CONTAINER, RETURN_T, ARGS)                           \
     CONTAINER<RETURN_T ARGS>::yOMM2_body
 
 #define YOMM2_CLASS(...)                                                      \
-    yOMM2_CLASS2(yOMM2_GENSYM,                                                \
-                 BOOST_PP_TUPLE_PUSH_FRONT(                                   \
-                     BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__),                 \
-                     ::yorel::yomm2::default_registry))
+    YOMM2_CLASS_(::yorel::yomm2::default_registry, __VA_ARGS__)
 
-#define YOMM2_CLASS_(REG, ...) \
-    yOMM2_CLASS2(yOMM2_GENSYM, \
-		BOOST_PP_TUPLE_PUSH_FRONT(BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__), REG))
+#define YOMM2_CLASS_(...)                                                     \
+    yOMM2_CLASS2(yOMM2_GENSYM, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
 
 #define yOMM2_CLASS2(NS, TUPLE)                                               \
     namespace {                                                               \
