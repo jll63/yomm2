@@ -40,12 +40,17 @@ endif()
 
 add_subdirectory (src)
 
-add_subdirectory (examples)
+if (NOT DEFINED(YOMM2_ENABLE_EXAMPLES))
+  set(YOMM2_ENABLE_EXAMPLES CACHE BOOL ON)
+endif()
+if (${YOMM2_ENABLE_EXAMPLES})
+  message(STATUS "Examples enabled")
+  add_subdirectory (examples)
+endif()
 
 if (NOT DEFINED(YOMM2_ENABLE_TESTS))
   set(YOMM2_ENABLE_TESTS CACHE BOOL ON)
 endif()
-
 if (${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
   include(CTest)
@@ -66,7 +71,6 @@ endif()
 if (NOT DEFINED(YOMM2_ENABLE_BENCHMARKS))
   set(YOMM2_ENABLE_BENCHMARKS CACHE BOOL ON)
 endif()
-
 if (${YOMM2_ENABLE_BENCHMARKS})
   message(STATUS "Benchmarks enabled")
   set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
