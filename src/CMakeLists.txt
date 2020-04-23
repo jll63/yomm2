@@ -5,6 +5,8 @@
 
 add_library(yomm2 yomm2.cpp)
 
-INSTALL(TARGETS yomm2
-  DESTINATION lib
+target_include_directories(yomm2 PUBLIC
+    $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
+target_include_directories(yomm2 SYSTEM INTERFACE ${Boost_INCLUDE_DIR})

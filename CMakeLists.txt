@@ -9,14 +9,9 @@ cmake_minimum_required (VERSION 3.0)
 
 project (YOMM2 VERSION 1.0)
 
-find_package(Boost)
-
-include_directories ("${YOMM2_SOURCE_DIR}/include")
-link_directories ("${YOMM2_BINARY_DIR}/src")
-
+# Find Boost dependency
+find_package(Boost 1.53 REQUIRED)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
-
-include_directories("${Boost_INCLUDE_DIR}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
