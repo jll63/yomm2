@@ -70,8 +70,34 @@ if (${YOMM2_ENABLE_BENCHMARKS})
   message(STATUS "Benchmarks enabled")
   set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
   set(BENCHMARK_ENABLE_GTEST_TESTS CACHE BOOL OFF)
-  add_subdirectory(extern/benchmark)
+  add_subdirectory(extern/benchmark EXCLUDE_FROM_ALL)
   include_directories(extern/benchmark/include)
 endif()
+
+## Install instruction
+# Create version file for cmake package
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  YOMM2ConfigVersion.cmake
+  VERSION ${PACKAGE_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+# Create targets file of yomm2
+install(EXPORT YOMM2Targets
+  FILE YOMM2Targets.cmake
+  NAMESPACE YOMM2::
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
+# Configure package config (tells using code about dependencies)
+configure_package_config_file(
+    cmake/Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
+# Copy config files to install directory
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
 
 INSTALL (DIRECTORY include/yorel DESTINATION include)

@@ -10,3 +10,7 @@ target_include_directories(yomm2 PUBLIC
     $<INSTALL_INTERFACE:include>
 )
 target_include_directories(yomm2 SYSTEM INTERFACE ${Boost_INCLUDE_DIR})
+
+install(TARGETS yomm2
+    EXPORT YOMM2Targets
+)
