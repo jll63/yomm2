@@ -29,25 +29,16 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
-set(YOMM2_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-
-if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
+# Only allow Debug or Release
+if("${CMAKE_BUILD_TYPE}" STREQUAL "DebugRelease")
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "ReleaseDebug")
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 add_subdirectory (src)
-
-if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
-  set(CMAKE_BUILD_TYPE "Release")
-endif()
-
-if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
-  set(CMAKE_BUILD_TYPE "Debug")
-endif()
 
 add_subdirectory (examples)
 
