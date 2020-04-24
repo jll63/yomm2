@@ -13,4 +13,6 @@ target_include_directories(yomm2 SYSTEM INTERFACE ${Boost_INCLUDE_DIR})
 
 install(TARGETS yomm2
   EXPORT YOMM2Targets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
 )
