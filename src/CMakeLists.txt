@@ -3,7 +3,7 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_library(yomm2 yomm2.cpp)
+add_library(yomm2 STATIC yomm2.cpp)
 
 target_include_directories(yomm2 PUBLIC
   $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
