@@ -9,14 +9,9 @@ cmake_minimum_required (VERSION 3.0)
 
 project (YOMM2 VERSION 1.0)
 
-find_package(Boost)
-
-include_directories ("${YOMM2_SOURCE_DIR}/include")
-link_directories ("${YOMM2_BINARY_DIR}/src")
-
+# Find Boost dependency
+find_package(Boost 1.53 REQUIRED)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
-
-include_directories("${Boost_INCLUDE_DIR}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
@@ -29,34 +24,37 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
-set(YOMM2_BUILD_TYPE ${CMAKE_BUILD_TYPE})
-
-if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
+# Only allow Debug or Release
+if("${CMAKE_BUILD_TYPE}" STREQUAL "DebugRelease")
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
+if("${CMAKE_BUILD_TYPE}" STREQUAL "ReleaseDebug")
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 add_subdirectory (src)
 
-if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
-  set(CMAKE_BUILD_TYPE "Release")
+option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
+if (${YOMM2_ENABLE_EXAMPLES})
+  message(STATUS "Examples enabled")
+  add_subdirectory (examples)
 endif()
 
-if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
-  set(CMAKE_BUILD_TYPE "Debug")
-endif()
-
-add_subdirectory (examples)
-
-if (NOT DEFINED(YOMM2_ENABLE_TESTS))
-  set(YOMM2_ENABLE_TESTS CACHE BOOL ON)
-endif()
-
+option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
+include(CMakeDependentOption)
+CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
+  "Set to ON to build benchmarks" OFF
+  "YOMM2_ENABLE_TESTS" OFF
+)
 if (${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
+  if (${YOMM2_ENABLE_BENCHMARKS})
+    message(STATUS "Benchmarks enabled")
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+    include(find_or_download_package)
+    find_or_download_package(benchmark)
+  endif()
   include(CTest)
   add_subdirectory (tests)
   enable_testing()
@@ -72,16 +70,30 @@ if (${YOMM2_ENABLE_TESTS})
   add_test (containers examples/containers/containers)
 endif()
 
-if (NOT DEFINED(YOMM2_ENABLE_BENCHMARKS))
-  set(YOMM2_ENABLE_BENCHMARKS CACHE BOOL ON)
-endif()
-
-if (${YOMM2_ENABLE_BENCHMARKS})
-  message(STATUS "Benchmarks enabled")
-  set(BENCHMARK_ENABLE_TESTING CACHE BOOL OFF)
-  set(BENCHMARK_ENABLE_GTEST_TESTS CACHE BOOL OFF)
-  add_subdirectory(extern/benchmark)
-  include_directories(extern/benchmark/include)
-endif()
+## Install instruction
+# Create version file for cmake package
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+  YOMM2ConfigVersion.cmake
+  VERSION ${PACKAGE_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+# Create targets file of yomm2
+install(EXPORT YOMM2Targets
+  FILE YOMM2Targets.cmake
+  NAMESPACE YOMM2::
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
+# Configure package config (tells using code about dependencies)
+configure_package_config_file(
+  cmake/Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
+# Copy config files to install directory
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2ConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+)
 
 INSTALL (DIRECTORY include/yorel DESTINATION include)

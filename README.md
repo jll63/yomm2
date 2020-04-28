@@ -178,13 +178,6 @@ git clone https://github.com/jll63/yomm2.git
 cd yomm2
 ```
 
-If you want to run the benchmarks, fetch the Google Benchmark submodule:
-
-```
-git submodule init
-git submodule update
-```
-
 Create a build directory and run cmake then make:
 
 ```
@@ -208,6 +201,9 @@ build):
 cmake .. -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
 make && tests/benchmarks # wow it's fast!
 ```
+This will automatically download the dependency
+[benchmark](https://github.com/google/benchmark), build it and finally install
+it to `./extern` within the root directory of yomm2.
 
 Finally, if you like it and you want to install it:
 
@@ -217,6 +213,13 @@ sudo make install
 # or:
 make install DESTDIR=/path/to/my/libs
 ```
+This will install the library and headers, as well as a CMake package
+configuration.
+Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
+`find_package(YOMM2)` from your including project. For linking, the use
+`target_link_library(<your_target> YOMM2::yomm2)`. This will automatically add
+the necessary include directories, so this should be all you need to do to link
+to yomm2.
 
 ## Going Further
 
