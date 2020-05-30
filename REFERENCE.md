@@ -161,6 +161,12 @@ NOTE:
 * The parameters in `type...` consist of _just_ a type, e.g. `int` is correct
   but `int i` is not.
 
+* `type`s that contain commas (e.g. `tuple<int, char>`) cannot be used directly
+  as macro arguments. Some workarounds are:
+  * using an alias, e.g. `using int_char = tuple<int, char>`
+  * using any C++ construct that puts parentheses around the commas,
+    e.g. `decltype(std::tuple<int, int>())`
+
 `declare_method` is an alias for `YOMM2_DECLARE` provided by header
 `yorel/yomm2/cute.hpp`.
 
@@ -192,6 +198,9 @@ exist and must be unique. `return_type` must be covariant with the method's
 return type. `return_type` may be `auto`.
 
 NOTE that the types of the arguments are _not_ marked with `virtual_`.
+
+See the dcumentation of `YOMM2_METHOD` for information on handling types that
+contain commas.
 
 If `container` is specified, the method definition is placed inside the said
 container, which must have been declared with `YOMM2_DECLARE_METHOD_CONTAINER`
@@ -251,6 +260,9 @@ potential candidate for inlining.
 See the documentation of `YOMM2_DECLARE_METHOD_CONTAINER` for more information
 on method containers.
 
+See the dcumentation of `YOMM2_METHOD` for information on handling types that
+contain commas.
+
 `define_method_inline` is an alias for `YOMM2_DEFINE_INLINE`, provided by
 header `yorel/yomm2/cute.hpp`.
 
@@ -283,6 +295,9 @@ inside containers are implemented as template specializations. Thus methods can
 only be added to a container defined in the same namespace, or a namespace
 nested inside the namespace where the container has been declared.
 
+See the dcumentation of `YOMM2_METHOD` for information on handling types that
+contain commas.
+
 `method_container` is an alias for `YOMM2_DECLARE_METHOD_CONTAINER`, provided
 by header `yorel/yomm2/cute.hpp`.
 
@@ -297,6 +312,9 @@ YOMM2_FRIEND(container, return_type, (unspecified_type... argument))
 
 Grant friendship to all the methods inside a container friend of a class, or to
 a specific method. See [containers](examples/containers) for an example.
+
+See the dcumentation of `YOMM2_METHOD` for information on handling types that
+contain commas.
 
 `friend_method_container` is an alias for `YOMM2_FRIEND`, provided by header
 `yorel/yomm2/cute.hpp`.
@@ -322,6 +340,9 @@ Note that the preferred way of calling the overriden method is via `next`. In
 normal circumstances, a method definition cannot assume which "super" or "base"
 function is the best choice, since the set of methods pertaining to the same
 declaration is open.
+
+See the dcumentation of `YOMM2_METHOD` for information on handling types that
+contain commas.
 
 See [containers](examples/containers) for an example.
 
