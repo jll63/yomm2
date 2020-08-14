@@ -71,8 +71,9 @@ struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
 enum Subtype {
+    MATRIX, DIAGONAL,
     SCALAR_MATRIX, SCALAR_DIAGONAL, MATRIX_SCALAR, DIAGONAL_SCALAR,
-  MATRIX_MATRIX, DIAGONAL_DIAGONAL
+    MATRIX_MATRIX, DIAGONAL_DIAGONAL
 };
 
 YOMM2_CLASS(matrix);
@@ -135,6 +136,26 @@ YOMM2_DEFINE(int, times, (matrix&& m, double a)) {
     return -MATRIX_SCALAR;
 }
 
+YOMM2_DECLARE(Subtype, zero_ref, (virtual_<matrix&>));
+
+YOMM2_DEFINE(Subtype, zero_ref, (dense_matrix& m)) {
+    return MATRIX;
+}
+
+YOMM2_DEFINE(Subtype, zero_ref, (diagonal_matrix& m)) {
+    return DIAGONAL;
+}
+
+YOMM2_DECLARE(Subtype, zero_ptr, (virtual_<matrix*>));
+
+YOMM2_DEFINE(Subtype, zero_ptr, (dense_matrix* m)) {
+    return MATRIX;
+}
+
+YOMM2_DEFINE(Subtype, zero_ptr, (diagonal_matrix* m)) {
+    return DIAGONAL;
+}
+
 BOOST_AUTO_TEST_CASE(simple)
 {
     yorel::yomm2::update_methods();
@@ -157,6 +178,15 @@ BOOST_AUTO_TEST_CASE(simple)
         BOOST_TEST(times(2, dense_matrix()) == -SCALAR_MATRIX);
         BOOST_TEST(times(dense_matrix(), 2) == -MATRIX_SCALAR);
         BOOST_TEST(times(diagonal_matrix(), 2) == -DIAGONAL_SCALAR);
+    }
+
+    {
+        dense_matrix dense;
+        BOOST_TEST(zero_ref(dense) == MATRIX);
+        BOOST_TEST(zero_ptr(&dense) == MATRIX);
+        diagonal_matrix diagonal;
+        BOOST_TEST(zero_ref(diagonal) == DIAGONAL);
+        BOOST_TEST(zero_ptr(&diagonal) == DIAGONAL);
     }
 }
 

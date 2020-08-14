@@ -407,7 +407,7 @@ template<typename T>
 struct virtual_traits< virtual_<T*> > {
     using base_type = std::remove_cv_t<T>;
     using argument_type = T*;
-    using resolve_type = const T*;
+    using resolve_type = T*;
 
     static_assert(std::is_class<base_type>::value);
     static_assert(std::is_polymorphic<base_type>::value);
