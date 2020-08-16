@@ -14,6 +14,7 @@
 #include <random>
 
 #if YOMM2_ENABLE_TRACE
+#include <sstream>
 #include <iostream>
 #endif
 
@@ -852,6 +853,7 @@ bool runtime::is_base(const rt_spec* a, const rt_spec* b)
     return result;
 }
 
+#if YOMM2_ENABLE_TRACE
 std::ostream* active_log = nullptr;
 
 std::ostream& log() {
@@ -875,6 +877,7 @@ std::ostream* log_off() {
     active_log = nullptr;
     return prev;
 }
+#endif
 
 void default_method_call_error_handler(const method_call_error& error) {
 #if YOMM2_ENABLE_TRACE
