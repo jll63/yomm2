@@ -24,16 +24,36 @@ if(MSVC)
     set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
-# Only allow Debug or Release
-if("${CMAKE_BUILD_TYPE}" STREQUAL "DebugRelease")
+# Remember original build type if doing a hybrid (Debug<->Release) build.
+set(YOMM2_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+
+# Hybrid builds: first set mode for the library.
+
+if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
+  # Compile the library in Debug mode and the tests and examples in Release
+  # mode.
+  message(STATUS "Testing compatibility of Release code against a Debug version of yomm2")
   set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "ReleaseDebug")
+if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
+  # Compile the library in Release mode and the tests and examples in Debug
+  # mode.
+  message(STATUS "Testing compatibility of Debug code against a Release version of yomm2")
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
 add_subdirectory (src)
+
+# Hybrid builds: set the (different) mode for examples and tests.
+
+if("${YOMM2_BUILD_TYPE}" STREQUAL "DebugRelease")
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+if("${YOMM2_BUILD_TYPE}" STREQUAL "ReleaseDebug")
+  set(CMAKE_BUILD_TYPE "Debug")
+endif()
 
 option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
 if (${YOMM2_ENABLE_EXAMPLES})
