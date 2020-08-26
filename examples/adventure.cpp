@@ -59,7 +59,7 @@ define_method(std::string, fight, (Warrior& x, Creature& y, Axe& z)) {
   return "and cuts it into pieces";
 }
 
-define_method(std::string, fight, (Warrior& x,  Dragon& y, Axe& z)) {
+define_method(std::string, fight, (Warrior& x, Dragon& y, Axe& z)) {
   return "and dies a honorable death";
 }
 

@@ -236,6 +236,6 @@ The library comes with a series of examples:
 * [Adventure: a 3-method example](examples/adventure.cpp)
 
 * [friendship: an example with namespaces, method containers and friend
-  declarations](examples/friendship)
+  declarations](examples/containers)
 
 I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
