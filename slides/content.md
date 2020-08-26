@@ -110,8 +110,6 @@ int main() {
 
 ## AST: Add a Virtual Function?
 
-_...if it needs to be virtual, make it a member function_ ???
-
 ```C++
 struct Node {
     // as before
