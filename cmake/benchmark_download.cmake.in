@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.5)
-project(benchmarkDownload)
+project(benchmark)
 include(ExternalProject)
 
-ExternalProject_Add(benchmark
+ExternalProject_Add(${PROJECT_NAME}
     GIT_REPOSITORY      https://github.com/google/benchmark.git
     GIT_TAG             master
     GIT_PROGRESS        True
-    SOURCE_DIR          "${CMAKE_SOURCE_DIR}/extern/benchmark"
-    BINARY_DIR          "${CMAKE_CURRENT_BINARY_DIR}/benchmark-build"
-    INSTALL_DIR         ${CMAKE_SOURCE_DIR}/extern
+    SOURCE_DIR          "@CMAKE_SOURCE_DIR@/dependencies/${PROJECT_NAME}"
+    BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
+    INSTALL_DIR         @DEPENDENCY_INSTALL_PREFIX@
     CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                         -DCMAKE_BUILD_TYPE=Release
                         -DBENCHMARK_ENABLE_TESTING=OFF

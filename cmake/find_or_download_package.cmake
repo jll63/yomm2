@@ -6,10 +6,13 @@ macro(find_or_download_package PACKAGE)
       "Downloading dependency \"${PACKAGE}\" and building from source."
     )
 
+    set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies)
+
     # Prepare download instructions for dependency
     configure_file(
       ${CMAKE_SOURCE_DIR}/cmake/${PACKAGE}_download.cmake.in
       ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-download/CMakeLists.txt
+      @ONLY
     )
 
     # Download dependency
@@ -36,9 +39,9 @@ macro(find_or_download_package PACKAGE)
     # Update search path and use regular find_package to add dependency
     # TODO Use same directory here as for configure_file up there and inside
     # download instructions!
-    list(
-      APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/extern/lib/cmake/${PACKAGE}"
+
+    find_package(${PACKAGE}
+        REQUIRED NO_DEFAULT_PATH PATHS "${DEPENDENCY_INSTALL_PREFIX}"
     )
-    find_package(${PACKAGE} REQUIRED)
   endif()
 endmacro()
