@@ -1,18 +1,24 @@
-<!-- .slide: style="font-size: 22pt;"> -->
+---
+center: false
+---
 
-# Open Is Good
+## Open Is Good
 
-## yomm2: fast, orthogonal open methods
+<br/><br/>
 
-<br><br>
+YOMM2: Fast, Orthogonal Open (Multi) Methods
 
-Jean-Louis Leroy - jl@leroy.nyc
+<br/><br/>
 
-Bloomberg Engineering
+<small>
+Jean-Louis Leroy - jl@leroy.nyc<br/>
+</small>
 
-===
+# Case Study: AST
 
 ## Case Study: AST
+
+<br/>
 
 ```C++
 struct Node {
@@ -20,11 +26,12 @@ struct Node {
 };
 ```
 
-const, memory management etc elided, code formatted to "slide style"
-
----
+const, memory management, etc, omitted<br/>
+code formatted to fit slide
 
 ## Case Study: AST
+
+<br/>
 
 ```C++
 struct Number : Node {
@@ -38,9 +45,9 @@ struct Number : Node {
 };
 ```
 
----
-
 ## Case Study: AST
+
+<br/>
 
 ```C++
 struct Plus : Node {
@@ -55,9 +62,9 @@ struct Plus : Node {
 };
 ```
 
----
-
 ## Case Study: AST
+
+<br/>
 
 ```C++
 struct Times : Node {
@@ -72,15 +79,16 @@ struct Times : Node {
 };
 ```
 
----
-
 ## Case Study: AST
+
+<br/>
 
 ```C++
 int main() {
     Node* expr =
-        new Times(*new Number(2),
-                  *new Plus(*new Number(3), *new Number(4)));
+        new Times(
+            *new Number(2),
+            *new Plus(*new Number(3), *new Number(4)));
 
     cout << expr->value() << "\n"; // 14
 
@@ -88,25 +96,24 @@ int main() {
 }
 ```
 
----
-
 ## Case Study: AST
+
+<br/>
 
 ```C++
 int main() {
     Node* expr =
-        new Times(*new Number(2),
-                  *new Plus(*new Number(3), *new Number(4)));
+        new Times(
+            *new Number(2),
+            *new Plus(*new Number(3), *new Number(4)));
 
-    cout /* string to RPN */
-        << " = " << expr->value() << "\n";
+    cout << /* RPN */
+         << " = " << expr->value() << "\n";
     // 2 3 4 * + = 14
 
     return 0;
 }
 ```
-
----
 
 ## AST: Add a Virtual Function?
 
@@ -129,8 +136,6 @@ struct Plus : Node {
 
 banana -> gorilla -> jungle
 
----
-
 ## AST: Type Switch?
 
 ```C++
@@ -149,8 +154,6 @@ string toRPN(Node& node) {
 ```
 needs modification each time a new Node subtype is added
 
----
-
 ## AST: Visitor?
 
 ```C++
@@ -166,8 +169,6 @@ struct Node {
     virtual void visit(Visitor& viz) = 0;
 };
 ```
-
----
 
 ## AST: Visitor?
 
@@ -187,8 +188,6 @@ struct Times : Node {
 ```
 
 
----
-
 ## AST: Visitor?
 
 ```C++
@@ -207,10 +206,6 @@ struct RPNVisitor : Node::Visitor {
 };
 ```
 
-ugh, yuck!
-
----
-
 ## AST: Visitor?
 
 ```C++
@@ -222,11 +217,8 @@ string toRPN(Node& node) {
 }
 ```
 
-my, that was a lot of work
-
-and, what does it even gain us?
-
----
+* lot of work
+* now it's difficult to add new types
 
 ## AST: Function Table?
 
@@ -238,8 +230,6 @@ string toRPN(Node& node) {
   return RPNformatters[typeid(node)](node);
 }
 ```
-
----
 
 ## AST: Function Table?
 
@@ -261,27 +251,29 @@ Init init;
 
 not bad, actually
 
-===
+# The Expression Problem
 
 ## The Expression Problem
 
-behaviors += types
+<br/><br/>
 
-types += behavior
+### behaviors += types
 
----
+### types += behaviors
 
 ## Multi-Layer Architectures
 
----
+<br/><br/>
 
-## presentation
----
-## domain
----
-## persistence
+### presentation
+<hr/>
+### domain
+<hr/>
+### persistence
 
----
+## Multi-Layer Architectures
+
+<br/>
 
 * presentation: PersonDlg, CriminalCaseDlg
 
@@ -291,16 +283,17 @@ types += behavior
 
 * cross-cutting concerns
 
-===
-
-# yomm2
-
 # Open Methods
 
+## Open Methods
 
----
+<br/><br/>
 
-## AST: Open Methods
+* free virtual functions
+
+* types += behaviors
+
+## AST
 
 ```C++
 #include <yorel/yomm2/cute.hpp>
@@ -318,10 +311,7 @@ int main() {
 
 (the boring part)
 
-
----
-
-## AST: Open Methods
+## AST
 
 ```C++
 using yorel::yomm2::virtual_;
@@ -339,20 +329,18 @@ define_method(string, toRPN, (Plus& expr)) {
 // same for Times
 ```
 
-call it like an ordinary function:
+<small>call it like an ordinary function:</small>
 
 ```
     cout << toRPN(expr) << " = " << expr->value() << "\n";
     // 2 3 4 * + = 14
 ```
 
----
-
 ## AST: what about value?
 
-* `value` in the node hierarchy screams interpreter
+* `value` in the node hierarchy => interpreter
 
-* the AST classes should _only_ represent the tree
+* AST classes should _only_ represent the tree
 
 ```C++
 declare_method(int, value, (virtual_<Node&>));
@@ -370,13 +358,7 @@ define_method(int, value, (Times& expr)) {
 }
 ```
 
----
-
-## Multiple Dispatch?
-
-Yes.
-
----
+# Multiple Dispatch
 
 ## Occasionally Useful
 
@@ -394,11 +376,9 @@ fight(Human, Dragon, Hands)    -> you just killed a dragon
                                   incredible isn't it?
 ```
 
----
-
 ## Syntax
 
-Just use `virtual_<>` on several arguments:
+use `virtual_<>` on multiple arguments:
 
 ```C++
 declare_method(string, fight,
@@ -417,9 +397,9 @@ define_method(string, fight,
 }
 ```
 
----
-
 ## Selecting the right specialization
+
+<br/>
 
 * works just like selecting from set of overloads (but at runtime!)
 
@@ -427,13 +407,17 @@ define_method(string, fight,
 
 * ambiguities can arise
 
----
-
 ## `next`
 
 calls the next most specific override
 
 ```c++
+register_class(Animal);
+register_class(Dog, Animal);
+register_class(Bulldog, Dog);
+
+declare_method(std::string, kick, (virtual_<Animal&>));
+
 define_method(string, kick, (Dog& dog)) {
   return "bark";
 }
@@ -442,8 +426,6 @@ define_method(string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
 }
 ```
-
----
 
 ## `next`
 
@@ -463,21 +445,19 @@ define_method(void, inspect, (Car& v, StateInspector& i)) {
 }
 ```
 
-===
+# Is This OOP?
 
 ## Is This OOP?
 
-* brief history of OOP: Simula, Smalltalk, C++/Java/D/...
+* Simula, Smalltalk, C++/Java/D/...:<br/>message-receiver
 
-* CLOS: not objects talking to each other a la Smalltalk
+* CLOS: rules
 
 * algorithms retake the front stage
 
 * no unnecessary breach of encapsulation
 
-===
-
-## Inside yomm2
+# Inside yomm2
 
 * purely in C++17 (no extra tooling)
 
@@ -488,22 +468,18 @@ define_method(void, inspect, (Car& v, StateInspector& i)) {
 * object -> dispatch data?
   * perfect integer hash of &type_info
 
----
-
 ## A Payroll Application
 
 * _Role_
-  * Employee
-    * Manager
-  * Founder
-* _Expense (X)_
-  * Cab, Jet
-  * _Public_
-    * Bus, Train
+    * Employee
+        * Manager
+    * Founder
+  * _Expense (X)_
+      * Cab, Jet
+      * _Public_
+          * Bus, Train
 
----
-
-## the `pay` (Uni-) Method
+## the `pay` Mono- Method
 
 ```C++`
 declare_method(double, pay, (virtual_<Employee&>));
@@ -516,8 +492,6 @@ define_method(double, pay, (Manager& manager)) {
   return next(manager) + 2000;
 }
 ```
-
----
 
 ## declare_method
 
@@ -540,8 +514,6 @@ _yOMM2_method::init_method init;
 }
 ```
 
----
-
 ## declare_method
 
 ```C++
@@ -561,8 +533,6 @@ pay(Employee & a0) {
   return pf(a0);
 };
 ```
-
----
 
 ## define_method
 
@@ -584,8 +554,6 @@ using _yOMM2_return_t = _yOMM2_method::return_type;
 _yOMM2_return_t (*next)(Employee &);
 ```
 
----
-
 ## define_method
 
 ```C++
@@ -606,8 +574,6 @@ double YoMm2_nS_12::_yOMM2_spec::body(Employee &)
 { return 3000; }
 ```
 
----
-
 ## update_methods
 
 * process the info registered by static ctors
@@ -619,9 +585,7 @@ double YoMm2_nS_12::_yOMM2_spec::body(Employee &)
 * find a perfect hash function over relevant type_info's
   * H(x) = (M * x) >> S
 
----
-
-## Dispatching a Uni-Method
+## Dispatching a Mono-Method
 
 * pretty much like virtual member functions
 
@@ -629,9 +593,7 @@ double YoMm2_nS_12::_yOMM2_spec::body(Employee &)
 
 * only it is not at a fixed offset in the method table
 
----
-
-## Dispatching a 1-Method
+## Dispatching a Mono-Method
 
 during `update_methods`
 
@@ -651,9 +613,7 @@ mtbls[ H(&typeid(Manager&)) ] = {
 };
 ```
 
----
-
-## Dispatching a 1-Method
+## Dispatching a Mono-Method
 
 ```C++
 pay(bill)
@@ -664,8 +624,6 @@ mtbls[ H(&typeid(bill)) ]          // mtable for type
   [ method<pay>::slots_strides.i ] // pointer to fun
 (bill)                             // call
 ```
-
----
 
 ## Performance?
 
@@ -686,8 +644,6 @@ movq	(%rax,%rsi,8), %rax                    ; method table
 jmpq	*(%rax,%rdx,8)                         ; call
 ```
 
----
-
 ## `approve` Multi-Method
 
 ```C++
@@ -707,8 +663,6 @@ define_method(bool, approve,
   (Founder& r, Expense& e, double amount)) { return true; }
 ```
 
----
-
 ## Dispatching a Multi-Method
 
 * it's a little more complicated
@@ -723,8 +677,6 @@ define_method(bool, approve,
 
 * work in terms of class _groups_, not classes
 
----
-
 ## Dispatching a Multi-Method
 
 |          | Expense+Jet  | Public+Bus+Train     | Cab |
@@ -736,15 +688,11 @@ define_method(bool, approve,
 
 (column major)
 
----
-
 ## Building the Compressed Dispatch Table
 
 * [Fast Algorithms for Compressed Multi-Method Dispatch, Eric Amiel, Eric Dujardin, Eric Simon, 1996](https://hal.inria.fr/inria-00073721/document)
 
 * [Open Multi-Methods for C++11, Part 3 - Inside Yomm11: Data Structures and Algorithms, Jean-Louis Leroy, 2013](https://www.codeproject.com/Articles/859492/Open-Multi-Methods-for-Cplusplus-Part-Inside-Yomm)
-
----
 
 ## Dispatching a Multi-Method
 
@@ -765,8 +713,6 @@ mtbls[ H(&typeid(Public))  ] = { 1 }; // also for Bus, Train
 mtbls[ H(&typeid(Cab))     ] = { 2 };
 ```
 
----
-
 ## Dispatching a Multi-Method
 
 ```C++
@@ -785,11 +731,7 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 (bill, ticket, 5000)             // call
 ```
 
----
-
 ## Benchmarks
-
-<!-- .slide: style="font-size: 22pt;"> -->
 
 |                     |          | gcc6 | clang6 |
 |---------------------|----------|------|--------|
@@ -800,55 +742,32 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 | virtual function    | 1-method | 19%  | 17%    |
 | double dispatch     | 2-method | 40%  | 33%    |
 
-===
-
-## yomm2 vs other implementations
+## yomm2 vs other systems
 
 * Pirkelbauer - Solodkyi - Stroustrup (PSS)
-
 * yomm11
-
-* (Cmm)
-
-* (Loki)
-
----
-
-<!-- .slide: style="font-size: 22pt;"> -->
+* Cmm
+* Loki / Modern C++
 
 ## yomm2 vs PSS
 
 * Solodkyi's  papers on open methods etc:
-  * [Open Multi-Methods for C++](http://www.stroustrup.com/multimethods.pdf)
-  * [Design and Evaluation of C++ Open Multi-Methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
-  * [Simplifying the Analysis of C++ Programs](http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf)
-
-* yomm2 overrides are not available for overloading
-
-* yomm2 overrides cannot specialize multiple methods
-
+    * [Open Multi-Methods for C++](http://www.stroustrup.com/multimethods.pdf)
+    * [Design and Evaluation of C++ Open Multi-Methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
+    * [Simplifying the Analysis of C++ Programs](http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf)
 * PSS attempts harder to resolve ambiguities
-
-* yomm2 supports smart pointers
-
-* yomm2 supports `next`
-
----
+* yomm2 overrides not visible as overloads, cannot specialize multiple methods
+* yomm2 supports smart pointers, `next`
 
 ## yomm2 vs yomm11
 
-* no need to instrument classes to get speed
+* no need to instrument classes
 
-* methods are ordinary functions (overload, etc)
+* methods are ordinary functions
 
-* seamless overriding across namespaces
-
-===
-
-## links
+## QA Time
 
 * github: https://github.com/jll63/yomm2
-
 * contact: Jean-Louis Leroy - jl@leroy.nyc
 
 <img src="qr.png" />

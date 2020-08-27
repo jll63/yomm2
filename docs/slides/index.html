@@ -1,284 +1,344 @@
 <!DOCTYPE html>
-<!-- saved from url=(0022)http://localhost:8000/ -->
-<html class=" js no-mobile desktop no-ie chrome chrome67 root-section w-1875 gt-240 gt-320 gt-480 gt-640 gt-768 gt-800 gt-1024 gt-1280 gt-1440 gt-1680 lt-1920 no-portrait landscape gradient rgba opacity textshadow multiplebgs boxshadow borderimage borderradius cssreflections csstransforms csstransitions no-touch no-retina fontface domloaded" id="index-page"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-	
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <title></title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@3.9.2//css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js@3.9.2//css/theme/beige.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'https://unpkg.com/reveal.js@3.9.2//css/print/pdf.css' : 'https://unpkg.com/reveal.js@3.9.2//css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="https://unpkg.com/reveal.js@3.9.2//lib/js/html5shiv.js"></script>
+  <![endif]-->
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
 
-	<title>Open Is Good</title>
 
-	<link rel="stylesheet" href="./index_files/reveal.css">
-	<link rel="stylesheet" href="./index_files/black.css">
+<section id="open-is-good" class="slide level2">
+<h2>Open Is Good</h2>
+<p><br/><br/></p>
+<p>YOMM2: Fast, Orthogonal Open (Multi) Methods</p>
+<p><br/><br/></p>
+<p><small> Jean-Louis Leroy - jl@leroy.nyc<br/> </small></p>
+</section>
+<section><section id="case-study-ast" class="titleslide slide level1"><h1>Case Study: AST</h1></section><section id="case-study-ast-1" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Node {
+    <span class="kw">virtual</span> <span class="dt">double</span> value() = <span class="dv">0</span>;
+};</code></pre></div>
+<p>const, memory management, etc, omitted<br/> code formatted to fit slide</p>
+</section><section id="case-study-ast-2" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Number : Node {
+  Number(<span class="dt">double</span> value) : val(value ) { }
 
-	<!-- Theme used for syntax highlighting of code -->
-	<link rel="stylesheet" href="./index_files/zenburn.css">
-
-	<!-- Printing and PDF exports -->
-	<script>
-	  var link = document.createElement( 'link' );
-	  link.rel = 'stylesheet';
-	  link.type = 'text/css';
-	  link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
-	  document.getElementsByTagName( 'head' )[0].appendChild( link );
-	</script><link rel="stylesheet" type="text/css" href="./index_files/paper.css"><script type="text/javascript" src="./index_files/marked.js"></script><script type="text/javascript" src="./index_files/markdown.js"></script>
-  <script type="text/javascript" src="./index_files/notes.js"></script><script type="text/javascript" src="./index_files/highlight.js"></script><style type="text/css">:root topadblock, :root td[valign="top"] > .mainmenu[style="padding:10px 0 0 0 !important;"], :root input[onclick^="window.open('http://www.friendlyduck.com/"], :root img[alt^="Fuckbook"], :root iframe[src^="http://cdn1.adexprt.com/"], :root iframe[src^="http://ad.yieldmanager.com/"], :root div[id^="zergnet-widget"], :root div[id^="mainads"], :root div[id^="dmRosAdWrapper"], :root div[id^="div_ad_stack_"], :root iframe[id^="google_ads_iframe"], :root div[id^="crt-"][style], :root div[id^="cns_ads_"], :root div[id^="ads300_250-widget"], :root iframe[src^="http://cdn2.adexprt.com/"], :root div[id^="ads300_100-widget"], :root div[id^="ads250_250-widget"], :root div[id^="adrotate_widgets-"], :root div[id^="adfox_"], :root div[id^="ad_script_"], :root div[id^="ad-server-"], :root div[id^="acm-ad-tag-"], :root div[id^="MarketGid"], :root div[id^="ADV-SLOT-"], :root div[data-native_ad], :root div[class^="proadszone-"], :root div[class^="local-feed-banner-ads"], :root div[class^="block-openx-"], :root div[class^="ads-partner-"], :root div[class^="ad_position_"], :root div[class^="ad_border_"], :root div[class^="Ad__container"], :root div[class^="Ad__bigBox"], :root div[id^="div-adtech-ad-"], :root div[class*="_AdInArticle_"], :root div[class$="dealnews"] > .dealnews, :root div > [class][onclick*=".updateAnalyticsEvents"], :root bottomadblock, :root aside[itemtype="https://schema.org/WPAdBlock"], :root aside[id^="div-gpt-ad"], :root div[id^="ad-cid-"], :root aside[id^="advads_ad_widget-"], :root aside[id^="adrotate_widgets-"], :root a[target="_blank"][href^="http://api.taboola.com/"], :root a[style="display:block;width:300px;min-height:250px"][href^="http://li.cnet.com/click?"], :root a[onmousedown^="this.href='https://paid.outbrain.com/network/redir?"][target="_blank"] + .ob_source, :root a[onmousedown^="this.href='http://staffpicks.outbrain.com/network/redir?"][target="_blank"] + .ob_source, :root a[onmousedown^="this.href='http://staffpicks.outbrain.com/network/redir?"][target="_blank"], :root a[onmousedown^="this.href='http://paid.outbrain.com/network/redir?"][target="_blank"] + .ob_source, :root a[onmousedown^="this.href='/wp-content/embed-ad-content/"], :root a[href^="https://www.share-online.biz/affiliate/"], :root a[href^="https://www.oboom.com/ad/"], :root a[href^="https://www.firstload.com/affiliate/"], :root a[href^="https://www.financeads.net/tc.php?"], :root a[href^="https://www.camyou.com/?cam="][href*="&track="], :root a[href^="https://www.camsoda.com/enter.php?id="], :root a[href^="https://www.bebi.com"], :root a[href^="https://www.adskeeper.co.uk/"], :root a[href^="https://windscribe.com/promo/"], :root a[href^="https://trust.zone/go/r.php?RID="], :root a[href^="https://tracking.truthfinder.com/?a="], :root a[href^="https://track.clickmoi.xyz/"], :root div[class^="gemini-ad"], :root a[href^="https://torguard.net/aff.php"], :root a[href^="https://t.mobtya.com/"], :root a[href^="https://syndication.exoclick.com/splash.php?"], :root div[id^="YFBMSN"], :root a[href^="https://secure.eveonline.com/ft/?aid="], :root a[href^="https://redirect.ero-advertising.com/"], :root a[href^="https://pubads.g.doubleclick.net/"], :root div[id^="proadszone-"], :root a[href^="https://mk-ads.com/"], :root a[href^="https://members.linkifier.com/public/affiliateLanding?refCode="], :root a[href^="https://go.stripchat.com/"][href*="&campaignId="], :root div[class^="BlockAdvert-"], :root a[href^="https://go.onclasrv.com/"], :root a[href^="https://go.ad2up.com/"], :root a[href^="https://farm.plista.com/pets"], :root a[href^="https://evaporate.pw/"], :root a[href^="https://click.plista.com/pets"], :root a[href^="https://chaturbate.com/affiliates/"], :root a[href^="https://www.googleadservices.com/pagead/aclk?"], :root a[href^="https://awentw.com/"], :root a[href^="https://servedbyadbutler.com/"], :root a[href^="https://affiliates.bet-at-home.com/processing/"], :root a[href^="https://adhealers.com/"], :root a[href^="https://ad.atdmt.com/"], :root a[href^="http://xtgem.com/click?"], :root a[href^="http://wxdownloadmanager.com/dl/"], :root a[href^="http://www.zergnet.com/i/"], :root a[href^="http://www.usearchmedia.com/signup?"], :root a[href^="http://www.torntv-downloader.com/"], :root a[href^="http://www.tirerack.com/affiliates/"], :root a[href^="http://www.text-link-ads.com/"], :root div[id^="div_openx_ad_"], :root a[href^="http://www.streamate.com/exports/"], :root a[href^="http://www.sfippa.com/"], :root a[href^="http://www.xmediaserve.com/"], :root a[href^="http://www.sex.com/videos/?utm_"], :root a[href^="http://www.sex.com/?utm_"], :root a[onmousedown^="this.href='http://paid.outbrain.com/network/redir?"][target="_blank"], :root a[href^="http://www.roboform.com/php/land.php"], :root a[href^="http://www.quick-torrent.com/download.html?aff"], :root a[href^="http://www.pinkvisualgames.com/?revid="], :root a[href^="http://www.paddypower.com/?AFF_ID="], :root div[data-spotim-slot], :root a[href^="http://www.mysuperpharm.com/"], :root a[href^="http://www.myfreepaysite.com/sfw_int.php?aid"], :root a[href^="http://www.myfreepaysite.com/sfw.php?aid"], :root a[href^="http://www.myfreecams.com/?co_id="][href*="&track="], :root a[href^="http://www.moneyducks.com/"], :root a[href^="http://www.menaon.com/installs/"], :root a[href^="http://www.securegfm.com/"], :root a[href^="http://www.liversely.net/"], :root a[href^="http://www.linkbucks.com/referral/"], :root a[href^="http://www.ireel.com/signup?ref"], :root a[href^="http://www.incredimail.com/?id="], :root a[href^="http://www.idownloadplay.com/"], :root a[href^="http://www.hitcpm.com/"], :root a[href^="http://www.greenmangaming.com/?tap_a="], :root a[href^="http://www.getyourguide.com/?partner_id="], :root a[href^="http://www.gamebookers.com/cgi-bin/intro.cgi?"], :root a[href^="http://www.friendlyquacks.com/"], :root a[href^="http://www.fpcTraffic2.com/blind/in.cgi?"], :root a[href^="http://www.fonts.com/BannerScript/"], :root a[href^="http://www.fleshlight.com/"], :root a[href^="http://www.flashx.tv/downloadthis"], :root a[href^="http://www.firstload.de/affiliate/"], :root a[href^="http://www.fducks.com/"], :root a[href^="http://www.faceporn.net/free?"], :root a[href^="http://www.epicgameads.com/"], :root a[href^="http://www.easydownloadnow.com/"], :root a[href^="http://www.duckssolutions.com/"], :root a[href^="http://www.duckcash.eu/"], :root a[href^="http://www.drowle.com/"], :root a[onmousedown^="this.href='https://paid.outbrain.com/network/redir?"][target="_blank"], :root a[href^="http://www.downloadweb.org/"], :root a[href^="http://www.downloadthesefiles.com/"], :root a[href^="http://www.installads.net/"], :root a[href^="http://www.download-provider.org/"], :root a[href^="http://www.down1oads.com/"], :root iframe[id^="google_ads_frame"], :root a[href^="http://www.dealcent.com/register.php?affid="], :root a[href^="http://www.clkads.com/adServe/"], :root a[href^="http://www.clickansave.net/"], :root a[href^="http://www.cash-duck.com/"], :root a[href^="http://www.bet365.com/"][href*="&affiliate="], :root a[href^="http://www.badoink.com/go.php?"], :root a[href^="http://ad-emea.doubleclick.net/"], :root a[href^="http://www.adskeeper.co.uk/"], :root a[href^="http://www.ragazzeinvendita.com/?rcid="], :root a[href^="http://www.adbrite.com/mb/commerce/purchase_form.php?"], :root a[href^="http://www.brightwheel.info/"], :root a[href^="http://www.1clickdownloader.com/"], :root a[href^="http://www.123-reg.co.uk/affiliate2.cgi"], :root div[id^="lazyad-"], :root a[href^="http://wopertific.info/"], :root a[href^="http://see-work.info/"], :root a[href^="http://prousa.work/"], :root a[href^="http://websitedhoome.com/"], :root a[href^="http://uploaded.net/ref/"], :root a[href^="http://www.graboid.com/affiliates/"], :root a[href^="http://tracking.toroadvertising.com/"], :root a[data-url^="http://paid.outbrain.com/network/redir?"], :root a[href^="http://www.bluehost.com/track/"] > img, :root a[data-redirect^="http://paid.outbrain.com/network/redir?"], :root a[href^="http://track.affiliatenetwork.co.za/"], :root a[href^="http://track.adform.net/"], :root a[href^="http://t.wowtrk.com/"], :root a[href^="http://adprovider.adlure.net/"], :root a[href^="http://tezfiles.com/pr/"], :root .mw > #rcnt > #center_col > #taw > .c, :root a[href^="http://taboola-"][href*="/redirect.php?app.type="], :root a[href^="http://t.mdn2015x3.com/"], :root a[href^="http://clickandjoinyourgirl.com/"], :root a[href^="http://webtrackerplus.com/"], :root a[href^="http://b.bestcompleteusa.info/"], :root a[href^="http://t.mdn2015x2.com/"], :root a[href^="http://www.seekbang.com/cs/"], :root a[href^="http://bluehost.com/track/"], :root a[href^="http://syndication.exoclick.com/"], :root a[href^="http://steel.starflavor.bid/"], :root a[href^="http://sharesuper.info/"], :root a[href^="http://getlinksinaseconds.com/"], :root a[href^="http://secure.signup-way.com/"], :root a[href*=".clkcln.com/"], :root a[href^="http://secure.signup-page.com/"], :root [onclick^="window.open('http://adultfriendfinder.com/search/"], :root a[href^="http://secure.hostgator.com/~affiliat/"], :root a[href^="http://ryushare.com/affiliate.python"], :root a[href^="http://record.commissionking.com/"], :root div[class*="-storyBodyAd-"], :root a[href^="http://record.betsafe.com/"], :root a[href^="http://gca.sh/user/register?ref="], :root a[href^="http://promos.bwin.com/"], :root a[href^="http://prochina.link/"], :root a[href^="http://z1.zedo.com/"], :root a[href^="http://pokershibes.com/index.php?ref="], :root .ra[width="30%"][align="right"] + table[width="70%"][cellpadding="0"], :root a[href^="http://searchtabnew.com/"], :root a[href^="http://pan.adraccoon.com?"], :root a[href^="http://n217adserv.com/"], :root a[href^="http://mojofun.info/"], :root a[href^="http://mmo123.co/"], :root a[href^="http://media.paddypower.com/redirect.aspx?"], :root a[href^="http://www.bitlord.me/share/"], :root a[href^="http://www.socialsex.com/"], :root a[href^="http://www.affbuzzads.com/affiliate/"], :root a[href*=".qertewrt.com/"], :root a[href^="http://lp.ncdownloader.com/"], :root #rhs_block .xpdopen > ._OKe > div > .mod > ._yYf, :root a[href^="http://lp.ezdownloadpro.info/"], :root a[href^="https://ads.ad4game.com/"], :root a[href*="/adServe/banners?"], :root a[href^="http://liversely.com/"], :root a[href^="http://latestdownloads.net/download.php?"], :root a[href^="http://keep2share.cc/pr/"], :root a[href^="http://k2s.cc/pr/"], :root a[href^="http://k2s.cc/code/"], :root a[href^="http://www.liutilities.com/"], :root a[href^="http://www.dl-provider.com/search/"], :root a[href^="http://tracking.deltamediallc.com/"], :root a[href*=".bang.com/"][href*="&aff="], :root a[href^="http://join3.bannedsextapes.com/track/"], :root a[href^="http://green.trafficinvest.com/"], :root a[href^="http://jobitem.org/"], :root a[href^="//adbit.co/?a=Advertise&"], :root a[href^="http://istri.it/?"], :root a[href^="https://dltags.com/"], :root a[href^="http://onclickads.net/"], :root a[href^="http://www.terraclicks.com/"], :root a[href^="http://www.coinducks.com/"], :root a[href^="http://internalredirect.site/"], :root a[href^="http://cdn.adstract.com/"], :root a[href^="http://hyperlinksecure.com/go/"], :root a[href^="http://pubads.g.doubleclick.net/"], :root a[href^="http://www.myvpn.pro/"], :root a[href^="http://hyperies.info/"], :root a[href^="http://hpn.houzz.com/"], :root a[href^="http://greensmoke.com/"], :root a[href^="http://farm.plista.com/pets"], :root a[href^="http://mo8mwxi1.com/"], :root div[class^="ResponsiveAd-"], :root a[href^="http://www.revenuehits.com/"], :root a[href^="http://go.seomojo.com/tracking202/"], :root div[id^="block-views-topheader-ad-block-"], :root a[href^="http://go.oclaserver.com/"], :root .__y_elastic .__y_item, :root a[href^="http://go.mobisla.com/"], :root div[id^="advads-"], :root a[href^="http://www.ringtonematcher.com/"], :root a[href^="http://www.adshost2.com/"], :root a[href^="//srv.buysellads.com/"], :root a[href^="http://g1.v.fwmrm.net/ad/"], :root a[href^="http://us.marketgid.com"], :root A[href^="https://www.friendlyduck.com/AF_"], :root a[href^="http://imads.integral-marketing.com/"], :root a[href^="http://freesoftwarelive.com/"], :root a[href^="http://adtrackone.eu/"], :root a[href^="http://finaljuyu.com/"], :root a[href^="http://tour.affbuzzads.com/"], :root a[href^="http://fileupnow.rocks/"], :root a[href^="http://fileloadr.com/"], :root a[href^="http://extra.bet365.com/"][href*="?affiliate="], :root a[href^="http://elitefuckbook.com/"], :root div[id^="ads300_600-widget"], :root div[class^="Ad__adContainer"], :root a[href^="http://web.adblade.com/"], :root a[href^="http://elite-sex-finder.com/?"], :root a[href^="http://webgirlz.online/landing/"], :root a[href^="http://eclkmpsa.com/"], :root a[href^="http://dethao.com/"], :root a[href^="http://ddownload39.club/"], :root a[href^="http://data.committeemenencyclopedicrepertory.info/"], :root a[href^="https://understandsolar.com/signup/?lead_source="][href*="&tracking_code="], :root a[href^="http://hdplugin.flashplayer-updates.com/"], :root a[href^="http://data.ad.yieldmanager.net/"], :root #content > #center > .dose > .dosesingle, :root a[href^="http://campaign.bharatmatrimony.com/track/"], :root a[href^="http://d2.zedo.com/"], :root a[href^="http://contractallsticker.net/"], :root a[href^="http://codec.codecm.com/"], :root div[id^="ads120_600-widget"], :root a[href^="http://clk.directrev.com/"], :root a[href^="http://refer.webhostingbuzz.com/"], :root a[href^="https://paid.outbrain.com/network/redir?"], :root a[href^="http://clickserv.sitescout.com/"], :root a[href*=".intab.fun/"], :root a[href^="http://clicks.guamwnvgashbkashawhgkhahshmashcas.pw/"], :root a[href^="http://www.downloadplayer1.com/"], :root a[href^="http://clicks.binarypromos.com/"], :root a[href^="https://dediseedbox.com/clients/aff.php?"], :root a[href^="http://www.wantstraffic.com/"], :root .lads[width="100%"][style="background:#FFF8DD"], :root a[href^="http://databass.info/"], :root a[href^="http://www.urmediazone.com/signup"], :root a[href^="http://ads.pheedo.com/"], :root a[href^="http://click.plista.com/pets"], :root a[href^="http://chaturbate.com/affiliates/"], :root a[href^="http://www.friendlyadvertisements.com/"], :root a[href^="http://cdn3.adbrau.com/"], :root a[href^="http://get.slickvpn.com/"], :root a[href*="/adrotate-out.php?"], :root a[href^="http://track.trkvluum.com/"], :root a[href^="http://2pxg8bcf.top/"], :root a[href^="http://cpaway.afftrack.com/"], :root a[href^="http://cdn.adsrvmedia.net/"], :root a[href^="http://360ads.go2cloud.org/"], :root a[href^="http://dftrck.com/"], :root a[href^="http://casino-x.com/?partner"], :root a[href^="http://campeeks.com/"][href*="&utm_"], :root a[href^="http://www.on2url.com/app/adtrack.asp"], :root #\5f _nq__hh[style="display:block!important"], :root a[href^="http://guideways.info/"], :root a[href^="http://campaign.bharatmatrimony.com/cbstrack/"], :root a[href^="http://ads.expekt.com/affiliates/"], :root a[href^="http://callville.xyz/"], :root div[itemtype="http://schema.org/WPAdBlock"], :root a[href^="http://xads.zedo.com/"], :root a[href^="http://c.jumia.io/"], :root a[href^="http://down1oads.com/"], :root a[href^="http://buysellads.com/"], :root a[href^="http://serve.williamhill.com/promoRedirect?"], :root a[href^="http://feedads.g.doubleclick.net/"], :root a[href^="http://bs.serving-sys.com/"], :root a[href^="http://bonusfapturbo.nmvsite.com/"], :root a[href^="http://betahit.click/"], :root a[href^="http://cinema.friendscout24.de?"], :root [lazy-ad="lefttop_banner"], :root a[href^="http://servicegetbook.net/"], :root a[href^="https://trklvs.com/"], :root a[href^="http://bestorican.com/"], :root a[href^="http://bcp.crwdcntrl.net/"], :root a[href^="http://bc.vc/?r="], :root a[href^="http://banners.victor.com/processing/"], :root a[href^="http://install.securewebsiteaccess.com/"], :root .inlineNewsletterSubscription + .inlineNewsletterSubscription div[class$="_item"], :root a[href^="http://clkmon.com/adServe/"], :root a[href^="http://www.torntvdl.com/"], :root a[href^="http://at.atwola.com/"], :root a[href^="//88d7b6aa44fb8eb.com/"], :root a[href^="http://api.ringtonematcher.com/"], :root a[href^="http://www.fbooksluts.com/"], :root a[href^="http://www.cdjapan.co.jp/aff/click.cgi/"], :root a[href^="http://c.actiondesk.com/"], :root div[id^="ad-position-"], :root a[href^="http://affiliate.glbtracker.com/"], :root a[href^="http://anonymous-net.com/"], :root a[href^="https://www.dsct1.com/"], :root a[href^="http://amzn.to/"] > img[src^="data"], :root .icons-rss-feed + .icons-rss-feed div[class$="_item"], :root a[href^="http://aflrm.com/"], :root a[href^="http://affiliates.pinnaclesports.com/processing/"], :root a[href^="http://affiliate.godaddy.com/"], :root a[href^="http://partner.sbaffiliates.com/"], :root a[href^="http://affiliate.coral.co.uk/processing/"], :root a[href^="http://aff.ironsocket.com/"], :root a[href^="http://zevera.com/afi.html"], :root a[href^="http://adsrv.keycaptcha.com"], :root a[href^="http://adserving.unibet.com/"], :root a[href^="https://bs.serving-sys.com"], :root a[href^="https://atomidownload.com/"], :root a[href^="http://adtransfer.net/"], :root a[href^="http://adserver.itsfogo.com/"], :root iframe[src^="http://static.mozo.com.au/strips/"], :root a[href^="https://www.spyoff.com/"], :root AD-TRIPLE-BOX, :root a[href^="http://ads2.williamhill.com/redirect.aspx?"], :root a[href^="https://secure.adnxs.com/clktrb?"], :root a[href^="http://adserver.adtechus.com/"], :root .__ywvr .__y_item, :root a[href^="http://download-performance.com/"], :root #\5f _mom_ad_12, :root a[href^="http://ads.integral-marketing.com/"], :root a[href^="http://adserver.adtech.de/"], :root a[href^="http://ads.betfair.com/redirect.aspx?"], :root a[href^="http://ads.affbuzzads.com/"], :root a[href^="http://online.ladbrokes.com/promoRedirect?"], :root a[href^="http://ads.ad-center.com/"], :root a[href^="http://admingame.info/"], :root div[id^="q1-adset-"], :root a[href^="http://adfarm.mediaplex.com/"], :root #center_col > #taw > #tvcap > .rscontainer, :root a[href^="http://adf.ly/?id="], :root a[href^="http://goldmoney.com/?gmrefcode="], :root a[href^="http://adexprt.me/"], :root a[href^="http://www.sex.com/pics/?utm_"], :root a[href^="http://engine.newsmaxfeednetwork.com/"], :root a[href^="http://www.plus500.com/?id="], :root #flowplayer > div[style="z-index: 208; position: absolute; width: 300px; height: 275px; left: 222.5px; top: 85px;"], :root a[href^="http://ad.yieldmanager.com/"], :root a[href^="http://ad.doubleclick.net/"], :root a[href^="http://abc2.mobile-10.com/"], :root a[href^="http://NowDownloadAll.com"], :root a[href^="http://www.ducksnetwork.com/"], :root a[href^="http://3wr110.net/"], :root a[href^="http://www5.smartadserver.com/call/pubjumpi/"], :root a[href^="//ads.ad-center.com/"], :root a[href^="http://1phads.com/"], :root a[href^="http://adserving.liveuniversenetwork.com/"], :root a[href^="https://chaturbate.com/in/?track="], :root a[href^="http://www1.clickdownloader.com/"], :root a[href^="//tracking.content-recommendation.net/"][href*="/sponsored/click.html?"], :root #center_col > #resultStats + div[style="border:1px solid #dedede;margin-bottom:11px;padding:5px 7px 5px 6px"], :root a[href^="https://www.secureupload.eu/suprerefid="], :root a[href^="http://yads.zedo.com/"], :root #mbEnd[cellspacing="0"][cellpadding="0"], :root a[href^="http://adclick.g.doubleclick.net/"], :root a[href^="//t.MtagMonetizationA.com/"], :root a[href^="//nlkdom.com/"], :root #MAIN.ShowTopic > .ad, :root a[href^="http://findersocket.com/"], :root a[href^="http://cdn3.adexprts.com/"], :root a[href^="//jsmptjmp.com/"], :root a[href^="//go.onclasrv.com/"], :root a[href^="http://games.ucoz.ru/"][target="_blank"], :root [id*="ScriptRoot"], :root div[id^="advads_"], :root a[href^="//db52cc91beabf7e8.com/"], :root #\5f _mom_ad_2, :root a[href^="http://ads.activtrades.com/"], :root a[href^="//api.ad-goi.com/"], :root a[href^="http://www.sexgangsters.com/?pid="], :root a[href^="http://www.amazon.co.uk/exec/obidos/external-search?"], :root div[id^="google_ads_iframe_"], :root a[href^="http://www.pheedo.com/"], :root a[href^="http://www.affiliates1128.com/processing/"], :root #mn div[style="position:relative"] > #center_col > ._Ak, :root [ad-id^="googlead"], :root a[href^="http://www.afgr3.com/"], :root div[id^="google_dfp_"], :root a[href^="//5e1fcb75b6d662d.com/"], :root #content > #right > .dose > .dosesingle, :root a[href^="http://9nl.es/"], :root #center_col > #resultStats + div + #res + #tads, :root a[href^="//40ceexln7929.com/"], :root a[href^="//00ae8b5a9c1d597.com/"], :root a[href^="http://www.firstclass-download.com/"], :root a[href*=".trust.zone"], :root a[href^="http://adrunnr.com/"], :root div[id^="div-gpt-ad"], :root a[href^="http://fusionads.net"], :root a[href^=" http://www.sex.com/"][href*="&utm_"], :root a[href^="https://keep2share.cc/pr/"], :root [onclick*="content.ad/"], :root div[class^="awpcp-random-ads"], :root a[href^="http://galleries.securewebsiteaccess.com/"], :root a[href^=" http://n47adshostnet.com/"], :root a[href^="http://linksnappy.com/?ref="], :root #main_col > #center_col div[style="font-size:14px;margin:0 4px;padding:1px 5px;background:#fff7ed"], :root [id*="MGWrap"], :root a[href^="http://adtrack123.pl/"], :root .section-result[data-result-ad-type], :root script[src^="http://free-shoutbox.net/app/webroot/shoutbox/sb.php?shoutbox="] + #freeshoutbox_content, :root a[href^=" http://ads.ad-center.com/"], :root a[href="http://track.freemmo2017.com/"], :root .GPMV2XEDA2 > .GPMV2XEDP1 > .GPMV2XEDJBB, :root a[href*="onclkds."], :root a[href^="http://a.adquantix.com/"], :root a[href^="http://srvpub.com/"], :root div[id^="dfp-slot-"], :root .l-container > #fishtank, :root a[href^="//go.vedohd.org/"], :root a[href^="https://fileboom.me/pr/"], :root a[href^="http://marketgid.com"], :root a[href*="pussl3.com"], :root div[itemtype="http://www.schema.org/WPAdBlock"], :root .__zinit .__y_item, :root .ch[onclick="ga(this,event)"], :root a[href^="https://ad.doubleclick.net/"], :root a[href*="letsadvertisetogether.com"], :root a[href^="http://data.linoleictanzaniatitanic.com/"], :root a[href*="=exoclick"], :root a[href*="=adscript"], :root #mn #center_col > div > h2.spon:first-child, :root a[href*="=Adtracker"], :root .ra[align="right"][width="30%"], :root a[href*="5iclx7wa4q.com"], :root a[href^="https://www.popads.net/users/"], :root a[href^="http://tracking.crazylead.com/"], :root a[href*="/cmd.php?ad="], :root #ads > .dose > .dosesingle, :root a[href^="//bwnjijl7w.com/"], :root a[href*=".revimedia.com/"], :root a[href^="http://fsoft4down.com/"], :root a[href*="ad2upapp.com/"], :root .plista_widget_belowArticleRelaunch_item[data-type="pet"], :root a[href*=".adsrv.eacdn.com/"] > img, :root a[href^="http://lp.ilivid.com/"], :root a[href*=".inclk.com/"], :root a[href*=".ichlnk.com/"], :root a[href^="http://api.content.ad/"], :root a[href^="http://galleries.pinballpublishernetwork.com/"], :root .ob_dual_right > .ob_ads_header ~ .odb_div, :root a[href*=".adk2x.com/"], :root #\5f _admvnlb_modal_container, :root a[href^="http://www.firstload.com/affiliate/"], :root a[href^="http://duckcash.eu/"], :root a[href^="http://www.mobileandinternetadvertising.com/"], :root a[data-widget-outbrain-redirect^="http://paid.outbrain.com/network/redir?"], :root a[data-url^="http://paid.outbrain.com/network/redir?"] + .author, :root a[href^="http://www.my-dirty-hobby.com/?sub="], :root a[href^="http://liversely.net/"], :root a[href^="http://www.bet365.com/"][href*="?affiliate="], :root a[data-redirect^="https://paid.outbrain.com/network/redir?"], :root a[href^="http://www.twinplan.com/AF_"], :root a[href^="http://n.admagnet.net/"], :root a[href^="http://connectlinking6.com/"], :root a[data-obtrack^="http://paid.outbrain.com/network/redir?"], :root a[href^="//www.mgid.com/"], :root div[id^="ad-div-"], :root #center_col > div[style="font-size:14px;margin-right:0;min-height:5px"] > div[style="font-size:14px;margin:0 4px;padding:1px 5px;background:#fff8e7"], :root .__y_inner > .__y_item, :root AMP-AD, :root .jobs-information-call-to-action + .jobs-information-call-to-action div[class$="_item"], :root .trc_rbox_div .syndicatedItem, :root a[href^="http://go.ad2up.com/"], :root [id*="MarketGid"], :root div[class^="lifeOnwerAd"], :root a[data-oburl^="http://paid.outbrain.com/network/redir?"], :root .widget-pane-section-result[data-result-ad-type], :root #center_col > #main > .dfrd > .mnr-c > .c._oc._zs, :root .trc_rbox_div .syndicatedItemUB, :root .trc_rbox .syndicatedItem, :root a[href^="http://pwrads.net/"], :root div[class^="adpubs-"], :root #mn div[style="position:relative"] > #center_col > div > ._dPg, :root .rhsvw[style="background-color:#fff;margin:0 0 14px;padding-bottom:1px;padding-top:1px;"], :root a[href^="http://www.pinkvisualpad.com/?revid="], :root a[href^="//porngames.adult/?SID="], :root #main-content > [style="padding:10px 0 0 0 !important;"], :root a[href^="http://www.webtrackerplus.com/"], :root .GJJKPX2N1 > .GJJKPX2M1 > .GJJKPX2P4, :root a[href^="http://centertrust.xyz/"], :root .ob_container .item-container-obpd, :root a[href^="http://ad.au.doubleclick.net/"], :root a[href^="https://intrev.co/"], :root a[href^="http://record.sportsbetaffiliates.com.au/"], :root #topstuff > #tads, :root a[href^="https://porndeals.com/?track="], :root a[href^="http://www.1clickmoviedownloader.info/"], :root .mw > #rcnt > #center_col > #taw > #tvcap > .c, :root #mn #center_col > div > h2.spon:first-child + ol:last-child, :root .plistaList > .plista_widget_underArticle_item[data-type="pet"], :root a[href*="a2g-secure.com"], :root a[href^="http://adultfriendfinder.com/p/register.cgi?pid="], :root a[href^="http://www.yourfuckbook.com/?"], :root a[href^="http://ads.sprintrade.com/"], :root .GHOFUQ5BG2 > .GHOFUQ5BF2 > .GHOFUQ5BG5, :root a[href^="http://www.richducks.com/"], :root a[href^="http://www.babylon.com/welcome/index?affID"], :root a[href^="http://ad-apac.doubleclick.net/"], :root .gbfwa > div[class$="_item"], :root a[href^="http://prochina.space/"], :root a[href^="http://www.freefilesdownloader.com/"], :root a[href^="http://ul.to/ref/"], :root a[href^="http://www.uniblue.com/cm/"], :root a[data-redirect^="http://click.plista.com/pets"], :root #rhs_block > script + .c._oc._Ve.rhsvw, :root .rscontainer > .ellip, :root .plistaList > .itemLinkPET, :root a[href^="http://mgid.com/"], :root a[data-redirect^="this.href='http://paid.outbrain.com/network/redir?"], :root a[href^="http://track.incognitovpn.com/"], :root a[href^="http://click.guamwnvgashbkashawhgkhahshmashcas.pw/"], :root a[href^="http://stateresolver.link/"], :root .__ywl .__y_item, :root a[href*=".clksite.com/"], :root #center_col > #resultStats + #tads, :root .__yinit .__y_item, :root a[href^="http://adlev.neodatagroup.com/"], :root .ra[align="left"][width="30%"], :root a[href^="https://trackjs.com/?utm_source"], :root AFS-AD, :root a[href^="http://server.cpmstar.com/click.aspx?poolid="], :root #cnt #center_col > #res > #topstuff > .ts, :root #cnt #center_col > #taw > #tvcap > .c._oc._Lp, :root .trc_rbox_div a[target="_blank"][href^="http://tab"], :root .GKJYXHBF2 > .GKJYXHBE2 > .GKJYXHBH5, :root #rhs_block .mod > .gws-local-hotels__booking-module, :root a[href*="googleme.eu"], :root .mod > ._jH + .rscontainer, :root .GFYY1SVD2 > .GFYY1SVC2 > .GFYY1SVF5, :root a[href^="https://dcs.adgear.com/clicks/"], :root a[data-oburl^="https://paid.outbrain.com/network/redir?"], :root a[href^="http://affiliates.score-affiliates.com/"], :root ADS-RIGHT, :root a[href^="http://www.accuserveadsystem.com/accuserve-go.php?"], :root a[href^="http://c.ketads.com/"], :root a[target="_blank"][onmousedown="this.href^='http://paid.outbrain.com/network/redir?"], :root #tads + div + .c, :root a[href^="https://betway.com/"][href*="&a="], :root a[href^="http://rekoverr.com/"], :root #rhswrapper > #rhssection[border="0"][bgcolor="#ffffff"], :root .Mpopup + #Mad > #MadZone, :root a[href^="http://www.TwinPlan.com/AF_"], :root a[href^="http://landingpagegenius.com/"], :root a[href^="http://www.streamtunerhd.com/signup?"], :root #ssmiwdiv[jsdisplay], :root a[href^="http://paid.outbrain.com/network/redir?"], :root a[href^="http://easydownload4you.com/"], :root #rhs_block > #mbEnd, :root #center_col > #\5f Emc, :root a[href^="http://papi.mynativeplatform.com:80/pub2/"], :root div[id^="dfp-ad-"], :root .GB3L-QEDGY .GB3L-QEDF- > .GB3L-QEDE-, :root #rhs_block .mod > .luhb-div > div[data-async-type="updateHotelBookingModule"], :root input[onclick^="window.open('http://www.FriendlyDuck.com/"], :root a[href^="//z6naousb.com/"], :root .rc-cta[data-target], :root a[href^="http://hd-plugins.com/download/"], :root #rhs_block > .ts[cellspacing="0"][cellpadding="0"][style="padding:0"], :root .GFYY1SVE2 > .GFYY1SVD2 > .GFYY1SVG5, :root a[href^="http://tracker.mybroadband.co.za/"], :root #flowplayer > div[style="position: absolute; width: 300px; height: 275px; left: 222.5px; top: 85px; z-index: 999;"], :root a[href^="http://cwcams.com/landing/click/"], :root .nrelate .nr_partner, :root a[href^="http://www.adxpansion.com"], :root a[href^="http://wgpartner.com/"], :root #center_col > #resultStats + #tads + #res + #tads, :root .trc_related_container div[data-item-syndicated="true"], :root a[href^="http://t.mdn2015x1.com/"], :root .trc_rbox_border_elm .syndicatedItem, :root a[href^="http://dwn.pushtraffic.net/"], :root a[href$="/vghd.shtml"], :root a[href^="//medleyads.com/spot/"], :root #rhs_block > ol > .rhsvw > .kp-blk > .xpdopen > ._OKe > ol > ._DJe > .luhb-div, :root #center_col > #res > #topstuff + #search > div > #ires > #rso > #flun, :root #resultspanel > #topads, :root p[id^="div-gpt-ad-"], :root #assetsListings[style="display: block;"], :root #header + #content > #left > #rlblock_left, :root a[href*="emprestimo.eu"] { display: none !important; }</style></head>
-  <body>
-	<div class="reveal slide center has-vertical-slides has-horizontal-slides ready" role="application" data-transition-speed="default" data-background-transition="fade">
-	  <div class="slides" style="width: 960px; height: 700px; zoom: 1.30971;">
-        <section data-charset="iso-8859-15" data-markdown="" data-markdown-parsed="true" style="font-size: 22pt; top: 218.5px; display: block;" class="present"><!-- -->
-<h1 id="open-is-good">Open Is Good</h1>
-<p>Jean-Louis Leroy</p>
-<p>Bloomberg Engineering</p>
-</section><section data-charset="iso-8859-15" class="stack future" style="top: 0px; display: block;" data-previous-indexv="0" hidden="" aria-hidden="true"><section data-markdown="" data-markdown-parsed="true" style="top: 159.5px; display: block;" class="" aria-hidden="true"><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Node</span> {</span>
-    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">double</span> <span class="hljs-title">value</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
-};
-</code></pre>
-<p>const, memory management etc elided, code formatted to "slide style"</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 141px; display: block;" hidden=""><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Number</span> :</span> Node {
-  Number(<span class="hljs-keyword">double</span> value) : val(value ) { }
-
-  <span class="hljs-function"><span class="hljs-keyword">double</span> <span class="hljs-title">value</span><span class="hljs-params">()</span> override </span>{
-    <span class="hljs-keyword">return</span> val;
+  <span class="dt">double</span> value() <span class="kw">override</span> {
+    <span class="cf">return</span> val;
   }
 
-  <span class="hljs-keyword">double</span> val;
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 127.5px; display: none;" hidden=""><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Plus</span> :</span> Node {
+  <span class="dt">double</span> val;
+};</code></pre></div>
+</section><section id="case-study-ast-3" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Plus : Node {
     Plus(Node&amp; left, Node&amp; right)
     : left(left), right(right) { }
 
-  <span class="hljs-function"><span class="hljs-keyword">double</span> <span class="hljs-title">value</span><span class="hljs-params">()</span> override </span>{
-    <span class="hljs-keyword">return</span> left.value() + right.value();
+  <span class="dt">double</span> value() <span class="kw">override</span> {
+    <span class="cf">return</span> left.value() + right.value();
   }
 
   Node &amp;left, &amp;right;
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Times</span> :</span> Node {
+};</code></pre></div>
+</section><section id="case-study-ast-4" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Times : Node {
     Times(Node&amp; left, Node&amp; right)
     : left(left), right(right) { }
 
-    <span class="hljs-function"><span class="hljs-keyword">double</span> <span class="hljs-title">value</span><span class="hljs-params">()</span> override </span>{
-        <span class="hljs-keyword">return</span> left.value() * right.value();
+    <span class="dt">double</span> value() <span class="kw">override</span> {
+        <span class="cf">return</span> left.value() * right.value();
     }
 
     Node &amp;left, &amp;right;
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
+};</code></pre></div>
+</section><section id="case-study-ast-5" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="dt">int</span> main() {
     Node* expr =
-        <span class="hljs-keyword">new</span> Times(*<span class="hljs-keyword">new</span> Number(<span class="hljs-number">2</span>),
-                  *<span class="hljs-keyword">new</span> Plus(*<span class="hljs-keyword">new</span> Number(<span class="hljs-number">3</span>), *<span class="hljs-keyword">new</span> Number(<span class="hljs-number">4</span>)));
+        <span class="kw">new</span> Times(
+            *<span class="kw">new</span> Number(<span class="dv">2</span>),
+            *<span class="kw">new</span> Plus(*<span class="kw">new</span> Number(<span class="dv">3</span>), *<span class="kw">new</span> Number(<span class="dv">4</span>)));
 
-    <span class="hljs-built_in">cout</span> &lt;&lt; expr-&gt;value() &lt;&lt; <span class="hljs-string">"\n"</span>; <span class="hljs-comment">// 14</span>
+    cout &lt;&lt; expr-&gt;value() &lt;&lt; <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>; <span class="co">// 14</span>
 
-    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="case-study-ast">Case Study: AST</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
+    <span class="cf">return</span> <span class="dv">0</span>;
+}</code></pre></div>
+</section><section id="case-study-ast-6" class="slide level2">
+<h2>Case Study: AST</h2>
+<p><br/></p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="dt">int</span> main() {
     Node* expr =
-        <span class="hljs-keyword">new</span> Times(*<span class="hljs-keyword">new</span> Number(<span class="hljs-number">2</span>),
-                  *<span class="hljs-keyword">new</span> Plus(*<span class="hljs-keyword">new</span> Number(<span class="hljs-number">3</span>), *<span class="hljs-keyword">new</span> Number(<span class="hljs-number">4</span>)));
+        <span class="kw">new</span> Times(
+            *<span class="kw">new</span> Number(<span class="dv">2</span>),
+            *<span class="kw">new</span> Plus(*<span class="kw">new</span> Number(<span class="dv">3</span>), *<span class="kw">new</span> Number(<span class="dv">4</span>)));
 
-    <span class="hljs-built_in">cout</span> <span class="hljs-comment">/* string to RPN */</span>
-        &lt;&lt; <span class="hljs-string">" = "</span> &lt;&lt; expr-&gt;value() &lt;&lt; <span class="hljs-string">"\n"</span>;
-    <span class="hljs-comment">// 2 3 4 * + = 14</span>
+    cout &lt;&lt; <span class="co">/* RPN */</span>
+         &lt;&lt; <span class="st">&quot; = &quot;</span> &lt;&lt; expr-&gt;value() &lt;&lt; <span class="st">&quot;</span><span class="sc">\n</span><span class="st">&quot;</span>;
+    <span class="co">// 2 3 4 * + = 14</span>
 
-    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-add-a-virtual-function-">AST: Add a Virtual Function?</h2>
-<p><em>...if it needs to be virtual, make it a member function</em> ???</p>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Node</span> {</span>
-    <span class="hljs-comment">// as before</span>
-    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-built_in">string</span> <span class="hljs-title">toRPN</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;
+    <span class="cf">return</span> <span class="dv">0</span>;
+}</code></pre></div>
+</section><section id="ast-add-a-virtual-function" class="slide level2">
+<h2>AST: Add a Virtual Function?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Node {
+    <span class="co">// as before</span>
+    <span class="kw">virtual</span> string toRPN() = <span class="dv">0</span>;
 };
 
-<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Plus</span> :</span> Node {
-    <span class="hljs-comment">// as before</span>
-  <span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">toRPN</span><span class="hljs-params">()</span> override </span>{
-    <span class="hljs-keyword">return</span> left.toRPN() + <span class="hljs-string">" "</span> + right.toRPN() + <span class="hljs-string">" +"</span>;
+<span class="kw">struct</span> Plus : Node {
+    <span class="co">// as before</span>
+  string toRPN() <span class="kw">override</span> {
+    <span class="cf">return</span> left.toRPN() + <span class="st">&quot; &quot;</span> + right.toRPN() + <span class="st">&quot; +&quot;</span>;
   }
 };
 
-<span class="hljs-comment">// same for Number and Times</span>
-</code></pre>
+<span class="co">// same for Number and Times</span></code></pre></div>
 <p>banana -&gt; gorilla -&gt; jungle</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-type-switch-">AST: Type Switch?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">toRPN</span><span class="hljs-params">(Node&amp; node)</span> </span>{
-    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> expr = <span class="hljs-keyword">dynamic_cast</span>&lt;Number*&gt;(&amp;node)) {
-        <span class="hljs-keyword">return</span> to_string(expr-&gt;value());
-    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> expr = <span class="hljs-keyword">dynamic_cast</span>&lt;Plus*&gt;(&amp;node)) {
-        <span class="hljs-keyword">return</span> toRPN(expr-&gt;left) + <span class="hljs-string">" "</span> +
-            toRPN(expr-&gt;right) + <span class="hljs-string">" +"</span>;
-    } <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> expr = <span class="hljs-keyword">dynamic_cast</span>&lt;Times*&gt;(&amp;node)) {
-        <span class="hljs-keyword">return</span> toRPN(expr-&gt;left) + <span class="hljs-string">" "</span> +
-            toRPN(expr-&gt;right) + <span class="hljs-string">" *"</span>;
+</section><section id="ast-type-switch" class="slide level2">
+<h2>AST: Type Switch?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">string toRPN(Node&amp; node) {
+    <span class="cf">if</span> (<span class="kw">auto</span> expr = <span class="kw">dynamic_cast</span>&lt;Number*&gt;(&amp;node)) {
+        <span class="cf">return</span> to_string(expr-&gt;value());
+    } <span class="cf">else</span> <span class="cf">if</span> (<span class="kw">auto</span> expr = <span class="kw">dynamic_cast</span>&lt;Plus*&gt;(&amp;node)) {
+        <span class="cf">return</span> toRPN(expr-&gt;left) + <span class="st">&quot; &quot;</span> +
+            toRPN(expr-&gt;right) + <span class="st">&quot; +&quot;</span>;
+    } <span class="cf">else</span> <span class="cf">if</span> (<span class="kw">auto</span> expr = <span class="kw">dynamic_cast</span>&lt;Times*&gt;(&amp;node)) {
+        <span class="cf">return</span> toRPN(expr-&gt;left) + <span class="st">&quot; &quot;</span> +
+            toRPN(expr-&gt;right) + <span class="st">&quot; *&quot;</span>;
     }
-    <span class="hljs-keyword">throw</span> runtime_error(<span class="hljs-string">"unknown node type"</span>);
-}
-</code></pre>
+    <span class="cf">throw</span> runtime_error(<span class="st">&quot;unknown node type&quot;</span>);
+}</code></pre></div>
 <p>needs modification each time a new Node subtype is added</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-visitor-">AST: Visitor?</h2>
-<pre><code class="lang-C++ hljs">
-<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Node</span> {</span>
-    <span class="hljs-comment">// as before</span>
-    <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Visitor</span> {</span>
-        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Number&amp; expr)</span> </span>= <span class="hljs-number">0</span>;
-        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Plus&amp; expr)</span> </span>= <span class="hljs-number">0</span>;
-        <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Times&amp; expr)</span> </span>= <span class="hljs-number">0</span>;
+</section><section id="ast-visitor" class="slide level2">
+<h2>AST: Visitor?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">
+<span class="kw">struct</span> Node {
+    <span class="co">// as before</span>
+    <span class="kw">struct</span> Visitor {
+        <span class="kw">virtual</span> <span class="dt">void</span> accept(Number&amp; expr) = <span class="dv">0</span>;
+        <span class="kw">virtual</span> <span class="dt">void</span> accept(Plus&amp; expr) = <span class="dv">0</span>;
+        <span class="kw">virtual</span> <span class="dt">void</span> accept(Times&amp; expr) = <span class="dv">0</span>;
     };
 
-    <span class="hljs-function"><span class="hljs-keyword">virtual</span> <span class="hljs-keyword">void</span> <span class="hljs-title">visit</span><span class="hljs-params">(Visitor&amp; viz)</span> </span>= <span class="hljs-number">0</span>;
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-visitor-">AST: Visitor?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Number</span> :</span> Node {
-  <span class="hljs-comment">// as before</span>
-  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">visit</span><span class="hljs-params">(Visitor&amp; viz)</span> override </span>{ viz.accept(*<span class="hljs-keyword">this</span>); }
-};
-
-<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Plus</span> :</span> Node {
-  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">visit</span><span class="hljs-params">(Visitor&amp; viz)</span> override </span>{ viz.accept(*<span class="hljs-keyword">this</span>); }
+    <span class="kw">virtual</span> <span class="dt">void</span> visit(Visitor&amp; viz) = <span class="dv">0</span>;
+};</code></pre></div>
+</section><section id="ast-visitor-1" class="slide level2">
+<h2>AST: Visitor?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> Number : Node {
+  <span class="co">// as before</span>
+  <span class="dt">void</span> visit(Visitor&amp; viz) <span class="kw">override</span> { viz.accept(*<span class="kw">this</span>); }
 };
 
-<span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Times</span> :</span> Node {
-    <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">visit</span><span class="hljs-params">(Visitor&amp; viz)</span> override </span>{ viz.accept(*<span class="hljs-keyword">this</span>); }
+<span class="kw">struct</span> Plus : Node {
+  <span class="dt">void</span> visit(Visitor&amp; viz) <span class="kw">override</span> { viz.accept(*<span class="kw">this</span>); }
 };
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-visitor-">AST: Visitor?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">RPNVisitor</span> :</span> Node::Visitor {
-  <span class="hljs-built_in">string</span> result;
-  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Number&amp; expr)</span> </span>{
+
+<span class="kw">struct</span> Times : Node {
+    <span class="dt">void</span> visit(Visitor&amp; viz) <span class="kw">override</span> { viz.accept(*<span class="kw">this</span>); }
+};</code></pre></div>
+</section><section id="ast-visitor-2" class="slide level2">
+<h2>AST: Visitor?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> RPNVisitor : Node::Visitor {
+  string result;
+  <span class="dt">void</span> accept(Number&amp; expr) {
     result = to_string(expr.val);
   }
-  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Plus&amp; expr)</span> </span>{
-    expr.left.visit(*<span class="hljs-keyword">this</span>);
-    <span class="hljs-built_in">string</span> l = result;
-    expr.right.visit(*<span class="hljs-keyword">this</span>);
-    result = l + <span class="hljs-string">" "</span> + result + <span class="hljs-string">" +"</span>;
+  <span class="dt">void</span> accept(Plus&amp; expr) {
+    expr.left.visit(*<span class="kw">this</span>);
+    string l = result;
+    expr.right.visit(*<span class="kw">this</span>);
+    result = l + <span class="st">&quot; &quot;</span> + result + <span class="st">&quot; +&quot;</span>;
   }
-  <span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">accept</span><span class="hljs-params">(Times&amp; expr)</span> </span>{ ... }
-};
-</code></pre>
-<p>ugh, yuck!</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-visitor-">AST: Visitor?</h2>
-<pre><code class="lang-C++ hljs">
-<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">toRPN</span><span class="hljs-params">(Node&amp; node)</span> </span>{
+  <span class="dt">void</span> accept(Times&amp; expr) { ... }
+};</code></pre></div>
+</section><section id="ast-visitor-3" class="slide level2">
+<h2>AST: Visitor?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">
+string toRPN(Node&amp; node) {
   RPNVisitor viz;
   node.visit(viz);
-  <span class="hljs-keyword">return</span> viz.result;
-}
-</code></pre>
-<p>my, that was a lot of work</p>
-<p>and, what does it even gain us?</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-function-table-">AST: Function Table?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-keyword">using</span> RPNFormatter = <span class="hljs-built_in">string</span> (*)(Node&amp;);
-<span class="hljs-built_in">unordered_map</span>&lt;type_index, RPNFormatter&gt; RPNformatters;
+  <span class="cf">return</span> viz.result;
+}</code></pre></div>
+<ul>
+<li>lot of work</li>
+<li>now it's difficult to add new types</li>
+</ul>
+</section><section id="ast-function-table" class="slide level2">
+<h2>AST: Function Table?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">using</span> RPNFormatter = string (*)(Node&amp;);
+unordered_map&lt;type_index, RPNFormatter&gt; RPNformatters;
 
-<span class="hljs-function"><span class="hljs-built_in">string</span> <span class="hljs-title">toRPN</span><span class="hljs-params">(Node&amp; node)</span> </span>{
-  <span class="hljs-keyword">return</span> RPNformatters[<span class="hljs-keyword">typeid</span>(node)](node);
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="ast-function-table-">AST: Function Table?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-keyword">namespace</span> { <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">Init</span> {</span>
+string toRPN(Node&amp; node) {
+  <span class="cf">return</span> RPNformatters[<span class="kw">typeid</span>(node)](node);
+}</code></pre></div>
+</section><section id="ast-function-table-1" class="slide level2">
+<h2>AST: Function Table?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">namespace</span> { <span class="kw">struct</span> Init {
   Init() {
-    RPNformatters[<span class="hljs-keyword">typeid</span>(Number)] = [](Node&amp; node) {
-     <span class="hljs-keyword">return</span> to_string(<span class="hljs-keyword">static_cast</span>&lt;Number&amp;&gt;(node).val); };
-    RPNformatters[<span class="hljs-keyword">typeid</span>(Plus)] = [](Node&amp; node) {
-     <span class="hljs-keyword">auto</span> expr = <span class="hljs-keyword">static_cast</span>&lt;Plus&amp;&gt;(node);
-     <span class="hljs-keyword">return</span> toRPN(expr.left) + <span class="hljs-string">" "</span> + toRPN(expr.right)
-       + <span class="hljs-string">" +"</span>; };
-    <span class="hljs-comment">// same for Time</span>
+    RPNformatters[<span class="kw">typeid</span>(Number)] = [](Node&amp; node) {
+     <span class="cf">return</span> to_string(<span class="kw">static_cast</span>&lt;Number&amp;&gt;(node).val); };
+    RPNformatters[<span class="kw">typeid</span>(Plus)] = [](Node&amp; node) {
+     <span class="kw">auto</span> expr = <span class="kw">static_cast</span>&lt;Plus&amp;&gt;(node);
+     <span class="cf">return</span> toRPN(expr.left) + <span class="st">&quot; &quot;</span> + toRPN(expr.right)
+       + <span class="st">&quot; +&quot;</span>; };
+    <span class="co">// same for Time</span>
   }
 };
 Init init;
-} }
-</code></pre>
+} }</code></pre></div>
 <p>not bad, actually</p>
-</section></section><section data-charset="iso-8859-15" class="stack future" style="top: 0px; display: block;" data-previous-indexv="0" hidden="" aria-hidden="true"><section data-markdown="" data-markdown-parsed="true" style="top: 205.5px; display: block;" class="" aria-hidden="true"><h2 id="the-expression-problem">The Expression Problem</h2>
-<p>behaviors += types</p>
-<p>types += behavior</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 280px; display: none;" hidden=""><h2 id="multi-layer-architectures">Multi-Layer Architectures</h2>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 155.5px; display: none;" hidden=""><h2 id="presentation">presentation</h2>
-<hr>
-<h2 id="domain">domain</h2>
-<hr>
-<h2 id="persistence">persistence</h2>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><ul>
-<li><p>presentation: PersonDlg, CriminalCaseDlg</p>
-</li>
-<li><p>domain: Person, CriminalCase</p>
-</li>
-<li><p>persistence: persist to database, to json...</p>
-</li>
-<li><p>cross-cutting concerns</p>
-</li>
+</section></section>
+<section><section id="the-expression-problem" class="titleslide slide level1"><h1>The Expression Problem</h1></section><section id="the-expression-problem-1" class="slide level2">
+<h2>The Expression Problem</h2>
+<p><br/><br/></p>
+<h3 id="behaviors-types">behaviors += types</h3>
+<h3 id="types-behaviors">types += behaviors</h3>
+</section><section id="multi-layer-architectures" class="slide level2">
+<h2>Multi-Layer Architectures</h2>
+<p><br/><br/></p>
+<h3 id="presentation">presentation</h3>
+<hr/>
+<h3 id="domain">domain</h3>
+<hr/>
+<h3 id="persistence">persistence</h3>
+</section><section id="multi-layer-architectures-1" class="slide level2">
+<h2>Multi-Layer Architectures</h2>
+<p><br/></p>
+<ul>
+<li><p>presentation: PersonDlg, CriminalCaseDlg</p></li>
+<li><p>domain: Person, CriminalCase</p></li>
+<li><p>persistence: persist to database, to json...</p></li>
+<li><p>cross-cutting concerns</p></li>
 </ul>
-</section></section><section data-charset="iso-8859-15" class="stack future" style="top: 0px; display: none;" data-previous-indexv="0" hidden="" aria-hidden="true"><section data-markdown="" data-markdown-parsed="true" style="top: 257.5px; display: none;" class="past" hidden="" aria-hidden="true"><h1 id="yomm2">yomm2</h1>
-</section><section data-markdown="" data-markdown-parsed="true" class="" style="top: 76.5px; display: none;" aria-hidden="true"><h2 id="ast-open-methods">AST: Open Methods</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-meta">#<span class="hljs-meta-keyword">include</span> <span class="hljs-meta-string">&lt;yorel/yomm2/cute.hpp&gt;</span></span>
+</section></section>
+<section><section id="open-methods" class="titleslide slide level1"><h1>Open Methods</h1></section><section id="open-methods-1" class="slide level2">
+<h2>Open Methods</h2>
+<p><br/><br/></p>
+<ul>
+<li><p>free virtual functions</p></li>
+<li><p>types += behaviors</p></li>
+</ul>
+</section><section id="ast" class="slide level2">
+<h2>AST</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="pp">#include </span><span class="im">&lt;yorel/yomm2/cute.hpp&gt;</span>
 
 register_class(Node);
 register_class(Plus, Node);
 register_class(Times, Node);
 register_class(Number, Node);
 
-<span class="hljs-function"><span class="hljs-keyword">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>{
+<span class="dt">int</span> main() {
   yorel::yomm2::update_methods();
-  <span class="hljs-comment">// ...</span>
-}
-</code></pre>
+  <span class="co">// ...</span>
+}</code></pre></div>
 <p>(the boring part)</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 7px; display: none;" hidden=""><h2 id="ast-open-methods">AST: Open Methods</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-keyword">using</span> yorel::yomm2::virtual_;
+</section><section id="ast-1" class="slide level2">
+<h2>AST</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">using</span> yorel::yomm2::<span class="va">virtual_</span>;
 
-declare_method(<span class="hljs-built_in">string</span>, toRPN, (virtual_&lt;Node&amp;&gt;));
+declare_method(string, toRPN, (<span class="va">virtual_</span>&lt;Node&amp;&gt;));
 
-define_method(<span class="hljs-built_in">string</span>, toRPN, (Number&amp; expr)) {
-  <span class="hljs-keyword">return</span> to_string(expr.val);
+define_method(string, toRPN, (Number&amp; expr)) {
+  <span class="cf">return</span> to_string(expr.val);
 }
 
-define_method(<span class="hljs-built_in">string</span>, toRPN, (Plus&amp; expr)) {
-  <span class="hljs-keyword">return</span> toRPN(expr.left) + <span class="hljs-string">" "</span> + toRPN(expr.right) + <span class="hljs-string">" +"</span>;
+define_method(string, toRPN, (Plus&amp; expr)) {
+  <span class="cf">return</span> toRPN(expr.left) + <span class="st">&quot; &quot;</span> + toRPN(expr.right) + <span class="st">&quot; +&quot;</span>;
 }
 
-<span class="hljs-comment">// same for Times</span>
-</code></pre>
-<p>call it like an ordinary function:</p>
-<pre><code class="hljs lisp">    cout &lt;&lt; toRPN(<span class="hljs-name">expr</span>) &lt;&lt; expr-&gt;value() &lt;&lt; <span class="hljs-string">"\n"</span><span class="hljs-comment">;</span>
-    // <span class="hljs-number">2</span> <span class="hljs-number">3</span> <span class="hljs-number">4</span> * + = <span class="hljs-number">14</span>
-</code></pre></section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 0px; display: none;" hidden=""><h2 id="ast-what-about-value-">AST: what about value?</h2>
+<span class="co">// same for Times</span></code></pre></div>
+<p><small>call it like an ordinary function:</small></p>
+<pre><code>    cout &lt;&lt; toRPN(expr) &lt;&lt; &quot; = &quot; &lt;&lt; expr-&gt;value() &lt;&lt; &quot;\n&quot;;
+    // 2 3 4 * + = 14</code></pre>
+</section><section id="ast-what-about-value" class="slide level2">
+<h2>AST: what about value?</h2>
 <ul>
-<li><p><code>value</code> in the node hierarchy screams interpreter</p>
-</li>
-<li><p>the AST classes should <em>only</em> represent the tree</p>
-</li>
+<li><p><code>value</code> in the node hierarchy =&gt; interpreter</p></li>
+<li><p>AST classes should <em>only</em> represent the tree</p></li>
 </ul>
-<pre><code class="lang-C++ hljs">declare_method(<span class="hljs-keyword">int</span>, value, (virtual_&lt;Node&amp;&gt;));
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">declare_method(<span class="dt">int</span>, value, (<span class="va">virtual_</span>&lt;Node&amp;&gt;));
 
-define_method(<span class="hljs-keyword">int</span>, value, (Number&amp; expr)) {
-  <span class="hljs-keyword">return</span> expr.val;
+define_method(<span class="dt">int</span>, value, (Number&amp; expr)) {
+  <span class="cf">return</span> expr.val;
 }
 
-define_method(<span class="hljs-keyword">int</span>, value, (Plus&amp; expr)) {
-  <span class="hljs-keyword">return</span> value(expr.left) + value(expr.right);
+define_method(<span class="dt">int</span>, value, (Plus&amp; expr)) {
+  <span class="cf">return</span> value(expr.left) + value(expr.right);
 }
 
-define_method(<span class="hljs-keyword">int</span>, value, (Times&amp; expr)) {
-  <span class="hljs-keyword">return</span> value(expr.left) * value(expr.right);
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="multiple-dispatch-">Multiple Dispatch?</h2>
-<p>Yes.</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="occasionally-useful">Occasionally Useful</h2>
-<pre><code class="lang-text">add(Matrix, Matrix)                 -&gt; Matrix
+define_method(<span class="dt">int</span>, value, (Times&amp; expr)) {
+  <span class="cf">return</span> value(expr.left) * value(expr.right);
+}</code></pre></div>
+</section></section>
+<section><section id="multiple-dispatch" class="titleslide slide level1"><h1>Multiple Dispatch</h1></section><section id="occasionally-useful" class="slide level2">
+<h2>Occasionally Useful</h2>
+<pre class="text"><code>add(Matrix, Matrix)                 -&gt; Matrix
                                        add all elements
 add(DiagonalMatrix, DiagonalMatrix) -&gt; DiagonalMatrix
                                        just add diagonals
@@ -288,338 +348,316 @@ fight(Warrior, Creature, Axe)  -&gt; chop it into pieces
 fight(Warrior, Dragon, Axe)    -&gt; die a honorable death
 fight(Human, Dragon, Hands)    -&gt; you just killed a dragon
                                   with your bare hands!
-                                  incredible isn't it?
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="syntax">Syntax</h2>
-<p>Just use <code>virtual_&lt;&gt;</code> on several arguments:</p>
-<pre><code class="lang-C++ hljs">declare_method(<span class="hljs-built_in">string</span>, fight,
-  (virtual_&lt;Character&amp;&gt;, virtual_&lt;Creature&amp;&gt;,
-   virtual_&lt;Device&amp;&gt;));
+                                  incredible isn&#39;t it?</code></pre>
+</section><section id="syntax" class="slide level2">
+<h2>Syntax</h2>
+<p>use <code>virtual_&lt;&gt;</code> on multiple arguments:</p>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">declare_method(string, fight,
+  (<span class="va">virtual_</span>&lt;Character&amp;&gt;, <span class="va">virtual_</span>&lt;Creature&amp;&gt;,
+   <span class="va">virtual_</span>&lt;Device&amp;&gt;));
 
-define_method(<span class="hljs-built_in">string</span>, fight,
+define_method(string, fight,
   (Human&amp; x, Creature&amp; y, Axe&amp; z)) {
-  <span class="hljs-keyword">return</span> <span class="hljs-string">"not agile enough to wield"</span>;
+  <span class="cf">return</span> <span class="st">&quot;not agile enough to wield&quot;</span>;
 }
 
-define_method(<span class="hljs-built_in">string</span>, fight,
+define_method(string, fight,
   (Human&amp; x, Dragon&amp; y, Hands&amp; z)) {
-  <span class="hljs-keyword">return</span> <span class="hljs-string">"you just killed a dragon with your bare hands."</span>
-         <span class="hljs-string">" Incredible isn't it?"</span>;
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="selecting-the-right-specialization">Selecting the right specialization</h2>
+  <span class="cf">return</span> <span class="st">&quot;you just killed a dragon with your bare hands.&quot;</span>
+         <span class="st">&quot; Incredible isn&#39;t it?&quot;</span>;
+}</code></pre></div>
+</section><section id="selecting-the-right-specialization" class="slide level2">
+<h2>Selecting the right specialization</h2>
+<p><br/></p>
 <ul>
-<li><p>works just like selecting from set of overloads (but at runtime!)</p>
-</li>
-<li><p>or partial template specialization</p>
-</li>
-<li><p>ambiguities can arise</p>
-</li>
+<li><p>works just like selecting from set of overloads (but at runtime!)</p></li>
+<li><p>or partial template specialization</p></li>
+<li><p>ambiguities can arise</p></li>
 </ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="-next-"><code>next</code></h2>
+</section><section id="next" class="slide level2">
+<h2><code>next</code></h2>
 <p>calls the next most specific override</p>
-<pre><code class="lang-c++ hljs cpp">define_method(<span class="hljs-built_in">string</span>, kick, (Dog&amp; dog)) {
-  <span class="hljs-keyword">return</span> <span class="hljs-string">"bark"</span>;
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">register_class(Animal);
+register_class(Dog, Animal);
+register_class(Bulldog, Dog);
+
+declare_method(<span class="bu">std::</span>string, kick, (<span class="va">virtual_</span>&lt;Animal&amp;&gt;));
+
+define_method(string, kick, (Dog&amp; dog)) {
+  <span class="cf">return</span> <span class="st">&quot;bark&quot;</span>;
 }
 
-define_method(<span class="hljs-built_in">string</span>, kick, (Bulldog&amp; dog)) {
-    <span class="hljs-keyword">return</span> next(dog) + <span class="hljs-string">" and bite"</span>;
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;" hidden=""><h2 id="-next-"><code>next</code></h2>
-<pre><code class="lang-c++ hljs cpp">define_method(<span class="hljs-keyword">void</span>, inspect, (Vehicle&amp; v, Inspector&amp; i)) {
-  <span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Inspect vehicle.\n"</span>;
+define_method(string, kick, (Bulldog&amp; dog)) {
+    <span class="cf">return</span> next(dog) + <span class="st">&quot; and bite&quot;</span>;
+}</code></pre></div>
+</section><section id="next-1" class="slide level2">
+<h2><code>next</code></h2>
+<div class="sourceCode"><pre class="sourceCode cpp"><code class="sourceCode cpp">define_method(<span class="dt">void</span>, inspect, (Vehicle&amp; v, Inspector&amp; i)) {
+  cout &lt;&lt; <span class="st">&quot;Inspect vehicle.</span><span class="sc">\n</span><span class="st">&quot;</span>;
 }
 
-define_method(<span class="hljs-keyword">void</span>, inspect, (Car&amp; v, Inspector&amp; i)) {
+define_method(<span class="dt">void</span>, inspect, (Car&amp; v, Inspector&amp; i)) {
   next(v, i);
-  <span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Inspect seat belts.\n"</span>;
+  cout &lt;&lt; <span class="st">&quot;Inspect seat belts.</span><span class="sc">\n</span><span class="st">&quot;</span>;
 }
 
-define_method(<span class="hljs-keyword">void</span>, inspect, (Car&amp; v, StateInspector&amp; i)) {
+define_method(<span class="dt">void</span>, inspect, (Car&amp; v, StateInspector&amp; i)) {
   next(v, i);
-  <span class="hljs-built_in">cout</span> &lt;&lt; <span class="hljs-string">"Check road tax.\n"</span>;
-}
-</code></pre>
-</section></section><section data-charset="iso-8859-15" data-markdown="" data-markdown-parsed="true" hidden="" aria-hidden="true" class="future" style="top: 67px; display: none;"><h2 id="is-this-oop-">Is This OOP?</h2>
+  cout &lt;&lt; <span class="st">&quot;Check road tax.</span><span class="sc">\n</span><span class="st">&quot;</span>;
+}</code></pre></div>
+</section></section>
+<section><section id="is-this-oop" class="titleslide slide level1"><h1>Is This OOP?</h1></section><section id="is-this-oop-1" class="slide level2">
+<h2>Is This OOP?</h2>
 <ul>
-<li><p>brief history of OOP: Simula, Smalltalk, C++/Java/D/...</p>
-</li>
-<li><p>CLOS: not objects talking to each other a la Smalltalk</p>
-</li>
-<li><p>algorithms retake the front stage</p>
-</li>
-<li><p>no unnecessary breach of encapsulation</p>
-</li>
+<li><p>Simula, Smalltalk, C++/Java/D/...:<br/>message-receiver</p></li>
+<li><p>CLOS: rules</p></li>
+<li><p>algorithms retake the front stage</p></li>
+<li><p>no unnecessary breach of encapsulation</p></li>
 </ul>
-</section><section data-charset="iso-8859-15" hidden="" aria-hidden="true" class="stack future" style="top: 0px; display: none;" data-previous-indexv="0"><section data-markdown="" data-markdown-parsed="true" style="top: 94.5px; display: none;"><h2 id="inside-yomm2">Inside yomm2</h2>
+</section></section>
+<section><section id="inside-yomm2" class="titleslide slide level1"><h1>Inside yomm2</h1></section><section id="a-payroll-application" class="slide level2">
+<h2>A Payroll Application</h2>
 <ul>
-<li><p>purely in C++17 (no extra tooling)</p>
-</li>
-<li><p>constant time dispatch</p>
-</li>
-<li><p>uses tables of function pointers</p>
-</li>
-<li><p>object -&gt; dispatch data?</p>
+<li><em>Role</em>
 <ul>
-<li>perfect integer hash of &amp;type_info</li>
-</ul>
-</li>
-</ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="a-payroll-application">A Payroll Application</h2>
+<li>Employee
 <ul>
-<li><em>Role</em><ul>
-<li>Employee<ul>
 <li>Manager</li>
-</ul>
-</li>
+</ul></li>
 <li>Founder</li>
-</ul>
-</li>
-<li><em>Expense (X)</em><ul>
+</ul></li>
+<li><em>Expense (X)</em>
+<ul>
 <li>Cab, Jet</li>
-<li><em>Public</em><ul>
+<li><em>Public</em>
+<ul>
 <li>Bus, Train</li>
+</ul></li>
+</ul></li>
 </ul>
-</li>
-</ul>
-</li>
-</ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="the-pay-uni-method">the <code>pay</code> (Uni-) Method</h2>
-<pre><code class="lang-C++` hljs">declare_method(<span class="hljs-keyword">double</span>, pay, (virtual_&lt;Employee&amp;&gt;));
+</section><section id="the-pay-mono--method" class="slide level2">
+<h2>the <code>pay</code> Mono- Method</h2>
+<pre class="c++`"><code>declare_method(double, pay, (virtual_&lt;Employee&amp;&gt;));
 
-define_method(<span class="hljs-keyword">double</span>, pay, (Employee&amp;)) {
-  <span class="hljs-keyword">return</span> <span class="hljs-number">3000</span>;
+define_method(double, pay, (Employee&amp;)) {
+  return 3000;
 }
 
-define_method(<span class="hljs-keyword">double</span>, pay, (Manager&amp; manager)) {
-  <span class="hljs-keyword">return</span> next(manager) + <span class="hljs-number">2000</span>;
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="declare_method">declare_method</h2>
-<pre><code class="lang-C++ hljs">declare_method(<span class="hljs-keyword">double</span>, pay, (virtual_&lt;Employee&amp;&gt;));
-</code></pre>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">yomm2_method_pay</span>;</span>
+define_method(double, pay, (Manager&amp; manager)) {
+  return next(manager) + 2000;
+}</code></pre>
+</section><section id="declare_method" class="slide level2">
+<h2>declare_method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">declare_method(<span class="dt">double</span>, pay, (<span class="va">virtual_</span>&lt;Employee&amp;&gt;));</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> _yomm2_method_pay;
 
-<span class="hljs-keyword">namespace</span> {
-<span class="hljs-keyword">namespace</span> YoMm2_nS_10 {
-<span class="hljs-keyword">using</span> _yOMM2_method =
-  method&lt;<span class="hljs-keyword">void</span>, _yomm2_method_pay,
-    <span class="hljs-keyword">double</span>(virtual_&lt;Employee &amp;&gt;),
+<span class="kw">namespace</span> {
+<span class="kw">namespace</span> YoMm2_nS_10 {
+<span class="kw">using</span> _yOMM2_method =
+  method&lt;<span class="dt">void</span>, _yomm2_method_pay,
+    <span class="dt">double</span>(<span class="va">virtual_</span>&lt;Employee &amp;&gt;),
     default_policy&gt;;
 _yOMM2_method::init_method init;
 }
-}
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="declare_method">declare_method</h2>
-<pre><code class="lang-C++ hljs">declare_method(<span class="hljs-keyword">double</span>, pay, (virtual_&lt;Employee&amp;&gt;));
-</code></pre>
-<pre><code class="lang-C++ hljs">YoMm2_nS_10::_<span class="hljs-function">yOMM2_method
-<span class="hljs-title">pay</span><span class="hljs-params">(discriminator, Employee &amp; a0)</span></span>;
+}</code></pre></div>
+</section><section id="declare_method-1" class="slide level2">
+<h2>declare_method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">declare_method(<span class="dt">double</span>, pay, (<span class="va">virtual_</span>&lt;Employee&amp;&gt;));</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">YoMm2_nS_10::_yOMM2_method
+pay(discriminator, Employee &amp; a0);
 
-<span class="hljs-function"><span class="hljs-keyword">inline</span> <span class="hljs-keyword">double</span>
-<span class="hljs-title">pay</span><span class="hljs-params">(Employee &amp; a0)</span> </span>{
-  <span class="hljs-keyword">auto</span> pf = <span class="hljs-keyword">reinterpret_cast</span>&lt;<span class="hljs-keyword">double</span> (*)(
+<span class="kw">inline</span> <span class="dt">double</span>
+pay(Employee &amp; a0) {
+  <span class="kw">auto</span> pf = <span class="kw">reinterpret_cast</span>&lt;<span class="dt">double</span> (*)(
     Employee &amp; a0)&gt;(
     YoMm2_nS_10::_yOMM2_method::resolve(a0));
-  <span class="hljs-keyword">return</span> pf(a0);
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="define_method">define_method</h2>
-<pre><code class="lang-C++ hljs">    define_method(<span class="hljs-keyword">double</span>, pay, (Employee&amp;)) { <span class="hljs-keyword">return</span> <span class="hljs-number">3000</span>; }
-</code></pre>
-<pre><code class="lang-C++ hljs"><span class="hljs-keyword">namespace</span> { <span class="hljs-keyword">namespace</span> YoMm2_nS_12 {
-<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span> T&gt; <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">select</span>;</span>
-<span class="hljs-keyword">template</span> &lt;<span class="hljs-keyword">typename</span>... A&gt; <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">select</span>&lt;void(A...)&gt; {</span>
-  <span class="hljs-keyword">using</span> type = <span class="hljs-keyword">decltype</span>(
+  <span class="cf">return</span> pf(a0);
+};</code></pre></div>
+</section><section id="define_method" class="slide level2">
+<h2>define_method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">define_method(<span class="dt">double</span>, pay, (Employee&amp;)) { <span class="cf">return</span> <span class="dv">3000</span>; }</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">namespace</span> { <span class="kw">namespace</span> YoMm2_nS_12 {
+<span class="kw">template</span> &lt;<span class="kw">typename</span> T&gt; <span class="kw">struct</span> select;
+<span class="kw">template</span> &lt;<span class="kw">typename</span>... A&gt; <span class="kw">struct</span> select&lt;<span class="dt">void</span>(A...)&gt; {
+  <span class="kw">using</span> type = <span class="kw">decltype</span>(
     pay(discriminator(), declval&lt;A&gt;()...));
 };
 
-<span class="hljs-keyword">using</span> _yOMM2_method =
-  select&lt;<span class="hljs-keyword">void</span>(Employee &amp;)&gt;::type;
-<span class="hljs-keyword">using</span> _yOMM2_return_t = _yOMM2_method::return_type;
-_yOMM2_return_t (*next)(Employee &amp;);
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="define_method">define_method</h2>
-<pre><code class="lang-C++ hljs">    define_method(<span class="hljs-keyword">double</span>, pay, (Employee&amp;)) { <span class="hljs-keyword">return</span> <span class="hljs-number">3000</span>; }
-</code></pre>
-<pre><code class="lang-C++ hljs"><span class="hljs-class"><span class="hljs-keyword">struct</span> _<span class="hljs-title">yOMM2_spec</span> {</span>
-  <span class="hljs-function"><span class="hljs-keyword">static</span> <span class="hljs-keyword">double</span> <span class="hljs-title">body</span><span class="hljs-params">(Employee &amp;)</span></span>;
+<span class="kw">using</span> _yOMM2_method =
+  select&lt;<span class="dt">void</span>(Employee &amp;)&gt;::type;
+<span class="kw">using</span> _yOMM2_return_t = _yOMM2_method::<span class="dt">return_type</span>;
+_yOMM2_return_t (*next)(Employee &amp;);</code></pre></div>
+</section><section id="define_method-1" class="slide level2">
+<h2>define_method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">define_method(<span class="dt">double</span>, pay, (Employee&amp;)) { <span class="cf">return</span> <span class="dv">3000</span>; }</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="kw">struct</span> _yOMM2_spec {
+  <span class="at">static</span> <span class="dt">double</span> body(Employee &amp;);
 };
 
 register_spec&lt;_yOMM2_return_t, _yOMM2_method,
-                    _yOMM2_spec, <span class="hljs-keyword">void</span>(Employee &amp;)&gt;
-_yOMM2_init((<span class="hljs-keyword">void</span> **)&amp;next);
+                    _yOMM2_spec, <span class="dt">void</span>(Employee &amp;)&gt;
+_yOMM2_init((<span class="dt">void</span> **)&amp;next);
 } }
 
-<span class="hljs-keyword">double</span> YoMm2_nS_12::_yOMM2_spec::body(Employee &amp;)
-{ <span class="hljs-keyword">return</span> <span class="hljs-number">3000</span>; }
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="update_methods">update_methods</h2>
+<span class="dt">double</span> YoMm2_nS_12::_yOMM2_spec::body(Employee &amp;)
+{ <span class="cf">return</span> <span class="dv">3000</span>; }</code></pre></div>
+</section><section id="update_methods" class="slide level2">
+<h2>update_methods</h2>
 <ul>
-<li><p>process the info registered by static ctors</p>
-</li>
-<li><p>build representation of class hierarchies</p>
-</li>
-<li><p>build all the dispatch data inside a single vector</p>
-</li>
-<li><p>find a perfect hash function over relevant type_info's</p>
+<li><p>process the info registered by static ctors</p></li>
+<li><p>build representation of class hierarchies</p></li>
+<li><p>build all the dispatch data inside a single vector</p></li>
+<li>find a perfect hash function over relevant type_info's</li>
+<li><p>H(x) = (M * x) &gt;&gt; S</p></li>
+</ul>
+</section><section id="dispatching-a-mono-method" class="slide level2">
+<h2>Dispatching a Mono-Method</h2>
 <ul>
-<li>H(x) = (M * x) &gt;&gt; S</li>
+<li><p>pretty much like virtual member functions</p></li>
+<li><p>method table contains a pointer to the effective function</p></li>
+<li><p>only it is not at a fixed offset in the method table</p></li>
 </ul>
-</li>
-</ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-uni-method">Dispatching a Uni-Method</h2>
-<ul>
-<li><p>pretty much like virtual member functions</p>
-</li>
-<li><p>method table contains a pointer to the effective function</p>
-</li>
-<li><p>only it is not at a fixed offset in the method table</p>
-</li>
-</ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-1-method">Dispatching a 1-Method</h2>
+</section><section id="dispatching-a-mono-method-1" class="slide level2">
+<h2>Dispatching a Mono-Method</h2>
 <p>during <code>update_methods</code></p>
-<pre><code class="lang-C++ hljs">method&lt;pay&gt;::slots_strides.i = <span class="hljs-number">1</span>;
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">method&lt;pay&gt;::slots_strides.i = <span class="dv">1</span>;
 
-<span class="hljs-comment">// method table for Employee</span>
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Employee)) ] = {
-  ..., <span class="hljs-comment">// used by approve,</span>
+<span class="co">// method table for Employee</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Employee)) ] = {
+  ..., <span class="co">// used by approve,</span>
   wrapper(pay(Employee&amp;))
 };
 
-<span class="hljs-comment">// method table for Manager</span>
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Manager&amp;)) ] = {
-  ..., <span class="hljs-comment">// used by approve,</span>
+<span class="co">// method table for Manager</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Manager&amp;)) ] = {
+  ..., <span class="co">// used by approve,</span>
   wrapper(pay(Manager&amp;))
-};
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-1-method">Dispatching a 1-Method</h2>
-<pre><code class="lang-C++ hljs">pay(bill)
-</code></pre>
+};</code></pre></div>
+</section><section id="dispatching-a-mono-method-2" class="slide level2">
+<h2>Dispatching a Mono-Method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">pay(bill)</code></pre></div>
 <p>=&gt;</p>
-<pre><code class="lang-C++ hljs">mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(bill)) ]          <span class="hljs-comment">// mtable for type</span>
-  [ method&lt;pay&gt;::slots_strides.i ] <span class="hljs-comment">// pointer to fun</span>
-(bill)                             <span class="hljs-comment">// call</span>
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="performance-">Performance?</h2>
-<pre><code class="lang-C++ hljs"><span class="hljs-function"><span class="hljs-keyword">double</span> <span class="hljs-title">call_pay</span><span class="hljs-params">(Employee&amp; e)</span> </span>{ <span class="hljs-keyword">return</span> pay(e); }
-</code></pre>
-<pre><code class="lang-asm">;;; g++-6 -DNDEBUG -O2 ...
-movq    mtbls(%rip), %rax                      ; hash table
-movb    mtbls+32(%rip), %cl                    ; shift factor
-movslq  method&lt;pay&gt;::slots_strides(%rip), %rdx ; slot
-movq    (%rdi), %rsi                           ; vptr
-movq    -8(%rsi), %rsi                         ; &amp;type_info
-imulq   mtbls+24(%rip), %rsi                   ; * M
-shrq    %cl, %rsi                              ; &gt;&gt; S
-movq    (%rax,%rsi,8), %rax                    ; method table
-jmpq    *(%rax,%rdx,8)                         ; call
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="the-approve-multi-method">the <code>approve</code> (Multi-) Method</h2>
-<pre><code class="lang-C++ hljs">declare_method(<span class="hljs-keyword">bool</span>, approve,
-  (virtual_&lt;Role&amp;&gt;, virtual_&lt;Expense&amp;&gt;, <span class="hljs-keyword">double</span>));
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">mtbls[ H(&amp;<span class="kw">typeid</span>(bill)) ]          <span class="co">// mtable for type</span>
+  [ method&lt;pay&gt;::slots_strides.i ] <span class="co">// pointer to fun</span>
+(bill)                             <span class="co">// call</span></code></pre></div>
+</section><section id="performance" class="slide level2">
+<h2>Performance?</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp"><span class="dt">double</span> call_pay(Employee&amp; e) { <span class="cf">return</span> pay(e); }</code></pre></div>
+<div class="sourceCode"><pre class="sourceCode asm"><code class="sourceCode fasm"><span class="co">;;; g++-6 -DNDEBUG -O2 ...</span>
+<span class="bu">movq</span>    mtbls(%rip), %<span class="kw">rax</span>                      <span class="co">; hash table</span>
+movb    mtbls+<span class="dv">32</span>(%rip), %<span class="kw">cl</span>                    <span class="co">; shift factor</span>
+movslq  method&lt;pay&gt;::slots_strides(%rip), %<span class="kw">rdx</span> <span class="co">; slot</span>
+<span class="bu">movq</span>    (%<span class="kw">rdi</span>), %<span class="kw">rsi</span>                           <span class="co">; vptr</span>
+<span class="bu">movq</span>    <span class="dv">-8</span>(%<span class="kw">rsi</span>), %<span class="kw">rsi</span>                         <span class="co">; &amp;type_info</span>
+imulq   mtbls+<span class="dv">24</span>(%rip), %<span class="kw">rsi</span>                   <span class="co">; * M</span>
+shrq    %<span class="kw">cl</span>, %<span class="kw">rsi</span>                              <span class="co">; &gt;&gt; S</span>
+<span class="bu">movq</span>    (%<span class="kw">rax</span>,%<span class="kw">rsi</span>,<span class="dv">8</span>), %<span class="kw">rax</span>                    <span class="co">; method table</span>
+jmpq    *(%<span class="kw">rax</span>,%<span class="kw">rdx</span>,<span class="dv">8</span>)                         <span class="co">; call</span></code></pre></div>
+</section><section id="approve-multi-method" class="slide level2">
+<h2><code>approve</code> Multi-Method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">declare_method(<span class="dt">bool</span>, approve,
+  (<span class="va">virtual_</span>&lt;Role&amp;&gt;, <span class="va">virtual_</span>&lt;Expense&amp;&gt;, <span class="dt">double</span>));
 
-define_method(<span class="hljs-keyword">bool</span>, approve,
-  (Role&amp; r, Expense&amp; e, <span class="hljs-keyword">double</span> amount))    { <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>; }
+define_method(<span class="dt">bool</span>, approve,
+  (Role&amp; r, Expense&amp; e, <span class="dt">double</span> amount))    { <span class="cf">return</span> <span class="kw">false</span>; }
 
-define_method(<span class="hljs-keyword">bool</span>, approve,
-  (Employee&amp; r, Public&amp; e, <span class="hljs-keyword">double</span> amount)) { <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; }
+define_method(<span class="dt">bool</span>, approve,
+  (Employee&amp; r, Public&amp; e, <span class="dt">double</span> amount)) { <span class="cf">return</span> <span class="kw">true</span>; }
 
-define_method(<span class="hljs-keyword">bool</span>, approve,
-  (Manager&amp; r, Taxi&amp; e, <span class="hljs-keyword">double</span> amount))    { <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; }
+define_method(<span class="dt">bool</span>, approve,
+  (Manager&amp; r, Taxi&amp; e, <span class="dt">double</span> amount))    { <span class="cf">return</span> <span class="kw">true</span>; }
 
-define_method(<span class="hljs-keyword">bool</span>, approve,
-  (Founder&amp; r, Expense&amp; e, <span class="hljs-keyword">double</span> amount)) { <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>; }
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-multi-method">Dispatching a Multi-Method</h2>
+define_method(<span class="dt">bool</span>, approve,
+  (Founder&amp; r, Expense&amp; e, <span class="dt">double</span> amount)) { <span class="cf">return</span> <span class="kw">true</span>; }</code></pre></div>
+</section><section id="dispatching-a-multi-method" class="slide level2">
+<h2>Dispatching a Multi-Method</h2>
 <ul>
-<li><p>it's a little more complicated</p>
-</li>
-<li><p>use a multi-dimensional dispatch table</p>
-</li>
-<li><p>size can grow very quickly</p>
-</li>
-<li><p>the table must be "compressed", devoid of redundancies</p>
-</li>
-<li><p>in fact the "uncompressed" table never exists</p>
-</li>
-<li><p>work in terms of class <em>groups</em>, not classes</p>
-</li>
+<li><p>it's a little more complicated</p></li>
+<li><p>use a multi-dimensional dispatch table</p></li>
+<li><p>size can grow very quickly</p></li>
+<li><p>the table must be &quot;compressed&quot;, devoid of redundancies</p></li>
+<li><p>in fact the &quot;uncompressed&quot; table never exists</p></li>
+<li><p>work in terms of class <em>groups</em>, not classes</p></li>
 </ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-multi-method">Dispatching a Multi-Method</h2>
+</section><section id="dispatching-a-multi-method-1" class="slide level2">
+<h2>Dispatching a Multi-Method</h2>
 <table>
 <thead>
-<tr>
+<tr class="header">
 <th></th>
-<th style="text-align:center">Expense+Jet</th>
-<th style="text-align:center">Public+Bus+Train</th>
-<th style="text-align:center">Cab</th>
+<th style="text-align: center;">Expense+Jet</th>
+<th style="text-align: center;">Public+Bus+Train</th>
+<th style="text-align: center;">Cab</th>
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>Role</td>
-<td style="text-align:center">R,X</td>
-<td style="text-align:center">R,X</td>
-<td style="text-align:center">R,X</td>
+<td style="text-align: center;">R,X</td>
+<td style="text-align: center;">R,X</td>
+<td style="text-align: center;">R,X</td>
 </tr>
-<tr>
+<tr class="even">
 <td>Employee</td>
-<td style="text-align:center">R,X</td>
-<td style="text-align:center">E,P</td>
-<td style="text-align:center">R,X</td>
+<td style="text-align: center;">R,X</td>
+<td style="text-align: center;">E,P</td>
+<td style="text-align: center;">R,X</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>Manager</td>
-<td style="text-align:center">R,X</td>
-<td style="text-align:center">E,P</td>
-<td style="text-align:center">M,C</td>
+<td style="text-align: center;">R,X</td>
+<td style="text-align: center;">E,P</td>
+<td style="text-align: center;">M,C</td>
 </tr>
-<tr>
+<tr class="even">
 <td>Founder</td>
-<td style="text-align:center">F,X</td>
-<td style="text-align:center">F,X</td>
-<td style="text-align:center">F,X</td>
+<td style="text-align: center;">F,X</td>
+<td style="text-align: center;">F,X</td>
+<td style="text-align: center;">F,X</td>
 </tr>
 </tbody>
 </table>
 <p>(column major)</p>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-multi-method">Dispatching a Multi-Method</h2>
-<pre><code class="lang-C++ hljs">method&lt;approve&gt;::.slots_strides.pw = { <span class="hljs-number">0</span>, <span class="hljs-number">4</span>, <span class="hljs-number">0</span> };
+</section><section id="building-the-compressed-dispatch-table" class="slide level2">
+<h2>Building the Compressed Dispatch Table</h2>
+<ul>
+<li><p><a href="https://hal.inria.fr/inria-00073721/document">Fast Algorithms for Compressed Multi-Method Dispatch, Eric Amiel, Eric Dujardin, Eric Simon, 1996</a></p></li>
+<li><p><a href="https://www.codeproject.com/Articles/859492/Open-Multi-Methods-for-Cplusplus-Part-Inside-Yomm">Open Multi-Methods for C++11, Part 3 - Inside Yomm11: Data Structures and Algorithms, Jean-Louis Leroy, 2013</a></p></li>
+</ul>
+</section><section id="dispatching-a-multi-method-2" class="slide level2">
+<h2>Dispatching a Multi-Method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">method&lt;approve&gt;::.slots_strides.pw = { <span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">0</span> };
 
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Employee)) ] = {
-  <span class="hljs-comment">// &amp; of (Employee,Expense+Jet) cell</span>
-  <span class="hljs-comment">// used by pay</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Employee)) ] = {
+  <span class="co">// &amp; of (Employee,Expense+Jet) cell</span>
+  <span class="co">// used by pay</span>
 };
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Manager)) ] = {
-  <span class="hljs-comment">// &amp; of (Manager,Expense+Jet) cell</span>
-  <span class="hljs-comment">// used by pay</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Manager)) ] = {
+  <span class="co">// &amp; of (Manager,Expense+Jet) cell</span>
+  <span class="co">// used by pay</span>
 };
 
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Expense)) ] = { <span class="hljs-number">0</span> }; <span class="hljs-comment">// also for Jet</span>
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Public))  ] = { <span class="hljs-number">1</span> }; <span class="hljs-comment">// also for Bus, Train</span>
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(Cab))     ] = { <span class="hljs-number">2</span> };
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="dispatching-a-multi-method">Dispatching a Multi-Method</h2>
-<pre><code class="lang-C++ hljs">approve(bill, ticket, <span class="hljs-number">5000</span>)
-</code></pre>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Expense)) ] = { <span class="dv">0</span> }; <span class="co">// also for Jet</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Public))  ] = { <span class="dv">1</span> }; <span class="co">// also for Bus, Train</span>
+mtbls[ H(&amp;<span class="kw">typeid</span>(Cab))     ] = { <span class="dv">2</span> };</code></pre></div>
+</section><section id="dispatching-a-multi-method-3" class="slide level2">
+<h2>Dispatching a Multi-Method</h2>
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">approve(bill, ticket, <span class="dv">5000</span>)</code></pre></div>
 <p>=&gt;</p>
-<pre><code class="lang-C++ hljs">word* slots_strides = method&lt;approve&gt;::.slots_strides.pw;
+<div class="sourceCode"><pre class="sourceCode c++"><code class="sourceCode cpp">word* slots_strides = method&lt;approve&gt;::.slots_strides.pw;
 
-mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(bill)) ]        <span class="hljs-comment">// method table for bill</span>
-  [ slots_strides[<span class="hljs-number">0</span>].i ]         <span class="hljs-comment">// ptr to cell in 1st column</span>
-  [ mtbls [ H(&amp;<span class="hljs-keyword">typeid</span>(ticket)) ] <span class="hljs-comment">// method table for ticket</span>
-    [ slots_strides[<span class="hljs-number">2</span>].i ]       <span class="hljs-comment">// column</span>
-    * slots_strides[<span class="hljs-number">1</span>].i         <span class="hljs-comment">// stride</span>
-  ]                              <span class="hljs-comment">// pointer to function</span>
-(bill, ticket, <span class="hljs-number">5000</span>)             <span class="hljs-comment">// call</span>
-</code></pre>
-</section><section data-markdown="" data-markdown-parsed="true" style="font-size: 22pt; top: 350px; display: none;" class="future" aria-hidden="true"><h2 id="performance-summary">Performance Summary</h2>
-<!-- -->
+mtbls[ H(&amp;<span class="kw">typeid</span>(bill)) ]        <span class="co">// method table for bill</span>
+  [ slots_strides[<span class="dv">0</span>].i ]         <span class="co">// ptr to cell in 1st column</span>
+  [ mtbls [ H(&amp;<span class="kw">typeid</span>(ticket)) ] <span class="co">// method table for ticket</span>
+    [ slots_strides[<span class="dv">2</span>].i ]       <span class="co">// column</span>
+    * slots_strides[<span class="dv">1</span>].i         <span class="co">// stride</span>
+  ]                              <span class="co">// pointer to function</span>
+(bill, ticket, <span class="dv">5000</span>)             <span class="co">// call</span></code></pre></div>
+</section><section id="benchmarks" class="slide level2">
+<h2>Benchmarks</h2>
 <table>
 <thead>
-<tr>
+<tr class="header">
 <th></th>
 <th></th>
 <th>gcc6</th>
@@ -627,37 +665,37 @@ mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(bill)) ]        <span cla
 </tr>
 </thead>
 <tbody>
-<tr>
+<tr class="odd">
 <td>normal inheritance</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr>
+<tr class="even">
 <td>virtual function</td>
 <td>1-method</td>
 <td>16%</td>
 <td>17%</td>
 </tr>
-<tr>
+<tr class="odd">
 <td>double dispatch</td>
 <td>2-method</td>
 <td>25%</td>
 <td>35%</td>
 </tr>
-<tr>
+<tr class="even">
 <td>virtual inheritance</td>
 <td></td>
 <td></td>
 <td></td>
 </tr>
-<tr>
+<tr class="odd">
 <td>virtual function</td>
 <td>1-method</td>
 <td>19%</td>
 <td>17%</td>
 </tr>
-<tr>
+<tr class="even">
 <td>double dispatch</td>
 <td>2-method</td>
 <td>40%</td>
@@ -665,82 +703,62 @@ mtbls[ H(&amp;<span class="hljs-keyword">typeid</span>(bill)) ]        <span cla
 </tr>
 </tbody>
 </table>
-</section></section><section data-charset="iso-8859-15" hidden="" aria-hidden="true" class="stack future" style="top: 350px; display: none;" data-previous-indexv="0"><section data-markdown="" data-markdown-parsed="true" style="top: 350px; display: none;"><h2 id="yomm2-vs-other-systems">yomm2 vs other systems</h2>
+</section><section id="yomm2-vs-other-systems" class="slide level2">
+<h2>yomm2 vs other systems</h2>
 <ul>
-<li><p>Pirkelbauer - Solodkyi - Stroustrup (PSS)</p>
-</li>
-<li><p>yomm11</p>
-</li>
-<li><p>(Cmm)</p>
-</li>
-<li><p>(Loki)</p>
-</li>
+<li>Pirkelbauer - Solodkyi - Stroustrup (PSS)</li>
+<li>yomm11</li>
+<li>Cmm</li>
+<li>Loki / Modern C++</li>
 </ul>
-</section><section data-markdown="" data-markdown-parsed="true" style="font-size: 22pt; top: 350px; display: none;" class="future" aria-hidden="true"><!-- -->
-<h2 id="yomm2-vs-pss">yomm2 vs PSS</h2>
+</section><section id="yomm2-vs-pss" class="slide level2">
+<h2>yomm2 vs PSS</h2>
 <ul>
-<li><p>Solodon's papers on open methods etc:</p>
+<li>Solodkyi's papers on open methods etc:
 <ul>
 <li><a href="http://www.stroustrup.com/multimethods.pdf">Open Multi-Methods for C++</a></li>
-<li><a href="https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf">Design and evaluation of C++ open multi-methods</a></li>
+<li><a href="https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf">Design and Evaluation of C++ Open Multi-Methods</a></li>
 <li><a href="http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf">Simplifying the Analysis of C++ Programs</a></li>
+</ul></li>
+<li>PSS attempts harder to resolve ambiguities</li>
+<li>yomm2 overrides not visible as overloads, cannot specialize multiple methods</li>
+<li>yomm2 supports smart pointers, <code>next</code></li>
 </ul>
-</li>
-<li><p>yomm2 overrides are not available for overloading</p>
-</li>
-<li><p>yomm2 overrides cannot specialize multiple methods</p>
-</li>
-<li><p>PSS attempts harder to resolve ambiguities</p>
-</li>
-<li><p>yomm2 supports smart pointers</p>
-</li>
-<li><p>yomm2 supports <code>next</code></p>
-</li>
-</ul>
-</section><section data-markdown="" data-markdown-parsed="true" class="future" aria-hidden="true" style="top: 350px; display: none;"><h2 id="yomm2-vs-yomm11">yomm2 vs yomm11</h2>
+</section><section id="yomm2-vs-yomm11" class="slide level2">
+<h2>yomm2 vs yomm11</h2>
 <ul>
-<li><p>no need to instrument classes to get speed</p>
-</li>
-<li><p>methods are ordinary functions (overload, etc)</p>
-</li>
-<li><p>seamless overriding across namespaces</p>
-</li>
+<li><p>no need to instrument classes</p></li>
+<li><p>methods are ordinary functions</p></li>
 </ul>
-</section></section><section data-charset="iso-8859-15" data-markdown="" data-markdown-parsed="true" hidden="" aria-hidden="true" class="future" style="top: 350px; display: none;"><h2 id="links">links</h2>
+</section><section id="qa-time" class="slide level2">
+<h2>QA Time</h2>
 <ul>
-<li><p>github: <a href="https://github.com/jll63/yomm2">https://github.com/jll63/yomm2</a></p>
-</li>
-<li><p>contact: Jean-Louis Leroy - jl@leroy.nyc</p>
-</li>
+<li>github: https://github.com/jll63/yomm2</li>
+<li>contact: Jean-Louis Leroy - jl@leroy.nyc</li>
 </ul>
-<p><img src="./index_files/qr.png"></p>
-</section>
-	  </div>
-      <div class="footer">
-        <p><img src="./index_files/logo.png" height="42/"></p>
-      </div>
-	<div class="backgrounds"><div class="slide-background present" data-loaded="true" style="display: block;"></div><div class="slide-background stack future" data-loaded="true" style="display: block;"><div class="slide-background present" data-loaded="true" style="display: block;"></div><div class="slide-background future" data-loaded="true" style="display: block;"></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div></div><div class="slide-background stack future" data-loaded="true" style="display: block;"><div class="slide-background present" data-loaded="true" style="display: block;"></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;"></div></div><div class="slide-background stack future" style="display: none;" data-loaded="true"><div class="slide-background past" style="display: none;" data-loaded="true"></div><div class="slide-background present" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div></div><div class="slide-background future" style="display: none;" data-loaded="true"></div><div class="slide-background stack future" style="display: none;" data-loaded="true"><div class="slide-background present" style="display: none;" data-loaded="true"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div></div><div class="slide-background stack future" style="display: none;"><div class="slide-background present" style="display: none;"></div><div class="slide-background future" style="display: none;"></div><div class="slide-background future" style="display: none;"></div></div><div class="slide-background future" style="display: none;"></div></div><div class="progress" style="display: block;"><span style="width: 0px;"></span></div><aside class="controls" data-controls-layout="bottom-right" data-controls-back-arrows="faded" style="display: block;"><button class="navigate-left" aria-label="previous slide" disabled="disabled"><div class="controls-arrow"></div></button><button class="navigate-right enabled" aria-label="next slide"><div class="controls-arrow"></div></button><button class="navigate-up" aria-label="above slide" disabled="disabled"><div class="controls-arrow"></div></button><button class="navigate-down" aria-label="below slide" disabled="disabled"><div class="controls-arrow"></div></button></aside><div class="slide-number" style="display: none;"></div><div class="speaker-notes" data-prevent-swipe="" tabindex="0"></div><div class="pause-overlay"></div><div id="aria-status-div" aria-live="polite" aria-atomic="true" style="position: absolute; height: 1px; width: 1px; overflow: hidden; clip: rect(1px, 1px, 1px, 1px);">
-Open Is Good
-Jean-Louis Leroy
-Bloomberg Engineering
-</div></div>
+<p><img src="qr.png" /></p>
+</section></section>
+    </div>
+  </div>
 
-	<script src="./index_files/head.min.js"></script>
-	<script src="./index_files/reveal.js"></script>
+  <script src="https://unpkg.com/reveal.js@3.9.2//lib/js/head.min.js"></script>
+  <script src="https://unpkg.com/reveal.js@3.9.2//js/reveal.js"></script>
 
-	<script>
-	  // More info about config & dependencies:
-	  // - https://github.com/hakimel/reveal.js#configuration
-	  // - https://github.com/hakimel/reveal.js#dependencies
-	  Reveal.initialize({
-	  dependencies: [
-	  { src: 'plugin/markdown/marked.js' },
-	  { src: 'plugin/markdown/markdown.js' },
-	  { src: 'plugin/notes/notes.js', async: true },
-	  { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
-	  ]
-	  });
-	</script>
-  <script src="./index_files/livereload.js" async="" defer=""></script>
+  <script>
 
-</body></html>
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+        // Vertical centering of slides
+        center: false,
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'https://unpkg.com/reveal.js@3.9.2//lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'https://unpkg.com/reveal.js@3.9.2//plugin/zoom-js/zoom.js', async: true },
+              { src: 'https://unpkg.com/reveal.js@3.9.2//plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
