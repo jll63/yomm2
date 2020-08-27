@@ -1,5 +1,8 @@
 macro(find_or_download_package PACKAGE)
-  find_package(${PACKAGE} QUIET)
+  find_package(
+    ${PACKAGE} QUIET
+    HINTS ${CMAKE_SOURCE_DIR}/dependencies ${CMAKE_INSTALL_PREFIX}
+  )
   if(NOT ${${PACKAGE}_FOUND})
     message(STATUS "Package \"${PACKAGE}\" not found in system.")
     message(STATUS
