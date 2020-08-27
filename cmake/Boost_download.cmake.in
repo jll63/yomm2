@@ -1,0 +1,90 @@
+cmake_minimum_required(VERSION 3.5)
+include(ExternalProject)
+project(Boost)
+set(BOOST_VERSION 1.74.0)
+
+list(APPEND BOOST_SUBMODULES
+    "libs/assert"
+    "libs/config"
+    "libs/container_hash"
+    "libs/core"
+    "libs/detail"
+    "libs/dynamic_bitset"
+    "libs/functional"
+    "libs/integer"
+    "libs/move"
+    "libs/preprocessor"
+    "libs/static_assert"
+    "libs/type_traits"
+    "libs/throw_exception"
+)
+if(@YOMM2_ENABLE_TESTS@)
+    list(APPEND BOOST_SUBMODULES
+        "libs/algorithm"
+        "libs/bind"
+        "libs/exception"
+        "libs/function"
+        "libs/io"
+        "libs/iterator"
+        "libs/mpl"
+        "libs/numeric/conversion"
+        "libs/range"
+        "libs/smart_ptr"
+        "libs/test"
+        "libs/type_index"
+        "libs/utility"
+    )
+endif()
+
+ExternalProject_Add(${PROJECT_NAME}
+    GIT_REPOSITORY      https://github.com/boostorg/boost.git
+    GIT_TAG             boost-${BOOST_VERSION}
+    GIT_SUBMODULES      tools/cmake;tools/boost_install;${BOOST_SUBMODULES}
+    @ADDITIONAL_GIT_SETTINGS@
+    SOURCE_DIR          "@CMAKE_SOURCE_DIR@/dependencies/sources/${PROJECT_NAME}"
+    BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
+    UPDATE_COMMAND      ""
+    INSTALL_DIR         @DEPENDENCY_INSTALL_PREFIX@
+    CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+                        -DCMAKE_BUILD_TYPE=Release
+                        -DBOOST_ENABLE_CMAKE=ON
+                        -DBUILD_TESTING=OFF
+)
+
+ExternalProject_Add_Step(${PROJECT_NAME} install_config
+    DEPENDEES           install
+    COMMAND             ${CMAKE_COMMAND} -E make_directory
+                        <INSTALL_DIR>/lib/cmake/Boost-${BOOST_VERSION}
+    COMMAND             ${CMAKE_COMMAND} -E copy
+                        <SOURCE_DIR>/tools/boost_install/BoostConfig.cmake
+                        <INSTALL_DIR>/lib/cmake/Boost-${BOOST_VERSION}
+)
+
+# Boost install broken for some CMake versions - do manually!
+foreach(boost_module ${BOOST_SUBMODULES})
+  STRING(REGEX REPLACE "/" "_" clean_boost_module ${boost_module})
+  ExternalProject_Add_Step(${PROJECT_NAME} "${clean_boost_module}"
+      DEPENDEES           install
+      COMMAND             ${CMAKE_COMMAND} -E copy_directory
+                          <SOURCE_DIR>/${boost_module}/include
+                          <INSTALL_DIR>/include
+  )
+endforeach(boost_module)
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/BoostConfigVersion.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/Boost-${BOOST_VERSION}/BoostConfigVersion.cmake
+  @ONLY
+)
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config-version.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config-version.cmake
+  @ONLY
+)
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config.cmake
+  @ONLY
+)
