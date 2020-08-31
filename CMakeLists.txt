@@ -4,11 +4,15 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 cmake_minimum_required(VERSION 3.0)
+cmake_policy(SET CMP0057 NEW)
 
 project(YOMM2 VERSION 1.0)
 
 # Find Boost dependency
-find_package(Boost 1.53 REQUIRED)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(find_or_download_package)
+find_or_download_package(Boost)
+# find_package(Boost 1.53 REQUIRED)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -34,8 +38,6 @@ if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
   if(${YOMM2_ENABLE_BENCHMARKS})
     message(STATUS "Benchmarks enabled")
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-    include(find_or_download_package)
     find_or_download_package(benchmark)
   endif()
   include(CTest)

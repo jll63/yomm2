@@ -11,6 +11,15 @@ macro(find_or_download_package PACKAGE)
 
     set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies)
 
+    # Use below settings for git downloads if available
+    if(${CMAKE_VERSION} VERSION_GREATER 3.6)
+        list(APPEND ADDITIONAL_GIT_SETTINGS "GIT_SHALLOW True")
+    endif()
+    if(${CMAKE_VERSION} VERSION_GREATER 3.8)
+        list(APPEND ADDITIONAL_GIT_SETTINGS
+            "GIT_PROGRESS True GIT_CONFIG advice.detachedHead=false"
+        )
+    endif()
     # Prepare download instructions for dependency
     configure_file(
       ${CMAKE_SOURCE_DIR}/cmake/${PACKAGE}_download.cmake.in
@@ -39,10 +48,7 @@ macro(find_or_download_package PACKAGE)
       message(FATAL_ERROR "Build of  dependency ${PACKAGE} failed: ${result}")
     endif()
 
-    # Update search path and use regular find_package to add dependency
-    # TODO Use same directory here as for configure_file up there and inside
-    # download instructions!
-
+    # Restrict search path and use regular find_package to add dependency
     find_package(${PACKAGE}
       REQUIRED NO_DEFAULT_PATH PATHS "${DEPENDENCY_INSTALL_PREFIX}"
     )
