@@ -13,11 +13,6 @@
 #include <list>
 #include <random>
 
-#if YOMM2_ENABLE_TRACE
-#include <sstream>
-#include <iostream>
-#endif
-
 namespace yorel {
 namespace yomm2 {
 
@@ -856,7 +851,13 @@ bool runtime::is_base(const rt_spec* a, const rt_spec* b)
 std::ostream* active_log = nullptr;
 
 std::ostream& log() {
-    static std::ostringstream discard_log;
+    static struct null_streambuf : std::streambuf {
+        int_type overflow(int_type c) override {
+            return 0;
+        }
+    } null;
+
+    static std::ostream discard_log(&null);
 
     if (getenv("YOMM2_ENABLE_TRACE")) {
         log_on(&std::cerr);
