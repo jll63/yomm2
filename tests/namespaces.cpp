@@ -24,6 +24,7 @@ class Dolphin : public interfaces::Animal {};
 }
 
 #include <yorel/yomm2/cute.hpp>
+#include <string>
 
 using yorel::yomm2::virtual_;
 
@@ -75,7 +76,6 @@ define_method(std::string, meet, (felis::Cat& cat, canis::Dog& dog)) {
 
 #include <iostream>
 #include <memory>
-#include <string>
 
 int main()
 {
