@@ -4,19 +4,19 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 add_executable(whitebox whitebox.cpp)
-target_link_libraries (whitebox yomm2)
+target_link_libraries (whitebox YOMM2::yomm2)
 
 add_executable(blackbox blackbox.cpp)
-target_link_libraries (blackbox yomm2)
+target_link_libraries (blackbox YOMM2::yomm2)
 
 add_executable(lab lab.cpp)
-target_link_libraries (lab yomm2 ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(namespaces namespaces.cpp)
-target_link_libraries (namespaces yomm2 ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries (namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 
 if (${YOMM2_ENABLE_BENCHMARKS})
   set_source_files_properties(benchmarks_vfuncs.cpp PROPERTIES COMPILE_FLAGS "-save-temps")
   add_executable(benchmarks benchmarks.cpp benchmarks_vfuncs.cpp )
-  target_link_libraries (benchmarks yomm2 benchmark::benchmark)
+  target_link_libraries (benchmarks YOMM2::yomm2 benchmark::benchmark)
 endif()

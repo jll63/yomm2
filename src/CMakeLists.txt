@@ -16,3 +16,5 @@ install(TARGETS yomm2
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
 )
+
+add_library(YOMM2::yomm2 ALIAS yomm2)
