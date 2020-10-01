@@ -1,5 +1,3 @@
-# -*- compile-command: "cd build ; make && ctest" -*-
-
 # Copyright (c) 2018-2020 Jean-Louis Leroy
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt
