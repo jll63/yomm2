@@ -1,0 +1,13 @@
+#!/bin/bash
+
+mkdir build
+cd build
+
+if [[ "$HYBRID" == "" ]]; then
+    cmake .. -DCMAKE_BUILD_TYPE=$CONFIG -DYOMM2_ENABLE_TESTS=1
+else
+    cmake ../cmake/$CONFIG -DYOMM2_ENABLE_TESTS=1
+fi
+
+make -j
+ctest

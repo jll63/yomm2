@@ -13,17 +13,12 @@ compiler:
 env:
     - CONFIG=Debug
     - CONFIG=Release
-    - CONFIG=ReleaseDebug
-    - CONFIG=DebugRelease
+    - CONFIG=ReleaseDebug HYBRID=1
+    - CONFIG=DebugRelease HYBRID=1
 
 notifications:
  email:
    on_success: change
    on_failure: always
 
-script:
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_CXX_COMPILER=$1 -DCMAKE_BUILD_TYPE=$CONFIG -DYOMM2_ENABLE_TESTS=1
-    - make -j
-    - ctest --output-on-failure
+script: dev/travis
