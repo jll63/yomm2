@@ -51,7 +51,7 @@ YOMM2_DEFINE(string, name, (const Cat& cat)) {
     return "cat " + cat.name;
 }
 
-BOOST_AUTO_TEST_CASE(states) {
+BOOST_AUTO_TEST_CASE(initializing) {
     yorel::yomm2::update_methods();
     const Animal& dog= Dog("spot");
     BOOST_TEST("dog spot" == name(dog));
@@ -301,7 +301,7 @@ YOMM2_DEFINE(void, test, (Cat&& cat)) {
     cat.moved = true;
 }
 
-BOOST_AUTO_TEST_CASE(states) {
+BOOST_AUTO_TEST_CASE(moving) {
     yorel::yomm2::update_methods();
 
     Dog dog;
