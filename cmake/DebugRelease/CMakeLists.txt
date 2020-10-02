@@ -22,10 +22,8 @@ include(find_or_download_package)
 
 find_or_download_package(YOMM2)
 
-if (${YOMM2_ENABLE_TESTS})
-  message(STATUS "Tests enabled")
-  include(CTest)
-endif()
+include(CTest)
+enable_testing()
 
 add_subdirectory(../../examples ${CMAKE_CURRENT_BINARY_DIR}/examples)
 
