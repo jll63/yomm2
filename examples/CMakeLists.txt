@@ -5,30 +5,30 @@
 
 add_executable(synopsis synopsis.cpp)
 target_link_libraries (synopsis YOMM2::yomm2)
-add_test (synopsis synopsis)
+add_test (NAME synopsis COMMAND synopsis)
 
 add_executable(matrix matrix.cpp)
 target_link_libraries (matrix YOMM2::yomm2)
-add_test (matrix matrix)
+add_test (NAME matrix COMMAND matrix)
 
 add_executable(accept_no_visitors accept_no_visitors.cpp)
 target_link_libraries (accept_no_visitors YOMM2::yomm2)
-add_test (accept_no_visitors accept_no_visitors)
+add_test (NAME accept_no_visitors COMMAND accept_no_visitors)
 
 add_executable(adventure adventure.cpp)
 target_link_libraries (adventure YOMM2::yomm2)
-add_test (adventure adventure)
+add_test (NAME adventure COMMAND adventure)
 
 add_executable(next next.cpp)
 target_link_libraries (next YOMM2::yomm2)
-add_test (next next)
+add_test (NAME next COMMAND next)
 
 add_executable(asteroids asteroids.cpp)
 target_link_libraries (asteroids YOMM2::yomm2)
-add_test (asteroids asteroids)
+add_test (NAME asteroids COMMAND asteroids)
 
 add_subdirectory (containers)
-add_test (containers containers)
+add_test (NAME containers COMMAND containers)
 
 if(NOT MSVC)
   set(CMAKE_SKIP_BUILD_RPATH TRUE)

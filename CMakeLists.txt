@@ -24,12 +24,6 @@ endif()
 
 add_subdirectory (src)
 
-option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
-if (${YOMM2_ENABLE_EXAMPLES})
-  message(STATUS "Examples enabled")
-  add_subdirectory (examples)
-endif()
-
 option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
@@ -45,18 +39,14 @@ if (${YOMM2_ENABLE_TESTS})
     find_or_download_package(benchmark)
   endif()
   include(CTest)
-  add_subdirectory (tests)
   enable_testing()
-  add_test (whitebox tests/whitebox)
-  add_test (blackbox tests/blackbox)
-  add_test (namespaces tests/namespaces)
-  add_test (synopsis examples/synopsis)
-  add_test (matrix examples/matrix)
-  add_test (accept_no_visitors examples/accept_no_visitors)
-  add_test (adventure examples/adventure)
-  add_test (next examples/next)
-  add_test (asteroids examples/asteroids)
-  add_test (containers examples/containers/containers)
+  add_subdirectory (tests)
+endif()
+
+option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
+if (${YOMM2_ENABLE_EXAMPLES})
+  message(STATUS "Examples enabled")
+  add_subdirectory (examples)
 endif()
 
 ## Install instruction
