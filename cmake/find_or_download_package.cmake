@@ -41,7 +41,7 @@ macro(find_or_download_package PACKAGE)
     # download instructions!
 
     find_package(${PACKAGE}
-        REQUIRED NO_DEFAULT_PATH PATHS "${DEPENDENCY_INSTALL_PREFIX}"
+      REQUIRED NO_DEFAULT_PATH PATHS "${DEPENDENCY_INSTALL_PREFIX}"
     )
   endif()
 endmacro()

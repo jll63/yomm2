@@ -3,9 +3,9 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required (VERSION 3.0)
+cmake_minimum_required(VERSION 3.0)
 
-project (YOMM2 VERSION 1.0)
+project(YOMM2 VERSION 1.0)
 
 # Find Boost dependency
 find_package(Boost 1.53 REQUIRED)
@@ -13,16 +13,16 @@ message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-  if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
-  endif ()
+  endif()
 endif()
 
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
+  set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
 endif()
 
-add_subdirectory (src)
+add_subdirectory(src)
 
 option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
 include(CMakeDependentOption)
@@ -30,9 +30,9 @@ CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
   "Set to ON to build benchmarks" OFF
   "YOMM2_ENABLE_TESTS" OFF
 )
-if (${YOMM2_ENABLE_TESTS})
+if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
-  if (${YOMM2_ENABLE_BENCHMARKS})
+  if(${YOMM2_ENABLE_BENCHMARKS})
     message(STATUS "Benchmarks enabled")
     list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
     include(find_or_download_package)
@@ -40,13 +40,13 @@ if (${YOMM2_ENABLE_TESTS})
   endif()
   include(CTest)
   enable_testing()
-  add_subdirectory (tests)
+  add_subdirectory(tests)
 endif()
 
 option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
-if (${YOMM2_ENABLE_EXAMPLES})
+if(${YOMM2_ENABLE_EXAMPLES})
   message(STATUS "Examples enabled")
-  add_subdirectory (examples)
+  add_subdirectory(examples)
 endif()
 
 ## Install instruction
@@ -75,4 +75,4 @@ install(FILES
   DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
 )
 
-INSTALL (DIRECTORY include/yorel DESTINATION include)
+install(DIRECTORY include/yorel DESTINATION include)

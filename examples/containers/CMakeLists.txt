@@ -9,4 +9,4 @@ add_executable(
   shape_painter.cpp concrete_shape_painters.cpp
   line_painter.cpp arc_painter.cpp segment_painter.cpp
   painter.cpp)
-target_link_libraries (containers YOMM2::yomm2)
+target_link_libraries(containers YOMM2::yomm2)
