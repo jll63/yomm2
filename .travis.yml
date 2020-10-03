@@ -13,8 +13,8 @@ compiler:
 env:
     - CONFIG=Debug
     - CONFIG=Release
-    - CONFIG=ReleaseDebug HYBRID=1
-    - CONFIG=DebugRelease HYBRID=1
+    - HYBRID=ReleaseDebug
+    - HYBRID=DebugRelease
 
 notifications:
  email:
