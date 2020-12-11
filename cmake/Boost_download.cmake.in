@@ -8,9 +8,9 @@ list(APPEND BOOST_LIBRARIES
     "config"
     "container_hash"
     "core"
+    "detail"
     "dynamic_bitset"
     "functional"
-    "headers"
     "integer"
     "move"
     "preprocessor"
@@ -18,9 +18,14 @@ list(APPEND BOOST_LIBRARIES
     "type_traits"
     "throw_exception"
 )
-set(BOOST_SUBMODULES ${BOOST_LIBRARIES})
-list(TRANSFORM BOOST_SUBMODULES PREPEND libs/)
-
+if(${CMAKE_VERSION} VERSION_GREATER 3.11)
+  set(BOOST_SUBMODULES ${BOOST_LIBRARIES})
+    list(TRANSFORM BOOST_SUBMODULES PREPEND libs/)
+else()
+    foreach(boost_lib ${BOOST_LIBRARIES})
+        list(APPEND BOOST_SUBMODULES "libs/${boost_lib}")
+    endforeach(boost_lib)
+endif()
 message(${BOOST_LIBRARIES})
 message(${BOOST_SUBMODULES})
 
@@ -37,7 +42,6 @@ ExternalProject_Add(${PROJECT_NAME}
     CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                         -DCMAKE_BUILD_TYPE=Release
                         -DBOOST_ENABLE_CMAKE=ON
-                        -DBOOST_INCLUDE_LIBRARIES=${BOOST_LIBARIES}
                         -DBUILD_TESTING=OFF
 )
 
@@ -50,19 +54,15 @@ ExternalProject_Add_Step(${PROJECT_NAME} install_config
                         <INSTALL_DIR>/lib/cmake/Boost-${BOOST_VERSION}
 )
 
-ExternalProject_Add_Step(${PROJECT_NAME} install_functional
-    DEPENDEES           install
-    COMMAND             ${CMAKE_COMMAND} -E copy_directory
-                        <SOURCE_DIR>/libs/functional/include
-                        <INSTALL_DIR>/include
-)
-
-ExternalProject_Add_Step(${PROJECT_NAME} install_container_hash
-    DEPENDEES           install
-    COMMAND             ${CMAKE_COMMAND} -E copy_directory
-                        <SOURCE_DIR>/libs/container_hash/include
-                        <INSTALL_DIR>/include
-)
+# Boost install broken for some CMake versions - do manually!
+foreach(boost_lib ${BOOST_LIBRARIES})
+  ExternalProject_Add_Step(${PROJECT_NAME} "${boost_lib}"
+      DEPENDEES           install
+      COMMAND             ${CMAKE_COMMAND} -E copy_directory
+                          <SOURCE_DIR>/libs/${boost_lib}/include
+                          <INSTALL_DIR>/include
+  )
+endforeach(boost_lib)
 
 configure_file(
   @CMAKE_SOURCE_DIR@/cmake/BoostConfigVersion.cmake.in
