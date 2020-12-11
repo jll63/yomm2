@@ -6,8 +6,10 @@ set(BOOST_VERSION 1.74.0)
 list(APPEND BOOST_LIBRARIES
     "assert"
     "config"
+    "container_hash"
     "core"
     "dynamic_bitset"
+    "functional"
     "headers"
     "integer"
     "move"
@@ -30,6 +32,7 @@ ExternalProject_Add(${PROJECT_NAME}
     SOURCE_DIR          "@CMAKE_SOURCE_DIR@/dependencies/${PROJECT_NAME}"
     BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
     UPDATE_COMMAND      ""
+    DOWNLOAD_COMMAND    ""
     INSTALL_DIR         @DEPENDENCY_INSTALL_PREFIX@
     CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                         -DCMAKE_BUILD_TYPE=Release
@@ -45,6 +48,20 @@ ExternalProject_Add_Step(${PROJECT_NAME} install_config
     COMMAND             ${CMAKE_COMMAND} -E copy
                         <SOURCE_DIR>/tools/boost_install/BoostConfig.cmake
                         <INSTALL_DIR>/lib/cmake/Boost-${BOOST_VERSION}
+)
+
+ExternalProject_Add_Step(${PROJECT_NAME} install_functional
+    DEPENDEES           install
+    COMMAND             ${CMAKE_COMMAND} -E copy_directory
+                        <SOURCE_DIR>/libs/functional/include
+                        <INSTALL_DIR>/include
+)
+
+ExternalProject_Add_Step(${PROJECT_NAME} install_container_hash
+    DEPENDEES           install
+    COMMAND             ${CMAKE_COMMAND} -E copy_directory
+                        <SOURCE_DIR>/libs/container_hash/include
+                        <INSTALL_DIR>/include
 )
 
 configure_file(
