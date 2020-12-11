@@ -37,7 +37,6 @@ ExternalProject_Add(${PROJECT_NAME}
     SOURCE_DIR          "@CMAKE_SOURCE_DIR@/dependencies/${PROJECT_NAME}"
     BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
     UPDATE_COMMAND      ""
-    DOWNLOAD_COMMAND    ""
     INSTALL_DIR         @DEPENDENCY_INSTALL_PREFIX@
     CMAKE_ARGS          -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
                         -DCMAKE_BUILD_TYPE=Release
