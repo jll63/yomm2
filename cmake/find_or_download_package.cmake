@@ -1,15 +1,25 @@
 macro(find_or_download_package PACKAGE)
+  set(options EXACT PKG_CONFIG INSTALL_WITH_YOMM)
+  set(oneValueArgs VERSION)
+  cmake_parse_arguments(ARGS
+      "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
+  )
+
   find_package(
     ${PACKAGE} QUIET
     HINTS ${CMAKE_SOURCE_DIR}/dependencies ${CMAKE_INSTALL_PREFIX}
   )
+
+  if(${ARGS_INSTALL_WITH_YOMM})
+      set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+  else()
+      set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies)
+  endif()
   if(NOT ${${PACKAGE}_FOUND})
     message(STATUS "Package \"${PACKAGE}\" not found in system.")
     message(STATUS
       "Downloading dependency \"${PACKAGE}\" and building from source."
     )
-
-    set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies)
 
     # Use below settings for git downloads if available
     if(${CMAKE_VERSION} VERSION_GREATER 3.6)
