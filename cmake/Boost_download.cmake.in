@@ -46,3 +46,21 @@ ExternalProject_Add_Step(${PROJECT_NAME} install_config
                         <SOURCE_DIR>/tools/boost_install/BoostConfig.cmake
                         <INSTALL_DIR>/lib/cmake/Boost-${BOOST_VERSION}
 )
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/BoostConfigVersion.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/Boost-${BOOST_VERSION}/BoostConfigVersion.cmake
+  @ONLY
+)
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config-version.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config-version.cmake
+  @ONLY
+)
+
+configure_file(
+  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config.cmake.in
+  @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config.cmake
+  @ONLY
+)
