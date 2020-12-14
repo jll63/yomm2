@@ -11,7 +11,7 @@ project(YOMM2 VERSION 1.0)
 # Find Boost dependency
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(find_or_download_package)
-find_or_download_package(Boost)
+find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
