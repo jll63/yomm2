@@ -4,19 +4,32 @@ project(Boost)
 set(BOOST_VERSION 1.74.0)
 
 list(APPEND BOOST_LIBRARIES
+    "algorithm"
     "assert"
+    "bind"
     "config"
     "container_hash"
     "core"
     "detail"
     "dynamic_bitset"
+    "exception"
+    "function"
     "functional"
     "integer"
+    "io"
+    "iterator"
     "move"
+    "mpl"
+    "numeric/conversion"
     "preprocessor"
+    "range"
+    "smart_ptr"
     "static_assert"
+    "test"
+    "type_index"
     "type_traits"
     "throw_exception"
+    "utility"
 )
 if(${CMAKE_VERSION} VERSION_GREATER 3.11)
   set(BOOST_SUBMODULES ${BOOST_LIBRARIES})
@@ -26,8 +39,6 @@ else()
         list(APPEND BOOST_SUBMODULES "libs/${boost_lib}")
     endforeach(boost_lib)
 endif()
-message(${BOOST_LIBRARIES})
-message(${BOOST_SUBMODULES})
 
 ExternalProject_Add(${PROJECT_NAME}
     GIT_REPOSITORY      https://github.com/boostorg/boost.git
@@ -55,7 +66,8 @@ ExternalProject_Add_Step(${PROJECT_NAME} install_config
 
 # Boost install broken for some CMake versions - do manually!
 foreach(boost_lib ${BOOST_LIBRARIES})
-  ExternalProject_Add_Step(${PROJECT_NAME} "${boost_lib}"
+  STRING(REGEX REPLACE "/" "_" clean_boost_lib ${boost_lib})
+  ExternalProject_Add_Step(${PROJECT_NAME} "${clean_boost_lib}"
       DEPENDEES           install
       COMMAND             ${CMAKE_COMMAND} -E copy_directory
                           <SOURCE_DIR>/libs/${boost_lib}/include
