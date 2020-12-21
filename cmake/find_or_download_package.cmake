@@ -5,12 +5,6 @@ macro(find_or_download_package PACKAGE)
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
   set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies/${PACKAGE})
-  if(${ARGS_INSTALL_WITH_YOMM})
-    install(
-      DIRECTORY ${DEPENDENCY_INSTALL_PREFIX}/
-      DESTINATION ${CMAKE_INSTALL_PREFIX}
-    )
-  endif()
   find_package(
     ${PACKAGE} QUIET
     HINTS ${DEPENDENCY_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}
@@ -61,5 +55,14 @@ macro(find_or_download_package PACKAGE)
     find_package(${PACKAGE}
       REQUIRED NO_DEFAULT_PATH PATHS "${DEPENDENCY_INSTALL_PREFIX}"
     )
+
+    # Install the built package alongside YOMM if so desired, by copying the
+    # install made in the build tree
+    if(${ARGS_INSTALL_WITH_YOMM})
+      install(
+        DIRECTORY ${DEPENDENCY_INSTALL_PREFIX}/
+        DESTINATION ${CMAKE_INSTALL_PREFIX}
+      )
+    endif()
   endif()
 endmacro()
