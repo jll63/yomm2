@@ -26,7 +26,7 @@ if(@YOMM2_ENABLE_TESTS@)
         "libs/function"
         "libs/io"
         "libs/iterator"
-        "libs/move"
+        "libs/mpl"
         "libs/numeric/conversion"
         "libs/range"
         "libs/smart_ptr"
