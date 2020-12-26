@@ -1,0 +1,5 @@
+#!/bin/bash
+
+repo=$(realpath $(dirname 0)/..)
+
+docker run -it --rm -v $repo:$repo yomm2:latest "$@"
