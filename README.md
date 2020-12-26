@@ -164,11 +164,6 @@ Make sure that you have the following dependencies:
 
 * a C++17 capable compiler
 
-* The following Boost libraries: Preprocessor, DynamicBitset, TypeTraits -
-  version 1.65 or above is recommended
-
-* For tests: Boost.Test version 1.65 or above
-
 * cmake version 3.5 or above
 
 Clone the repository:
@@ -194,8 +189,20 @@ cmake .. -DYOMM2_ENABLE_TESTS=1
 make && ctest
 ```
 
-If you also want to run the benchmarks (and in this case you really want a release
-build):
+YOMM2 uses several Boost libraries:
+
+1. Preprocessor, DynamicBitset, TypeTraits: included by YOMM2 headers
+
+2. Boost.Test: only used to run the test suite
+
+If these libraries are already available on your machine, and they can by
+`cmake`, they will be used. In this case, make sure that the pre-installed
+libraries are at version 1.65 or above. If Boost is not found, the latest
+version will be downloaded, and the Boost headers mentioned in section (1) will
+be installed along YOMM2 (if you decide to `make install`).
+
+If you also want to run the benchmarks (and in this case you really want a
+release build):
 
 ```
 cmake .. -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
@@ -215,6 +222,7 @@ make install DESTDIR=/path/to/my/libs
 ```
 This will install the library and headers, as well as a CMake package
 configuration.
+
 Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
 `find_package(YOMM2)` from your including project. For linking, the use
 `target_link_library(<your_target> YOMM2::yomm2)`. This will automatically add
