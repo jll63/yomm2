@@ -4,7 +4,7 @@ macro(find_or_download_package PACKAGE)
   cmake_parse_arguments(ARGS
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
-  set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies/${PACKAGE})
+  set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dependencies/${PACKAGE})
   find_package(
     ${PACKAGE} QUIET
     HINTS ${DEPENDENCY_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}
