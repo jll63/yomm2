@@ -1,5 +1,13 @@
 cmake_minimum_required(VERSION 3.0)
+cmake_policy(SET CMP0057 NEW)
+
 project(YOMM2_ReleaseDebug VERSION 1.0)
+
+# Find Boost dependency
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(find_or_download_package)
+find_or_download_package(Boost INSTALL_WITH_YOMM)
+message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(isMultiConfig)
