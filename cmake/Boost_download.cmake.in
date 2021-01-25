@@ -72,19 +72,19 @@ foreach(boost_module ${BOOST_SUBMODULES})
 endforeach(boost_module)
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/BoostConfigVersion.cmake.in
+  @DL_SCRIPT_DIR@/BoostConfigVersion.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/Boost-${BOOST_VERSION}/BoostConfigVersion.cmake
   @ONLY
 )
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config-version.cmake.in
+  @DL_SCRIPT_DIR@/boost_headers-config-version.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config-version.cmake
   @ONLY
 )
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config.cmake.in
+  @DL_SCRIPT_DIR@/boost_headers-config.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config.cmake
   @ONLY
 )
