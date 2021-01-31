@@ -3,11 +3,28 @@
 mkdir build
 cd build
 
-if [[ "$HYBRID" == "" ]]; then
-    cmake .. -DCMAKE_BUILD_TYPE=$CONFIG -DYOMM2_ENABLE_TESTS=1
-else
-    cmake ../cmake/$HYBRID -DYOMM2_ENABLE_TESTS=1
+if [[ "$PREINSTALL_BOOST" != "true" ]]; then
+    sudo apt-get -y install libboost-dev libboost-test-dev
 fi
 
-make -j
-ctest
+if [[ "$CONFIG" == "Debug" || "$CONFIG" == "Release" ]]; then
+    HYBRID=false
+    cmake .. -DCMAKE_BUILD_TYPE=$CONFIG -DYOMM2_ENABLE_TESTS=1 || exit $?
+else
+    HYBRID=true
+    cmake ../cmake/$CONFIG -DYOMM2_ENABLE_TESTS=1 || exit $?
+fi
+
+make -j  || exit $?
+
+ctest || exit $?
+
+if [[ "$HYBRID" == "false" ]]; then
+    echo "Installing..."
+    sudo make install || exit $?
+
+    if [[ "$PREINSTALL_BOOST" != "true" ]]; then
+        echo "Checking that auto-fetched Boost libs have been installed..."
+        test -d /usr/local/include/boost || exit 1
+    fi
+fi

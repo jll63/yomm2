@@ -41,7 +41,7 @@ ExternalProject_Add(${PROJECT_NAME}
     GIT_TAG             boost-${BOOST_VERSION}
     GIT_SUBMODULES      tools/cmake;tools/boost_install;${BOOST_SUBMODULES}
     @ADDITIONAL_GIT_SETTINGS@
-    SOURCE_DIR          "@CMAKE_SOURCE_DIR@/dependencies/sources/${PROJECT_NAME}"
+    SOURCE_DIR          "@CMAKE_BINARY_DIR@/dependencies/sources/${PROJECT_NAME}"
     BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
     UPDATE_COMMAND      ""
     INSTALL_DIR         @DEPENDENCY_INSTALL_PREFIX@
@@ -72,19 +72,19 @@ foreach(boost_module ${BOOST_SUBMODULES})
 endforeach(boost_module)
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/BoostConfigVersion.cmake.in
+  @DL_SCRIPT_DIR@/BoostConfigVersion.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/Boost-${BOOST_VERSION}/BoostConfigVersion.cmake
   @ONLY
 )
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config-version.cmake.in
+  @DL_SCRIPT_DIR@/boost_headers-config-version.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config-version.cmake
   @ONLY
 )
 
 configure_file(
-  @CMAKE_SOURCE_DIR@/cmake/boost_headers-config.cmake.in
+  @DL_SCRIPT_DIR@/boost_headers-config.cmake.in
   @DEPENDENCY_INSTALL_PREFIX@/lib/cmake/boost_headers-${BOOST_VERSION}/boost_headers-config.cmake
   @ONLY
 )

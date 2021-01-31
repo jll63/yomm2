@@ -1,10 +1,10 @@
 macro(find_or_download_package PACKAGE)
-  set(options EXACT PKG_CONFIG INSTALL_WITH_YOMM)
-  set(oneValueArgs VERSION)
+  set(options INSTALL_WITH_YOMM)
+  set(oneValueArgs DL_SCRIPT_DIR)
   cmake_parse_arguments(ARGS
     "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN}
   )
-  set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_SOURCE_DIR}/dependencies/${PACKAGE})
+  set(DEPENDENCY_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dependencies/${PACKAGE})
   find_package(
     ${PACKAGE} QUIET
     HINTS ${DEPENDENCY_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}
@@ -24,8 +24,14 @@ macro(find_or_download_package PACKAGE)
       )
     endif()
     # Prepare download instructions for dependency
+    message(STATUS ${ARGS_DL_SCRIPT_DIR})
+    if("${ARGS_DL_SCRIPT_DIR}" STREQUAL "")
+      set(DL_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/cmake)
+    else()
+      set(DL_SCRIPT_DIR ${ARGS_DL_SCRIPT_DIR})
+    endif()
     configure_file(
-      ${CMAKE_SOURCE_DIR}/cmake/${PACKAGE}_download.cmake.in
+      ${DL_SCRIPT_DIR}/${PACKAGE}_download.cmake.in
       ${CMAKE_CURRENT_BINARY_DIR}/${PACKAGE}-download/CMakeLists.txt
       @ONLY
     )

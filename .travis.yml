@@ -13,8 +13,12 @@ compiler:
 env:
     - CONFIG=Debug
     - CONFIG=Release
-    - HYBRID=ReleaseDebug
-    - HYBRID=DebugRelease
+    - CONFIG=ReleaseDebug
+    - CONFIG=DebugRelease
+    - CONFIG=Debug PREINSTALL_BOOST=true
+    - CONFIG=Release PREINSTALL_BOOST=true
+    - CONFIG=ReleaseDebug PREINSTALL_BOOST=true
+    - CONFIG=DebugRelease PREINSTALL_BOOST=true
 
 notifications:
  email:

@@ -1,4 +1,6 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.5)
+cmake_policy(SET CMP0057 NEW)
+
 project(YOMM2_ReleaseDebug VERSION 1.0)
 
 get_property(isMultiConfig GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -19,6 +21,9 @@ endif()
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/..")
 include(find_or_download_package)
+
+set(YOMM2_ENABLE_TESTS ON)
+find_or_download_package(Boost DL_SCRIPT_DIR ${CMAKE_SOURCE_DIR}/..)
 
 find_or_download_package(YOMM2)
 
