@@ -273,7 +273,6 @@ union word {
     const word* pw;
     int i;
     unsigned long ul;
-    const word* control_table;
     const void* ti;
 };
 
@@ -330,7 +329,7 @@ inline const word* get_mptr(
     auto index = detail::hash(hash_mult, hash_shift, ti);
         auto mptr = hash_table[index].pw;
 #ifndef NDEBUG
-        if (!mptr || hash_table[-1].control_table[index].ti != ti) {
+        if (!mptr || hash_table[-1].pw[index].ti != ti) {
             unregistered_class_error(ti);
         }
 #endif
@@ -543,7 +542,7 @@ struct init_class_info {
         if (inserted.second)
             YOMM2_TRACE(
                 ::yorel::yomm2::detail::log()
-                      << "Register " << name
+                      << "Register class " << name
                       << " with &typeid " << &typeid(CLASS)
                       << "\n");
     }
@@ -952,12 +951,12 @@ struct method<ID, R(A...), POLICY> {
     enum { arity = for_each_vp_t::count };
 
     static  void* resolve(resolve_arg_t<A>... args) {
+        YOMM2_TRACE(detail::log() << "call " << name() << "\n");
         return resolve(
             typename POLICY::hash_factors_placement(), args...);
     }
 
     static  void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
-        YOMM2_TRACE(detail::log() << "call " << name() << "\n");
         return resolver<arity, A...>::resolve(
             dispatch_data::instance<REG>::_.hash_table,
             dispatch_data::instance<REG>::_.hash.mult,

@@ -134,7 +134,7 @@ void runtime::augment_methods() {
                         std::cerr << meth_iter->info->name
                         << " parameter " << (param_index + 1)
                         << ": ");
-                    std::cerr << "unregistered class\n";
+                    std::cerr << "\nUnregistered class\n";
                     abort();
                 }
                 rt_arg param = { &*meth_iter,  param_index++ };
@@ -161,7 +161,7 @@ void runtime::augment_methods() {
                             std::cerr << meth_iter->info->name
                             << ": spec " << spec_iter->info->name
                             << ": parameter " << (param_index + 1) << ": ");
-                        std::cerr << "unregistered class\n";
+                        std::cerr << "\nUnregistered class\n";
                         abort();
                     }
                     ++param_index;
@@ -652,21 +652,19 @@ void runtime::install_gv() {
         dd.gv.resize(0);
 
         YOMM2_TRACE(
-            if (pass)
+            if (pass) {
                 log()
-                    << "Initializing global vector at " << dd.gv.data() << "\n");
-
-        YOMM2_TRACE(
-            if (pass)
-                log()
+                    << "Initializing global vector at " << dd.gv.data() << "\n"
                     << std::setw(4) << dd.gv.size()
-                    << " pointer to control table\n");
+                    << " pointer to control table\n";
+            }
+        );
 
-        {
-            word w;
-            w.control_table = nullptr;
-            dd.gv.push_back(w);
-        }
+        // reserve a work for control table
+        dd.gv.emplace_back(make_word(nullptr));
+
+        auto hash_table = dd.gv.data() + 1;
+        dd.hash_table = hash_table;
 
         YOMM2_TRACE(
             if (pass)
@@ -685,48 +683,46 @@ void runtime::install_gv() {
         dd.gv.resize(dd.gv.size() + metrics.hash_table_size);
 
         for (auto& m : methods) {
-            if (m.info->vp.size() > 1) {
-                m.info->slots_strides_p->pw = dd.gv.data() + dd.gv.size();
-            }
             YOMM2_TRACE(
                 if (pass)
                     log() << std::setw(4) << dd.gv.size()
                           << ' ' << m.info->name << "\n");
 
+            m.info->slots_strides_p->pw = dd.gv.data() + dd.gv.size();
+
             if (*m.info->hash_factors_placement == typeid(policy::hash_factors_in_vector)) {
-                dd.gv.emplace_back(make_word(dd.hash_table));
+                dd.gv.emplace_back(make_word(hash_table));
                 dd.gv.emplace_back(make_word(dd.hash.mult));
                 dd.gv.emplace_back(make_word(dd.hash.shift));
-            }
-
-            if (m.info->vp.size() > 1) {
-                auto slot_iter = m.slots.begin();
-                auto stride_iter = m.strides.begin();
-                dd.gv.emplace_back(make_word(*slot_iter++));
-
-                while (slot_iter != m.slots.end()) {
-                    dd.gv.emplace_back(make_word(*slot_iter++));
-                    dd.gv.emplace_back(make_word(*stride_iter++));
-                }
-                YOMM2_TRACE(
-                    if (pass)
-                        log() << std::setw(4) << dd.gv.size()
-                              << ' ' << m.info->name << " dispatch table\n");
-                m.gv_dispatch_table = dd.gv.data() + dd.gv.size();
-                std::transform(
-                    m.dispatch_table.begin(), m.dispatch_table.end(),
-                    std::back_inserter(dd.gv), [](void* pf) {
-                        return make_word(pf); });
-            } else {
+                // 1-methods with co-located
+            } else if (m.info->vp.size() == 1) {
                 m.info->slots_strides_p->i = m.slots[0];
+                continue;
             }
+
+            // multi-methods only
+
+            auto slot_iter = m.slots.begin();
+            auto stride_iter = m.strides.begin();
+            dd.gv.emplace_back(make_word(*slot_iter++));
+
+            while (slot_iter != m.slots.end()) {
+                dd.gv.emplace_back(make_word(*slot_iter++));
+                dd.gv.emplace_back(make_word(*stride_iter++));
+            }
+            YOMM2_TRACE(
+                if (pass)
+                    log() << std::setw(4) << dd.gv.size()
+                            << ' ' << m.info->name << " dispatch table\n");
+            m.gv_dispatch_table = dd.gv.data() + dd.gv.size();
+            std::transform(
+                m.dispatch_table.begin(), m.dispatch_table.end(),
+                std::back_inserter(dd.gv), [](void* pf) {
+                    return make_word(pf); });
         }
 
-        auto hash_table = dd.gv.data() + 1;
-        dd.hash_table = hash_table;
-
         auto control_table = hash_table + metrics.hash_table_size;
-        dd.gv[0].control_table = control_table;
+        dd.gv[0].pw = control_table;
 
         for (auto& cls : classes) {
             cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
@@ -889,7 +885,7 @@ void default_method_call_error_handler(const method_call_error& error) {
 method_call_error_handler call_error_handler;
 
 void unregistered_class_error(const std::type_info* pt) {
-    std::cerr << "unregistered class: " << pt->name() << "\n";
+    std::cerr << "\nUnregistered class: " << pt->name() << "\n";
     abort();
 }
 
