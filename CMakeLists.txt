@@ -3,7 +3,7 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0057 NEW)
 
 project(YOMM2 VERSION 1.0)
@@ -15,14 +15,14 @@ find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
   if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -save-temps")
+    add_compile_options(-save-temps)
   endif()
 endif()
 
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "/std:c++17 -D_SCL_SECURE_NO_WARNINGS /EHsc")
+  add_compile_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
+  add_compile_options(/EHsc)
 endif()
 
 add_subdirectory(src)
