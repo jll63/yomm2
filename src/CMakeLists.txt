@@ -11,6 +11,7 @@ target_include_directories(yomm2 PUBLIC
   PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
 )
 target_link_libraries(yomm2 PUBLIC Boost::headers)
+target_compile_features(yomm2 PUBLIC cxx_std_17)
 
 install(TARGETS yomm2
   EXPORT YOMM2Targets
