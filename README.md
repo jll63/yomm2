@@ -195,8 +195,8 @@ YOMM2 uses several Boost libraries:
 
 2. Boost.Test: only used to run the test suite
 
-If these libraries are already available on your machine, and they can by
-`cmake`, they will be used. In this case, make sure that the pre-installed
+If these libraries are already available on your machine, and they can be found
+by `cmake`, they will be used. In this case, make sure that the pre-installed
 libraries are at version 1.65 or above. If Boost is not found, the latest
 version will be downloaded, and the Boost headers mentioned in section (1) will
 be installed along YOMM2 (if you decide to `make install`).
