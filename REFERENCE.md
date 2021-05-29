@@ -257,6 +257,10 @@ specified container, which must have been declared with
 `inline` storage class, and thus can be placed in a header file and is a
 potential candidate for inlining.
 
+Note that inlining is only supported for implementations placed inside a container.
+Inlining implementations defined outside of a container would make no sense, as there
+would be no way of referencing them.
+
 See the documentation of `YOMM2_DECLARE_METHOD_CONTAINER` for more information
 on method containers.
 
