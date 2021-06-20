@@ -19,10 +19,15 @@ yorel::yomm2 and its content.
 
 Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 
-* `register_class` for `YOMM2_CLASS`
-* `declare_method` for `YOMM2_DECLARE`
-* `define_method` for `YOMM2_DEFINE`
-* `end_method` for `YOMM2_END`
+| cute                   | UGLY                             |
+|------------------------|----------------------------------|
+| `register_class`       | `YOMM2_CLASS`                    |
+| `declare_method`       | `YOMM2_DECLARE`                  |
+| `define_method`        | `YOMM2_DEFINE`                   |
+| `method_container`     | `YOMM2_DECLARE_METHOD_CONTAINER` |
+| `define_method_inline` | `YOMM2_METHOD_INLINE`            |
+| `friend_method`        | `YOMM2_FRIEND`                   |
+| `method_definition`    | `YOMM2_DEFINITION`               |
 
 It is recommended to use the "cute" names unless they clash with names used in
 existing code.
@@ -177,7 +182,7 @@ YOMM2_DECLARE(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 ```
 
-## macros YOMM2_METHOD, define_method
+## macros YOMM2_DEFINE, define_method
 
 #### Synopsis:
 ```
@@ -199,7 +204,7 @@ return type. `return_type` may be `auto`.
 
 NOTE that the types of the arguments are _not_ marked with `virtual_`.
 
-See the dcumentation of `YOMM2_METHOD` for information on handling types that
+See the documentation of `YOMM2_METHOD` for information on handling types that
 contain commas.
 
 If `container` is specified, the method definition is placed inside the said
@@ -264,7 +269,7 @@ would be no way of referencing them.
 See the documentation of `YOMM2_DECLARE_METHOD_CONTAINER` for more information
 on method containers.
 
-See the dcumentation of `YOMM2_METHOD` for information on handling types that
+See the documentation of `YOMM2_METHOD` for information on handling types that
 contain commas.
 
 `define_method_inline` is an alias for `YOMM2_DEFINE_INLINE`, provided by
@@ -299,7 +304,7 @@ inside containers are implemented as template specializations. Thus methods can
 only be added to a container defined in the same namespace, or a namespace
 nested inside the namespace where the container has been declared.
 
-See the dcumentation of `YOMM2_METHOD` for information on handling types that
+See the documentation of `YOMM2_METHOD` for information on handling types that
 contain commas.
 
 `method_container` is an alias for `YOMM2_DECLARE_METHOD_CONTAINER`, provided
@@ -317,7 +322,7 @@ YOMM2_FRIEND(container, return_type, (unspecified_type... argument))
 Grant friendship to all the methods inside a container friend of a class, or to
 a specific method. See [containers](examples/containers) for an example.
 
-See the dcumentation of `YOMM2_METHOD` for information on handling types that
+See the documentation of `YOMM2_METHOD` for information on handling types that
 contain commas.
 
 `friend_method_container` is an alias for `YOMM2_FRIEND`, provided by header
@@ -335,7 +340,7 @@ Retrieve a method definition with a given return type and signature from a
 container.
 
 The resulting method can be used as a normal function reference. It can be
-called, or its address can be taken. In particular, this makes it possible for
+called, and its address can be taken. In particular, this makes it possible for
 a method definition to call a base method as part of its implementation, in the
 same manner as an ordinary virtual function can call a specific base function
 by prefixing its name with a base class name.
@@ -345,7 +350,7 @@ normal circumstances, a method definition cannot assume which "super" or "base"
 function is the best choice, since the set of methods pertaining to the same
 declaration is open.
 
-See the dcumentation of `YOMM2_METHOD` for information on handling types that
+See the documentation of `YOMM2_METHOD` for information on handling types that
 contain commas.
 
 See [containers](examples/containers) for an example.
