@@ -9,8 +9,6 @@
 #include <yorel/yomm2/cute.hpp>
 
 #include <iostream>
-#include <memory>
-#include <string>
 
 #include "geometries.hpp"
 #include "painter.hpp"

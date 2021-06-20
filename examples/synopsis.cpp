@@ -18,8 +18,6 @@ class Dolphin : public Animal {};
 
 #include <yorel/yomm2/cute.hpp>
 
-#include <string>
-
 using yorel::yomm2::virtual_;
 
 register_class(Animal);

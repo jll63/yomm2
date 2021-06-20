@@ -6,6 +6,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <typeinfo>
 
 #include <yorel/yomm2/cute.hpp>
 

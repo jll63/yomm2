@@ -6,7 +6,10 @@
 #ifndef YOREL_YOMM2_INCLUDED
 #define YOREL_YOMM2_INCLUDED
 
-#include <algorithm>
+#include <algorithm> // IWYU pragma: keep
+#include <cstdint>
+#include <iostream>
+#include <iterator> // IWYU pragma: keep
 #include <memory>
 #include <type_traits>
 #include <typeinfo>
@@ -14,18 +17,24 @@
 #include <utility>
 #include <vector>
 
+#include <boost/preprocessor/cat.hpp>                   
+#include <boost/preprocessor/config/config.hpp>         
+#include <boost/preprocessor/control/iif.hpp>      
+#include <boost/preprocessor/detail/auto_rec.hpp>  
 #include <boost/preprocessor/facilities/overload.hpp>
+#include <boost/preprocessor/logical/bool.hpp>     
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
+#include <boost/preprocessor/tuple/rem.hpp>             
 #include <boost/preprocessor/tuple/size.hpp>
 #include <boost/preprocessor/variadic/elem.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
-#ifndef YOMM2_ENABLE_TRACE
+ #ifndef YOMM2_ENABLE_TRACE
 #ifdef NDEBUG
 #define YOMM2_ENABLE_TRACE 0
 #else
@@ -38,9 +47,6 @@
 #define YOMM2_TRACE(X) X
 #define YOMM2_TRACE_ELSE(X, Y) X
 #define YOMM2_TRACE_COMMA(X) , X
-
-#include <iostream>
-#include <iterator>
 
 #else
 #define YOMM2_TRACE(ST)
@@ -238,7 +244,7 @@ using method_call_error_handler = void (*)(const method_call_error& error);
 method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler);
 
-struct default_registry;
+struct default_registry; 
 
 struct policy {
     struct hash_factors_in_globals {};
@@ -250,6 +256,9 @@ struct default_policy : policy {
     using registry = default_registry;
 };
 
+// IWYU pragma: no_forward_declare default_registry
+// IWYU pragma: no_forward_declare default_policy
+ 
 namespace detail {
 
 template<typename Signature>
