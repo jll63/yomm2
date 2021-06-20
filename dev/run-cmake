@@ -1,3 +1,5 @@
+#!/bin/bash
+
 COMPILER=$1
 BUILD=$2
 mkdir -p build/$COMPILER/$BUILD
