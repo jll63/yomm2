@@ -11,6 +11,7 @@
 #include <yorel/yomm2/cute.hpp>
 
 #include "geometries.hpp"
+#include "painter.hpp"
 #include "line_painter.hpp"
 
 register_class(geometries::Segment, geometries::Line);

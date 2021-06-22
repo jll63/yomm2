@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cd ./build/$1/Release
 make -j4 benchmarks
 tests/benchmarks --benchmark_color=false --benchmark_repetitions=5 | perl -ne "$(cat <<'PERCENTS'

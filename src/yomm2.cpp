@@ -3,18 +3,35 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/runtime.hpp>
+#include <algorithm>                                // for max, transform, copy
+#include <cassert>                                  // for assert
+#include <chrono>                                   // for operator-, duration
+#include <cstdint>                                  // for uintptr_t
+#include <cstdlib>                                 // for abort, getenv
+#include <iomanip>                                  // for operator<<, setw
+#include <iostream>                                 // for operator<<, ostream
+#include <iterator>                                 // for back_insert_iterator
+#include <list>                                     // for list, _List_iterator
+#include <map>                                      // for map
+#include <memory>                                   // for allocator_traits<...
+#include <random>                                   // for default_random_en...
+#include <stdexcept>                                // for runtime_error
+#include <string>                                   // for char_traits, allo...
+#include <typeinfo>                                 // for type_info
+#include <unordered_map>                            // for _Node_iterator
+#include <unordered_set>                            // for unordered_set<>::...
+#include <utility>                                  // for pair
+#include <vector>                                   // for vector, vector<>:...
 
-#include <algorithm>
-#include <cassert>
-#include <iomanip>
-#include <iostream>
-#include <list>
-#include <random>
+#include <boost/dynamic_bitset/dynamic_bitset.hpp>  // for operator<<, dynam...
+
+#include <yorel/yomm2.hpp>                          // for word, YOMM2_TRACE
+#include <yorel/yomm2/runtime.hpp>                  // for rt_class, runtime
 
 namespace yorel {
 namespace yomm2 {
+
+struct default_registry;
 
 namespace detail {
 
