@@ -918,10 +918,19 @@ struct E : D {};
 YOMM2_CLASS_(test_registry, E, D);
 
 YOMM2_DECLARE(void, a, (virtual_<A&>), test_policy);
+YOMM2_DEFINE(void, a, (A&)) {}
+
 YOMM2_DECLARE(void, b, (virtual_<B&>), test_policy);
+YOMM2_DEFINE(void, b, (B&)) {}
+
 YOMM2_DECLARE(void, ab, (virtual_<A&>, virtual_<B&>), test_policy);
+YOMM2_DEFINE(void, ab, (A&, B&)) {}
+
 YOMM2_DECLARE(void, c, (virtual_<C&>), test_policy);
+YOMM2_DEFINE(void, c, (C&)) {}
+
 YOMM2_DECLARE(void, d, (virtual_<D&>), test_policy);
+YOMM2_DEFINE(void, d, (D&)) {}
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime rt(registry, dd);

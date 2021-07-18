@@ -229,13 +229,13 @@ BOOST_AUTO_TEST_CASE(error_handling)
     BOOST_TEST(error_code == yorel::yomm2::method_call_error::not_implemented);
     YOMM2_TRACE(
         BOOST_TEST(
-            method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
+            method_name == "void times(virtual_<const matrix&>, virtual_<const matrix&>)"));
     YOMM2_TRACE(method_name = "");
     times(diagonal_matrix(), diagonal_matrix());
     BOOST_TEST(error_code == yorel::yomm2::method_call_error::ambiguous);
     YOMM2_TRACE(
         BOOST_TEST(
-            method_name == "times(virtual_<const matrix&>, virtual_<const matrix&>)"));
+            method_name == "void times(virtual_<const matrix&>, virtual_<const matrix&>)"));
 }
 
 }

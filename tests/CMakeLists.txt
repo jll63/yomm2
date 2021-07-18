@@ -19,6 +19,10 @@ add_executable(namespaces namespaces.cpp)
 target_link_libraries(namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME namespaces COMMAND namespaces)
 
+add_executable(static_methods static_methods.cpp)
+target_link_libraries(static_methods YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME static_methods COMMAND static_methods)
+
 if(${YOMM2_ENABLE_BENCHMARKS})
   set_source_files_properties(benchmarks_vfuncs.cpp PROPERTIES COMPILE_FLAGS "-save-temps")
   add_executable(benchmarks benchmarks.cpp benchmarks_vfuncs.cpp )

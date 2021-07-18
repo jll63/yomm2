@@ -19,15 +19,16 @@ yorel::yomm2 and its content.
 
 Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 
-| cute                   | UGLY                             |
-|------------------------|----------------------------------|
-| `register_class`       | `YOMM2_CLASS`                    |
-| `declare_method`       | `YOMM2_DECLARE`                  |
-| `define_method`        | `YOMM2_DEFINE`                   |
-| `method_container`     | `YOMM2_DECLARE_METHOD_CONTAINER` |
-| `define_method_inline` | `YOMM2_METHOD_INLINE`            |
-| `friend_method`        | `YOMM2_FRIEND`                   |
-| `method_definition`    | `YOMM2_DEFINITION`               |
+| cute                    | UGLY                             |
+|-------------------------|----------------------------------|
+| `register_class`        | `YOMM2_CLASS`                    |
+| `declare_method`        | `YOMM2_DECLARE`                  |
+| `declare_static_method` | `YOMM2_STATIC_DECLARE`           |
+| `define_method`         | `YOMM2_DEFINE`                   |
+| `method_container`      | `YOMM2_DECLARE_METHOD_CONTAINER` |
+| `define_method_inline`  | `YOMM2_METHOD_INLINE`            |
+| `friend_method`         | `YOMM2_FRIEND`                   |
+| `method_definition`     | `YOMM2_DEFINITION`               |
 
 It is recommended to use the "cute" names unless they clash with names used in
 existing code.
@@ -181,6 +182,7 @@ YOMM2_DECLARE(std::string, kick, (virtual_<Animal&>));
 YOMM2_DECLARE(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 YOMM2_DECLARE(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 ```
+
 
 ## macros YOMM2_DEFINE, define_method
 
@@ -357,6 +359,23 @@ See [containers](examples/containers) for an example.
 
 `method_definition` is an alias for `YOMM2_DEFINITION`, provided by header
 `yorel/yomm2/cute.hpp`.
+## macros YOMM2_STATIC_DECLARE, declare_static_method
+
+#### Synopsis:
+```
+struct no_adl {
+  YOMM2_STATIC_DECLARE(return_type, method, (type...));
+};
+
+return_type rv = no_adl::method(unspecified_type... arg);
+```
+
+Declare a method as a static member in a `struct` or `class`. Otherwise, the
+macro does exactly the same things as `YOMM2_DECLARE`.
+
+This macro can be used when Argument Dependent Lookup is considered Evil. Note
+that there is no need for a static version of `DEFINE_METHOD`, since it does not
+introduce any functions that can be picked via ADL.
 
 ## function next
 

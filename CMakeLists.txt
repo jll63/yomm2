@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0057 NEW)
 
-project(YOMM2 VERSION 1.0)
+project(YOMM2 VERSION 1.1.2)
 
 # Find Boost dependency
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
