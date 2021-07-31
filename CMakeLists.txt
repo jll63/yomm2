@@ -25,6 +25,12 @@ if(MSVC)
   add_compile_options(/EHsc)
 endif()
 
+option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
+if(${YOMM2_DEBUG_MACROS})
+  message(STATUS "Macro debugging enabled")
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_SOURCE_DIR}/dev/ppfc)
+endif()
+
 add_subdirectory(src)
 
 option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
