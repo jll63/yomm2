@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0057 NEW)
 
-project(YOMM2 VERSION 1.0)
+project(YOMM2 VERSION 1.1.2)
 
 # Find Boost dependency
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
@@ -23,6 +23,12 @@ endif()
 if(MSVC)
   add_compile_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
   add_compile_options(/EHsc)
+endif()
+
+option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
+if(${YOMM2_DEBUG_MACROS})
+  message(STATUS "Macro debugging enabled")
+  set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_SOURCE_DIR}/dev/ppfc)
 endif()
 
 add_subdirectory(src)

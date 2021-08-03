@@ -11,6 +11,7 @@
 #define register_class YOMM2_CLASS
 
 #define declare_method YOMM2_DECLARE
+#define declare_static_method YOMM2_STATIC_DECLARE
 #define define_method YOMM2_DEFINE
 #define define_method_inline YOMM2_DEFINE_INLINE
 

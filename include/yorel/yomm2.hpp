@@ -61,65 +61,85 @@
     ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>          \
     BOOST_PP_CAT(a, I)
 
-#define yOMM2_ALIST(N, I, A)                                                  \
+#define yOMM2_PPLIST(N, I, A)                                                 \
     BOOST_PP_COMMA_IF(I)                                                      \
-    std::forward<::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>> \
-    (BOOST_PP_CAT(a, I))
+    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>*         \
+    BOOST_PP_CAT(a, I)
 
-#define yOMM2_RLIST(N, I, A)                                                  \
-    BOOST_PP_COMMA_IF(I) BOOST_PP_CAT(a, I)
+#define yOMM2_ALIST(N, I, A) \
+    BOOST_PP_COMMA_IF(I)     \
+    std::forward<::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>>(BOOST_PP_CAT(a, I))
 
-#define yOMM2_DECLARE_KEY(ID)                                                 \
+#define yOMM2_RLIST(N, I, A) \
+    BOOST_PP_COMMA_IF(I)     \
+    BOOST_PP_CAT(a, I)
+
+#define yOMM2_DECLARE_KEY(ID) \
     BOOST_PP_CAT(_yomm2_method_, ID)
 
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DECLARE(...)                                                    \
-    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__)
+#define YOMM2_DECLARE(...)                         \
+    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__) \
+    (__VA_ARGS__)
+#define YOMM2_STATIC_DECLARE(...)                         \
+    BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__) \
+    (__VA_ARGS__)
 #else
-#define YOMM2_DECLARE(...)                                                    \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__) \
-                 (__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_DECLARE(...) \
+    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_STATIC_DECLARE(...) \
+    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_DECLARE_3(R, ID, ARGS)                           \
-    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS,                   \
-                  ::yorel::yomm2::default_policy)
+#define yOMM2_WHEN_STATIC(CODE1, CODE2) CODE1
+#define yOMM2_WHEN_NOT_STATIC(CODE1, CODE2) CODE2
 
-#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                  \
-    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, POLICY)
+#define YOMM2_DECLARE_3(R, ID, ARGS) yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC, ::yorel::yomm2::default_policy)
 
-#define yOMM2_DECLARE(NS, R, ID, ARGS, POLICY)                                \
-    struct yOMM2_DECLARE_KEY(ID);                                             \
-    namespace {                                                               \
-    namespace NS {                                                            \
-    using _yOMM2_method = ::yorel::yomm2::detail::method                      \
-        <yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                              \
-    _yOMM2_method::init_method init = #ID  #ARGS;                             \
-    } }                                                                       \
-    NS::_yOMM2_method ID(                                                     \
-        ::yorel::yomm2::detail::discriminator,                                \
-        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                            \
-                        yOMM2_PLIST, ARGS));                                  \
-    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                    \
-                                yOMM2_PLIST, ARGS)) {                         \
-        auto pf = reinterpret_cast<R (*)(                                     \
-            BOOST_PP_REPEAT(                                                  \
-                BOOST_PP_TUPLE_SIZE(ARGS),                                    \
-                yOMM2_PLIST, ARGS))>(                                         \
-                    NS::_yOMM2_method::resolve(                               \
-                        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),            \
-                                        yOMM2_RLIST, ARGS)));                 \
-            return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),              \
-                             yOMM2_ALIST, ARGS));                             \
+#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY) \
+    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC, POLICY)
+
+#define YOMM2_STATIC_DECLARE_3(R, ID, ARGS) yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_STATIC, ::yorel::yomm2::default_policy)
+
+#define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY) \
+    yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_STATIC, POLICY)
+
+#define yOMM2_OPEN_BRACE {
+#define yOMM2_CLOSE_BRACE }
+
+#define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                                            \
+    struct yOMM2_DECLARE_KEY(ID);                                                                    \
+    IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                                          \
+    struct NS                                                                                        \
+    {                                                                                                \
+        using _yOMM2_method = ::yorel::yomm2::detail::method<yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>; \
+    };                                                                                               \
+    IF_STATIC(, yOMM2_CLOSE_BRACE)                                                                   \
+    IF_STATIC(static, )                                                                              \
+    NS::_yOMM2_method ID(                                                                            \
+        ::yorel::yomm2::detail::discriminator,                                                       \
+        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));                              \
+    IF_STATIC(static, ) inline const char* ID(NS::_yOMM2_method)  { return #R " " #ID #ARGS; }       \
+    IF_STATIC(static, )                                                                              \
+    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {                     \
+        auto pf = reinterpret_cast<R (*)(                                                            \
+            BOOST_PP_REPEAT(                                                                         \
+                BOOST_PP_TUPLE_SIZE(ARGS),                                                           \
+                yOMM2_PLIST, ARGS))>(                                                                \
+            NS::_yOMM2_method::resolve(                                                              \
+                BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                                           \
+                                yOMM2_RLIST, ARGS)));                                                \
+        return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                                         \
+                                  yOMM2_ALIST, ARGS));                                               \
     }
 
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DEFINE(...)                                                     \
+#define YOMM2_DEFINE(...) \
     BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__)
 #else
-#define YOMM2_DEFINE(...)                                                    \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)               \
-                 (__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_DEFINE(...) \
+    BOOST_PP_CAT(         \
+        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
 #endif
 
 #define YOMM2_DEFINE_3(RETURN_T, ID, ARGS)                                    \
@@ -132,7 +152,8 @@
                                  std::declval<A>()...));                      \
     };                                                                        \
     using _yOMM2_method = _yOMM2_select<void ARGS>::type;                     \
-    using _yOMM2_return_t = _yOMM2_method::return_type
+    using _yOMM2_return_t = _yOMM2_method::return_type;                       \
+    inline _yOMM2_method::init_method _yOMM2_init_method(ID(_yOMM2_method()));
 
 #define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
     namespace {                                                               \
@@ -167,7 +188,7 @@
 #define YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS) \
     template<typename S> struct CONTAINER;                                    \
     namespace { namespace NS {                                                \
-    yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                                  \
+        yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                              \
     } }                                                                       \
     template<> struct CONTAINER<RETURN_T ARGS> {                              \
         static NS::_yOMM2_method::next_type next;                             \
@@ -518,6 +539,7 @@ template<typename T>
 using resolve_arg_t = typename virtual_traits<T>::resolve_type;
 
 struct discriminator {};
+struct method_name {};
 
 std::ostream& log();
 std::ostream* log_on(std::ostream* os);
@@ -589,6 +611,7 @@ struct spec_info {
 };
 
 struct method_info {
+    bool initialized;
     const char* name = "(a method)";
     std::vector<const class_info*> vp;
     std::vector<const spec_info*> specs;
@@ -916,7 +939,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
             this_ = &si;
             si.name = name;
             YOMM2_TRACE(
-                log() << METHOD::info().name << ": add spec " << name << "\n");
+                log() << METHOD::name() << ": add spec " << name << "\n");
             si.pf = (void*) wrapper<
                 RETURN_T, SPEC, typename METHOD::signature_type, RETURN_T(SPEC_ARGS...)
                 >::call;
@@ -931,7 +954,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
         auto iter = std::find(specs.begin(), specs.end(), this_);
         if (iter != specs.end()) {
             YOMM2_TRACE(
-                log() << METHOD::info().name << ": remove spec "
+                log() << METHOD::name() << ": remove spec "
                 << (*iter)->name << "\n");
             specs.erase(iter);
         }
@@ -991,23 +1014,24 @@ struct method<ID, R(A...), POLICY> {
     static void not_implemented(virtual_arg_t<A>...) {
         method_call_error error;
         error.code = method_call_error::not_implemented;
-        YOMM2_TRACE(error.method_name = info().name);
+        YOMM2_TRACE(error.method_name = name());
         detail::call_error_handler(error);
     }
 
     static void ambiguous(virtual_arg_t<A>...) {
         method_call_error error;
         error.code = method_call_error::ambiguous;
-        YOMM2_TRACE(error.method_name = info().name);
+        YOMM2_TRACE(error.method_name = name());
         detail::call_error_handler(error);
     }
 
     struct init_method {
         init_method(const char* name) {
-            if (info().vp.empty()) {
-                info().name = name;
+            auto& inf = info();
+            if (!inf.initialized) {
                 YOMM2_TRACE(log() << "Register method " << name << "\n");
-                auto& inf = info();
+                inf.initialized = true;
+                inf.name = name;
                 inf.slots_strides_p = &slots_strides;
                 for_each_vp_t::collect_class_info(inf.vp);
                 registry::get<REG>().methods.push_back(&inf);
@@ -1022,7 +1046,7 @@ struct method<ID, R(A...), POLICY> {
             auto& methods = registry::get<REG>().methods;
             auto iter = std::find(methods.begin(), methods.end(), &info());
             if (iter != methods.end()) {
-                YOMM2_TRACE(log() << "Un-register method " << info().name << "\n");
+                YOMM2_TRACE(log() << "Un-register method " << name() << "\n");
                 methods.erase(iter);
             }
         }
