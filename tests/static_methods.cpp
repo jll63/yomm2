@@ -5,8 +5,6 @@
 
 #include <yorel/yomm2/cute.hpp>
 
-#include <iostream>
-#include <memory>
 #include <string>
 
 #define BOOST_TEST_MODULE yomm2
