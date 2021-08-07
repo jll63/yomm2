@@ -109,35 +109,30 @@
 
 #define yOMM2_SELECTOR(ID) ID ## _yOMM2_selector_
 
-#define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                                            \
-    struct yOMM2_DECLARE_KEY(ID);                                                                    \
-    IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                                          \
-    struct NS                                                                                        \
-    {                                                                                                \
-        using _yOMM2_method = ::yorel::yomm2::detail::method<yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>; \
-    };                                                                                               \
-    IF_STATIC(, yOMM2_CLOSE_BRACE)                                                                   \
-    IF_STATIC(static, )                                                                              \
-    NS::_yOMM2_method yOMM2_SELECTOR(ID)(                                                            \
-        ::yorel::yomm2::detail::discriminator,                                                       \
-        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));                              \
-    IF_STATIC(static, )                                                                              \
-    inline const char *yOMM2_SELECTOR(ID)(NS::_yOMM2_method)                                         \
-    {                                                                                                \
-        return #R " " #ID #ARGS;                                                                     \
-    }                                                                                                \
-    IF_STATIC(static, )                                                                              \
-    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS))                       \
-    {                                                                                                \
-        auto pf = reinterpret_cast<R (*)(                                                            \
-            BOOST_PP_REPEAT(                                                                         \
-                BOOST_PP_TUPLE_SIZE(ARGS),                                                           \
-                yOMM2_PLIST, ARGS))>(                                                                \
-            NS::_yOMM2_method::resolve(                                                              \
-                BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                                           \
-                                yOMM2_RLIST, ARGS)));                                                \
-        return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS),                                         \
-                                  yOMM2_ALIST, ARGS));                                               \
+#define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                         \
+    struct yOMM2_DECLARE_KEY(ID);                                                 \
+    IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                       \
+    struct NS                                                                     \
+    {                                                                             \
+        using _yOMM2_method = ::yorel::yomm2::detail::method<                     \
+            yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                               \
+    };                                                                            \
+    IF_STATIC(, yOMM2_CLOSE_BRACE)                                                \
+    IF_STATIC(static, )                                                           \
+    NS::_yOMM2_method yOMM2_SELECTOR(ID)(                                         \
+        ::yorel::yomm2::detail::discriminator,                                    \
+        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));           \
+    IF_STATIC(static, )                                                           \
+    inline const char *yOMM2_SELECTOR(ID)(NS::_yOMM2_method)                      \
+    {                                                                             \
+        return #R " " #ID #ARGS;                                                  \
+    }                                                                             \
+    IF_STATIC(static, )                                                           \
+    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS))    \
+    {                                                                             \
+        auto pf = NS::_yOMM2_method::resolve(                                     \
+            BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_RLIST, ARGS));       \
+        return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS)); \
     }
 
 #if !BOOST_PP_VARIADICS_MSVC
@@ -169,7 +164,7 @@
     namespace {                                                               \
     namespace NS {                                                            \
     yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                                  \
-    _yOMM2_method::next_type next;                                            \
+    _yOMM2_method::function_pointer_type next;                                \
     struct _yOMM2_spec { static RETURN_T yOMM2_body ARGS; };                  \
     ::yorel::yomm2::detail::                                                  \
     register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
@@ -201,7 +196,7 @@
         yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                              \
     } }                                                                       \
     template<> struct CONTAINER<RETURN_T ARGS> {                              \
-        static NS::_yOMM2_method::next_type next;                             \
+        static NS::_yOMM2_method::function_pointer_type next;                 \
         static RETURN_T yOMM2_body ARGS;                                      \
     }
 
@@ -211,16 +206,20 @@
 #define YOMM2_DEFINE_INLINE(CONTAINER, RETURN_T, ID, ARGS)                    \
     yOMM2_DEFINE_METHOD_IN(yOMM2_GENSYM, inline, CONTAINER, RETURN_T, ID, ARGS)
 
-#define yOMM2_DEFINE_METHOD_IN(NS, INLINE, CONTAINER, RETURN_T, ID, ARGS)     \
-    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS);   \
-    INLINE NS::_yOMM2_method::next_type CONTAINER<RETURN_T ARGS>::next;       \
-    namespace { namespace NS {                                                \
-    INLINE ::yorel::yomm2::detail::                                           \
-    register_spec<_yOMM2_return_t, _yOMM2_method, CONTAINER<RETURN_T ARGS>, void ARGS> \
-    _yOMM2_init(                                                              \
-        (void**)&CONTAINER<RETURN_T ARGS>::next,                              \
-        YOMM2_TRACE_ELSE(#ARGS, typeid(CONTAINER<RETURN_T ARGS>).name()));    \
-    } }                                                                       \
+#define yOMM2_DEFINE_METHOD_IN(NS, INLINE, CONTAINER, RETURN_T, ID, ARGS)                          \
+    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS);                        \
+    INLINE NS::_yOMM2_method::function_pointer_type CONTAINER<RETURN_T ARGS>::next;                \
+    namespace                                                                                      \
+    {                                                                                              \
+        namespace NS                                                                               \
+        {                                                                                          \
+            INLINE ::yorel::yomm2::detail::                                                        \
+                register_spec<_yOMM2_return_t, _yOMM2_method, CONTAINER<RETURN_T ARGS>, void ARGS> \
+                    _yOMM2_init(                                                                   \
+                        (void **)&CONTAINER<RETURN_T ARGS>::next,                                  \
+                        YOMM2_TRACE_ELSE(#ARGS, typeid(CONTAINER<RETURN_T ARGS>).name()));         \
+        }                                                                                          \
+    }                                                                                              \
     INLINE RETURN_T CONTAINER<RETURN_T ARGS>::yOMM2_body ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
@@ -549,7 +548,6 @@ template<typename T>
 using resolve_arg_t = typename virtual_traits<T>::resolve_type;
 
 struct discriminator {};
-struct method_name {};
 
 std::ostream& log();
 std::ostream* log_on(std::ostream* os);
@@ -986,19 +984,20 @@ struct method<ID, R(A...), POLICY> {
 
     using signature_type = R(A...);
     using return_type = R;
-    using next_type = R (*)(virtual_arg_t<A>...);
+    using function_pointer_type = R (*)(virtual_arg_t<A>...);
     using REG = typename POLICY::registry;
     using for_each_vp_t = for_each_vp<REG, A...>;
 
     enum { arity = for_each_vp_t::count };
 
-    static  void* resolve(resolve_arg_t<A>... args) {
+    static function_pointer_type resolve(resolve_arg_t<A>... args) {
         YOMM2_TRACE(detail::log() << "call " << name() << "\n");
-        return resolve(
-            typename POLICY::hash_factors_placement(), args...);
+        return reinterpret_cast<function_pointer_type>(
+            resolve(
+                typename POLICY::hash_factors_placement(), args...));
     }
 
-    static  void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
+    static void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
         return resolver<arity, A...>::resolve(
             dispatch_data::instance<REG>::_.hash_table,
             dispatch_data::instance<REG>::_.hash.mult,
