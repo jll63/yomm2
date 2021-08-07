@@ -776,13 +776,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         const Expense& taxi = Taxi();
         const Expense& jet = Jet();
 
-        using pay_method = decltype(pay(discriminator(), Employee()));
+        using pay_method = decltype(yOMM2_SELECTOR(pay)(discriminator(), Employee()));
         BOOST_TEST(pay_method::arity == 1);
         BOOST_TEST(pay_method::resolve(employee) == pay_Employee->info->pf);
         BOOST_TEST(&typeid(manager) == &typeid(Manager));
         BOOST_TEST(pay_method::resolve(manager) == pay_Manager->info->pf);
 
-        using approve_method = decltype(approve(discriminator(), Role(), Expense(), 0.));
+        using approve_method = decltype(yOMM2_SELECTOR(approve)(discriminator(), Role(), Expense(), 0.));
         BOOST_TEST(approve_method::arity == 2);
 
         BOOST_TEST(approve_method::resolve(role, expense, 0.) == approve_Role_Expense->info->pf);

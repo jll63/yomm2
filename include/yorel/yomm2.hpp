@@ -107,6 +107,8 @@
 #define yOMM2_OPEN_BRACE {
 #define yOMM2_CLOSE_BRACE }
 
+#define yOMM2_SELECTOR(ID) ID ## _yOMM2_selector_
+
 #define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                                            \
     struct yOMM2_DECLARE_KEY(ID);                                                                    \
     IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                                          \
@@ -116,12 +118,17 @@
     };                                                                                               \
     IF_STATIC(, yOMM2_CLOSE_BRACE)                                                                   \
     IF_STATIC(static, )                                                                              \
-    NS::_yOMM2_method ID(                                                                            \
+    NS::_yOMM2_method yOMM2_SELECTOR(ID)(                                                            \
         ::yorel::yomm2::detail::discriminator,                                                       \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));                              \
-    IF_STATIC(static, ) inline const char* ID(NS::_yOMM2_method)  { return #R " " #ID #ARGS; }       \
     IF_STATIC(static, )                                                                              \
-    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {                     \
+    inline const char *yOMM2_SELECTOR(ID)(NS::_yOMM2_method)                                         \
+    {                                                                                                \
+        return #R " " #ID #ARGS;                                                                     \
+    }                                                                                                \
+    IF_STATIC(static, )                                                                              \
+    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS))                       \
+    {                                                                                                \
         auto pf = reinterpret_cast<R (*)(                                                            \
             BOOST_PP_REPEAT(                                                                         \
                 BOOST_PP_TUPLE_SIZE(ARGS),                                                           \
@@ -145,15 +152,18 @@
 #define YOMM2_DEFINE_3(RETURN_T, ID, ARGS)                                    \
     yOMM2_DEFINE(yOMM2_GENSYM, RETURN_T, ID, ARGS)
 
-#define yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS)                               \
-    template<typename T> struct _yOMM2_select;                                \
-    template<typename... A> struct _yOMM2_select<void(A...)> {                \
-        using type = decltype(ID(::yorel::yomm2::detail::discriminator(),     \
-                                 std::declval<A>()...));                      \
-    };                                                                        \
-    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                     \
-    using _yOMM2_return_t = _yOMM2_method::return_type;                       \
-    inline _yOMM2_method::init_method _yOMM2_init_method(ID(_yOMM2_method()));
+#define yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS)                                           \
+    template <typename T>                                                                 \
+    struct _yOMM2_select;                                                                 \
+    template <typename... A>                                                              \
+    struct _yOMM2_select<void(A...)>                                                      \
+    {                                                                                     \
+        using type = decltype(yOMM2_SELECTOR(ID)(::yorel::yomm2::detail::discriminator(), \
+                                                 std::declval<A>()...));                  \
+    };                                                                                    \
+    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                                 \
+    using _yOMM2_return_t = _yOMM2_method::return_type;                                   \
+    inline _yOMM2_method::init_method _yOMM2_init_method(yOMM2_SELECTOR(ID)(_yOMM2_method()));
 
 #define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
     namespace {                                                               \
