@@ -968,7 +968,7 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
 spec_info* register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>::this_;
 
-template<typename ID, typename SIG, class POLICY>
+template<typename ID, typename SIG, class POLICY = default_policy>
 struct method;
 
 template<typename ID, typename R, typename... A, typename POLICY>
