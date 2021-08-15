@@ -44,7 +44,7 @@ while True:
     compile.append(arg)
 
 preprocess.append(cpp_file)
-compile.append(ii_file)
+compile.append(os.path.realpath(ii_file))
 
 if verbose:
     print(*preprocess)
