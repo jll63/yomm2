@@ -1,19 +1,38 @@
-name: YOMM2
+name: CI
+
+env:
+  BUILD_TYPE: Debug Release
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: [ master ]
   pull_request:
-    branches: [ $default-branch ]
+    branches: [ master ]
 
-env:
-  BUILD_TYPE: Release
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        compiler: [g++, clang++]
+        standard: [17, 20]
+        config: [Debug, Release, ReleaseDebug, DebugRelease]
     steps:
-    - uses: actions/checkout@v2
-    - name: POC
-      run: CONFIG=Debug dev/travis
+      - uses: actions/checkout@v2
+      - name: Install Boost
+        if: ${{ matrix.standard == 17 }}
+        run: |
+          sudo apt update
+          sudo apt install libboost-all-dev
+      - name: Configure
+        run: |
+          mkdir cmake.bld
+          cd cmake.bld
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+      - name: Build
+        run: VERBOSE=1 cmake --build cmake.bld
+      - name: Test
+        run: ctest cmake.bld
