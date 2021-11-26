@@ -473,12 +473,14 @@ struct shared_ptr_traits {
 template<typename T>
 struct shared_ptr_traits< std::shared_ptr<T> > {
     static const bool is_shared_ptr = true;
+    static const bool is_const_ref = false;
     using polymorphic_type = T;
 };
 
 template<typename T>
 struct shared_ptr_traits< const std::shared_ptr<T>& > {
     static const bool is_shared_ptr = true;
+    static const bool is_const_ref = true;
     using polymorphic_type = T;
 };
 
@@ -499,12 +501,8 @@ struct virtual_traits< virtual_< std::shared_ptr<T> > > {
     static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            std::is_same<
-                DERIVED, 
-                std::shared_ptr<
-                    typename shared_ptr_traits<DERIVED>::polymorphic_type
-                >
-            >::value, "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+            !shared_ptr_traits<DERIVED>::is_const_ref, 
+            "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
         static_assert(
             std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
@@ -539,12 +537,8 @@ struct virtual_traits< virtual_< const std::shared_ptr<T>& > > {
     static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            std::is_same<
-                DERIVED, 
-                const std::shared_ptr<
-                    typename shared_ptr_traits<DERIVED>::polymorphic_type
-                >&
-            >::value, "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+            shared_ptr_traits<DERIVED>::is_const_ref, 
+            "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
         static_assert(
             std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
