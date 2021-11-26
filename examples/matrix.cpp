@@ -59,7 +59,7 @@ declare_method(
 define_method(
     auto,
     times,
-    (shared_ptr<const matrix> a, shared_ptr<const matrix> b)) {
+    (const shared_ptr<const matrix>& a, const shared_ptr<const matrix>& b)) {
     return make_shared<dense_matrix>();
 }
 
@@ -67,7 +67,7 @@ define_method(
 define_method(
     auto,
     times,
-    (shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b)) {
+    (const shared_ptr<const diagonal_matrix>& a, const shared_ptr<const diagonal_matrix>& b)) {
     return make_shared<diagonal_matrix>();
 }
 
@@ -82,7 +82,7 @@ inline shared_ptr<const matrix> operator *(
 declare_method(
     shared_ptr<const matrix>,
     times,
-    (double, virtual_<const shared_ptr<const matrix>&>));
+    (double, virtual_<shared_ptr<const matrix>>));
 
 // catch-all matrix * scalar -> dense_matrix
 define_method(auto, times, (double a, shared_ptr<const matrix> b)) {
@@ -97,7 +97,7 @@ define_method(auto, times, (double a, shared_ptr<const diagonal_matrix> b)) {
 // matrix * scalar
 
 // just swap
-inline shared_ptr<const matrix> times(shared_ptr<const matrix> a, double b) {
+inline shared_ptr<const matrix> times(const shared_ptr<const matrix>& a, double b) {
     return times(b, a);
 }
 

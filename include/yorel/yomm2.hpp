@@ -378,7 +378,7 @@ struct static_cast_ {};
 
 template<typename T>
 struct virtual_traits {
-    using base_type = typename std::remove_cv_t<std::remove_reference_t<T>>;
+    using polymorphic_type = typename std::remove_cv_t<std::remove_reference_t<T>>;
     using argument_type = T;
     using resolve_type = const T&;
     template<typename>
@@ -393,73 +393,73 @@ struct virtual_traits {
 
 template<typename T>
 struct virtual_traits< virtual_<T&> > {
-    using base_type = std::remove_cv_t<T>;
+    using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = T&;
     using resolve_type = T&;
 
-    static_assert(std::is_class<base_type>::value);
-    static_assert(std::is_polymorphic<base_type>::value);
+    static_assert(std::is_class<polymorphic_type>::value);
+    static_assert(std::is_polymorphic<polymorphic_type>::value);
 
     static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T& obj, static_cast_) {
+    static auto& cast(T& obj, static_cast_) {
         return static_cast<DERIVED>(obj);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T& obj, dynamic_cast_) {
+    static auto& cast(T& obj, dynamic_cast_) {
         return dynamic_cast<DERIVED>(obj);
     }
 };
 
 template<typename T>
 struct virtual_traits< virtual_<T&&> > {
-    using base_type = T;
+    using polymorphic_type = T;
     using argument_type = T&&;
     using resolve_type = T&;
 
-    static_assert(std::is_class<base_type>::value);
-    static_assert(std::is_polymorphic<base_type>::value);
+    static_assert(std::is_class<polymorphic_type>::value);
+    static_assert(std::is_polymorphic<polymorphic_type>::value);
 
     static auto key(resolve_type arg) {
         return &typeid(arg);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T&& obj, static_cast_) {
+    static auto&& cast(T&& obj, static_cast_) {
         return static_cast<DERIVED>(obj);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T&& obj, dynamic_cast_) {
+    static auto&& cast(T&& obj, dynamic_cast_) {
         return dynamic_cast<DERIVED>(obj);
     }
 };
 
 template<typename T>
 struct virtual_traits< virtual_<T*> > {
-    using base_type = std::remove_cv_t<T>;
+    using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = T*;
     using resolve_type = T*;
 
-    static_assert(std::is_class<base_type>::value);
-    static_assert(std::is_polymorphic<base_type>::value);
+    static_assert(std::is_class<polymorphic_type>::value);
+    static_assert(std::is_polymorphic<polymorphic_type>::value);
 
     static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T* obj, static_cast_) {
+    static auto cast(T* obj, static_cast_) {
         static_assert(std::is_pointer<DERIVED>::value);
         return static_cast<DERIVED>(obj);
     }
 
     template<class DERIVED>
-    static DERIVED cast(T* obj, dynamic_cast_) {
+    static auto cast(T* obj, dynamic_cast_) {
         static_assert(std::is_pointer<DERIVED>::value);
         return dynamic_cast<DERIVED>(obj);
     }
@@ -473,71 +473,97 @@ struct shared_ptr_traits {
 template<typename T>
 struct shared_ptr_traits< std::shared_ptr<T> > {
     static const bool is_shared_ptr = true;
-    using base_type = T;
+    using polymorphic_type = T;
+};
+
+template<typename T>
+struct shared_ptr_traits< const std::shared_ptr<T>& > {
+    static const bool is_shared_ptr = true;
+    using polymorphic_type = T;
 };
 
 template<typename T>
 struct virtual_traits< virtual_< std::shared_ptr<T> > > {
-    using base_type = std::remove_cv_t<T>;
+    using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = std::shared_ptr<T>;
     using resolve_type = const std::shared_ptr<T>&;
 
-    static_assert(std::is_class<base_type>::value);
-    static_assert(std::is_polymorphic<base_type>::value);
+    static_assert(std::is_class<polymorphic_type>::value);
+    static_assert(std::is_polymorphic<polymorphic_type>::value);
 
     static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
     template<class DERIVED>
-    static DERIVED cast(argument_type obj, static_cast_) {
+    static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
-        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+            std::is_same<
+                DERIVED, 
+                std::shared_ptr<
+                    typename shared_ptr_traits<DERIVED>::polymorphic_type
+                >
+            >::value, "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
 
     template<class DERIVED>
-    static DERIVED cast(argument_type obj, dynamic_cast_) {
-        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
-        static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
-        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+    static auto cast(argument_type obj, static_cast_) {
+        check_cast<DERIVED>();
+        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+    }
+
+    template<class DERIVED>
+    static auto cast(argument_type obj, dynamic_cast_) {
+        check_cast<DERIVED>();
+        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 };
 
 template<typename T>
 struct virtual_traits< virtual_< const std::shared_ptr<T>& > > {
-    using base_type = std::remove_cv_t<T>;
+    using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = const std::shared_ptr<T>&;
     using resolve_type = const std::shared_ptr<T>&;
 
-    static_assert(std::is_class<base_type>::value);
-    static_assert(std::is_polymorphic<base_type>::value);
+    static_assert(std::is_class<polymorphic_type>::value);
+    static_assert(std::is_polymorphic<polymorphic_type>::value);
 
     static auto key(resolve_type arg) {
         return &typeid(*arg);
     }
 
     template<class DERIVED>
-    static DERIVED cast(argument_type obj, static_cast_) {
+    static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
-        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+            std::is_same<
+                DERIVED, 
+                const std::shared_ptr<
+                    typename shared_ptr_traits<DERIVED>::polymorphic_type
+                >&
+            >::value, "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+        static_assert(
+            std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
 
     template<class DERIVED>
-    static DERIVED cast(argument_type obj, dynamic_cast_) {
-        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
-        static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::base_type>::value);
-        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::base_type>(obj);
+    static auto cast(argument_type obj, static_cast_) {
+        check_cast<DERIVED>();
+        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+    }
+
+    template<class DERIVED>
+    static auto cast(argument_type obj, dynamic_cast_) {
+        check_cast<DERIVED>();
+        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 };
 
 template<typename T>
-using virtual_base_t = typename virtual_traits<T>::base_type;
+using virtual_base_t = typename virtual_traits<T>::polymorphic_type;
 
 template<typename T>
 using virtual_arg_t = typename virtual_traits<T>::argument_type;
