@@ -25,8 +25,7 @@ namespace detail {
 
 struct rt_method;
 
-struct rt_arg
-{
+struct rt_arg {
     rt_method* method;
     int param;
 };
@@ -35,8 +34,9 @@ struct rt_class {
     const class_info* info;
     std::vector<rt_class*> direct_bases;
     std::vector<rt_class*> direct_derived;
-    std::unordered_set<rt_class*> conforming; // all the classes that conform to this one,
-                                         // = the class itself and all its subclasses
+    std::unordered_set<rt_class*>
+        conforming; // all the classes that conform to this one,
+                    // = the class itself and all its subclasses
     std::vector<rt_arg> vp;
     int next_slot{0};
     int first_used_slot{-1};
@@ -46,14 +46,13 @@ struct rt_class {
     word* mptr;
 };
 
-struct rt_spec
-{
+struct rt_spec {
     const spec_info* info;
     std::vector<rt_class*> vp;
 };
 
 using bitvec = boost::dynamic_bitset<>;
-using group_map = std::map< bitvec, std::vector<rt_class*> >;
+using group_map = std::map<bitvec, std::vector<rt_class*>>;
 
 struct rt_method {
     method_info* info;
@@ -78,8 +77,7 @@ struct runtime {
     std::vector<rt_method> methods;
     int class_visit{0};
 
-    struct metrics_t
-    {
+    struct metrics_t {
         size_t method_table_size, dispatch_table_size, hash_table_size;
         int hash_search_attempts;
         std::chrono::duration<double> hash_search_time;
@@ -106,10 +104,10 @@ struct runtime {
     void optimize();
 
     static void find_hash_function(
-        const std::vector<rt_class>& classes,
-        hash_function& hash,
+        const std::vector<rt_class>& classes, hash_function& hash,
         metrics_t& metrics);
-    static std::vector<const rt_spec*> best(std::vector<const rt_spec*>& candidates);
+    static std::vector<const rt_spec*>
+    best(std::vector<const rt_spec*>& candidates);
     static bool is_more_specific(const rt_spec* a, const rt_spec* b);
     static bool is_base(const rt_spec* a, const rt_spec* b);
 };

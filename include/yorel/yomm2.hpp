@@ -17,24 +17,24 @@
 #include <utility>
 #include <vector>
 
-#include <boost/preprocessor/cat.hpp>                   
-#include <boost/preprocessor/config/config.hpp>         
-#include <boost/preprocessor/control/iif.hpp>      
-#include <boost/preprocessor/detail/auto_rec.hpp>  
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/config/config.hpp>
+#include <boost/preprocessor/control/iif.hpp>
+#include <boost/preprocessor/detail/auto_rec.hpp>
 #include <boost/preprocessor/facilities/overload.hpp>
-#include <boost/preprocessor/logical/bool.hpp>     
+#include <boost/preprocessor/logical/bool.hpp>
 #include <boost/preprocessor/punctuation/comma_if.hpp>
 #include <boost/preprocessor/repetition/repeat.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/preprocessor/tuple/elem.hpp>
-#include <boost/preprocessor/tuple/rem.hpp>             
+#include <boost/preprocessor/tuple/rem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 #include <boost/preprocessor/variadic/elem.hpp>
 #include <boost/preprocessor/variadic/to_tuple.hpp>
 
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
- #ifndef YOMM2_ENABLE_TRACE
+#ifndef YOMM2_ENABLE_TRACE
 #ifdef NDEBUG
 #define YOMM2_ENABLE_TRACE 0
 #else
@@ -56,203 +56,227 @@
 
 #define yOMM2_GENSYM BOOST_PP_CAT(YoMm2_nS_, __COUNTER__)
 
-#define yOMM2_PLIST(N, I, A)                                                  \
-    BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>          \
+#define yOMM2_PLIST(N, I, A)                                                   \
+    BOOST_PP_COMMA_IF(I)                                                       \
+    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>           \
     BOOST_PP_CAT(a, I)
 
-#define yOMM2_PPLIST(N, I, A)                                                 \
-    BOOST_PP_COMMA_IF(I)                                                      \
-    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>*         \
+#define yOMM2_PPLIST(N, I, A)                                                  \
+    BOOST_PP_COMMA_IF(I)                                                       \
+    ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>*          \
     BOOST_PP_CAT(a, I)
 
-#define yOMM2_ALIST(N, I, A) \
-    BOOST_PP_COMMA_IF(I)     \
-    std::forward<::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>>(BOOST_PP_CAT(a, I))
+#define yOMM2_ALIST(N, I, A)                                                   \
+    BOOST_PP_COMMA_IF(I)                                                       \
+    std::forward<                                                              \
+        ::yorel::yomm2::detail::virtual_arg_t<BOOST_PP_TUPLE_ELEM(I, A)>>(     \
+        BOOST_PP_CAT(a, I))
 
-#define yOMM2_RLIST(N, I, A) \
-    BOOST_PP_COMMA_IF(I)     \
+#define yOMM2_RLIST(N, I, A)                                                   \
+    BOOST_PP_COMMA_IF(I)                                                       \
     BOOST_PP_CAT(a, I)
 
-#define yOMM2_DECLARE_KEY(ID) \
-    BOOST_PP_CAT(_yomm2_method_, ID)
+#define yOMM2_DECLARE_KEY(ID) BOOST_PP_CAT(_yomm2_method_, ID)
 
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DECLARE(...)                         \
-    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__) \
+#define YOMM2_DECLARE(...)                                                     \
+    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)                             \
     (__VA_ARGS__)
-#define YOMM2_STATIC_DECLARE(...)                         \
-    BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__) \
+#define YOMM2_STATIC_DECLARE(...)                                              \
+    BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)                      \
     (__VA_ARGS__)
 #else
-#define YOMM2_DECLARE(...) \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
-#define YOMM2_STATIC_DECLARE(...) \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_DECLARE(...)                                                     \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__),           \
+        BOOST_PP_EMPTY())
+#define YOMM2_STATIC_DECLARE(...)                                              \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)(__VA_ARGS__),    \
+        BOOST_PP_EMPTY())
 #endif
 
 #define yOMM2_WHEN_STATIC(CODE1, CODE2) CODE1
 #define yOMM2_WHEN_NOT_STATIC(CODE1, CODE2) CODE2
 
-#define YOMM2_DECLARE_3(R, ID, ARGS) yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC, ::yorel::yomm2::default_policy)
+#define YOMM2_DECLARE_3(R, ID, ARGS)                                           \
+    yOMM2_DECLARE(                                                             \
+        yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC,                      \
+        ::yorel::yomm2::default_policy)
 
-#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY) \
+#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                   \
     yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC, POLICY)
 
-#define YOMM2_STATIC_DECLARE_3(R, ID, ARGS) yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_STATIC, ::yorel::yomm2::default_policy)
+#define YOMM2_STATIC_DECLARE_3(R, ID, ARGS)                                    \
+    yOMM2_DECLARE(                                                             \
+        yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_STATIC,                          \
+        ::yorel::yomm2::default_policy)
 
-#define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY) \
+#define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY)                            \
     yOMM2_DECLARE(yOMM2_GENSYM, R, ID, ARGS, yOMM2_WHEN_STATIC, POLICY)
 
 #define yOMM2_OPEN_BRACE {
 #define yOMM2_CLOSE_BRACE }
 
-#define yOMM2_SELECTOR(ID) ID ## _yOMM2_selector_
+#define yOMM2_SELECTOR(ID) ID##_yOMM2_selector_
 
-#define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                         \
-    struct yOMM2_DECLARE_KEY(ID);                                                 \
-    IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                       \
-    struct NS                                                                     \
-    {                                                                             \
-        using _yOMM2_method = ::yorel::yomm2::detail::method<                     \
-            yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                               \
-    };                                                                            \
-    IF_STATIC(, yOMM2_CLOSE_BRACE)                                                \
-    IF_STATIC(static, )                                                           \
-    NS::_yOMM2_method yOMM2_SELECTOR(ID)(                                         \
-        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));           \
-    IF_STATIC(static, )                                                           \
-    inline const char *yOMM2_SELECTOR(ID)(NS::_yOMM2_method)                      \
-    {                                                                             \
-        return #R " " #ID #ARGS;                                                  \
-    }                                                                             \
-    IF_STATIC(static, )                                                           \
-    inline R ID(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS))    \
-    {                                                                             \
-        auto pf = NS::_yOMM2_method::resolve(                                     \
-            BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_RLIST, ARGS));       \
-        return pf(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS)); \
+#define yOMM2_DECLARE(NS, R, ID, ARGS, IF_STATIC, POLICY)                      \
+    struct yOMM2_DECLARE_KEY(ID);                                              \
+    IF_STATIC(, namespace yOMM2_OPEN_BRACE)                                    \
+    struct NS {                                                                \
+        using _yOMM2_method = ::yorel::yomm2::detail::method<                  \
+            yOMM2_DECLARE_KEY(ID), R ARGS, POLICY>;                            \
+    };                                                                         \
+    IF_STATIC(, yOMM2_CLOSE_BRACE)                                             \
+    IF_STATIC(static, )                                                        \
+    NS::_yOMM2_method yOMM2_SELECTOR(ID)(                                      \
+        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));        \
+    IF_STATIC(static, )                                                        \
+    inline const char* yOMM2_SELECTOR(ID)(NS::_yOMM2_method) {                 \
+        return #R " " #ID #ARGS;                                               \
+    }                                                                          \
+    IF_STATIC(static, )                                                        \
+    inline R ID(                                                               \
+        BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
+        auto pf = NS::_yOMM2_method::resolve(                                  \
+            BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_RLIST, ARGS));    \
+        return pf(                                                             \
+            BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));    \
     }
 
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DEFINE(...) \
+#define YOMM2_DEFINE(...)                                                      \
     BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__)
 #else
-#define YOMM2_DEFINE(...) \
-    BOOST_PP_CAT(         \
-        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_DEFINE(...)                                                      \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__),            \
+        BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_DEFINE_3(RETURN_T, ID, ARGS) \
+#define YOMM2_DEFINE_3(RETURN_T, ID, ARGS)                                     \
     yOMM2_DEFINE(yOMM2_GENSYM, RETURN_T, ID, ARGS)
 
-#define yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS)                                           \
-    template <typename T>                                                                 \
-    struct _yOMM2_select;                                                                 \
-    template <typename... A>                                                              \
-    struct _yOMM2_select<void(A...)>                                                      \
-    {                                                                                     \
-        using type = decltype(yOMM2_SELECTOR(ID)(std::declval<A>()...));                  \
-    };                                                                                    \
-    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                                 \
-    using _yOMM2_return_t = _yOMM2_method::return_type;                                   \
-    inline _yOMM2_method::init_method _yOMM2_init_method(yOMM2_SELECTOR(ID)(_yOMM2_method()));
+#define yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS)                                \
+    template<typename T>                                                       \
+    struct _yOMM2_select;                                                      \
+    template<typename... A>                                                    \
+    struct _yOMM2_select<void(A...)> {                                         \
+        using type = decltype(yOMM2_SELECTOR(ID)(std::declval<A>()...));       \
+    };                                                                         \
+    using _yOMM2_method = _yOMM2_select<void ARGS>::type;                      \
+    using _yOMM2_return_t = _yOMM2_method::return_type;                        \
+    inline _yOMM2_method::init_method _yOMM2_init_method(                      \
+        yOMM2_SELECTOR(ID)(_yOMM2_method()));
 
-#define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                  \
-    namespace {                                                               \
-    namespace NS {                                                            \
-    yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                                  \
-    _yOMM2_method::function_pointer_type next;                                \
-    struct _yOMM2_spec { static RETURN_T yOMM2_body ARGS; };                  \
-    ::yorel::yomm2::detail::                                                  \
-    register_spec<_yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>     \
-    _yOMM2_init(                                                              \
-        (void**)&next, YOMM2_TRACE_ELSE(#ARGS, typeid(_yOMM2_spec).name()));  \
-    } }                                                                       \
+#define yOMM2_DEFINE(NS, RETURN_T, ID, ARGS)                                   \
+    namespace {                                                                \
+    namespace NS {                                                             \
+    yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                                   \
+    _yOMM2_method::function_pointer_type next;                                 \
+    struct _yOMM2_spec {                                                       \
+        static RETURN_T yOMM2_body ARGS;                                       \
+    };                                                                         \
+    ::yorel::yomm2::detail::register_spec<                                     \
+        _yOMM2_return_t, _yOMM2_method, _yOMM2_spec, void ARGS>                \
+        _yOMM2_init(                                                           \
+            (void**) &next,                                                    \
+            YOMM2_TRACE_ELSE(#ARGS, typeid(_yOMM2_spec).name()));              \
+    }                                                                          \
+    }                                                                          \
     RETURN_T NS::_yOMM2_spec::yOMM2_body ARGS
 
-
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                   \
+#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                    \
     BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)(__VA_ARGS__)
 #else
-#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                   \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__) \
-                 (__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                    \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)(       \
+            __VA_ARGS__),                                                      \
+        BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_DECLARE_METHOD_CONTAINER_1(CONTAINER)                           \
-    template<typename S> struct CONTAINER
+#define YOMM2_DECLARE_METHOD_CONTAINER_1(CONTAINER)                            \
+    template<typename S>                                                       \
+    struct CONTAINER
 
-#define YOMM2_DECLARE_METHOD_CONTAINER_4(CONTAINER, RETURN_T, ID, ARGS)       \
-    template<typename S> struct CONTAINER;                                    \
-    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(yOMM2_GENSYM, CONTAINER, RETURN_T, ID, ARGS) \
+#define YOMM2_DECLARE_METHOD_CONTAINER_4(CONTAINER, RETURN_T, ID, ARGS)        \
+    template<typename S>                                                       \
+    struct CONTAINER;                                                          \
+    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                       \
+        yOMM2_GENSYM, CONTAINER, RETURN_T, ID, ARGS)
 
 #define YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS) \
-    template<typename S> struct CONTAINER;                                    \
-    namespace { namespace NS {                                                \
-        yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                              \
-    } }                                                                       \
-    template<> struct CONTAINER<RETURN_T ARGS> {                              \
-        static NS::_yOMM2_method::function_pointer_type next;                 \
-        static RETURN_T yOMM2_body ARGS;                                      \
+    template<typename S>                                                       \
+    struct CONTAINER;                                                          \
+    namespace {                                                                \
+    namespace NS {                                                             \
+    yOMM2_SELECT_METHOD(RETURN_T, ID, ARGS);                                   \
+    }                                                                          \
+    }                                                                          \
+    template<>                                                                 \
+    struct CONTAINER<RETURN_T ARGS> {                                          \
+        static NS::_yOMM2_method::function_pointer_type next;                  \
+        static RETURN_T yOMM2_body ARGS;                                       \
     }
 
-#define YOMM2_DEFINE_4(CONTAINER, RETURN_T, ID, ARGS)                         \
+#define YOMM2_DEFINE_4(CONTAINER, RETURN_T, ID, ARGS)                          \
     yOMM2_DEFINE_METHOD_IN(yOMM2_GENSYM, , CONTAINER, RETURN_T, ID, ARGS)
 
-#define YOMM2_DEFINE_INLINE(CONTAINER, RETURN_T, ID, ARGS)                    \
+#define YOMM2_DEFINE_INLINE(CONTAINER, RETURN_T, ID, ARGS)                     \
     yOMM2_DEFINE_METHOD_IN(yOMM2_GENSYM, inline, CONTAINER, RETURN_T, ID, ARGS)
 
-#define yOMM2_DEFINE_METHOD_IN(NS, INLINE, CONTAINER, RETURN_T, ID, ARGS)                          \
-    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS);                        \
-    INLINE NS::_yOMM2_method::function_pointer_type CONTAINER<RETURN_T ARGS>::next;                \
-    namespace                                                                                      \
-    {                                                                                              \
-        namespace NS                                                                               \
-        {                                                                                          \
-            INLINE ::yorel::yomm2::detail::                                                        \
-                register_spec<_yOMM2_return_t, _yOMM2_method, CONTAINER<RETURN_T ARGS>, void ARGS> \
-                    _yOMM2_init(                                                                   \
-                        (void **)&CONTAINER<RETURN_T ARGS>::next,                                  \
-                        YOMM2_TRACE_ELSE(#ARGS, typeid(CONTAINER<RETURN_T ARGS>).name()));         \
-        }                                                                                          \
-    }                                                                                              \
+#define yOMM2_DEFINE_METHOD_IN(NS, INLINE, CONTAINER, RETURN_T, ID, ARGS)      \
+    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, RETURN_T, ID, ARGS);    \
+    INLINE NS::_yOMM2_method::function_pointer_type                            \
+        CONTAINER<RETURN_T ARGS>::next;                                        \
+    namespace {                                                                \
+    namespace NS {                                                             \
+    INLINE ::yorel::yomm2::detail::register_spec<                              \
+        _yOMM2_return_t, _yOMM2_method, CONTAINER<RETURN_T ARGS>, void ARGS>   \
+        _yOMM2_init(                                                           \
+            (void**) &CONTAINER<RETURN_T ARGS>::next,                          \
+            YOMM2_TRACE_ELSE(#ARGS, typeid(CONTAINER<RETURN_T ARGS>).name())); \
+    }                                                                          \
+    }                                                                          \
     INLINE RETURN_T CONTAINER<RETURN_T ARGS>::yOMM2_body ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_FRIEND(...)                                                     \
+#define YOMM2_FRIEND(...)                                                      \
     BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__)
 #else
-#define YOMM2_FRIEND(...)                                                     \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)                \
-                 (__VA_ARGS__), BOOST_PP_EMPTY())
+#define YOMM2_FRIEND(...)                                                      \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__),            \
+        BOOST_PP_EMPTY())
 #endif
 
-#define YOMM2_FRIEND_1(CONTAINER)                                             \
-    template<typename> friend struct CONTAINER
+#define YOMM2_FRIEND_1(CONTAINER)                                              \
+    template<typename>                                                         \
+    friend struct CONTAINER
 
-#define YOMM2_FRIEND_3(CONTAINER, RETURN_T, ARGS)                             \
+#define YOMM2_FRIEND_3(CONTAINER, RETURN_T, ARGS)                              \
     friend struct CONTAINER<RETURN_T ARGS>
 
-#define YOMM2_DEFINITION(CONTAINER, RETURN_T, ARGS)                           \
+#define YOMM2_DEFINITION(CONTAINER, RETURN_T, ARGS)                            \
     CONTAINER<RETURN_T ARGS>::yOMM2_body
 
-#define YOMM2_CLASS(...)                                                      \
+#define YOMM2_CLASS(...)                                                       \
     YOMM2_CLASS_(::yorel::yomm2::default_registry, __VA_ARGS__)
 
-#define YOMM2_CLASS_(...)                                                     \
+#define YOMM2_CLASS_(...)                                                      \
     yOMM2_CLASS2(yOMM2_GENSYM, BOOST_PP_VARIADIC_TO_TUPLE(__VA_ARGS__))
 
-#define yOMM2_CLASS2(NS, TUPLE)                                               \
-    namespace {                                                               \
-    namespace NS {                                                            \
-    ::yorel::yomm2::detail::                                                  \
-    init_class_info                                                           \
-    <BOOST_PP_TUPLE_REM(BOOST_PP_TUPLE_SIZE(TUPLE))TUPLE> init                \
-    YOMM2_TRACE( {                                                            \
-            BOOST_PP_STRINGIZE(                                               \
-                BOOST_PP_TUPLE_ELEM(BOOST_PP_TUPLE_SIZE(TUPLE), 1, TUPLE)) }); } }
+#define yOMM2_CLASS2(NS, TUPLE)                                                \
+    namespace {                                                                \
+    namespace NS {                                                             \
+    ::yorel::yomm2::detail::init_class_info<                                   \
+        BOOST_PP_TUPLE_REM(BOOST_PP_TUPLE_SIZE(TUPLE)) TUPLE>                  \
+        init YOMM2_TRACE({BOOST_PP_STRINGIZE(                                               \
+                BOOST_PP_TUPLE_ELEM(BOOST_PP_TUPLE_SIZE(TUPLE), 1, TUPLE))});                          \
+    }                                                                          \
+    }
 
 namespace yorel {
 namespace yomm2 {
@@ -272,7 +296,7 @@ using method_call_error_handler = void (*)(const method_call_error& error);
 method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler);
 
-struct default_registry; 
+struct default_registry;
 
 struct policy {
     struct hash_factors_in_globals {};
@@ -286,15 +310,15 @@ struct default_policy : policy {
 
 // IWYU pragma: no_forward_declare default_registry
 // IWYU pragma: no_forward_declare default_policy
- 
+
 namespace detail {
 
 template<typename Signature>
 struct next_ptr_t;
 
 template<typename R, typename... T>
-struct  next_ptr_t<R(T...)> {
-    using type = R(*)(T...);
+struct next_ptr_t<R(T...)> {
+    using type = R (*)(T...);
 };
 
 template<typename Method, typename Signature>
@@ -316,10 +340,12 @@ union word {
 struct registry {
     std::vector<const class_info*> classes;
     std::vector<method_info*> methods;
-    template<typename T> static registry& get();
+    template<typename T>
+    static registry& get();
 };
 
-template<typename T> registry& registry::get() {
+template<typename T>
+registry& registry::get() {
     static registry r;
     return r;
 }
@@ -328,13 +354,12 @@ struct hash_function {
     std::uintptr_t mult;
     std::size_t shift;
 
-    std::size_t operator ()(const void* p) const {
+    std::size_t operator()(const void* p) const {
         return static_cast<std::size_t>(
             (mult * reinterpret_cast<std::uintptr_t>(const_cast<void*>(p)))
             >> shift);
     }
 };
-
 
 inline std::size_t hash(std::uintptr_t mult, std::size_t shift, const void* p) {
     return static_cast<std::size_t>(
@@ -364,13 +389,13 @@ inline const word* get_mptr(
     const word* hash_table, std::uintptr_t hash_mult, std::size_t hash_shift,
     const std::type_info* ti) {
     auto index = detail::hash(hash_mult, hash_shift, ti);
-        auto mptr = hash_table[index].pw;
+    auto mptr = hash_table[index].pw;
 #ifndef NDEBUG
-        if (!mptr || hash_table[-1].pw[index].ti != ti) {
-            unregistered_class_error(ti);
-        }
+    if (!mptr || hash_table[-1].pw[index].ti != ti) {
+        unregistered_class_error(ti);
+    }
 #endif
-        return mptr;
+    return mptr;
 }
 
 struct dynamic_cast_ {};
@@ -378,7 +403,8 @@ struct static_cast_ {};
 
 template<typename T>
 struct virtual_traits {
-    using polymorphic_type = typename std::remove_cv_t<std::remove_reference_t<T>>;
+    using polymorphic_type =
+        typename std::remove_cv_t<std::remove_reference_t<T>>;
     using argument_type = T;
     using resolve_type = const T&;
     template<typename>
@@ -392,7 +418,7 @@ struct virtual_traits {
 };
 
 template<typename T>
-struct virtual_traits< virtual_<T&> > {
+struct virtual_traits<virtual_<T&>> {
     using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = T&;
     using resolve_type = T&;
@@ -400,9 +426,7 @@ struct virtual_traits< virtual_<T&> > {
     static_assert(std::is_class<polymorphic_type>::value);
     static_assert(std::is_polymorphic<polymorphic_type>::value);
 
-    static auto key(resolve_type arg) {
-        return &typeid(arg);
-    }
+    static auto key(resolve_type arg) { return &typeid(arg); }
 
     template<class DERIVED>
     static auto& cast(T& obj, static_cast_) {
@@ -416,7 +440,7 @@ struct virtual_traits< virtual_<T&> > {
 };
 
 template<typename T>
-struct virtual_traits< virtual_<T&&> > {
+struct virtual_traits<virtual_<T&&>> {
     using polymorphic_type = T;
     using argument_type = T&&;
     using resolve_type = T&;
@@ -424,9 +448,7 @@ struct virtual_traits< virtual_<T&&> > {
     static_assert(std::is_class<polymorphic_type>::value);
     static_assert(std::is_polymorphic<polymorphic_type>::value);
 
-    static auto key(resolve_type arg) {
-        return &typeid(arg);
-    }
+    static auto key(resolve_type arg) { return &typeid(arg); }
 
     template<class DERIVED>
     static auto&& cast(T&& obj, static_cast_) {
@@ -440,7 +462,7 @@ struct virtual_traits< virtual_<T&&> > {
 };
 
 template<typename T>
-struct virtual_traits< virtual_<T*> > {
+struct virtual_traits<virtual_<T*>> {
     using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = T*;
     using resolve_type = T*;
@@ -448,9 +470,7 @@ struct virtual_traits< virtual_<T*> > {
     static_assert(std::is_class<polymorphic_type>::value);
     static_assert(std::is_polymorphic<polymorphic_type>::value);
 
-    static auto key(resolve_type arg) {
-        return &typeid(*arg);
-    }
+    static auto key(resolve_type arg) { return &typeid(*arg); }
 
     template<class DERIVED>
     static auto cast(T* obj, static_cast_) {
@@ -471,21 +491,21 @@ struct shared_ptr_traits {
 };
 
 template<typename T>
-struct shared_ptr_traits< std::shared_ptr<T> > {
+struct shared_ptr_traits<std::shared_ptr<T>> {
     static const bool is_shared_ptr = true;
     static const bool is_const_ref = false;
     using polymorphic_type = T;
 };
 
 template<typename T>
-struct shared_ptr_traits< const std::shared_ptr<T>& > {
+struct shared_ptr_traits<const std::shared_ptr<T>&> {
     static const bool is_shared_ptr = true;
     static const bool is_const_ref = true;
     using polymorphic_type = T;
 };
 
 template<typename T>
-struct virtual_traits< virtual_< std::shared_ptr<T> > > {
+struct virtual_traits<virtual_<std::shared_ptr<T>>> {
     using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = std::shared_ptr<T>;
     using resolve_type = const std::shared_ptr<T>&;
@@ -493,35 +513,37 @@ struct virtual_traits< virtual_< std::shared_ptr<T> > > {
     static_assert(std::is_class<polymorphic_type>::value);
     static_assert(std::is_polymorphic<polymorphic_type>::value);
 
-    static auto key(resolve_type arg) {
-        return &typeid(*arg);
-    }
+    static auto key(resolve_type arg) { return &typeid(*arg); }
 
     template<class DERIVED>
     static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            !shared_ptr_traits<DERIVED>::is_const_ref, 
-            "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+            !shared_ptr_traits<DERIVED>::is_const_ref,
+            "cannot cast from 'const shared_ptr<base>&' to "
+            "'shared_ptr<derived>'");
         static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
+            std::is_class<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
 
     template<class DERIVED>
     static auto cast(argument_type obj, static_cast_) {
         check_cast<DERIVED>();
-        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        return std::static_pointer_cast<
+            typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 
     template<class DERIVED>
     static auto cast(argument_type obj, dynamic_cast_) {
         check_cast<DERIVED>();
-        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        return std::dynamic_pointer_cast<
+            typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 };
 
 template<typename T>
-struct virtual_traits< virtual_< const std::shared_ptr<T>& > > {
+struct virtual_traits<virtual_<const std::shared_ptr<T>&>> {
     using polymorphic_type = std::remove_cv_t<T>;
     using argument_type = const std::shared_ptr<T>&;
     using resolve_type = const std::shared_ptr<T>&;
@@ -529,30 +551,32 @@ struct virtual_traits< virtual_< const std::shared_ptr<T>& > > {
     static_assert(std::is_class<polymorphic_type>::value);
     static_assert(std::is_polymorphic<polymorphic_type>::value);
 
-    static auto key(resolve_type arg) {
-        return &typeid(*arg);
-    }
+    static auto key(resolve_type arg) { return &typeid(*arg); }
 
     template<class DERIVED>
     static void check_cast() {
         static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
         static_assert(
-            shared_ptr_traits<DERIVED>::is_const_ref, 
-            "cannot cast from 'const shared_ptr<base>&' to 'shared_ptr<derived>'");
+            shared_ptr_traits<DERIVED>::is_const_ref,
+            "cannot cast from 'const shared_ptr<base>&' to "
+            "'shared_ptr<derived>'");
         static_assert(
-            std::is_class<typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
+            std::is_class<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>::value);
     }
 
     template<class DERIVED>
     static auto cast(argument_type obj, static_cast_) {
         check_cast<DERIVED>();
-        return std::static_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        return std::static_pointer_cast<
+            typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 
     template<class DERIVED>
     static auto cast(argument_type obj, dynamic_cast_) {
         check_cast<DERIVED>();
-        return std::dynamic_pointer_cast<typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        return std::dynamic_pointer_cast<
+            typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
     }
 };
 
@@ -574,7 +598,8 @@ struct class_info {
     const char* name;
     std::unordered_set<const void*> ti_ptrs;
 
-    template<typename REG, class CLASS> static class_info& get();
+    template<typename REG, class CLASS>
+    static class_info& get();
 };
 
 template<typename REG, class CLASS>
@@ -591,15 +616,14 @@ struct init_class_info {
         if (!refs++) {
             info.name = YOMM2_TRACE_ELSE(name, typeid(CLASS).name());
             registry::get<REG>().classes.push_back(&info);
-            info.direct_bases = { &class_info::get<REG, BASE>()... };
+            info.direct_bases = {&class_info::get<REG, BASE>()...};
         }
         auto inserted = info.ti_ptrs.insert(&typeid(CLASS));
         if (inserted.second)
             YOMM2_TRACE(
                 ::yorel::yomm2::detail::log()
-                      << "Register class " << name
-                      << " with &typeid " << &typeid(CLASS)
-                      << "\n");
+                << "Register class " << name << " with &typeid "
+                << &typeid(CLASS) << "\n");
     }
 
     ~init_class_info() {
@@ -609,9 +633,8 @@ struct init_class_info {
         if (iter != info.ti_ptrs.end()) {
             YOMM2_TRACE(
                 ::yorel::yomm2::detail::log()
-                << "Un-register " << info.name
-                << " with &typeid " << &typeid(CLASS)
-                << "\n");
+                << "Un-register " << info.name << " with &typeid "
+                << &typeid(CLASS) << "\n");
 
             info.ti_ptrs.erase(iter);
         }
@@ -641,7 +664,7 @@ struct method_info {
     std::vector<const spec_info*> specs;
     void* ambiguous;
     void* not_implemented;
-    //const word** slots_strides_p{nullptr};
+    // const word** slots_strides_p{nullptr};
     word* slots_strides_p{nullptr};
     const std::type_info* hash_factors_placement;
 };
@@ -649,8 +672,8 @@ struct method_info {
 template<typename BASE, typename DERIVED>
 struct select_cast {
     using type = std::conditional_t<
-        boost::is_virtual_base_of<BASE, DERIVED>::value, dynamic_cast_, static_cast_
-    >;
+        boost::is_virtual_base_of<BASE, DERIVED>::value, dynamic_cast_,
+        static_cast_>;
 };
 
 template<typename BASE, typename DERIVED>
@@ -669,7 +692,8 @@ struct for_each_vp<REG, FIRST, REST...> {
     template<typename SPEC_FIRST, typename... SPEC_REST>
     struct for_spec {
         static void collect_class_info(std::vector<const class_info*>& vp) {
-            for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
+            for_each_vp<REG, REST...>::template for_spec<
+                SPEC_REST...>::collect_class_info(vp);
         }
     };
 
@@ -680,8 +704,7 @@ template<typename REG, typename FIRST, typename... REST>
 struct for_each_vp<REG, virtual_<FIRST>, REST...> {
 
     static void collect_class_info(std::vector<const class_info*>& vp) {
-        vp.push_back(
-            &class_info::get<REG, virtual_base_t<virtual_<FIRST>>>());
+        vp.push_back(&class_info::get<REG, virtual_base_t<virtual_<FIRST>>>());
         for_each_vp<REG, REST...>::collect_class_info(vp);
     }
 
@@ -690,7 +713,8 @@ struct for_each_vp<REG, virtual_<FIRST>, REST...> {
         static void collect_class_info(std::vector<const class_info*>& vp) {
             vp.push_back(
                 &class_info::get<REG, virtual_base_t<virtual_<SPEC_FIRST>>>());
-            for_each_vp<REG, REST...>::template for_spec<SPEC_REST...>::collect_class_info(vp);
+            for_each_vp<REG, REST...>::template for_spec<
+                SPEC_REST...>::collect_class_info(vp);
         }
     };
 
@@ -700,13 +724,11 @@ struct for_each_vp<REG, virtual_<FIRST>, REST...> {
 template<typename REG>
 struct for_each_vp<REG> {
 
-    static void collect_class_info(std::vector<const class_info*>& vp) {
-    }
+    static void collect_class_info(std::vector<const class_info*>& vp) {}
 
     template<typename...>
     struct for_spec {
-        static void collect_class_info(std::vector<const class_info*>& vp) {
-        }
+        static void collect_class_info(std::vector<const class_info*>& vp) {}
     };
 
     enum { count = 0 };
@@ -716,25 +738,18 @@ template<int ARITY, typename... A>
 struct resolver;
 
 template<typename FIRST, typename... REST>
-struct resolver<1, FIRST, REST...>
-{
+struct resolver<1, FIRST, REST...> {
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        word ss,
-        resolve_arg_t<FIRST> first,
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, word ss, resolve_arg_t<FIRST> first,
         resolve_arg_t<REST>... rest) {
         return resolver<1, REST...>::resolve(
             hash_table, hash_mult, hash_shift, ss, rest...);
     }
 
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        resolve_arg_t<FIRST> first,
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, resolve_arg_t<FIRST> first,
         resolve_arg_t<REST>... rest) {
         return resolver<1, REST...>::resolve(
             hash_table, hash_mult, hash_shift, ssp, rest...);
@@ -742,19 +757,15 @@ struct resolver<1, FIRST, REST...>
 };
 
 template<typename FIRST, typename... REST>
-struct resolver<1, virtual_<FIRST>, REST...>
-{
+struct resolver<1, virtual_<FIRST>, REST...> {
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        word ss,
-        resolve_arg_t<FIRST> first,
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, word ss, resolve_arg_t<FIRST> first,
         resolve_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(
-            detail::log() << "hash_table = " << hash_table
-            << " slot = " << ss.i << " key = " << key);
+            detail::log() << "hash_table = " << hash_table << " slot = " << ss.i
+                          << " key = " << key);
         auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto pf = mptr[ss.i].pf;
@@ -763,16 +774,13 @@ struct resolver<1, virtual_<FIRST>, REST...>
     }
 
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        resolve_arg_t<FIRST> first,
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, resolve_arg_t<FIRST> first,
         resolve_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(
             detail::log() << "hash_table = " << hash_table
-            << " slot = " << ssp->i << " key = " << key);
+                          << " slot = " << ssp->i << " key = " << key);
         auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
         YOMM2_TRACE(detail::log() << " mptr = " << mptr);
         auto pf = mptr[ssp->i].pf;
@@ -781,14 +789,9 @@ struct resolver<1, virtual_<FIRST>, REST...>
     }
 
     static void* resolve_next(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        const word* dispatch,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, const word* dispatch,
+        resolve_arg_t<FIRST> first, resolve_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
@@ -806,44 +809,30 @@ struct resolver<1, virtual_<FIRST>, REST...>
 };
 
 template<int ARITY, typename FIRST, typename... REST>
-struct resolver<ARITY, FIRST, REST...>
-{
+struct resolver<ARITY, FIRST, REST...> {
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        word ss,
-        resolve_arg_t<FIRST> first,
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, word ss, resolve_arg_t<FIRST> first,
         resolve_arg_t<REST>... rest) {
         return resolver<ARITY, REST...>::resolve_first(
             hash_table, hash_mult, hash_shift, ss, rest...);
     }
 
     static void* resolve_next(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        const word* dispatch,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, const word* dispatch,
+        resolve_arg_t<FIRST> first, resolve_arg_t<REST>... rest) {
         return resolver<ARITY, REST...>::resolve_next(
             hash_table, hash_mult, hash_shift, ssp, dispatch, rest...);
     }
 };
 
 template<int ARITY, typename FIRST, typename... REST>
-struct resolver<ARITY, virtual_<FIRST>, REST...>
-{
+struct resolver<ARITY, virtual_<FIRST>, REST...> {
     static void* resolve_first(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
@@ -857,13 +846,9 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
     }
 
     static void* resolve_first(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        word ss,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, word ss, resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         auto ssp = ss.pw;
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
@@ -878,14 +863,9 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
     }
 
     static void* resolve_next(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        const word* dispatch,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, const word* dispatch,
+        resolve_arg_t<FIRST> first, resolve_arg_t<REST>... rest) {
         auto key = virtual_traits<virtual_<FIRST>>::key(first);
         YOMM2_TRACE(detail::log() << "  key = " << key);
         auto mptr = detail::get_mptr(hash_table, hash_mult, hash_shift, key);
@@ -901,25 +881,17 @@ struct resolver<ARITY, virtual_<FIRST>, REST...>
     }
 
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        word ss,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, word ss, resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolve_first(
             hash_table, hash_mult, hash_shift, ss, first, rest...);
     }
 
     static void* resolve(
-        const word* hash_table,
-        std::uintptr_t hash_mult,
-        std::size_t hash_shift,
-        const word* ssp,
-        resolve_arg_t<FIRST> first,
-        resolve_arg_t<REST>... rest)
-    {
+        const word* hash_table, std::uintptr_t hash_mult,
+        std::size_t hash_shift, const word* ssp, resolve_arg_t<FIRST> first,
+        resolve_arg_t<REST>... rest) {
         return resolve_first(
             hash_table, hash_mult, hash_shift, ssp, first, rest...);
     }
@@ -929,32 +901,26 @@ template<typename BASE_RETURN, class FUNCTION, typename BASE, typename SPEC>
 struct wrapper;
 
 template<
-    typename BASE_RETURN,
-    class FUNCTION,
-    typename... BASE_PARAM,
-    typename... SPEC_PARAM
-    >
+    typename BASE_RETURN, class FUNCTION, typename... BASE_PARAM,
+    typename... SPEC_PARAM>
 struct wrapper<
-    BASE_RETURN,
-    FUNCTION,
-    BASE_RETURN(BASE_PARAM...),
+    BASE_RETURN, FUNCTION, BASE_RETURN(BASE_PARAM...),
     BASE_RETURN(SPEC_PARAM...)> {
     static BASE_RETURN call(virtual_arg_t<BASE_PARAM>... arg) {
-    return FUNCTION::yOMM2_body(
-        virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
-            std::forward<virtual_arg_t<BASE_PARAM>>(arg),
-            typename select_cast<
-                virtual_base_t<BASE_PARAM>,
-                virtual_base_t<SPEC_PARAM>>::type())...);
-  }
+        return FUNCTION::yOMM2_body(
+            virtual_traits<BASE_PARAM>::template cast<SPEC_PARAM>(
+                std::forward<virtual_arg_t<BASE_PARAM>>(arg),
+                typename select_cast<
+                    virtual_base_t<BASE_PARAM>,
+                    virtual_base_t<SPEC_PARAM>>::type())...);
+    }
 };
 
 template<typename RETURN_T, class METHOD, class SPEC, typename F>
 struct register_spec;
 
 template<typename RETURN_T, class METHOD, class SPEC, class... SPEC_ARGS>
-struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
-{
+struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)> {
     static spec_info* this_;
 
     register_spec(void** next, const char* name) {
@@ -965,9 +931,10 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
             YOMM2_TRACE(
                 log() << METHOD::name() << ": add spec " << name << "\n");
             si.pf = (void*) wrapper<
-                RETURN_T, SPEC, typename METHOD::signature_type, RETURN_T(SPEC_ARGS...)
-                >::call;
-            METHOD::for_each_vp_t::template for_spec<SPEC_ARGS...>::collect_class_info(si.vp);
+                RETURN_T, SPEC, typename METHOD::signature_type,
+                RETURN_T(SPEC_ARGS...)>::call;
+            METHOD::for_each_vp_t::template for_spec<
+                SPEC_ARGS...>::collect_class_info(si.vp);
             METHOD::info().specs.push_back(&si);
             si.next = next;
         }
@@ -978,8 +945,8 @@ struct register_spec<RETURN_T, METHOD, SPEC, void(SPEC_ARGS...)>
         auto iter = std::find(specs.begin(), specs.end(), this_);
         if (iter != specs.end()) {
             YOMM2_TRACE(
-                log() << METHOD::name() << ": remove spec "
-                << (*iter)->name << "\n");
+                log() << METHOD::name() << ": remove spec " << (*iter)->name
+                      << "\n");
             specs.erase(iter);
         }
     }
@@ -1009,19 +976,19 @@ struct method<ID, R(A...), POLICY> {
     static function_pointer_type resolve(resolve_arg_t<A>... args) {
         YOMM2_TRACE(detail::log() << "call " << name() << "\n");
         return reinterpret_cast<function_pointer_type>(
-            resolve(
-                typename POLICY::hash_factors_placement(), args...));
+            resolve(typename POLICY::hash_factors_placement(), args...));
     }
 
-    static void* resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
+    static void*
+    resolve(policy::hash_factors_in_globals, resolve_arg_t<A>... args) {
         return resolver<arity, A...>::resolve(
             dispatch_data::instance<REG>::_.hash_table,
             dispatch_data::instance<REG>::_.hash.mult,
-            dispatch_data::instance<REG>::_.hash.shift,
-            slots_strides, args...);
+            dispatch_data::instance<REG>::_.hash.shift, slots_strides, args...);
     }
 
-    static void* resolve(policy::hash_factors_in_vector, resolve_arg_t<A>... args) {
+    static void*
+    resolve(policy::hash_factors_in_vector, resolve_arg_t<A>... args) {
         auto ssp = slots_strides.pw;
         auto hash_table = ssp++->pw;
         auto hash_mult = ssp++->ul;
@@ -1062,8 +1029,8 @@ struct method<ID, R(A...), POLICY> {
                 registry::get<REG>().methods.push_back(&inf);
                 inf.not_implemented = (void*) not_implemented;
                 inf.ambiguous = (void*) ambiguous;
-                inf.hash_factors_placement =
-                    &typeid(typename POLICY::hash_factors_placement);
+                inf.hash_factors_placement
+                    = &typeid(typename POLICY::hash_factors_placement);
             }
         }
 
