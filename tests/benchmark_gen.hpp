@@ -1,9 +1,7 @@
-#define POLICY default_policy
-
+#define POLICY ::yorel::yomm2::policy::hash_factors_in_method
 #define INHERITANCE
-#define PREFIX normal
+#define PREFIX default
 #include "benchmark_matrices.hpp"
-
 #undef INHERITANCE
 #undef PREFIX
 
@@ -12,14 +10,14 @@
 #include "benchmark_matrices.hpp"
 
 #undef INHERITANCE
-#undef PREFIX
-
-#undef POLICY
-#define POLICY hash_in_gv_policy
-
 #define INHERITANCE
-#define PREFIX hash_in_gv
+
+#undef PREFIX
+#undef POLICY
+
+#define POLICY ::yorel::yomm2::policy::hash_factors_in_globals
+#define PREFIX hash_in_globals
 #include "benchmark_matrices.hpp"
 
-#undef INHERITANCE
 #undef PREFIX
+#undef POLICY

@@ -9,38 +9,32 @@
 
 #include <string>
 
-#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 struct Animal {
-  virtual ~Animal() {
-  }
+    virtual ~Animal() {
+    }
 };
 
-YOMM2_CLASS(Animal);
+register_classes(Animal);
 
-struct Herbivore : Animal {
-};
+struct Herbivore : Animal {};
 
-YOMM2_CLASS(Herbivore, Animal);
+register_classes(Herbivore, Animal);
 
-struct Carnivore : Animal {
-};
+struct Carnivore : Animal {};
 
-YOMM2_CLASS(Carnivore, Animal);
+register_classes(Carnivore, Animal);
 
-struct Cow : Herbivore {
-};
+struct Cow : Herbivore {};
 
-YOMM2_CLASS(Cow, Herbivore);
+register_classes(Cow, Herbivore);
 
-struct Wolf : Carnivore {
-};
+struct Wolf : Carnivore {};
 
-YOMM2_CLASS(Wolf, Carnivore);
+register_classes(Wolf, Carnivore);
 
-YOMM2_DECLARE(
-    std::string,
-    encounter,
-    (yorel::yomm2::virtual_<const Animal&>, yorel::yomm2::virtual_<const Animal&>));
+declare_method(
+    std::string, encounter, (virtual_<const Animal&>, virtual_<const Animal&>));
 
 #endif

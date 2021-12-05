@@ -1,12 +1,17 @@
+
+
 # YOMM2
 
-This is a complete rewrite of YOMM11, which is now deprecated. This library is
-much better, see [here](yomm11-yomm2.md) to find out why.
+This library implements fast, open, multi-methods for C++17. It is strongly
+inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
+Stroustrup.
 
 ## TL;DR
 
-If you are familiar with the concept of open multi-methods, or prefer to learn
-by reading code, go directly to [the synopsis](examples/synopsis.cpp)
+If you are familiar with the concept of open multi-methods, or if you prefer
+to learn by reading code, go directly to [the
+synopsis](examples/synopsis.cpp). The [reference is
+here](reference/README.md)
 
 ## Open Methods in a Nutshell
 
@@ -53,7 +58,10 @@ Problem.
 
 Let's look at an example.
 
+
 ```c++
+
+
 // -----------------------------------------------------------------------------
 // library code
 
@@ -68,51 +76,49 @@ struct diagonal_matrix : matrix { /* ... */ };
 // -----------------------------------------------------------------------------
 // application code
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
-using yorel::yomm2::virtual_;
+register_classes(matrix, dense_matrix, diagonal_matrix);
 
-register_class(matrix);
-register_class(dense_matrix, matrix);
-register_class(diagonal_matrix, matrix);
+declare_method(std::string, to_json, (virtual_<const matrix&>));
 
-declare_method(string, to_json, (virtual_<const matrix&>));
-
-define_method(string, to_json, (const dense_matrix& m)) {
+define_method(std::string, to_json, (const dense_matrix& m)) {
     return "json for dense matrix...";
 }
 
-define_method(string, to_json, (const diagonal_matrix& m)) {
+define_method(std::string, to_json, (const diagonal_matrix& m)) {
     return "json for diagonal matrix...";
 }
 
 int main() {
     yorel::yomm2::update_methods();
 
-    shared_ptr<const matrix> a = make_shared<dense_matrix>();
-    shared_ptr<const matrix> b = make_shared<diagonal_matrix>();
+    const matrix& a = dense_matrix();
+    const matrix& b = diagonal_matrix();
 
-    cout << to_json(*a) << "\n"; // json for dense matrix
-    cout << to_json(*b) << "\n"; // json for diagonal matrix
+    std::cout << to_json(a) << "\n"; // json for dense matrix
+    std::cout << to_json(b) << "\n"; // json for diagonal matrix
 
     return 0;
 }
+
+
 ```
 
+
 The `declare_method` line declares an open method called `to_json`that takes
-one virtual argument of type `const matrix&` and returns a string. The
+one virtual argument of type `const matrix&` and returns a std::string. The
 `virtual_<>` decorator specifies that the argument must be taken into account
-to select the appropriate specialization. In essence, this is the same thing as
-having a `virtual string to_json() const` inside class Matrix - except
-that the virtual function lives outside of any classes, and you can add as many
-as you want without modifying the classes.
+to select the appropriate specialization. In essence, this is the same thing
+as having a `virtual std::string to_json() const` inside class Matrix -
+except that the virtual function lives outside of any classes, and you can
+add as many as you want without the classes.
 
 NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 permitted.
 
-The following two `define_method` blocks define two
-implementations for the `to_json` method: one for dense matrices, and one for
-diagonal matrices.
+The following `define_method` blocks define two implementations for the
+`to_json` method: one for dense matrices, and one for diagonal matrices.
 
 `yorel::yomm2::update_methods()` must be called before any method is called,
 and after dynamically loading and unloading shared libraries.
@@ -231,7 +237,12 @@ to yomm2.
 
 ## Going Further
 
-The Reference is [here](REFERENCE.md).
+The Reference is [here](reference/README.md). Since version 1.3.0, some of
+the internals are documented, which make it possible to use the library
+without using the macros - see [the API tutorial](tutorials/api.md).
+
+YOMM2 has *experimental* support for writing templatized methods and
+definitions - see [the templates tutorial](tutorials/templates_tutorial.md).
 
 The library comes with a series of examples:
 
@@ -247,3 +258,5 @@ The library comes with a series of examples:
   declarations](examples/containers)
 
 I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
+
+

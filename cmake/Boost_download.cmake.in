@@ -13,6 +13,7 @@ list(APPEND BOOST_SUBMODULES
     "libs/functional"
     "libs/integer"
     "libs/move"
+    "libs/mp11"
     "libs/preprocessor"
     "libs/static_assert"
     "libs/type_traits"

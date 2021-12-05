@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+import argparse
+import fileinput
+from itertools import count
+import re
+from socket import timeout
+from subprocess import Popen, PIPE
+import threading
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-s", "--scope", help="do not simplify scopes")
+parser.add_argument("-y", "--prefix", help="do not remove YOMM2 prefixes")
+parser.add_argument("-p", "--policy", help="do not remove policy")
+parser.add_argument("files", nargs="*", default=("-"))
+args = parser.parse_args()
+
+def process(fh):
+    while True:
+        line = fh.readline()
+        if not line:
+            return
+        if not args.prefix:
+            line = re.sub(r"\s*,\s*yorel::yomm2::policy::\w+", "", line)
+        if not args.scope:
+            line = re.sub(r"(\w+::)+", "", line)
+        if not args.prefix:
+            line = re.sub(r"YoMm2_S_", "", line)
+        print(line, end="")
+
+i = 0
+
+with Popen(
+    "/usr/bin/c++filt --types".split(), stdin=PIPE, stdout=PIPE, encoding="ascii"
+) as cppfilt:
+    demangler = threading.Thread(target=process, args=[cppfilt.stdout])
+    demangler.start()
+    for line in fileinput.input(files=args.files):
+        print(line, file=cppfilt.stdin, end="")
+    cppfilt.stdin.close()
+    demangler.join()

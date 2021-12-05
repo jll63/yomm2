@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2022 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -171,13 +171,3 @@ double call_multi_method(const matrix& a, const matrix& b) {
 #endif
 
 }
-
-#ifndef hash_in_gv_policy_defined
-#define hash_in_gv_policy_defined
-
-struct hash_in_gv_policy {
-    using hash_factors_placement = policy::hash_factors_in_vector;
-    using registry = default_registry;
-};
-
-#endif

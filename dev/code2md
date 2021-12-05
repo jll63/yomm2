@@ -1,0 +1,36 @@
+#!/usr/bin/python3
+
+from pathlib import Path
+import re
+import sys
+
+import mdgen
+
+with open(sys.argv[1]) as fh:
+    code = fh.read()
+
+out_path = Path(sys.argv[2]).absolute()
+
+mdgen.index_targets()
+
+with open(out_path, "w") as out:
+    #print(f"{out_path}...")
+    fragments = re.findall(
+        r"// (md|code)<(.*?)// > *", 
+        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL), 
+        flags=re.MULTILINE | re.DOTALL)
+
+    def code(text):
+        print("```c++", file=out)
+        print(text.replace("elided", "..."), file=out)
+        print("```", file=out)
+
+    def md(text):
+        text = re.sub(r"^// ?", "", text, flags=re.MULTILINE)
+        text = mdgen.replace_link(text, flags=re.MULTILINE)
+        print(text, file=out)
+
+    for fragment in fragments:
+        action, content = fragment
+        globals()[action](content)
+        

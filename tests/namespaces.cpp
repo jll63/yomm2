@@ -28,11 +28,11 @@ class Dolphin : public interfaces::Animal {};
 
 using yorel::yomm2::virtual_;
 
-register_class(interfaces::Animal);
-register_class(canis::Dog, interfaces::Animal);
-register_class(canis::Bulldog, canis::Dog);
-register_class(felis::Cat, interfaces::Animal);
-register_class(delphinus::Dolphin, interfaces::Animal);
+register_classes(
+  interfaces::Animal, 
+  canis::Dog, canis::Bulldog, 
+  felis::Cat, 
+  delphinus::Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
 declare_method(std::string, kick, (virtual_<interfaces::Animal&>));

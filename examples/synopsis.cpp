@@ -1,41 +1,36 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2022 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
-class Dog     : public Animal {};
+class Dog : public Animal {};
 class Bulldog : public Dog {};
-class Cat     : public Animal {};
+class Cat : public Animal {};
 class Dolphin : public Animal {};
 
 // =============================================================================
 // add behavior to existing classes, without changing them
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
-using yorel::yomm2::virtual_;
-
-register_class(Animal);
-register_class(Dog, Animal);
-register_class(Bulldog, Dog);
-register_class(Cat, Animal);
-register_class(Dolphin, Animal);
+register_classes(Animal, Dog, Bulldog, Cat, Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
 declare_method(std::string, kick, (virtual_<Animal&>));
 
 // implement 'kick' for dogs
-define_method(std::string, kick, (Dog& dog)) {
-  return "bark";
+define_method(std::string, kick, (Dog & dog)) {
+    return "bark";
 }
 
 // implement 'kick' for bulldogs
-define_method(std::string, kick, (Bulldog& dog)) {
+define_method(std::string, kick, (Bulldog & dog)) {
     return next(dog) + " and bite";
 }
 
@@ -44,19 +39,19 @@ declare_method(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 
 // 'meet' catch-all implementation
 define_method(std::string, meet, (Animal&, Animal&)) {
-  return "ignore";
+    return "ignore";
 }
 
-define_method(std::string, meet, (Dog& dog1, Dog& dog2)) {
-  return "wag tail";
+define_method(std::string, meet, (Dog & dog1, Dog& dog2)) {
+    return "wag tail";
 }
 
-define_method(std::string, meet, (Dog& dog, Cat& cat)) {
-  return "chase";
+define_method(std::string, meet, (Dog & dog, Cat& cat)) {
+    return "chase";
 }
 
-define_method(std::string, meet, (Cat& cat, Dog& dog)) {
-  return "run";
+define_method(std::string, meet, (Cat & cat, Dog& dog)) {
+    return "run";
 }
 
 // -----------------------------------------------------------------------------
@@ -66,23 +61,24 @@ define_method(std::string, meet, (Cat& cat, Dog& dog)) {
 #include <memory>
 #include <string>
 
-int main()
-{
+int main() {
     yorel::yomm2::update_methods();
 
-    std::unique_ptr<Animal>
-        hector = std::make_unique<Bulldog>(),
-        snoopy = std::make_unique<Dog>();
+    std::unique_ptr<Animal> hector = std::make_unique<Bulldog>(),
+                            snoopy = std::make_unique<Dog>();
 
     std::cout << "kick snoopy: " << kick(*snoopy) << "\n"; // bark
     std::cout << "kick hector: " << kick(*hector) << "\n"; // bark and bite
 
-    std::unique_ptr<Animal>
-        sylvester = std::make_unique<Cat>(),
-        flipper = std::make_unique<Dolphin>();
+    std::unique_ptr<Animal> sylvester = std::make_unique<Cat>(),
+                            flipper = std::make_unique<Dolphin>();
 
-  std::cout << "hector meets sylvester: " << meet(*hector, *sylvester) << "\n"; // chase
-  std::cout << "sylvester meets hector: " << meet(*sylvester, *hector) << "\n"; // run
-  std::cout << "hector meets snoopy: " << meet(*hector, *snoopy) << "\n"; // wag tail
-  std::cout << "hector meets flipper: " << meet(*hector, *flipper) << "\n"; // ignore
+    std::cout << "hector meets sylvester: " << meet(*hector, *sylvester)
+              << "\n"; // chase
+    std::cout << "sylvester meets hector: " << meet(*sylvester, *hector)
+              << "\n"; // run
+    std::cout << "hector meets snoopy: " << meet(*hector, *snoopy)
+              << "\n"; // wag tail
+    std::cout << "hector meets flipper: " << meet(*hector, *flipper)
+              << "\n"; // ignore
 }
