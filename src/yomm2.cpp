@@ -250,13 +250,13 @@ void runtime::calculate_conforming_classes() {
 void runtime::allocate_slots() {
     YOMM2_TRACE(log() << "Allocating slots...\n");
 
-    for (auto& c : classes) {
-        if (!c.vp.empty()) {
-            YOMM2_TRACE(log() << c.info->name << "...\n");
+    for (auto cls : layered_classes) {
+        if (!cls->vp.empty()) {
+            YOMM2_TRACE(log() << cls->info->name << "...\n");
         }
 
-        for (const auto& mp : c.vp) {
-            int slot = c.next_slot++;
+        for (const auto& mp : cls->vp) {
+            int slot = cls->next_slot++;
 
             YOMM2_TRACE(
                 log() << "  for " << mp.method->info->name << "#" << mp.param
@@ -268,13 +268,13 @@ void runtime::allocate_slots() {
 
             mp.method->slots[mp.param] = slot;
 
-            if (c.first_used_slot == -1) {
-                c.first_used_slot = slot;
+            if (cls->first_used_slot == -1) {
+                cls->first_used_slot = slot;
             }
 
-            c.visited = ++class_visit;
+            cls->visited = ++class_visit;
 
-            for (auto derived : c.direct_derived) {
+            for (auto derived : cls->direct_derived) {
                 allocate_slot_down(derived, slot);
             }
 
@@ -282,8 +282,8 @@ void runtime::allocate_slots() {
         }
     }
 
-    for (auto& c : classes) {
-        c.mtbl.resize(c.next_slot);
+    for (auto cls : layered_classes) {
+        cls->mtbl.resize(cls->next_slot);
     }
 }
 
