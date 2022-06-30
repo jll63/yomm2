@@ -110,7 +110,7 @@ as you want without modifying the classes.
 NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 permitted.
 
-The following two `define_method ... end_method` blocks define two
+The following two `define_method` blocks define two
 implementations for the `to_json` method: one for dense matrices, and one for
 diagonal matrices.
 
