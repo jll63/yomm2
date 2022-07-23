@@ -9,6 +9,7 @@
 #include <yorel/yomm2.hpp>
 
 #define register_class YOMM2_CLASS
+#define register_classes YOMM2_CLASSES
 
 #define declare_method YOMM2_DECLARE
 #define declare_static_method YOMM2_STATIC_DECLARE

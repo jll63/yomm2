@@ -1,0 +1,14 @@
+#!/usr/bin/python3
+
+from pathlib import Path
+import re
+import sys
+
+import mdgen
+
+mdgen.index_targets()
+
+with open(sys.argv[1]) as rh, open(sys.argv[2], "w") as wh:
+    for text in rh.readlines():
+        text = mdgen.replace_link(text)
+        print(text, file=wh, end="")

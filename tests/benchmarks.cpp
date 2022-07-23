@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2022 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -13,13 +13,16 @@ int main(int argc, char** argv) {
     yorel::yomm2::update_methods();
 
     benchmark::RegisterBenchmark(
-        "virtual function call", normal_ns::virtual_function);
+        "virtual function call", default_ns::virtual_function);
     benchmark::RegisterBenchmark(
-        "uni-method call", normal_ns::uni_method);
+        "uni-method call", default_ns::uni_method);
+
+    // ------------------------------------------------------------------------
+
     benchmark::RegisterBenchmark(
-        "double dispatch", normal_ns::double_dispatch);
+        "double dispatch", default_ns::double_dispatch);
     benchmark::RegisterBenchmark(
-        "multi-method call", normal_ns::multi_method);
+        "multi-method call", default_ns::multi_method);
 
     // ------------------------------------------------------------------------
 
@@ -27,21 +30,29 @@ int main(int argc, char** argv) {
         "virtual function call", virtual_ns::virtual_function);
     benchmark::RegisterBenchmark(
         "uni-method call (virtual inheritance)", virtual_ns::uni_method);
+
+    // ------------------------------------------------------------------------
+
     benchmark::RegisterBenchmark(
         "double dispatch(virtual inheritance)", virtual_ns::double_dispatch);
     benchmark::RegisterBenchmark(
         "multi-method call (virtual inheritance)", virtual_ns::multi_method);
 
-    // ------------------------------------------------------------------------
+    // // ------------------------------------------------------------------------
 
-    benchmark::RegisterBenchmark(
-        "virtual function call (hash info in gv)", hash_in_gv_ns::virtual_function);
-    benchmark::RegisterBenchmark(
-        "uni-method call (hash info in gv)", hash_in_gv_ns::uni_method);
-    benchmark::RegisterBenchmark(
-        "double dispatch (hash info in gv)", hash_in_gv_ns::double_dispatch);
-    benchmark::RegisterBenchmark(
-        "multi-method call (hash info in gv)", hash_in_gv_ns::multi_method);
+    // benchmark::RegisterBenchmark(
+    //     "virtual function call (hash info in gv)", hash_in_gv_ns::virtual_function);
+    // benchmark::RegisterBenchmark(
+    //     "uni-method call (hash info in gv)", hash_in_gv_ns::uni_method);
+
+    // // ------------------------------------------------------------------------
+
+    // benchmark::RegisterBenchmark(
+    //     "double dispatch (hash info in gv)", hash_in_gv_ns::double_dispatch);
+    // benchmark::RegisterBenchmark(
+    //     "multi-method call (hash info in gv)", hash_in_gv_ns::multi_method);
+
+    // // ------------------------------------------------------------------------
 
     benchmark::Initialize(&argc, argv);
     benchmark::RunSpecifiedBenchmarks();

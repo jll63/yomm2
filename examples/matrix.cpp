@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2022 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8,12 +8,11 @@
 #include <string>
 #include <typeinfo>
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 using std::string;
 using std::shared_ptr;
 using std::make_shared;
-using yorel::yomm2::virtual_;
 
 struct matrix {
     virtual ~matrix() {}
@@ -33,9 +32,7 @@ struct diagonal_matrix : matrix {
     }
 };
 
-register_class(matrix);
-register_class(dense_matrix, matrix);
-register_class(diagonal_matrix, matrix);
+register_classes(matrix, dense_matrix, diagonal_matrix);
 
 declare_method(string, to_json, (virtual_<const matrix&>));
 

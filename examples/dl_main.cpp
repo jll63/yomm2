@@ -4,66 +4,67 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
-#include <iostream>
 #include <cstring>
 #include <dlfcn.h>
+#include <iostream>
 
-#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include "dl.hpp"
 
 using namespace std;
-using yorel::yomm2::virtual_;
 
-YOMM2_DEFINE(string, encounter, (const Animal&, const Animal&)) {
-  return "ignore";
+define_method(string, encounter, (const Animal&, const Animal&)) {
+    return "ignore";
 }
 
 int main() {
-  yorel::yomm2::update_methods();
+    yorel::yomm2::update_methods();
 
-  cout << "Before loading library\n";
-  cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
-  cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
+    cout << "Before loading library\n";
+    cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
+    cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
 
-  char dl_path[4096];
-  dl_path[readlink("/proc/self/exe", dl_path, sizeof(dl_path))] = 0;
-  *strrchr(dl_path, '/') = 0;
+    char dl_path[4096];
+    dl_path[readlink("/proc/self/exe", dl_path, sizeof(dl_path))] = 0;
+    *strrchr(dl_path, '/') = 0;
 
 #ifdef __APPLE__
-  strcat(dl_path, "/libdl_shared.dylib");
+    strcat(dl_path, "/libdl_shared.dylib");
 #else
-  strcat(dl_path, "/libdl_shared.so");
+    strcat(dl_path, "/libdl_shared.so");
 #endif
 
-  void* handle = dlopen(dl_path, RTLD_NOW);
+    void* handle = dlopen(dl_path, RTLD_NOW);
 
-  if (!handle) {
-    cout << "dlopen() failed: " << dlerror() << "\n";
-    exit(1);
-  }
+    if (!handle) {
+        cout << "dlopen() failed: " << dlerror() << "\n";
+        exit(1);
+    }
 
-  cout << "\nAfter loading library\n";
-  yorel::yomm2::update_methods();
+    cout << "\nAfter loading library\n";
+    yorel::yomm2::update_methods();
 
-  using make_tyget_type = Animal* (*)();
-  make_tyget_type make_tiger = reinterpret_cast<make_tyget_type>(dlsym(handle, "make_tiger"));
+    using make_tyget_type = Animal* (*)();
+    make_tyget_type make_tiger =
+        reinterpret_cast<make_tyget_type>(dlsym(handle, "make_tiger"));
 
-  if (!make_tiger) {
-    cout << "dlsym() failed: " << dlerror() << "\n";
-    exit(1);
-  }
+    if (!make_tiger) {
+        cout << "dlsym() failed: " << dlerror() << "\n";
+        exit(1);
+    }
 
-  cout << "encounter(Cow(), *make_tiger()) -> " << encounter(Cow(), *make_tiger()) << endl;
-  cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
+    cout << "encounter(Cow(), *make_tiger()) -> "
+         << encounter(Cow(), *make_tiger()) << endl;
+    cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
 
-  dlclose(handle);
+    dlclose(handle);
 
-  cout << "\nAfter unloading library\n";
-  yorel::yomm2::update_methods();
+    cout << "\nAfter unloading library\n";
+    yorel::yomm2::update_methods();
 
-  cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
-  cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
+    cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
+    cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;
 
-  return 0;
+    return 0;
 }

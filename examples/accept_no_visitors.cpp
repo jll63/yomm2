@@ -7,45 +7,44 @@
 #include <memory>
 #include <string>
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
-using std::string;
-using std::shared_ptr;
-using std::make_shared;
 using std::cout;
-
-using yorel::yomm2::virtual_;
+using std::make_shared;
+using std::shared_ptr;
+using std::string;
 
 struct Node {
-    virtual ~Node() {}
+    virtual ~Node() {
+    }
 };
 
 struct Plus : Node {
     Plus(shared_ptr<const Node> left, shared_ptr<const Node> right)
-    : left(left), right(right) {}
+        : left(left), right(right) {
+    }
 
     shared_ptr<const Node> left, right;
 };
 
 struct Times : Node {
     Times(shared_ptr<const Node> left, shared_ptr<const Node> right)
-    : left(left), right(right) {}
+        : left(left), right(right) {
+    }
 
     shared_ptr<const Node> left, right;
 };
 
 struct Integer : Node {
-    explicit Integer(int value) : value(value) {}
+    explicit Integer(int value) : value(value) {
+    }
     int value;
 };
 
 // =============================================================================
 // add behavior to existing classes, without changing them
 
-register_class(Node);
-register_class(Plus, Node);
-register_class(Times, Node);
-register_class(Integer, Node);
+register_classes(Node, Plus, Times, Integer);
 
 // -----------------------------------------------------------------------------
 // evaluate
@@ -53,15 +52,15 @@ register_class(Integer, Node);
 declare_method(int, value, (virtual_<const Node&>));
 
 define_method(int, value, (const Plus& expr)) {
-  return value(*expr.left) + value(*expr.right);
+    return value(*expr.left) + value(*expr.right);
 }
 
 define_method(int, value, (const Times& expr)) {
-  return value(*expr.left) * value(*expr.right);
+    return value(*expr.left) * value(*expr.right);
 }
 
 define_method(int, value, (const Integer& expr)) {
-  return expr.value;
+    return expr.value;
 }
 
 // -----------------------------------------------------------------------------
@@ -100,20 +99,15 @@ define_method(string, as_lisp, (const Integer& expr)) {
 
 // -----------------------------------------------------------------------------
 
-int main()
-{
+int main() {
     yorel::yomm2::update_methods();
 
-    shared_ptr<Node> expr =
-        make_shared<Times>(
-            make_shared<Integer>(2),
-            make_shared<Plus>(
-                make_shared<Integer>(3),
-                make_shared<Integer>(4)));
+    shared_ptr<Node> expr = make_shared<Times>(
+        make_shared<Integer>(2),
+        make_shared<Plus>(make_shared<Integer>(3), make_shared<Integer>(4)));
 
-    cout << as_forth(*expr)
-         << " = " << as_lisp(*expr)
-         << " = " << value(*expr) << "\n";
+    cout << as_forth(*expr) << " = " << as_lisp(*expr) << " = " << value(*expr)
+         << "\n";
     // output:
     // 2 3 4 + * = (times 2 (plus 3 4)) = 14
 

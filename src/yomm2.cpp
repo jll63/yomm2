@@ -1,206 +1,422 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2022 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <algorithm>     // for max, transform, copy
-#include <cassert>       // for assert
-#include <chrono>        // for operator-, duration
-#include <cstdint>       // for uintptr_t
-#include <cstdlib>       // for abort, getenv
-#include <iomanip>       // for operator<<, setw
-#include <iostream>      // for operator<<, ostream
-#include <iterator>      // for back_insert_iterator
-#include <list>          // for list, _List_iterator
-#include <map>           // for map
-#include <memory>        // for allocator_traits<...
-#include <random>        // for default_random_en...
-#include <stdexcept>     // for runtime_error
-#include <string>        // for char_traits, allo...
+#include <algorithm> // for max, transform, copy
+#include <cassert>   // for assert
+#include <chrono>    // for operator-, duration
+#include <cstdint>   // for uintptr_t
+#include <cstdlib>   // for abort, getenv
+#include <iomanip>   // for operator<<, setw
+#include <iostream>  // for operator<<, ostream
+#include <iterator>  // for back_insert_iterator
+#include <list>      // for list, _List_iterator
+#include <map>       // for map
+#include <memory>    // for allocator_traits<...
+#include <random>    // for default_random_en...
+#include <stdexcept> // for runtime_error
+#include <string>    // for char_traits, allo...
+#include <string_view>
 #include <typeinfo>      // for type_info
 #include <unordered_map> // for _Node_iterator
 #include <unordered_set> // for unordered_set<>::...
 #include <utility>       // for pair
 #include <vector>        // for vector, vector<>:...
 
+#if defined(YOMM2_TRACE) && (YOMM2_TRACE & 1) || !defined(NDEBUG)
+#include <iostream>
+#endif
+
 #include <boost/dynamic_bitset/dynamic_bitset.hpp> // for operator<<, dynam...
 
-#include <yorel/yomm2.hpp>         // for word, YOMM2_TRACE
-#include <yorel/yomm2/runtime.hpp> // for rt_class, runtime
+#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/runtime.hpp>
 
 namespace yorel {
 namespace yomm2 {
-
-struct default_registry;
-
 namespace detail {
 
-#if YOMM2_ENABLE_TRACE
+std::ostream* logs;
+unsigned trace_flags;
 
-struct indent {
-    explicit indent(int n) : n(n) { assert(n >= 0); }
-    int n;
-};
-
-std::ostream& operator<<(std::ostream& os, const indent& i) {
-    for (int n = i.n; n--;)
-        os << "  ";
-    return os;
-}
-
-template<typename ITER, typename FUN>
-struct outseq_t {
-    outseq_t(ITER first, ITER last, FUN fun, int indent = 0)
-        : first(first), last(last), fun(fun), indent(indent) {}
-    ITER first, last;
-    FUN fun;
-    int indent;
-};
-
-template<typename ITER, typename FUN>
-outseq_t<ITER, FUN> outseq(ITER first, ITER last, FUN fun) {
-    return {first, last, fun};
-}
-
-template<typename ITER, typename FUN>
-std::ostream& operator<<(std::ostream& os, const outseq_t<ITER, FUN>& s) {
-    const char* sep = "";
-    ITER iter = s.first;
-    os << indent(s.indent);
-    while (iter != s.last) {
-        os << sep << s.fun(*iter++);
-        sep = " ";
+template<unsigned Flags>
+inline trace_type<Flags>& trace_type<Flags>::operator++() {
+    if constexpr (bool(trace_enabled & Flags)) {
+        if (trace_flags & Flags) {
+            for (size_t n = indent; n--;)
+                *logs << " ";
+        }
     }
-    return os;
+
+    return *this;
 }
 
-#endif
+template<unsigned Flags>
+struct with_indent {
+    trace_type<Flags>& trace;
+    int by;
 
-void update_methods(const registry& reg, dispatch_data& ht) {
-    runtime rt(reg, ht);
-    rt.update();
+    explicit with_indent(trace_type<Flags>& trace, int by = 2)
+        : trace(trace), by(by) {
+        trace.indent += by;
+    }
+
+    ~with_indent() {
+        trace.indent -= by;
+    }
+};
+
+template<typename Iterator>
+struct range {
+    Iterator first, last;
+    Iterator begin() const {
+        return first;
+    }
+    Iterator end() const {
+        return last;
+    }
+};
+
+template<typename Iterator>
+range(Iterator b, Iterator e) -> range<Iterator>;
+
+struct tip {
+    const ti_ptr ptr;
+};
+
+std::ostream& operator<<(std::ostream& os, tip t) {
+    return os << t.ptr->name() << "(" << t.ptr << ")";
+}
+
+std::ostream& operator<<(std::ostream& os, const range<const ti_ptr*>& tips) {
+    os << "(";
+    const char* sep = "";
+    for (auto t : tips) {
+        os << sep << tip{t};
+        sep = ", ";
+    }
+
+    return os << ")";
+}
+
+std::ostream* log_on(std::ostream* os) {
+    auto prev = logs;
+    logs = os;
+    return prev;
+}
+
+std::ostream* log_off() {
+    auto prev = logs;
+    logs = nullptr;
+    return prev;
+}
+
+void unregistered_class_error(const std::type_info* pt) {
+    std::cerr << "\nunregistered class: " << pt->name() << "\n";
+    abort();
+}
+
+template<template<typename...> typename Container, typename... T>
+std::ostream&
+operator<<(std::ostream& os, Container<rt_class*, T...>& classes) {
+    os << "(";
+    const char* sep = "";
+    for (auto cls : classes) {
+        os << sep << cls->info->name();
+        sep = ", ";
+    }
+
+    return os << ")";
+}
+
+void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
+    cells += other.cells;
+    concrete_cells += other.concrete_cells;
+    not_implemented += other.not_implemented;
+    concrete_not_implemented += other.concrete_not_implemented;
+    ambiguous += other.ambiguous;
+    concrete_ambiguous += other.concrete_ambiguous;
 }
 
 void runtime::update() {
     augment_classes();
-    layer_classes();
-    calculate_conforming_classes();
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    find_hash_function(classes, dd.hash, metrics);
+    find_hash_function(classes, ctx.hash, metrics);
     install_gv();
     optimize();
-    YOMM2_TRACE(log() << "Finished\n");
+    print(metrics);
+    ++trace << "Finished\n";
 }
 
-runtime::runtime(const registry& reg, struct dispatch_data& dd)
-    : reg(reg), dd(dd) {
+runtime::runtime(catalog& cat, struct context& ctx) : cat(cat), ctx(ctx) {
+    if constexpr (bool(trace_enabled)) {
+        if (auto env_trace = getenv("YOMM2_TRACE")) {
+            log_on(&std::cerr);
+            trace_flags = std::atoi(env_trace);
+        }
+    }
 }
 
 void runtime::augment_classes() {
-    classes.resize(reg.classes.size());
-
     // scope
     {
-        auto class_iter = reg.classes.begin();
+        ++trace << "Static class info:\n";
 
-        for (auto& rt_class : classes) {
-            rt_class.info = *class_iter++;
-            class_map[rt_class.info] = &rt_class;
+        // The standard does not guarantee that there is exactly one type_info
+        // object per class. However, it guarantees that the type_index for a
+        // class has a unique value.
+        for (auto& cr : cat.classes) {
+            if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                {
+                    with_indent YOMM2_GENSYM(trace);
+                    ++trace << cr.ti << " " << cr.name() << " "
+                            << range{cr.first_base, cr.last_base};
+
+                    ++trace << "\n";
+                }
+            }
+
+            auto& entry = class_map[std::type_index(*cr.ti)];
+
+            if (entry == nullptr) {
+                classes.emplace_front(&cr);
+                entry = &classes.front();
+            }
+
+            // In the unlikely case that a class does have more than one
+            // associated  ti*, collect them in a vector. We don't use an
+            // unordered_set because, again, this situation is highly unlikely,
+            // and, were it to occurr, the number of distinct ti*s would
+            // probably be small.
+            if (std::find(
+                    entry->ti_ptrs.begin(), entry->ti_ptrs.end(), cr.ti) ==
+                entry->ti_ptrs.end()) {
+                entry->ti_ptrs.push_back(cr.ti);
+            }
         }
     }
 
-    for (auto& rt_class : classes) {
-        rt_class.direct_bases.resize(rt_class.info->direct_bases.size());
-        auto base_iter = rt_class.info->direct_bases.begin();
+    // All known classes now have exactly one associated rt_class* in the map.
+    // Collect the bases.
 
-        for (auto& rt_base : rt_class.direct_bases) {
-            rt_base = class_map[*base_iter++];
-            if (!rt_base) {
-                throw std::runtime_error(
-                    std::string("yomm2: base class of ")
-                        YOMM2_TRACE(+rt_class.info->name)
-                    + " not registered");
+    for (auto& rtc : classes) {
+        for (auto base_iter = rtc.info->first_base;
+             base_iter != rtc.info->last_base; ++base_iter) {
+            auto rtb = class_map[std::type_index(**base_iter)];
+
+            if (!rtb) {
+                std::string msg("yomm2: base class of ");
+                msg.append(rtc.info->name()).append(" not registered");
+                throw error(msg);
+            }
+
+            if (&rtc != rtb) {
+                // At compile time we collected the class as its own improper
+                // base, as per std::is_base_of. Eliminate that.
+                rtc.transitive_bases.push_back(rtb);
+            }
+        }
+    }
+
+    // At this point bases may contain duplicates, and also indirect
+    // bases. Clean that up.
+
+    size_t mark = ++class_visit;
+
+    for (auto& rtc : classes) {
+        decltype(rtc.transitive_bases) bases;
+        mark = ++class_visit;
+
+        for (auto rtb : rtc.transitive_bases) {
+            if (rtb->mark != mark) {
+                bases.push_back(rtb);
+                rtb->mark = mark;
             }
         }
 
-        for (auto rt_base : rt_class.direct_bases) {
-            rt_base->direct_derived.push_back(&rt_class);
+        // Record the "weight" of the class, i.e. the total number of direct and
+        // indirect proper bases it has.
+        rtc.weight = bases.size();
+        rtc.transitive_bases.swap(bases);
+    }
+
+    for (auto& rtc : classes) {
+        // Sort base classes by weight. This ensures that a base class is never
+        // preceded by one if its own bases classes.
+        std::sort(
+            rtc.transitive_bases.begin(), rtc.transitive_bases.end(),
+            [](auto a, auto b) { return a->weight > b->weight; });
+        mark = ++class_visit;
+
+        // Collect the direct base classes. The first base is certainly a direct
+        // one. Remove *its* bases from the candidates, by marking them.
+        // Continue with the next base that is not marked. It is the next direct
+        // base. And so on...
+
+        for (auto rtb : rtc.transitive_bases) {
+            if (rtb->mark == mark) {
+                continue;
+            }
+
+            rtc.direct_bases.push_back(rtb);
+
+            for (auto rtbb : rtb->transitive_bases) {
+                rtbb->mark = mark;
+            }
         }
+    }
+
+    for (auto& rtc : classes) {
+        for (auto rtb : rtc.direct_bases) {
+            rtb->direct_derived.push_back(&rtc);
+        }
+    }
+
+    for (auto& rtc : classes) {
+        calculate_conforming_classes(rtc);
+    }
+
+    if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+        ++trace << "Inheritance:\n";
+        for (auto& rtc : classes) {
+            with_indent YOMM2_GENSYM(trace);
+            ++trace << rtc.name() << "\n";
+            {
+                with_indent YOMM2_GENSYM(trace);
+                ++trace << "bases:      " << rtc.direct_bases << "\n";
+                ++trace << "derived:    " << rtc.direct_derived << "\n";
+                ++trace << "covariant_classes: " << rtc.covariant_classes
+                        << "\n";
+            }
+        }
+    }
+}
+
+// void runtime::calculate_conforming_classes() {
+//     ++trace << "Conforming classes...\n";
+//     with_indent YOMM2_GENSYM(trace);
+
+//     for (auto& cls : classes) {
+//         if (cls.covariant_classes.empty()) {
+//             calculate_conforming_classes(cls);
+// #if YOMM2_TRACE
+//             ++trace << cls.info->name() << ":\n";
+//             with_indent YOMM2_GENSYM(trace);
+//             for (auto conf : cls.covariant_classes) {
+//                 ++trace << tip{conf->info->ti} << "\n";
+//             }
+// #endif
+//         }
+//     }
+// }
+
+void runtime::calculate_conforming_classes(rt_class& cls) {
+    if (!cls.covariant_classes.empty()) {
+        return;
+    }
+
+    cls.covariant_classes.insert(&cls);
+
+    for (auto derived : cls.direct_derived) {
+        if (derived->covariant_classes.empty()) {
+            calculate_conforming_classes(*derived);
+        }
+
+        std::copy(
+            derived->covariant_classes.begin(),
+            derived->covariant_classes.end(),
+            std::inserter(cls.covariant_classes, cls.covariant_classes.end()));
     }
 }
 
 void runtime::augment_methods() {
-    methods.resize(reg.methods.size());
-    auto meth_info_iter = reg.methods.begin(),
-         meth_info_iter_end = reg.methods.end();
-    auto meth_iter = methods.begin();
+    methods.resize(cat.methods.size());
 
-    for (; meth_info_iter != meth_info_iter_end;
-         ++meth_info_iter, ++meth_iter) {
-        meth_iter->info = *meth_info_iter;
-        meth_iter->vp.resize((*meth_info_iter)->vp.size());
-        int param_index = 0;
-        std::transform(
-            (*meth_info_iter)->vp.begin(), (*meth_info_iter)->vp.end(),
-            meth_iter->vp.begin(),
-            [this, meth_iter, &param_index](const class_info* ci) {
-                auto rt_class = class_map[ci];
+    ++trace << "Methods:\n";
+    with_indent YOMM2_GENSYM(trace);
+
+    auto meth_iter = methods.rbegin();
+    // reverse the registration order reversed by 'chain'.
+
+    for (auto& meth_info : cat.methods) {
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            ++trace << meth_info.name << " "
+                    << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
+        }
+
+        with_indent YOMM2_GENSYM(trace);
+
+        meth_iter->info = &meth_info;
+        meth_iter->vp.reserve(meth_info.arity());
+        size_t param_index = 0;
+
+        for (auto ti : range{meth_info.vp_begin, meth_info.vp_end}) {
+            auto rt_class = class_map[std::type_index(*ti)];
+            if (!rt_class) {
+                ++trace << "unkown class " << ti << "(" << ti->name()
+                        << ") for parameter #" << (param_index + 1) << "\n";
+                throw error(std::string("unknown class ") + ti->name());
+            }
+            rt_arg param = {&*meth_iter, param_index++};
+            meth_iter->vp.push_back(rt_class);
+        }
+
+        meth_iter->specs.resize(meth_info.specs.size());
+        auto spec_iter = meth_iter->specs.rbegin();
+        // reverse the reversed order from 'chain'
+
+        for (auto& definition_info : meth_info.specs) {
+            ++trace << definition_info.name << "\n";
+            spec_iter->info = &definition_info;
+            spec_iter->vp.reserve(meth_info.arity());
+            size_t param_index = 0;
+
+            for (auto ti :
+                 range{definition_info.vp_begin, definition_info.vp_end}) {
+                with_indent YOMM2_GENSYM(trace);
+                auto rt_class = class_map[std::type_index(*ti)];
                 if (!rt_class) {
-                    YOMM2_TRACE(
-                        std::cerr << meth_iter->info->name << " parameter "
-                                  << (param_index + 1) << ": ");
-                    std::cerr << "\nUnregistered class\n";
-                    abort();
+                    ++trace << "error for *virtual* parameter #"
+                            << (param_index + 1) << "\n";
+                    throw error(
+                        std::string("unregistered class ") + ti->name());
                 }
-                rt_arg param = {&*meth_iter, param_index++};
-                rt_class->vp.push_back(param);
-                return class_map[ci];
-            });
+                spec_iter->vp.push_back(rt_class);
+                ++param_index;
+            }
+            ++spec_iter;
+        }
 
-        meth_iter->specs.resize((*meth_info_iter)->specs.size());
-        auto spec_info_iter = (*meth_info_iter)->specs.begin(),
-             spec_info_end = (*meth_info_iter)->specs.end();
-        auto spec_iter = meth_iter->specs.begin();
+        ++meth_iter;
+    }
 
-        for (; spec_info_iter != spec_info_end; ++spec_info_iter, ++spec_iter) {
-            spec_iter->info = *spec_info_iter;
-            spec_iter->vp.resize((*spec_info_iter)->vp.size());
-            int param_index = 0;
-            std::transform(
-                (*spec_info_iter)->vp.begin(), (*spec_info_iter)->vp.end(),
-                spec_iter->vp.begin(),
-                [this, meth_iter, spec_iter,
-                 &param_index](const class_info* ci) {
-                    auto rt_class = class_map[ci];
-                    if (!rt_class) {
-                        YOMM2_TRACE(
-                            std::cerr << meth_iter->info->name << ": spec "
-                                      << spec_iter->info->name << ": parameter "
-                                      << (param_index + 1) << ": ");
-                        std::cerr << "\nUnregistered class\n";
-                        abort();
-                    }
-                    ++param_index;
-                    return rt_class;
-                });
+    for (auto& method : methods) {
+        size_t param_index = 0;
+
+        for (auto vp : method.vp) {
+            vp->used_by_vp.push_back({&method, param_index++});
         }
     }
 }
 
-void runtime::layer_classes() {
+std::vector<rt_class*> runtime::layer_classes() {
+    ++trace << "Layering classes...\n";
 
-    YOMM2_TRACE(log() << "Layering...\n");
-
-    layered_classes.reserve(classes.size());
-    std::list<rt_class*> input;
+    std::vector<rt_class*> input;
+    input.reserve(classes.size());
     std::transform(
-        classes.begin(), classes.end(), std::inserter(input, input.begin()),
+        classes.begin(), classes.end(), std::back_inserter(input),
         [](rt_class& cls) { return &cls; });
 
+    std::vector<rt_class*> layered;
+    layered.reserve(classes.size());
+
     for (int layer = 1; !input.empty(); ++layer) {
-        YOMM2_TRACE(const char* sep = "");
+        with_indent YOMM2_GENSYM(trace, 1);
+        ++trace;
 
         for (auto class_iter = input.begin(); class_iter != input.end();) {
             auto seen_all_bases = true;
@@ -220,47 +436,38 @@ void runtime::layer_classes() {
             }
 
             if (seen_all_bases && in_this_layer) {
-                layered_classes.push_back(*class_iter);
+                layered.push_back(*class_iter);
                 (*class_iter)->layer = layer;
-                YOMM2_TRACE(log() << sep << (*class_iter)->info->name);
-                YOMM2_TRACE(sep = " ");
+
+                if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                    trace << " " << (*class_iter)->info->name();
+                }
+
                 class_iter = input.erase(class_iter);
             } else {
                 ++class_iter;
             }
         }
-        YOMM2_TRACE(log() << "\n");
+        trace << "\n";
     }
-}
 
-void runtime::calculate_conforming_classes() {
-    for (auto class_iter = layered_classes.rbegin();
-         class_iter != layered_classes.rend(); ++class_iter) {
-        auto c = *class_iter;
-        c->conforming.insert(c);
-        for (auto s : c->direct_derived) {
-            c->conforming.insert(s);
-            std::copy(
-                s->conforming.begin(), s->conforming.end(),
-                std::inserter(c->conforming, c->conforming.end()));
-        }
-    }
+    return std::move(layered);
 }
 
 void runtime::allocate_slots() {
-    YOMM2_TRACE(log() << "Allocating slots...\n");
+    auto layered = layer_classes();
 
-    for (auto cls : layered_classes) {
-        if (!cls->vp.empty()) {
-            YOMM2_TRACE(log() << cls->info->name << "...\n");
-        }
+    ++trace << "Allocating slots...\n";
+    with_indent YOMM2_GENSYM(trace);
 
-        for (const auto& mp : cls->vp) {
-            int slot = cls->next_slot++;
+    for (auto cls : layered) {
+        for (const auto& mp : cls->used_by_vp) {
+            size_t slot = cls->next_slot++;
 
-            YOMM2_TRACE(
-                log() << "  for " << mp.method->info->name << "#" << mp.param
-                      << ": " << slot << "  also in");
+            ++trace << mp.method->info->name << "#" << mp.param << ": slot "
+                    << slot << "\n";
+            with_indent YOMM2_GENSYM(trace);
+            ++trace << cls->info->name();
 
             if (mp.method->slots.size() <= mp.param) {
                 mp.method->slots.resize(mp.param + 1);
@@ -272,29 +479,29 @@ void runtime::allocate_slots() {
                 cls->first_used_slot = slot;
             }
 
-            cls->visited = ++class_visit;
+            cls->mark = ++class_visit;
 
             for (auto derived : cls->direct_derived) {
                 allocate_slot_down(derived, slot);
             }
 
-            YOMM2_TRACE(log() << "\n");
+            ++trace << "\n";
         }
     }
 
-    for (auto cls : layered_classes) {
-        cls->mtbl.resize(cls->next_slot);
+    for (auto& c : classes) {
+        c.mtbl.resize(c.next_slot);
     }
 }
 
-void runtime::allocate_slot_down(rt_class* cls, int slot) {
+void runtime::allocate_slot_down(rt_class* cls, size_t slot) {
 
-    if (cls->visited == class_visit)
+    if (cls->mark == class_visit)
         return;
 
-    cls->visited = class_visit;
+    cls->mark = class_visit;
 
-    YOMM2_TRACE(log() << "\n    " << cls->info->name);
+    trace << " " << cls->info->name();
 
     assert(slot >= cls->next_slot);
 
@@ -313,17 +520,16 @@ void runtime::allocate_slot_down(rt_class* cls, int slot) {
     }
 }
 
-void runtime::allocate_slot_up(rt_class* cls, int slot) {
+void runtime::allocate_slot_up(rt_class* cls, size_t slot) {
 
-    if (cls->visited == class_visit)
+    if (cls->mark == class_visit)
         return;
 
-    cls->visited = class_visit;
+    cls->mark = class_visit;
 
-    YOMM2_TRACE(log() << "\n    " << cls->info->name);
+    trace << " " << cls->info->name();
 
     assert(slot >= cls->next_slot);
-
     cls->next_slot = slot + 1;
 
     if (cls->first_used_slot == -1) {
@@ -341,52 +547,48 @@ void runtime::allocate_slot_up(rt_class* cls, int slot) {
 
 void runtime::build_dispatch_tables() {
     for (auto& m : methods) {
-        YOMM2_TRACE(
-            log() << "Building dispatch table for " << m.info->name << "\n");
+        ++trace << "Building dispatch table for " << m.info->name << "\n";
+        with_indent YOMM2_GENSYM(trace);
 
-        auto dims = m.vp.size();
+        auto dims = m.arity();
 
         std::vector<group_map> groups;
         groups.resize(dims);
 
         {
-            int dim = 0;
+            size_t dim = 0;
 
             for (auto vp : m.vp) {
                 auto& dim_group = groups[dim];
+                ++trace << "make groups for param #" << dim << ", class "
+                        << vp->info->name() << "\n";
+                with_indent YOMM2_GENSYM(trace);
 
-                YOMM2_TRACE(
-                    log() << indent(1) << "make groups for param #" << dim
-                          << ", class " << vp->info->name << "\n");
-
-                for (auto conforming : vp->conforming) {
-                    YOMM2_TRACE(
-                        log() << indent(2) << "specs applicable to "
-                              << conforming->info->name << "\n");
+                for (auto covariant_classes : vp->covariant_classes) {
+                    ++trace << "specs applicable to "
+                            << covariant_classes->info->name() << "\n";
                     bitvec mask;
                     mask.resize(m.specs.size());
 
-                    int spec_index = 0;
+                    size_t spec_index = 0;
+                    with_indent YOMM2_GENSYM(trace);
 
                     for (auto& spec : m.specs) {
-                        if (spec.vp[dim]->conforming.find(conforming)
-                            != spec.vp[dim]->conforming.end()) {
-                            YOMM2_TRACE(
-                                log() << indent(3) << spec.info->name << "\n");
+                        if (spec.vp[dim]->covariant_classes.find(
+                                covariant_classes) !=
+                            spec.vp[dim]->covariant_classes.end()) {
+                            ++trace << spec.info->name << "\n";
                             mask[spec_index] = 1;
                         }
                         ++spec_index;
                     }
 
-                    dim_group[mask].push_back(conforming);
+                    auto& group = dim_group[mask];
+                    group.classes.push_back(covariant_classes);
+                    group.has_concrete_classes = group.has_concrete_classes ||
+                        !covariant_classes->info->is_abstract;
 
-                    YOMM2_TRACE(
-                        log() << "      bit mask = "
-                              << mask
-                              // << " group = "
-                              // << std::distance(dim_group.begin(),
-                              // dim_group.find(mask))
-                              << "\n");
+                    ++trace << "-> mask: " << mask << "\n";
                 }
 
                 ++dim;
@@ -394,55 +596,73 @@ void runtime::build_dispatch_tables() {
         }
 
         {
-            int stride = 1;
+            size_t stride = 1;
             m.strides.reserve(dims - 1);
 
-            for (int dim = 1; dim < m.vp.size(); ++dim) {
+            for (size_t dim = 1; dim < m.arity(); ++dim) {
                 stride *= groups[dim - 1].size();
-                YOMM2_TRACE(
-                    log() << "    stride for dim " << dim << " = " << stride
-                          << "\n");
+                ++trace << "    stride for dim " << dim << " = " << stride
+                        << "\n";
                 m.strides.push_back(stride);
             }
         }
 
-        m.first_dim = groups[0];
-
-        for (int dim = 0; dim < m.vp.size(); ++dim) {
-            YOMM2_TRACE(
-                log() << indent(1) << "groups for dim " << dim << ":\n");
-            int group_num = 0;
-            for (auto& group_pair : groups[dim]) {
-                auto& group = group_pair.second;
-                for (auto cls : group) {
+        for (size_t dim = 0; dim < m.arity(); ++dim) {
+            ++trace << "groups for dim " << dim << ":\n";
+            with_indent YOMM2_GENSYM(trace);
+            size_t group_num = 0;
+            for (auto& [mask, group] : groups[dim]) {
+                for (auto cls : group.classes) {
                     cls->mtbl[m.slots[dim]] = group_num;
                 }
-#if YOMM2_ENABLE_TRACE
-                {
-                    auto mask = group_pair.first;
-                    log() << indent(2) << "group " << dim << "/" << group_num
-                          << " mask " << mask << " "
-                          << outseq(
-                                 group.begin(), group.end(),
-                                 [](const rt_class* c) {
-                                     return c->info->name;
-                                 })
-                          << "\n";
+                if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                    ++trace << "group " << dim << "/" << group_num << " mask "
+                            << mask << "\n";
+                    with_indent YOMM2_GENSYM(trace);
+                    for (auto cls :
+                         range{group.classes.begin(), group.classes.end()}) {
+                        ++trace << tip{cls->info->ti} << "\n";
+                    }
                 }
-#endif
                 ++group_num;
             }
         }
 
         {
-            YOMM2_TRACE(log() << indent(1) << "assign specs\n");
+            ++trace << "assigning specs\n";
             bitvec all(m.specs.size());
             all = ~all;
-            build_dispatch_table(m, dims - 1, groups, all);
-        }
+            build_dispatch_table(m, dims - 1, groups.end() - 1, all, false);
 
-        {
-            YOMM2_TRACE(log() << indent(1) << "assign next\n");
+            if (m.arity() > 1) {
+                with_indent YOMM2_GENSYM(trace);
+                m.stats.cells = 1;
+                ++trace << "dispatch table rank: ";
+                const char* prefix = "";
+                for (const auto& dim_groups : groups) {
+                    m.stats.cells *= dim_groups.size();
+                    trace << prefix << dim_groups.size();
+                    prefix = " x ";
+                }
+
+                m.stats.concrete_cells = 1;
+                prefix = ", concrete only: ";
+                for (const auto& dim_groups : groups) {
+                    auto cells = std::count_if(
+                        dim_groups.begin(), dim_groups.end(),
+                        [](const auto& group) {
+                            return group.second.has_concrete_classes;
+                        });
+                    m.stats.concrete_cells *= cells;
+                    trace << prefix << cells;
+                    prefix = " x ";
+                }
+                trace << "\n";
+            }
+
+            print(m.stats);
+            metrics.accumulate(m.stats);
+            ++trace << "assigning next\n";
 
             std::vector<const rt_spec*> specs;
             std::transform(
@@ -450,7 +670,8 @@ void runtime::build_dispatch_tables() {
                 [](const rt_spec& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
-                YOMM2_TRACE(log() << indent(2) << spec.info->name << ":\n");
+                with_indent YOMM2_GENSYM(trace);
+                ++trace << spec.info->name << ":\n";
                 std::vector<const rt_spec*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
@@ -458,26 +679,33 @@ void runtime::build_dispatch_tables() {
                         return is_base(other, &spec);
                     });
 
-#if YOMM2_ENABLE_TRACE
-                log() << indent(3) << "select best of:\n";
+                if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                    with_indent YOMM2_GENSYM(trace);
+                    ++trace << "for next, select best:\n";
 
-                for (auto& candidate : candidates) {
-                    log() << indent(4) << candidate->info->name << "\n";
+                    for (auto& candidate : candidates) {
+                        with_indent YOMM2_GENSYM(trace);
+                        ++trace << candidate->info->name << "\n";
+                    }
                 }
-#endif
+
                 auto nexts = best(candidates);
+                void* next;
 
                 if (nexts.size() == 1) {
-                    auto next = nexts.front()->info;
-                    YOMM2_TRACE(
-                        log() << indent(3) << "-> " << next->name << "\n");
-                    *spec.info->next = next->pf;
+                    const definition_info* next_info = nexts.front()->info;
+                    next = next_info->pf;
+                    ++trace << "-> " << next_info->name << "\n";
                 } else if (nexts.empty()) {
-                    YOMM2_TRACE(log() << indent(3) << "-> none\n");
-                    *spec.info->next = m.info->not_implemented;
-                } else if (nexts.empty()) {
-                    YOMM2_TRACE(log() << indent(3) << "->  ambiguous\n");
-                    *spec.info->next = m.info->ambiguous;
+                    ++trace << "-> none\n";
+                    next = m.info->not_implemented;
+                } else if (nexts.size() > 1) {
+                    ++trace << "->  ambiguous\n";
+                    next = m.info->ambiguous;
+                }
+
+                if (spec.info->next) {
+                    *spec.info->next = next;
                 }
             }
         }
@@ -485,27 +713,26 @@ void runtime::build_dispatch_tables() {
 }
 
 void runtime::build_dispatch_table(
-    rt_method& m, size_t dim, const std::vector<group_map>& groups,
-    const bitvec& candidates) {
+    rt_method& m, size_t dim, std::vector<group_map>::const_iterator group_iter,
+    const bitvec& candidates, bool concrete) {
+    with_indent YOMM2_GENSYM(trace);
+    size_t group_index = 0;
 
-    int group_index = 0;
+    for (const auto& [group_mask, group] : *group_iter) {
+        auto mask = candidates & group_mask;
 
-    for (auto& group_pair : groups[dim]) {
-        auto mask = candidates & group_pair.first;
-        auto& group = group_pair.second;
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            ++trace << "group " << dim << "/" << group_index << " mask " << mask
+                    << "\n";
+            with_indent YOMM2_GENSYM(trace);
+            for (auto cls : range{group.classes.begin(), group.classes.end()}) {
+                ++trace << tip{cls->info->ti} << "\n";
+            }
+        }
 
-#if YOMM2_ENABLE_TRACE
-        log() << indent(m.vp.size() - dim + 1) << "group " << dim << "/"
-              << group_index << " mask " << mask << " "
-              << outseq(
-                     group.begin(), group.end(),
-                     [](const rt_class* c) { return c->info->name; })
-              << "\n";
-#endif
         if (dim == 0) {
             std::vector<const rt_spec*> applicable;
-
-            int i = 0;
+            size_t i = 0;
 
             for (const auto& spec : m.specs) {
                 if (mask[i]) {
@@ -514,64 +741,65 @@ void runtime::build_dispatch_table(
                 ++i;
             }
 
-#if YOMM2_ENABLE_TRACE
-            log() << indent(m.vp.size() - dim + 2) << "select best of:\n";
+            if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                ++trace << "select best of:\n";
+                with_indent YOMM2_GENSYM(trace);
 
-            for (auto& app : applicable) {
-                log() << indent(m.vp.size() - dim + 3) << app->info->name
-                      << "\n";
+                for (auto& app : applicable) {
+                    ++trace << app->info->name << "\n";
+                }
             }
-#endif
 
             auto specs = best(applicable);
 
             if (specs.size() > 1) {
-                YOMM2_TRACE(
-                    log() << indent(m.vp.size() - dim + 2) << "ambiguous\n");
+                with_indent YOMM2_GENSYM(trace);
+                ++trace << "ambiguous\n";
                 m.dispatch_table.push_back(m.info->ambiguous);
+                ++m.stats.ambiguous;
+                if (concrete) {
+                    ++m.stats.concrete_ambiguous;
+                }
             } else if (specs.empty()) {
-                YOMM2_TRACE(
-                    log() << indent(m.vp.size() - dim + 2)
-                          << "not implemented\n");
+                with_indent YOMM2_GENSYM(trace);
+                ++trace << "not implemented\n";
                 m.dispatch_table.push_back(m.info->not_implemented);
+                ++m.stats.not_implemented;
+                if (concrete) {
+                    ++m.stats.concrete_not_implemented;
+                }
             } else {
                 m.dispatch_table.push_back(specs[0]->info->pf);
-#if YOMM2_ENABLE_TRACE
-                log() << indent(m.vp.size() - dim + 2)
-                      << outseq(
-                             specs.begin(), specs.end(),
-                             [](const rt_spec* spec) {
-                                 return spec->info->name;
-                             })
-                      << ": pf = " << specs[0]->info->pf << "\n";
-#endif
+                ++trace << "-> " << specs[0]->info->name
+                        << " pf = " << specs[0]->info->pf << "\n";
             }
         } else {
-            build_dispatch_table(m, dim - 1, groups, mask);
+            build_dispatch_table(
+                m, dim - 1, group_iter - 1, mask,
+                concrete && group.has_concrete_classes);
         }
         ++group_index;
     }
 }
 
 void runtime::find_hash_function(
-    const std::vector<rt_class>& classes, hash_function& hash,
+    const std::deque<rt_class>& classes, hash_function& hash,
     metrics_t& metrics) {
     std::vector<const void*> keys;
     auto start_time = std::chrono::steady_clock::now();
 
     for (auto& cls : classes) {
         std::copy(
-            cls.info->ti_ptrs.begin(), cls.info->ti_ptrs.end(),
-            std::back_inserter(keys));
+            cls.ti_ptrs.begin(), cls.ti_ptrs.end(), std::back_inserter(keys));
     }
 
     const auto N = keys.size();
 
-    YOMM2_TRACE(log() << "Finding hash factor for " << N << " ti*\n");
+    ++trace << "Finding hash factor for " << N << " ti*\n";
 
     std::default_random_engine rnd(13081963);
-    int total_attempts = 0;
-    int M = 1;
+    size_t total_attempts = 0;
+    size_t M = 1;
 
     for (auto size = N * 5 / 4; size >>= 1;) {
         ++M;
@@ -579,17 +807,15 @@ void runtime::find_hash_function(
 
     std::uniform_int_distribution<std::uintptr_t> uniform_dist;
 
-    for (int pass = 0; pass < 4; ++pass, ++M) {
+    for (size_t pass = 0; pass < 4; ++pass, ++M) {
 
         hash.shift = 8 * sizeof(std::uintptr_t) - M;
         auto hash_size = 1 << M;
 
-        YOMM2_TRACE(
-            log() << indent(1) << "trying with M = " << M << ", " << hash_size
-                  << " buckets\n");
+        ++trace << "trying with M = " << M << ", " << hash_size << " buckets\n";
 
         bool found = false;
-        int attempts = 0;
+        size_t attempts = 0;
         std::vector<int> buckets(hash_size);
 
         while (!found && attempts < 100000) {
@@ -610,20 +836,19 @@ void runtime::find_hash_function(
         }
 
         metrics.hash_search_attempts = total_attempts;
-        metrics.hash_search_time
-            = std::chrono::steady_clock::now() - start_time;
+        metrics.hash_search_time =
+            std::chrono::steady_clock::now() - start_time;
         metrics.hash_table_size = hash_size;
 
         if (found) {
-            YOMM2_TRACE(
-                log() << indent(1) << "found " << hash.mult << " after "
-                      << total_attempts << " attempts and "
-                      << metrics.hash_search_time.count() * 1000 << " msecs\n");
+            ++trace << "found " << hash.mult << " after " << total_attempts
+                    << " attempts and "
+                    << metrics.hash_search_time.count() * 1000 << " msecs\n";
             return;
         }
     }
 
-    throw std::runtime_error("cannot find hash factor");
+    throw error("cannot find hash factor");
 }
 
 void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
@@ -635,138 +860,141 @@ void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
     }
 }
 
-inline word make_word(int i) {
-    word w;
-    w.i = i;
-    return w;
-}
-
-inline word make_word(uintptr_t value) {
-    word w;
-    w.ul = value;
-    return w;
-}
-
-inline word make_word(void* pf) {
-    word w;
-    w.pf = pf;
-    return w;
-}
-
 void runtime::install_gv() {
 
-    for (int pass = 0; pass != 2; ++pass) {
-        dd.gv.resize(0);
+    for (size_t pass = 0; pass != 2; ++pass) {
+        ctx.gv.resize(0);
 
-        YOMM2_TRACE(if (pass) {
-            log() << "Initializing global vector at " << dd.gv.data() << "\n"
-                  << std::setw(4) << dd.gv.size()
-                  << " pointer to control table\n";
-        });
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            if (pass) {
+                ++trace << "Initializing global vector at " << ctx.gv.data()
+                        << "\n"
+                        << std::setw(4) << ctx.gv.size()
+                        << " pointer to control table\n";
+            }
+        }
 
         // reserve a work for control table
-        dd.gv.emplace_back(make_word(nullptr));
+        ctx.gv.emplace_back(make_word(nullptr));
 
-        auto hash_table = dd.gv.data() + 1;
-        dd.hash_table = hash_table;
+        auto hash_table = ctx.gv.data() + 1;
+        ctx.hash_table = hash_table;
 
-        YOMM2_TRACE(
-            if (pass) log() << std::setw(4) << dd.gv.size() << " hash table\n");
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            if (pass) {
+                ++trace << std::setw(4) << ctx.gv.size() << " hash table\n";
+            }
+        }
 
-        dd.gv.resize(dd.gv.size() + metrics.hash_table_size);
+        ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
 
-        YOMM2_TRACE(
-            if (pass) log()
-            << std::setw(4) << dd.gv.size() << " control table\n");
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            ++trace << std::setw(4) << ctx.gv.size() << " control table\n";
+        }
 
-        dd.gv.resize(dd.gv.size() + metrics.hash_table_size);
+        ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
 
         for (auto& m : methods) {
-            YOMM2_TRACE(
-                if (pass) log()
-                << std::setw(4) << dd.gv.size() << ' ' << m.info->name << "\n");
+            if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                if (pass) {
+                    ++trace << std::setw(4) << ctx.gv.size() << ' '
+                            << m.info->name << "\n";
+                }
+            }
 
-            m.info->slots_strides_p->pw = dd.gv.data() + dd.gv.size();
+            m.info->slots_strides.pw = ctx.gv.data() + ctx.gv.size();
+            m.info->install_hash_factors(*this);
 
-            if (*m.info->hash_factors_placement
-                == typeid(policy::hash_factors_in_vector)) {
-                dd.gv.emplace_back(make_word(hash_table));
-                dd.gv.emplace_back(make_word(dd.hash.mult));
-                dd.gv.emplace_back(make_word(dd.hash.shift));
-                // 1-methods with co-located
-            } else if (m.info->vp.size() == 1) {
-                m.info->slots_strides_p->i = m.slots[0];
+            if (m.info->arity() == 1) {
+                // Uni-methods just need an index in the method table.
+                m.info->slots_strides.i = m.slots[0];
                 continue;
             }
 
             // multi-methods only
 
+            // TODO: experiment with putting the slots and strides in the
+            // method object instead of the global vector. This should speed
+            // up multi-methods a bit (one indirection), but not help
+            // uni-methods.
+
             auto slot_iter = m.slots.begin();
             auto stride_iter = m.strides.begin();
-            dd.gv.emplace_back(make_word(*slot_iter++));
+            ctx.gv.emplace_back(make_word(*slot_iter++));
 
             while (slot_iter != m.slots.end()) {
-                dd.gv.emplace_back(make_word(*slot_iter++));
-                dd.gv.emplace_back(make_word(*stride_iter++));
+                ctx.gv.emplace_back(make_word(*slot_iter++));
+                ctx.gv.emplace_back(make_word(*stride_iter++));
             }
-            YOMM2_TRACE(
-                if (pass) log() << std::setw(4) << dd.gv.size() << ' '
-                                << m.info->name << " dispatch table\n");
-            m.gv_dispatch_table = dd.gv.data() + dd.gv.size();
+
+            if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                ++trace << std::setw(4) << ctx.gv.size() << ' ' << m.info->name
+                        << " dispatch table\n";
+            }
+
+            m.gv_dispatch_table = ctx.gv.data() + ctx.gv.size();
             std::transform(
                 m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(dd.gv),
+                std::back_inserter(ctx.gv),
                 [](void* pf) { return make_word(pf); });
         }
 
         auto control_table = hash_table + metrics.hash_table_size;
-        dd.gv[0].pw = control_table;
+        ctx.gv[0].pw = control_table;
 
         for (auto& cls : classes) {
-            cls.mptr = dd.gv.data() + dd.gv.size() - cls.first_used_slot;
-            YOMM2_TRACE(
-                if (pass) log() << std::setw(4) << dd.gv.size() << " mtbl for "
-                                << cls.info->name << ": " << cls.mptr << "\n");
+            cls.mptr = ctx.gv.data() + ctx.gv.size() - cls.first_used_slot;
+
+            if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                ++trace << std::setw(4) << ctx.gv.size() << " mtbl for "
+                        << cls.info->name() << ": " << cls.mptr << "\n";
+            }
+
             if (cls.first_used_slot != -1) {
                 std::transform(
                     cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
-                    std::back_inserter(dd.gv),
-                    [](int i) { return make_word(i); });
+                    std::back_inserter(ctx.gv),
+                    [](size_t i) { return make_word(i); });
             }
+
             if (pass) {
-                for (auto tid : cls.info->ti_ptrs) {
-                    auto index = dd.hash(tid);
+                for (auto ti : cls.ti_ptrs) {
+                    auto index = ctx.hash(ti);
                     hash_table[index].pw = cls.mptr;
-                    control_table[index].ti = tid;
+                    control_table[index].ti = ti;
                 }
             }
         }
     }
 
-    YOMM2_TRACE(log() << std::setw(4) << dd.gv.size() << " end\n");
+    ++trace << std::setw(4) << ctx.gv.size() << " end\n";
 }
 
 void runtime::optimize() {
-    YOMM2_TRACE(log() << "Optimizing\n");
+    ++trace << "Optimizing\n";
 
     for (auto& m : methods) {
-        YOMM2_TRACE(log() << "  " << m.info->name << "\n");
+        ++trace << "  " << m.info->name << "\n";
         auto slot = m.slots[0];
-        if (m.vp.size() == 1) {
-            for (auto cls : m.vp[0]->conforming) {
+        if (m.arity() == 1) {
+            for (auto cls : m.vp[0]->covariant_classes) {
                 auto pf = m.dispatch_table[cls->mptr[slot].i];
-                YOMM2_TRACE(
-                    log() << "    " << cls->info->name << ".mtbl[" << slot
-                          << "] = " << pf << " (function)"
-                          << "\n");
+                if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                    ++trace << cls->info->name() << " mtbl[" << slot
+                            << "] = " << pf << " (function)"
+                            << "\n";
+                }
                 cls->mptr[slot].pf = pf;
             }
         } else {
-            for (auto cls : m.vp[0]->conforming) {
+            for (auto cls : m.vp[0]->covariant_classes) {
                 auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
-                YOMM2_TRACE(
-                    log() << "    " << cls->info->name << ".mtbl[" << slot
-                          << "] = gv+" << (pw - dd.hash_table) << "\n");
+
+                if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+                    ++trace << "    " << cls->info->name() << " mtbl[" << slot
+                            << "] = gv+" << (pw - ctx.hash_table) << "\n";
+                }
+
                 cls->mptr[slot].pw = pw;
             }
         }
@@ -806,12 +1034,12 @@ bool runtime::is_more_specific(const rt_spec* a, const rt_spec* b) {
 
     for (; a_iter != a_last; ++a_iter, ++b_iter) {
         if (*a_iter != *b_iter) {
-            if ((*b_iter)->conforming.find(*a_iter)
-                != (*b_iter)->conforming.end()) {
+            if ((*b_iter)->covariant_classes.find(*a_iter) !=
+                (*b_iter)->covariant_classes.end()) {
                 result = true;
             } else if (
-                (*a_iter)->conforming.find(*b_iter)
-                != (*a_iter)->conforming.end()) {
+                (*a_iter)->covariant_classes.find(*b_iter) !=
+                (*a_iter)->covariant_classes.end()) {
                 return false;
             }
         }
@@ -827,8 +1055,8 @@ bool runtime::is_base(const rt_spec* a, const rt_spec* b) {
 
     for (; a_iter != a_last; ++a_iter, ++b_iter) {
         if (*a_iter != *b_iter) {
-            if ((*a_iter)->conforming.find(*b_iter)
-                == (*a_iter)->conforming.end()) {
+            if ((*a_iter)->covariant_classes.find(*b_iter) ==
+                (*a_iter)->covariant_classes.end()) {
                 return false;
             } else {
                 result = true;
@@ -839,62 +1067,72 @@ bool runtime::is_base(const rt_spec* a, const rt_spec* b) {
     return result;
 }
 
-std::ostream* active_log = nullptr;
-
-std::ostream& log() {
-    static struct null_streambuf : std::streambuf {
-        int_type overflow(int_type c) override { return 0; }
-    } null;
-
-    static std::ostream discard_log(&null);
-
-    if (getenv("YOMM2_ENABLE_TRACE")) {
-        log_on(&std::cerr);
+void runtime::print(const dispatch_stats_t& stats) const {
+    ++trace;
+    if (stats.cells) {
+        // only for multi-methods, uni-methods don't have dispatch tables
+        ++trace << stats.cells << " dispatch table cells, ";
     }
-
-    return active_log ? *active_log : discard_log;
+    trace << stats.not_implemented << " not implemented, ";
+    trace << stats.ambiguous << " ambiguities, concrete only: ";
+    if (stats.cells) {
+        trace << stats.concrete_cells << ", ";
+    }
+    trace << stats.concrete_not_implemented << ", ";
+    trace << stats.concrete_ambiguous << "\n";
 }
 
-std::ostream* log_on(std::ostream* os) {
-    auto prev = active_log;
-    active_log = os;
-    return prev;
-}
-
-std::ostream* log_off() {
-    auto prev = active_log;
-    active_log = nullptr;
-    return prev;
-}
-
-void default_method_call_error_handler(const method_call_error& error) {
-#if YOMM2_ENABLE_TRACE
-    const char* explanation[] = {"no applicable definition", "ambiguous call"};
-    std::cerr << explanation[error.code] << "while calling "
-              << error.method_name << "\n";
-#endif
+void default_method_call_error_handler(
+    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
+    if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+        const char* explanation[] = {
+            "no applicable definition", "ambiguous call"};
+        std::cerr << explanation[error.code] << " for " << error.method_name
+                  << "(";
+        auto comma = "";
+        for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
+            std::cerr << comma << ti->name();
+            comma = ", ";
+        }
+        std::cerr << ")\n" << std::flush;
+    }
     abort();
 }
 
-method_call_error_handler call_error_handler;
-
-void unregistered_class_error(const std::type_info* pt) {
-    std::cerr << "\nUnregistered class: " << pt->name() << "\n";
-    abort();
-}
+method_call_error_handler call_error_handler =
+    detail::default_method_call_error_handler;
 
 } // namespace detail
 
+using namespace detail;
+
+void update_methods(catalog& cat, context& ht) {
+    runtime rt(cat, ht);
+    rt.update();
+}
+
+namespace policy {
+
+catalog global_catalog::catalog;
+context global_context::context;
+
+void hash_factors_in_method::method_info_type::install_hash_factors(
+    runtime& rt) {
+    this->hash_table = rt.ctx.hash_table;
+    this->hash = rt.ctx.hash;
+}
+
+} // namespace policy
+
 void update_methods() {
     update_methods(
-        detail::registry::get<default_registry>(),
-        detail::dispatch_data::instance<default_registry>::_);
+        policy::default_policy::catalog, policy::default_policy::context);
 }
 
 method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = detail::call_error_handler;
-    detail::call_error_handler = handler;
+    auto prev = call_error_handler;
+    call_error_handler = handler;
     return prev;
 }
 

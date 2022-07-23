@@ -1,3 +1,5 @@
+<!-- target:reference -->
+
 # Reference
 
 ## header yorel/yomm2.hpp
@@ -22,6 +24,7 @@ Include `yorel/yomm2.hpp` and define nicer, lower case synonyms for the macros:
 | cute                    | UGLY                             |
 |-------------------------|----------------------------------|
 | `register_class`        | `YOMM2_CLASS`                    |
+| `register_classes`      | `YOMM2_CLASSES`                  |
 | `declare_method`        | `YOMM2_DECLARE`                  |
 | `declare_static_method` | `YOMM2_STATIC_DECLARE`           |
 | `define_method`         | `YOMM2_DEFINE`                   |
@@ -99,6 +102,37 @@ YOMM2_CLASS(Animal);
 YOMM2_CLASS(Carnivore, Animal);
 YOMM2_CLASS(Mammal, Animal);
 YOMM2_CLASS(Dog, Carnivore, Mammal);
+```
+
+## macros YOMM2_CLASSES, register_classes
+
+#### Synopsis:
+```
+YOMM2_CLASSES(polymorphic_class...);
+```
+
+Register several classes and their inheritance relationships.
+
+This is equivalent of a series of calls to YOMM2_CLASS. Inheritance
+relationships between classes are infered.
+
+The classes need not be part of a single hierarchy. In other words, it is
+possible to register several class hierarchies with a single call to the macro.
+
+The classes may appear in any order.
+
+`register_classes` is an alias for `YOMM2_CLASSES` provided by header
+`yorel/yomm2/cute.hpp`.
+
+#### Examples:
+```
+struct Animal { virtual ~Animal() {} };
+struct Dog : Animal {};
+struct Bulldog : Dog {};
+struct Cat : Dog {};
+struct Food : { virtual ~Food(); }
+struct Treat : Food {};
+YOMM2_CLASSES(Animal, Food, Dog, Bulldog, Cat, Treat);
 ```
 
 ## template virtual_

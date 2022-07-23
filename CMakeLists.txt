@@ -1,11 +1,11 @@
-# Copyright (c) 2018-2021 Jean-Louis Leroy
+# Copyright (c) 2018-2022 Jean-Louis Leroy
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0057 NEW)
-project(YOMM2 VERSION 1.1.3)
+project(YOMM2 VERSION 1.2.0)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -58,6 +58,21 @@ option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
 if(${YOMM2_ENABLE_EXAMPLES})
   message(STATUS "Examples enabled")
   add_subdirectory(examples)
+endif()
+
+option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
+
+if(${YOMM2_ENABLE_DOC})
+  message(STATUS "Documentation generation enabled")
+    set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
+    set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
+    add_custom_command(
+        OUTPUT "${readme_md}"
+        COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
+        DEPENDS "${readme_cpp}")
+    add_custom_target(README ALL DEPENDS "${readme_md}")
+    add_subdirectory(reference.in)
+  add_subdirectory(tutorials)
 endif()
 
 ## Install instruction

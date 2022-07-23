@@ -1,27 +1,30 @@
-// Copyright (c) 2021 Jean-Louis Leroy
-// Distributed under the Boost Software License, Version 1.0.
-// See accompanying file LICENSE_1_0.txt
-// or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/cute.hpp>
+<sub>/ [home](/README.md) / [reference](README.md) </sub>
+## declare_static_method
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp>
+---
+```
+#define declare_static_method(return-type, name, (types)) /*unspecified*/
+```
+---
+Declare a method as a static member in a `struct` or `class`. Otherwise, the
+macro does exactly the same things as [declare_method](declare_method.md).
 
+This macro can be used when Argument Dependent Lookup is considered Evil. Note
+that there is no need for a static version of [define_method](define_method.md), since it does not
+create functions that can be picked via ADL.
+## example
+
+```c++
+
+
+#include <yorel/yomm2/keywords.hpp>
 #include <string>
 
-#define BOOST_TEST_MODULE yomm2
-#include <boost/test/included/unit_test.hpp>
+struct Engineer { virtual ~Engineer() {} };
+struct SeniorEngineer : Engineer {};
 
-using yorel::yomm2::virtual_;
-using std::cout;
-
-class Engineer {
-  public:
-    virtual ~Engineer() {}
-};
-
-class SeniorEngineer : public Engineer {};
-
-register_class(Engineer);
-register_class(SeniorEngineer, Engineer);
+register_classes(Engineer, SeniorEngineer);
 
 declare_method(std::string, speak, (virtual_<const Engineer&>));
 
@@ -45,7 +48,7 @@ define_method(std::string, no_adl::speak, (const SeniorEngineer& engineer)) {
   return "senior " + next(engineer);
 }
 
-BOOST_AUTO_TEST_CASE(adl) {
+BOOST_AUTO_TEST_CASE(love_adl) {
     yorel::yomm2::update_methods();
 
     {
@@ -59,7 +62,7 @@ BOOST_AUTO_TEST_CASE(adl) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(noadl) {
+BOOST_AUTO_TEST_CASE(hate_adl) {
     yorel::yomm2::update_methods();
 
     {
@@ -72,3 +75,5 @@ BOOST_AUTO_TEST_CASE(noadl) {
         BOOST_TEST(no_adl::speak(engineer) == "senior engineers hate ADL");
     }
 }
+
+```

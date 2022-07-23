@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2021 Jean-Louis Leroy
+# Copyright (c) 2018-2022 Jean-Louis Leroy
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -30,7 +30,7 @@ add_test(NAME asteroids COMMAND asteroids)
 add_subdirectory(containers)
 add_test(NAME containers COMMAND containers)
 
-if(NOT MSVC)
+if(NOT MSVC AND NOT XCODE_VERSION)
   set(CMAKE_SKIP_BUILD_RPATH TRUE)
   add_executable(dl_main dl_main.cpp)
   add_library(dl_shared SHARED dl_shared.cpp)
@@ -38,8 +38,9 @@ if(NOT MSVC)
   target_include_directories(dl_shared PUBLIC ${YOMM2_INCLUDE_DIRS})
   add_dependencies(dl_main dl_shared)
   if(APPLE)
-    set_target_properties(dl_main PROPERTIES LINK_FLAGS "-Wl,-export_dynamic")
     set_target_properties(dl_shared PROPERTIES LINK_FLAGS "-Wl,-undefined,dynamic_lookup")
+  else()
+    set_target_properties(dl_main PROPERTIES LINK_FLAGS "-Wl,-export-dynamic")
   endif()
   target_link_libraries(dl_main YOMM2::yomm2 dl)
 endif()

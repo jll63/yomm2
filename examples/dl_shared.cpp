@@ -7,26 +7,25 @@
 #include <iostream>
 #include <string>
 
-#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include "dl.hpp"
 
 using namespace std;
-using yorel::yomm2::virtual_;
 
-YOMM2_DEFINE(string, encounter, (const Herbivore&, const Carnivore&)) {
+define_method(string, encounter, (const Herbivore&, const Carnivore&)) {
   return "run";
 }
 
 struct Tiger : Carnivore {
 };
 
-YOMM2_CLASS(Tiger, Carnivore);
+register_classes(Tiger, Carnivore);
 
 extern "C" Tiger* make_tiger() {
   return new Tiger;
 }
 
-YOMM2_DEFINE(string, encounter, (const Carnivore&, const Herbivore&)) {
+define_method(string, encounter, (const Carnivore&, const Herbivore&)) {
   return "hunt";
 }

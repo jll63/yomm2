@@ -1,0 +1,16 @@
+#!/bin/bash
+
+make -j4 benchmarks && \
+./benchmarks --benchmark_color=false --benchmark_repetitions=10 | perl -ne "$(cat <<'PERCENTS'
+if (s/_median//) {
+  if ($n0) {
+     s{\d+(?:\.\d+)? ns\s+(\d+(?:\.\d+)?) ns.*}{$1 . sprintf " ns %+2.1f%%\n", ($1 - $n0) / $n0 * 100}e or die;
+     $n0 = 0;
+  } else {
+    s/\d+(?:\.\d+)? ns\s+(\d+(?:\.\d+)?) ns.*/$1 ns/;
+    $n0 = $1
+  }
+  print;
+}
+PERCENTS
+)"

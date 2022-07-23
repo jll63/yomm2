@@ -6,9 +6,7 @@
 
 // Example for Wikipedia
 
-#include <yorel/yomm2/cute.hpp>
-
-using yorel::yomm2::virtual_;
+#include <yorel/yomm2/keywords.hpp>
 
 class Thing {
   public:
@@ -21,9 +19,7 @@ class Asteroid : public Thing {
 class Spaceship : public Thing {
 };
 
-register_class(Thing);
-register_class(Spaceship, Thing);
-register_class(Asteroid, Thing);
+register_classes(Thing, Spaceship, Asteroid);
 
 declare_method(void, collideWith, (virtual_<Thing&>, virtual_<Thing&>));
 
