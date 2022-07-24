@@ -42,15 +42,15 @@ define_method(std::string, meet, (Animal&, Animal&)) {
     return "ignore";
 }
 
-define_method(std::string, meet, (Dog & dog1, Dog& dog2)) {
+define_method(std::string, meet, (Dog& dog1, Dog& dog2)) {
     return "wag tail";
 }
 
-define_method(std::string, meet, (Dog & dog, Cat& cat)) {
+define_method(std::string, meet, (Dog& dog, Cat& cat)) {
     return "chase";
 }
 
-define_method(std::string, meet, (Cat & cat, Dog& dog)) {
+define_method(std::string, meet, (Cat& cat, Dog& dog)) {
     return "run";
 }
 

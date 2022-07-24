@@ -18,7 +18,7 @@ method_call_error_handler set_method_call_error_handler(
     method_call_error_handler handler);
 ```
 ---
-This mechanism is *deprecated*. Please use the new [error handler
+This mechanism is **deprecated**. Please use the new [error handler
 mechanism](set_error_handler.md) instead.
 
 If a method call cannot be dispatched, an error handler is called with a
