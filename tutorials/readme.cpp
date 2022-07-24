@@ -170,7 +170,7 @@ int main() {
 
 // * a C++17 capable compiler
 
-// * cmake version 3.5 or above
+// * cmake version 3.20 or above
 
 // Clone the repository:
 

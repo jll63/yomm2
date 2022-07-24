@@ -1,9 +1,11 @@
 #ifndef YOREL_YOMM2_CORE_INCLUDED
 #define YOREL_YOMM2_CORE_INCLUDED
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 #if defined(YOMM2_TRACE) && (YOMM2_TRACE & 2)
@@ -25,11 +27,33 @@ struct virtual_;
 template<typename... Types>
 struct types;
 
-struct method_call_error;
+struct resolution_error {
+    enum status_type { no_definition = 1, ambiguous } status;
+    const std::type_info* method;
+    size_t arity;
+    const std::type_info* const* tis;
+};
 
-using method_call_error_handler = void (*)(
-    const method_call_error& error, size_t arity,
-    const std::type_info* const tis[]);
+struct unknown_class_error {
+    enum { update = 1, call } context;
+    const std::type_info* ti;
+};
+
+struct hash_search_error {
+    size_t attempts;
+    std::chrono::duration<double> duration;
+    size_t buckets;
+};
+
+using error_type =
+    std::variant<resolution_error, unknown_class_error, hash_search_error>;
+
+using error_handler_type = void (*)(const error_type& error);
+
+error_handler_type set_error_handler(error_handler_type handler);
+
+struct catalog;
+struct context;
 
 namespace policy {
 
@@ -50,23 +74,29 @@ struct class_declaration;
 namespace yorel {
 namespace yomm2 {
 
+// deprecated
+
+struct method_call_error {
+    resolution_error::status_type code;
+    static constexpr auto not_implemented = resolution_error::no_definition;
+    static constexpr auto ambiguous = resolution_error::ambiguous;
+    std::string_view method_name;
+};
+
+using method_call_error_handler = void (*)(
+    const method_call_error& error, size_t arity,
+    const std::type_info* const tis[]);
+
+method_call_error_handler
+set_method_call_error_handler(method_call_error_handler handler);
+
+// end deprecated
+
 template<typename T>
 struct virtual_;
 
 template<typename... Types>
 struct types;
-
-struct method_call_error {
-    enum type { not_implemented = 0, ambiguous = 1 } code;
-    std::string_view method_name;
-};
-
-method_call_error_handler
-set_method_call_error_handler(method_call_error_handler handler);
-
-struct error : std::runtime_error {
-    using std::runtime_error::runtime_error;
-};
 
 struct catalog {
     catalog& add(detail::class_info& cls) {
@@ -198,25 +228,25 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
 
     static return_type
     not_implemented_handler(detail::remove_virtual<A>... args) {
-        method_call_error error;
-        error.code = method_call_error::not_implemented;
-        error.method_name = typeid(method).name();
+        resolution_error error;
+        error.status = resolution_error::no_definition;
+        error.method = &typeid(method);
         detail::ti_ptr tis[sizeof...(args)];
         auto ti_iter = tis;
         (..., (*ti_iter++ = detail::universal_traits<A>::key(args)));
-        detail::call_error_handler(error, arity, tis);
-        abort();
+        detail::error_handler(error_type(std::move(error)));
+        abort(); // in case user handler "forgets" to abort
     }
 
     static return_type ambiguous_handler(detail::remove_virtual<A>... args) {
-        method_call_error error;
-        error.code = method_call_error::ambiguous;
-        error.method_name = typeid(method).name();
+        resolution_error error;
+        error.status = resolution_error::ambiguous;
+        error.method = &typeid(method);
         detail::ti_ptr tis[sizeof...(args)];
         auto ti_iter = tis;
         (..., (*ti_iter++ = detail::universal_traits<A>::key(args)));
-        detail::call_error_handler(error, arity, tis);
-        abort();
+        detail::error_handler(error_type(std::move(error)));
+        abort(); // in case user handler "forgets" to abort
     }
 
     template<typename Container>
@@ -332,7 +362,6 @@ template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
 
 void update_methods();
-void update_methods(const catalog& cat, context& ctx);
 
 } // namespace yomm2
 } // namespace yorel

@@ -18,6 +18,9 @@ method_call_error_handler set_method_call_error_handler(
     method_call_error_handler handler);
 ```
 ---
+This mechanism is *deprecated*. Please use the new [error handler
+mechanism](set_error_handler.md) instead.
+
 If a method call cannot be dispatched, an error handler is called with a
 reference to a `method_call_error` structure, which contains the method's name
 in an unspecified format, and a code identifying the error.

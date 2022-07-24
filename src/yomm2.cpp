@@ -112,11 +112,6 @@ std::ostream* log_off() {
     return prev;
 }
 
-void unregistered_class_error(const std::type_info* pt) {
-    std::cerr << "\nunregistered class: " << pt->name() << "\n";
-    abort();
-}
-
 template<template<typename...> typename Container, typename... T>
 std::ostream&
 operator<<(std::ostream& os, Container<rt_class*, T...>& classes) {
@@ -208,9 +203,10 @@ void runtime::augment_classes() {
             auto rtb = class_map[std::type_index(**base_iter)];
 
             if (!rtb) {
-                std::string msg("yomm2: base class of ");
-                msg.append(rtc.info->name()).append(" not registered");
-                throw error(msg);
+                unknown_class_error error;
+                error.ti = *base_iter;
+                error_handler(error_type(error));
+                abort();
             }
 
             if (&rtc != rtb) {
@@ -358,7 +354,10 @@ void runtime::augment_methods() {
             if (!rt_class) {
                 ++trace << "unkown class " << ti << "(" << ti->name()
                         << ") for parameter #" << (param_index + 1) << "\n";
-                throw error(std::string("unknown class ") + ti->name());
+                unknown_class_error error;
+                error.ti = ti;
+                error_handler(error_type(error));
+                abort();
             }
             rt_arg param = {&*meth_iter, param_index++};
             meth_iter->vp.push_back(rt_class);
@@ -381,8 +380,10 @@ void runtime::augment_methods() {
                 if (!rt_class) {
                     ++trace << "error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
-                    throw error(
-                        std::string("unregistered class ") + ti->name());
+                    unknown_class_error error;
+                    error.ti = ti;
+                    error_handler(error_type(error));
+                    abort();
                 }
                 spec_iter->vp.push_back(rt_class);
                 ++param_index;
@@ -848,7 +849,12 @@ void runtime::find_hash_function(
         }
     }
 
-    throw error("cannot find hash factor");
+    hash_search_error error;
+    error.attempts = total_attempts;
+    error.duration = std::chrono::steady_clock::now() - start_time;
+    error.buckets = 1 << M;
+    error_handler(error_type(error));
+    abort();
 }
 
 void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
@@ -1084,7 +1090,7 @@ void runtime::print(const dispatch_stats_t& stats) const {
 
 void default_method_call_error_handler(
     const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
-    if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+    if constexpr (bool(trace_enabled)) {
         const char* explanation[] = {
             "no applicable definition", "ambiguous call"};
         std::cerr << explanation[error.code] << " for " << error.method_name
@@ -1099,17 +1105,46 @@ void default_method_call_error_handler(
     abort();
 }
 
-method_call_error_handler call_error_handler =
-    detail::default_method_call_error_handler;
+method_call_error_handler method_call_error_handler_p =
+    default_method_call_error_handler;
 
-} // namespace detail
+void default_error_handler(const error_type& error_v) {
+    if (auto error = std::get_if<resolution_error>(&error_v)) {
+        method_call_error old_error;
+        old_error.code = error->status;
+        old_error.method_name = error->method->name();
+        method_call_error_handler_p(
+            std::move(old_error), error->arity, error->tis);
+        return;
+    }
 
-using namespace detail;
+    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
+        if constexpr (bool(trace_enabled)) {
+            std::cerr << "unknown class " << error->ti->name();
+        }
+        return;
+    }
+
+    if (auto error = std::get_if<hash_search_error>(&error_v)) {
+        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+            std::cerr << "could not find hash factors after " << error->attempts
+                      << " in " << error->duration.count() << "s using "
+                      << error->buckets << " buckets\n";
+        }
+        return;
+    }
+}
+
+error_handler_type error_handler = default_error_handler;
 
 void update_methods(catalog& cat, context& ht) {
     runtime rt(cat, ht);
     rt.update();
 }
+
+} // namespace detail
+
+using namespace detail;
 
 namespace policy {
 
@@ -1125,14 +1160,20 @@ void hash_factors_in_method::method_info_type::install_hash_factors(
 } // namespace policy
 
 void update_methods() {
-    update_methods(
+    detail::update_methods(
         policy::default_policy::catalog, policy::default_policy::context);
+}
+
+error_handler_type set_error_handler(error_handler_type handler) {
+    auto prev = detail::error_handler;
+    detail::error_handler = handler;
+    return prev;
 }
 
 method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = call_error_handler;
-    call_error_handler = handler;
+    auto prev = detail::method_call_error_handler_p;
+    detail::method_call_error_handler_p = handler;
     return prev;
 }
 

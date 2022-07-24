@@ -20,24 +20,30 @@ using std::string;
 
 struct Animal {
     Animal(const Animal&) = delete;
-    Animal() : name("wrong") {}
-    virtual ~Animal() {}
+    Animal() : name("wrong") {
+    }
+    virtual ~Animal() {
+    }
     std::string name;
 };
 
 struct Dog : Animal {
-    Dog(string n) { name = n; }
+    Dog(string n) {
+        name = n;
+    }
 };
 
 struct Cat : virtual Animal {
-    Cat(string n) { name = n; }
+    Cat(string n) {
+        name = n;
+    }
 };
 
 YOMM2_CLASS(Animal);
 YOMM2_CLASS(Dog, Animal);
 YOMM2_CLASS(Cat, Animal);
 
-YOMM2_DECLARE(string, name, (virtual_<const Animal&>) );
+YOMM2_DECLARE(string, name, (virtual_<const Animal&>));
 
 YOMM2_DEFINE(string, name, (const Dog& dog)) {
     return "dog " + dog.name;
@@ -60,7 +66,8 @@ BOOST_AUTO_TEST_CASE(initializing) {
 namespace matrices {
 
 struct matrix {
-    virtual ~matrix() {}
+    virtual ~matrix() {
+    }
 };
 
 struct dense_matrix : matrix {};
@@ -82,16 +89,15 @@ YOMM2_CLASS(dense_matrix, matrix);
 YOMM2_CLASS(diagonal_matrix, matrix);
 
 YOMM2_DECLARE(
-    Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>) );
-YOMM2_DECLARE(Subtype, times, (double, virtual_<const matrix&>) );
-YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, double) );
+    Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>));
+YOMM2_DECLARE(Subtype, times, (double, virtual_<const matrix&>));
+YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, double));
 
-YOMM2_DEFINE(Subtype, times, (const matrix&, const matrix&) ) {
+YOMM2_DEFINE(Subtype, times, (const matrix&, const matrix&)) {
     return MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(
-    Subtype, times, (const diagonal_matrix&, const diagonal_matrix&) ) {
+YOMM2_DEFINE(Subtype, times, (const diagonal_matrix&, const diagonal_matrix&)) {
     return DIAGONAL_DIAGONAL;
 }
 
@@ -111,15 +117,15 @@ YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
     return MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(int, times, (virtual_<matrix&&>, virtual_<matrix&&>) );
-YOMM2_DECLARE(int, times, (double, virtual_<matrix&&>) );
-YOMM2_DECLARE(int, times, (virtual_<matrix&&>, double) );
+YOMM2_DECLARE(int, times, (virtual_<matrix&&>, virtual_<matrix&&>));
+YOMM2_DECLARE(int, times, (double, virtual_<matrix&&>));
+YOMM2_DECLARE(int, times, (virtual_<matrix&&>, double));
 
-YOMM2_DEFINE(int, times, (matrix&&, matrix&&) ) {
+YOMM2_DEFINE(int, times, (matrix&&, matrix&&)) {
     return -MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(int, times, (diagonal_matrix&&, diagonal_matrix&&) ) {
+YOMM2_DEFINE(int, times, (diagonal_matrix&&, diagonal_matrix&&)) {
     return -DIAGONAL_DIAGONAL;
 }
 
@@ -139,7 +145,7 @@ YOMM2_DEFINE(int, times, (matrix && m, double a)) {
     return -MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(Subtype, zero_ref, (virtual_<matrix&>) );
+YOMM2_DECLARE(Subtype, zero_ref, (virtual_<matrix&>));
 
 YOMM2_DEFINE(Subtype, zero_ref, (dense_matrix & m)) {
     return MATRIX;
@@ -149,7 +155,7 @@ YOMM2_DEFINE(Subtype, zero_ref, (diagonal_matrix & m)) {
     return DIAGONAL;
 }
 
-YOMM2_DECLARE(Subtype, zero_ptr, (virtual_<matrix*>) );
+YOMM2_DECLARE(Subtype, zero_ptr, (virtual_<matrix*>));
 
 YOMM2_DEFINE(Subtype, zero_ptr, (dense_matrix * m)) {
     return MATRIX;
@@ -198,7 +204,8 @@ BOOST_AUTO_TEST_CASE(simple) {
 namespace errors {
 
 struct matrix {
-    virtual ~matrix() {}
+    virtual ~matrix() {
+    }
 };
 
 struct dense_matrix : matrix {};
@@ -208,27 +215,28 @@ YOMM2_CLASS(matrix);
 YOMM2_CLASS(dense_matrix, matrix);
 YOMM2_CLASS(diagonal_matrix, matrix);
 
-YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>) );
+YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
-YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&) ) {
+YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 }
 
-YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&) ) {
+YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void test_handler(
+void deprecated_test_handler(
     const method_call_error& error, size_t, const std::type_info* const*) {
     throw error;
 }
 
-BOOST_AUTO_TEST_CASE(error_handling) {
+BOOST_AUTO_TEST_CASE(deprecated_error_handling) {
     update_methods();
-    set_method_call_error_handler(test_handler);
+    set_method_call_error_handler(deprecated_test_handler);
 
     try {
         times(dense_matrix(), dense_matrix());
     } catch (const method_call_error& error) {
         BOOST_TEST(error.code == method_call_error::not_implemented);
+        return;
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
@@ -237,12 +245,101 @@ BOOST_AUTO_TEST_CASE(error_handling) {
         times(diagonal_matrix(), diagonal_matrix());
     } catch (const method_call_error& error) {
         BOOST_TEST(error.code == method_call_error::ambiguous);
+        return;
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
 }
 
+void test_handler(const error_type& error_v) {
+    if (auto error = std::get_if<resolution_error>(&error_v)) {
+        throw *error;
+    }
+
+    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
+        throw *error;
+    }
+
+    if (auto error = std::get_if<hash_search_error>(&error_v)) {
+        throw *error;
+    }
+
+    throw int();
+}
+
+BOOST_AUTO_TEST_CASE(call_error_handling) {
+    update_methods();
+
+    set_error_handler(test_handler);
+
+    try {
+        times(dense_matrix(), dense_matrix());
+    } catch (const resolution_error& error) {
+        BOOST_TEST(error.status == resolution_error::no_definition);
+        return;
+    } catch (...) {
+        BOOST_FAIL("unexpected exception");
+    }
+    BOOST_FAIL("did not throw");
+
+    try {
+        times(diagonal_matrix(), diagonal_matrix());
+    } catch (const resolution_error& error) {
+        BOOST_TEST(error.status == resolution_error::ambiguous);
+        return;
+    } catch (...) {
+        BOOST_FAIL("unexpected exception");
+    }
+    BOOST_FAIL("did not throw");
+
+#ifndef NDEBUG
+    struct identity_matrix : matrix {};
+
+    try {
+        times(diagonal_matrix(), identity_matrix());
+    } catch (const unknown_class_error& error) {
+        BOOST_TEST(error.ti == &typeid(identity_matrix));
+        return;
+    } catch (...) {
+        BOOST_FAIL("unexpected exception");
+    }
+    BOOST_FAIL("did not throw");
+#endif
+}
+
 } // namespace errors
+
+namespace update_error_handling {
+
+struct test_policy : policy::default_policy {
+    static struct catalog catalog;
+    static struct context context;
+};
+
+catalog test_policy::catalog;
+context test_policy::context;
+
+struct base {
+    virtual ~base() {
+    }
+};
+
+struct derived : base {};
+
+class_declaration<types<derived, base>, test_policy> YOMM2_GENSYM;
+
+BOOST_AUTO_TEST_CASE(test_update_error_handling) {
+    try {
+        detail::update_methods(test_policy::catalog, test_policy::context);
+    } catch (const unknown_class_error& error) {
+        BOOST_TEST(error.ti == &typeid(base));
+        return;
+    } catch (...) {
+        BOOST_FAIL("unexpected exception");
+    }
+    BOOST_FAIL("did not throw");
+}
+} // namespace update_error_handling
 
 namespace across_namespaces {
 
@@ -250,12 +347,13 @@ namespace animals {
 
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
 YOMM2_CLASS(Animal);
 
-YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>) );
+YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>));
 
 } // namespace animals
 
@@ -281,7 +379,8 @@ BOOST_AUTO_TEST_CASE(across_namespaces) {
 namespace refref {
 
 struct Animal {
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
     bool moved{false};
 };
 
@@ -293,7 +392,7 @@ YOMM2_CLASS(Animal);
 YOMM2_CLASS(Dog, Animal);
 YOMM2_CLASS(Cat, Animal);
 
-YOMM2_DECLARE(void, test, (virtual_<Animal&&>) );
+YOMM2_DECLARE(void, test, (virtual_<Animal&&>));
 
 YOMM2_DEFINE(void, test, (Dog && dog)) {
     dog.moved = true;

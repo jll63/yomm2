@@ -118,7 +118,7 @@ struct method<Key, R(Args...)> {
 Register static member function `Container::fn` as a definition of the
 `method`. If static member variable `Container::next` exists, it is set to a
 pointer to the next most specialised definition, or to an error handler if
-the next definition does not excist, or is ambiguous.
+the next definition does not exist, or is ambiguous.
 
 The parameters of `Container::fn` must be covariant with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return

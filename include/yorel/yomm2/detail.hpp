@@ -9,6 +9,8 @@ namespace detail {
 
 struct runtime;
 
+void update_methods(catalog& cat, context& ht);
+
 namespace mp11 = boost::mp11;
 
 using ti_ptr = const std::type_info*;
@@ -123,7 +125,7 @@ using type_next_t = decltype(type_next(std::declval<Container>()));
 template<typename Container, typename Next>
 constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
 
-extern method_call_error_handler call_error_handler;
+extern error_handler_type error_handler;
 
 struct hash_function {
     std::uintptr_t mult;
@@ -189,10 +191,6 @@ inline definition_info::~definition_info() {
         method->specs.remove(*this);
     }
 }
-
-#ifndef NDEBUG
-void unregistered_class_error(const std::type_info* ti);
-#endif
 
 template<bool, typename... Classes>
 struct split_policy_aux;
@@ -540,7 +538,10 @@ inline const word* get_mptr(
     auto mptr = hash_table[index].pw;
 #ifndef NDEBUG
     if (!mptr || hash_table[-1].pw[index].ti != ti) {
-        unregistered_class_error(ti);
+        unknown_class_error error;
+        error.ti = ti;
+        error_handler(error_type(error));
+        abort();
     }
 #endif
     return mptr;
