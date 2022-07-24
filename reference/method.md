@@ -45,34 +45,26 @@ with the same signature. At least one parameter must be [virtual_](virtual_.md).
 
 ### constructor
 ```c++
-yorel::yomm2::method<Key, R(Args...)>::method();
+method<Key, R(Args...)>::method();
 ```
 Add the method to the global method list.
 
 ### destructor
 ```c++
-yorel::yomm2::method<Key, R(Args...)>::~method();
+method<Key, R(Args...)>::~method();
 ```
 Remove the method from the global method list.
 
 ### call operator
 ```c++
-yorel::yomm2::method<Key, R(Args...)>::operator()(args...);
+method<Key, R(Args...)>::operator()(args...);
 ```
 Call the method. The dynamic types of the arguments corresponding to a
 [virtual_](virtual_.md) parameter determine which method definition to call.
 
-### fn (verbose)
-```c++
-template<typename Key, typename R, typename... Args>
-struct method<Key, R(Args...)> {
-    static method fn;
-};
-```
-
 ### fn (compact)
 ```c++
-/*static*/ method<Key, R(Args...)>::method method<Key, R(Args...)>::fn;
+static method fn;
 ```
 
 The single instance of `method<Key, R(Args...)>`. Used to call the method.
@@ -93,7 +85,7 @@ The parameters of `Function` must be covariant with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return
 type of `Function` must be covariant with the return type of the method.
 
-### add_function (verbose)
+### add_function
 ```c++
 template<typename Key, typename R, typename... Args>
 struct method<Key, R(Args...)> {
@@ -101,14 +93,6 @@ struct method<Key, R(Args...)> {
     struct add_function {
         explicit add_function(next_type* next = nullptr);
     };
-};
-```
-
-### add_function (compact)
-```c++
-template<auto Function>
-struct method<Key, R(Args...)>::add_function {
-    explicit add_function(next_type* next = nullptr);
 };
 ```
 
