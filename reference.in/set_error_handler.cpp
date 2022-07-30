@@ -59,6 +59,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 // code<
+#include <stdexcept>
 #include <yorel/yomm2/keywords.hpp>
 
 struct Dog {

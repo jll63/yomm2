@@ -53,6 +53,7 @@ variant:
 
 ```c++
 
+#include <stdexcept>
 #include <yorel/yomm2/keywords.hpp>
 
 struct Dog {
