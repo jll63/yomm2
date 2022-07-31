@@ -6,18 +6,25 @@
 <!-- -->
 ---
 ```
+template<typename Key, typename Signature, typename... Unspecified>
+struct method<Key, R(Args...), Unspecified...>; /* undefined */
 template<typename Key, typename R, typename... Args, typename... Unspecified>
-struct method<Key, R(Args...), Unspecified...>;
+struct method<Key, R(Args...), Unspecified...> { ... }
 ```
 <!-- -->
 ---
 
-`method` contains a static function object `fn`, that takes arguments of type
-`remove_virtual<Args>...`, where `remove_virtual<T>` and
-`remove_virtual<virtual_<T>>` evaluate to `T`. `R` is the return type of the
-function object. `Key` is a type, defined by the user in the same namespace
-as the method declaration, that makes the method distinct from other methods
-with the same signature. At least one parameter must be [virtual_](virtual_.md). 
+`method` implements a function object that takes a list of arguments of type
+`Args`, *minus* the `virtual_` decorator, and returns a value of type `R`.
+
+The method can be called via the singleton [`method::fn`](#fn). Method
+definitions can be added with the [`method::add_function`](#add_function) and
+[`method::add_definition`](#add_definition) class templates.
+
+At least one of the `Args` parameter types must be [virtual_](virtual_.md). 
+
+`Key` is a used-suplied type that makes it possible to have distinct methods
+with the same signature.
 
 ### member functions
 |                              |                                    |
@@ -29,7 +36,7 @@ with the same signature. At least one parameter must be [virtual_](virtual_.md).
 ### static member variable
 |           |                               |
 | --------- | ----------------------------- |
-| [fn](#fn) | single instance of the method |
+| [fn](#fn) | function object to call the method |
 
 ### member types
 |                         |                                                           |
@@ -62,9 +69,9 @@ method<Key, R(Args...)>::operator()(args...);
 Call the method. The dynamic types of the arguments corresponding to a
 [virtual_](virtual_.md) parameter determine which method definition to call.
 
-### fn (compact)
+### fn
 ```c++
-static method fn;
+method<Key, R(Args...)>::fn;
 ```
 
 The single instance of `method<Key, R(Args...)>`. Used to call the method.
