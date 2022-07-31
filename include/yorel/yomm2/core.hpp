@@ -312,6 +312,15 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
         using type = add_definition; // make it a meta-function
     };
 
+    template<auto F>
+    struct add_member_function
+        : add_function<detail::member_function_wrapper<F, decltype(F)>::fn> {};
+
+    template<auto... F>
+    struct add_member_functions {
+        std::tuple<add_member_function<F>...> add;
+    };
+
     template<typename Container>
     struct use_next {
         static next_type next;

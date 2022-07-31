@@ -27,6 +27,10 @@ add_executable(lab lab.cpp)
 target_link_libraries(lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME lab COMMAND lab)
 
+add_executable(member_method member_method.cpp)
+target_link_libraries(member_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME member_method COMMAND member_method)
+
 add_executable(namespaces namespaces.cpp)
 target_link_libraries(namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME namespaces COMMAND namespaces)

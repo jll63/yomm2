@@ -677,6 +677,16 @@ struct next_aux {
 template<typename Method, typename Container>
 typename Method::next_type next_aux<Method, Container>::next;
 
+template<auto F, typename T>
+struct member_function_wrapper;
+
+template<auto F, class R, class C, typename... Args>
+struct member_function_wrapper<F, R (C::*)(Args...)> {
+    static R fn(C* this_, Args&&... args) {
+        return (this_->*F)(std::forward<Args>(args)...);
+    }
+};
+
 // Collect the base classes of a list of classes. The result is a mp11 map that
 // associates each class to a list starting with the class itself, followed by
 // all its bases, as per std::is_base_of. Thus the list includes the class
