@@ -21,9 +21,9 @@ The method can be called via the singleton [`method::fn`](#fn). Method
 definitions can be added with the [`method::add_function`](#add_function) and
 [`method::add_definition`](#add_definition) class templates.
 
-At least one of the `Args` parameter types must be [virtual_](virtual_.md). 
+At least one of the `Args` parameter types must be decorated with [virtual_](virtual_.md). 
 
-`Key` is a used-suplied type that makes it possible to have distinct methods
+`Key` is a user-suplied type that makes it possible to have distinct methods
 with the same signature.
 
 ### member functions
