@@ -12,7 +12,7 @@
 using yorel::yomm2::virtual_;
 using std::cout;
 
-// register_class(class, bases);
+// register_class(classes);
 
 // declare_method(return, name, (params));
 
