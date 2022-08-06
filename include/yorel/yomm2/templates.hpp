@@ -72,15 +72,16 @@ using transform_product = boost::mp11::mp_apply<
     >
 >;
 
-namespace detail {
+template<typename... T>
+struct aggregate;
 
 namespace detail {
+
 template<typename T>
 std::true_type has_method_aux(typename T::method*);
 
 template<typename T>
 std::false_type has_method_aux(...);
-}
 
 template<typename T>
 constexpr bool has_method = decltype(detail::has_method_aux<T>(nullptr))::value;
@@ -118,16 +119,10 @@ struct is_defined {
     >;
 };
 
-template<typename... T>
-struct aggregate;
-
 // ===========================================================================
 
 // Some compiler have problems with classes that have a large number of bases,
 // so divide-and-conquer to keep the number of bases below 1024.
-
-template<typename... T>
-struct aggregate;
 
 template<typename... T>
 struct large_aggregate : std::tuple<
@@ -136,21 +131,21 @@ struct large_aggregate : std::tuple<
 > {
 };
 
+} // namespace detail
+
 template<typename... T>
 struct aggregate : boost::mp11::mp_if_c<
     sizeof...(T) <= 512,
     boost::mp11::mp_defer<std::tuple, T...>,
-    boost::mp11::mp_defer<large_aggregate, T...>
+    boost::mp11::mp_defer<detail::large_aggregate, T...>
 >::type {};
 
 template<typename... T>
 struct aggregate<types<T...>> : aggregate<T...> {};
 
-} // namespace detail
-
 template<template<typename...> typename Definition, typename LoL>
 using use_definitions = boost::mp11::mp_apply<
-    detail::aggregate,
+    aggregate,
     boost::mp11::mp_transform_q<
         detail::use_definition<Definition>,
         boost::mp11::mp_copy_if_q<

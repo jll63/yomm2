@@ -41,8 +41,8 @@ static_assert(
     std::is_same_v<
         apply_product<
             templates<bin1, bin2>,
-            types<n<1>, n<2> >, 
-            types< n<3>, n<4>, n<5> > 
+            types<n<1>, n<2>>, 
+            types<n<3>, n<4>, n<5>> 
         >,
         types<
             bin1<n<1>, n<3>>,

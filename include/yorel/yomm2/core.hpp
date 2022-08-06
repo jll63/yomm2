@@ -69,8 +69,8 @@ struct context;
 namespace policy {
 
 struct abstract_policy;
-struct hash_factors_in_method;
-using default_policy = hash_factors_in_method;
+struct hash_factors_in_globals;
+using default_policy = hash_factors_in_globals;
 
 } // namespace policy
 
@@ -160,8 +160,6 @@ struct hash_factors_in_method : global_catalog, global_context {
             method.slots_strides, args...);
     }
 };
-
-using default_policy = hash_factors_in_method;
 
 } // namespace policy
 
@@ -294,6 +292,9 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
             fn.specs.push_front(info);
         }
     };
+
+    template<auto... Function>
+    struct add_functions : std::tuple<add_function<Function>...> {};
 
     template<typename Container, bool has_next, bool has_name>
     struct add_definition_;

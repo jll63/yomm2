@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+
+import argparse
+import itertools
+import json
+import logging
+import platform
+from pathlib import Path
+
+from bmutils import Benchmarks, axes, build
+from mdutils.mdutils import MdUtils
+from mdutils.tools.TextUtils import TextUtils
+
+x_axis = ("hash_factors_in_globals", "hash_factors_in_method")
+other_axes = axes.copy()
+other_axes.pop("policy")
+
+parser = argparse.ArgumentParser()
+parser.add_argument("benchmarks", nargs="?", type=Path, default=Path("build"))
+parser.add_argument("--prefix", "-p", default="benchmarks")
+parser.add_argument("--objects", "-O", type=int)
+parser.add_argument("--hierarchies", "-H", type=int)
+parser.add_argument("--log-level")
+args, other_args = parser.parse_known_args()
+
+if args.log_level:
+    logging.basicConfig(level=getattr(logging, args.log_level.upper()))
+
+if args.benchmarks.suffix == ".json":
+    print("reading results from", args.benchmarks)
+    with open(args.benchmarks) as fh:
+        results = Benchmarks.parse(json.load(fh))
+    prefix = args.benchmarks.stem
+else:
+    if args.hierarchies is not None:
+        build(args.benchmarks, args.hierarchies)
+    exe = args.benchmarks.joinpath("tests", "benchmarks")
+    print(f"running {exe}")
+    results = Benchmarks.run(exe, *other_args, objects=args.objects)
+    prefix = f"{args.prefix}.{platform.node()}.{results.context.yomm2.compiler}"
+
+    with open(f"{prefix}.json", "w") as fh:
+        print("writing results to", f"{prefix}.json")
+        json.dump(results.data, fh, indent=4)
+
+
+def format_result(result):
+    return (
+        result.dispatch,
+        f"{result.mean:6.1f}",
+        "1.00" if result.base is None else f"{result.mean / result.base.mean:5.2f}",
+    )
+
+
+# =============================================================
+
+md = MdUtils(file_name=f"{prefix}.md")
+print("writing results to", f"{prefix}.md")
+results.context.write_md(md)
+
+for other_tags in itertools.product(*other_axes.values()):
+    md.new_header(
+        level=2,
+        title=", ".join([str(tag).replace("_", " ") for tag in other_tags]),
+        add_table_of_contents=False,
+    )
+    table = ["dispatch", "avg", "ratio"]
+    columns = len(table)
+    virtual_results = results.get("virtual", *other_tags)
+    max_cv = virtual_results.cv
+    table.extend(format_result(virtual_results))
+    for dispatch in x_axis:
+        other_results = results.get(dispatch, *other_tags)
+        max_cv = max(max_cv, other_results.cv)
+        table.extend(format_result(other_results))
+
+    md.new_table(
+        columns=columns,
+        rows=int(len(table) / columns),
+        text=table,
+        text_align="right",
+    )
+    display_cv = f"max cv = {max_cv * 100:5.1f}%"
+    if max_cv > 0.05:
+        display_cv = TextUtils.bold(f"WARNING: {display_cv}")
+    md.new_line(display_cv)
+
+
+md.create_md_file()
+
+# --benchmark_enable_random_interleaving=true --benchmark_repetitions=5  --benchmark_min_time=2 --benchmark_report_aggregates_only=true

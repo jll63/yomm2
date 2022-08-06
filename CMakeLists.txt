@@ -19,9 +19,7 @@ find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-save-temps)
-  endif()
+  add_compile_options(-save-temps)
 endif()
 
 if(MSVC)
@@ -61,6 +59,7 @@ if(${YOMM2_ENABLE_EXAMPLES})
 endif()
 
 option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
+option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 
 if(${YOMM2_ENABLE_DOC})
   message(STATUS "Documentation generation enabled")

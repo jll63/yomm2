@@ -13,4 +13,7 @@ ExternalProject_Add(${PROJECT_NAME}
                         -DCMAKE_BUILD_TYPE=Release
                         -DBENCHMARK_ENABLE_TESTING=OFF
                         -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                        -DCMAKE_CXX_FLAGS=-fPIE
 )
+
+

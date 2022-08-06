@@ -2,9 +2,7 @@
 
 import argparse
 import fileinput
-from itertools import count
 import re
-from socket import timeout
 from subprocess import Popen, PIPE
 import threading
 

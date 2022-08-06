@@ -157,12 +157,16 @@ int main() {
 
 // ## Performance
 
-// Don't worry about it. Open methods are almost as fast as ordinary virtual
-// member functions once you turn on optimization (-O2). With both clang and gcc,
-// dispatching a call to a method with one virtual argument is only 15-30% slower
-// than calling the equivalent virtual member function. If the body of the method
-// does any amount of work, the difference is unnoticeable. See the implementation
-// notes for benchmarks and assembly listings.
+// Open methods are almost as fast as ordinary virtual member functions once you
+// turn on optimization (-O2). With both clang and gcc, dispatching a call to a
+// method with one virtual argument takes 15-30% more time than calling the
+// equivalent virtual member function (unless the call goes through a virtual
+// base, which requires a dynamic cast). It does not involve branching or
+// looping, only a few memory reads (which the CPU can be parallelize), a
+// multiplication, a bit shift, a final memory read, then an indirect call. If
+// the body of the method does any amount of work, the difference is
+// unnoticeable. See the implementation notes for benchmarks and assembly
+// listings.
 
 // ## Building and Installing
 

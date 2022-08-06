@@ -3,6 +3,7 @@ build/
 **/#*#
 dependencies/*
 extern/*
+tests/benchmarks_parameters.hpp
 
 # ides
 .vscode/

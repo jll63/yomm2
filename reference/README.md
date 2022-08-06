@@ -96,11 +96,11 @@ The header consumes two macros:
   delivers a performance close to normal virtual function calls.
 * `YOMM2_TRACE`: controls tracing. This feature is, at the moment, not
   documented.
-* YOMM2_SHARED: if defined, the library runtime is in a shared library or DLL.
+* `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
 
-The header defines only the following macros:
+The header defines the following macros:
 * an include guard (`YOREL_YOMM2_CORE_INCLUDED`).
-* *iff* YOMM2_SHARED is defined, a `yOMM2_API` macro.
+* *iff* `YOMM2_SHARED` is defined, a `yOMM2_API` macro, for internal use.
 
 ### `<yorel/yomm2/symbols.hpp>`
 
