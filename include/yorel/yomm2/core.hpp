@@ -242,9 +242,11 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
         resolution_error error;
         error.status = resolution_error::no_definition;
         error.method = &typeid(method);
+        error.arity = arity;
         detail::ti_ptr tis[sizeof...(args)];
         auto ti_iter = tis;
         (..., (*ti_iter++ = detail::universal_traits<A>::key(args)));
+        error.tis = tis;
         detail::error_handler(error_type(std::move(error)));
         abort(); // in case user handler "forgets" to abort
     }
@@ -253,9 +255,11 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
         resolution_error error;
         error.status = resolution_error::ambiguous;
         error.method = &typeid(method);
+        error.arity = arity;
         detail::ti_ptr tis[sizeof...(args)];
         auto ti_iter = tis;
         (..., (*ti_iter++ = detail::universal_traits<A>::key(args)));
+        error.tis = tis;
         detail::error_handler(error_type(std::move(error)));
         abort(); // in case user handler "forgets" to abort
     }

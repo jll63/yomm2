@@ -5,43 +5,57 @@
 
 #include <yorel/yomm2/keywords.hpp>
 
-#include <iostream>
+#define BOOST_TEST_MODULE core
+#include <boost/test/included/unit_test.hpp>
 
-struct Object {
-    virtual ~Object() {
+// clang-format off
+
+struct Dog {
+    virtual ~Dog() {
     }
 };
 
-register_classes(Object);
+register_classes(Dog);
 
-declare_method(void, foo, (virtual_<Object&>));
+declare_method(const char*, kick, (virtual_<Dog&>));
 
-define_method(void, foo, (Object&)) {
-    std::cout << "ok\n";
+define_method(const char*, kick, (Dog&)) {
+    return "bark";
 }
 
-using namespace yorel::yomm2;
-
-void call_foo(Object& obj) {
-    foo(obj);
+auto call_kick(Dog& obj) {
+    return kick(obj);
 }
 
-void call_foo_manual(Object& obj) {
+/*
+movq	context+24(%rip), %r8
+movq	context+32(%rip), %rdx
+movb	context+40(%rip), %cl
+movslq	method<kick, char const* (virtual_<Dog&>)>::fn+96(%rip), %rsi
+movq	(%rdi), %rax
+imulq	-8(%rax), %rdx
+shrq	%cl, %rdx
+movq	(%r8,%rdx,8), %rax
+jmpq	*(%rax,%rsi,8)                  # TAILCALL
+*/
+
+using const_char_ptr = const char*;
+
+auto call_kick_manual(Dog& obj) {
+    using namespace yorel::yomm2;
     const auto& context = policy::global_context::context;
-    ((void (*)(Object&))(
-        context
-            .hash_table
-                [std::uintptr_t(&typeid(obj)) * context.hash.mult >>
-                 context.hash.shift]
-            .pw[method<YOMM2_SYMBOL(foo), void(virtual_<Object&>)>::fn
-                    .slots_strides.i]
-            .pw))(obj);
+    return ((const char*(*)(Dog&))(
+        context.hash_table[
+            std::uintptr_t(&typeid(obj)) * context.hash.mult >> context.hash.shift
+        ]
+        .pw[method<YOMM2_SYMBOL(kick), const_char_ptr(virtual_<Dog&>)>::fn.slots_strides.i]
+        .pw))(obj);
 }
 
-int main() {
+BOOST_AUTO_TEST_CASE(test_manual_call) {
     yorel::yomm2::update_methods();
-    Object o;
-    call_foo(o);
-    call_foo_manual(o);
-    return 0;
+    Dog o;
+    BOOST_TEST(call_kick_manual(o) == std::string("bark"));
 }
+
+>>>>>>> 52ebdbc (fix error handlers)
