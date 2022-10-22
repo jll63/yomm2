@@ -11,6 +11,7 @@ struct class_declaration;
 
 ### usage
 ```c++
+class_declaration<Class, Bases...> identifier;
 class_declaration<types<Class, Bases...>> identifier;
 ```
 ---

@@ -74,7 +74,7 @@ using default_policy = hash_factors_in_method;
 
 } // namespace policy
 
-template<typename ClassList, typename Policy>
+template<typename Class, typename... Rest>
 struct class_declaration;
 
 } // namespace yomm2
@@ -355,14 +355,22 @@ template<typename Container>
 typename method<Key, R(A...), Policy>::next_type
     method<Key, R(A...), Policy>::use_next<Container>::next;
 
-template<typename ClassList, typename Policy = policy::default_policy>
-struct class_declaration : detail::class_info {
+// clang-format off
+
+template<typename Class, typename... Rest>
+struct class_declaration : class_declaration<
+    detail::remove_policy<Class, Rest...>,
+    detail::get_policy<Class, Rest...>
+> {};
+
+template<typename Class, typename... Bases, typename Policy>
+struct class_declaration<types<Class, Bases...>, Policy> : detail::class_info {
     // Add a class to a catalog.
     // There is a possibility that the same class is registered with
     // different bases. This will be caught by augment_classes.
 
-    using class_type = boost::mp11::mp_front<ClassList>;
-    using bases_type = boost::mp11::mp_pop_front<ClassList>;
+    using class_type = Class;
+    using bases_type = types<Bases...>;
 
     class_declaration() {
         // TODO: make following work for root classes.
@@ -381,6 +389,13 @@ struct class_declaration : detail::class_info {
         Policy::catalog.classes.remove(*this);
     }
 };
+
+template<typename Class, typename... Bases>
+struct class_declaration<types<Class, Bases...>> : class_declaration<
+    types<Class, Bases...>, policy::default_policy
+> {};
+
+// clang-format on
 
 template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
