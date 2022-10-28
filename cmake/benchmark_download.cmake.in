@@ -4,7 +4,7 @@ include(ExternalProject)
 
 ExternalProject_Add(${PROJECT_NAME}
     GIT_REPOSITORY      https://github.com/google/benchmark.git
-    GIT_TAG             master
+    GIT_TAG             v1.7.0
     GIT_PROGRESS        True
     SOURCE_DIR          "@CMAKE_BINARY_DIR@/dependencies/${PROJECT_NAME}"
     BINARY_DIR          "@CMAKE_CURRENT_BINARY_DIR@/${PROJECT_NAME}_build"
