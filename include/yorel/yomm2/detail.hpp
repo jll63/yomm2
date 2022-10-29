@@ -178,7 +178,7 @@ struct method_info : static_chain<method_info>::static_link {
     detail::word* hash_table;
     detail::word slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
-    virtual void install_hash_factors(runtime& rt) {
+    virtual void install_hash_factors(runtime&) {
     }
 
     auto arity() const {
