@@ -3,3 +3,8 @@ build/
 **/#*#
 dependencies/*
 extern/*
+
+# ides
+.vscode/
+.vs/
+CMakeSettings.json
