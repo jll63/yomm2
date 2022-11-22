@@ -9,7 +9,7 @@ namespace detail {
 
 struct runtime;
 
-void update_methods(catalog& cat, context& ht);
+yOMM2_API void update_methods(catalog& cat, context& ht);
 
 namespace mp11 = boost::mp11;
 
@@ -125,7 +125,7 @@ using type_next_t = decltype(type_next(std::declval<Container>()));
 template<typename Container, typename Next>
 constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
 
-extern YOMM2_API error_handler_type error_handler;
+extern yOMM2_API error_handler_type error_handler;
 
 struct hash_function {
     std::uintptr_t mult;
@@ -164,7 +164,7 @@ struct definition_info : static_chain<definition_info>::static_link {
     void* pf;
 };
 
-struct YOMM2_API method_info : static_chain<method_info>::static_link {
+struct yOMM2_API method_info : static_chain<method_info>::static_link {
     std::string_view name;
     const std::type_info *const *vp_begin, *const *vp_end;
     static_chain<definition_info> specs;

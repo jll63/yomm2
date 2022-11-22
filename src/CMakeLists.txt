@@ -5,12 +5,12 @@
 
 option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
 if(YOMM2_SHARED)
+  message(STATUS "Building a shared library")
   add_library(yomm2 SHARED)
   if(NOT WIN32)
     target_compile_options(yomm2 PRIVATE -fvisibility=hidden)
   endif()
   target_compile_definitions(yomm2
-    PRIVATE -DBUILDING_YOMM2=1
     PUBLIC -DYOMM2_SHARED=1
   )
 else()

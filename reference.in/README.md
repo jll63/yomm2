@@ -89,16 +89,18 @@ This header defines the `yorel::yomm2` namespace, which contains the `method`
 template, and other C++ mechanisms. Since version 1.3.0, the key mechanisms are
 documented; thus, it possible to use the library without resorting on the
 macros. See the [API tutorial](../tutorials/api.md) for an introduction to the
-main feautures of `core`.
-
-The header itself does not define any macros, except for its include guard
-(`YOREL_YOMM2_CORE_INCLUDED`).
+main features of `core`.
 
 The header consumes two macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
 * `YOMM2_TRACE`: controls tracing. This feature is, at the moment, not
   documented.
+* `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
+
+The header defines the following macros:
+* an include guard (`YOREL_YOMM2_CORE_INCLUDED`).
+* *iff* `YOMM2_SHARED` is defined, a `yOMM2_API` macro, for internal use.
 
 ### `<yorel/yomm2/symbols.hpp>`
 

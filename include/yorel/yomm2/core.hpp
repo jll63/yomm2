@@ -8,30 +8,27 @@
 #include <vector>
 
 #if defined(YOMM2_TRACE) && (YOMM2_TRACE & 2)
-#include <iostream>
+    #include <iostream>
 #else
-#include <iosfwd>
+    #include <iosfwd>
 #endif
 
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 #include <boost/type_traits/is_virtual_base_of.hpp>
 
-#if YOMM2_SHARED
-#if defined(_WIN32)
-#define YOMM2_SYMBOL_EXPORT __declspec(dllexport)
-#define YOMM2_SYMBOL_IMPORT __declspec(dllimport)
+#if defined(YOMM2_SHARED)
+    #if !defined(yOMM2_API)
+        #if defined(_WIN32)
+            #define yOMM2_API __declspec(dllimport)
+        #else
+            #define YOMM2_SYMBOL_EXPORT                                        \
+                __attribute__((__visibility__("default")))
+            #define yOMM2_API
+        #endif
+    #endif
 #else
-#define YOMM2_SYMBOL_EXPORT __attribute__((__visibility__("default")))
-#define YOMM2_SYMBOL_IMPORT
-#endif
-#if BUILDING_YOMM2
-#define YOMM2_API YOMM2_SYMBOL_EXPORT
-#else
-#define YOMM2_API YOMM2_SYMBOL_IMPORT
-#endif
-#else
-#define YOMM2_API
+    #define yOMM2_API
 #endif
 
 namespace yorel {
@@ -66,7 +63,7 @@ using error_type =
 
 using error_handler_type = void (*)(const error_type& error);
 
-YOMM2_API error_handler_type set_error_handler(error_handler_type handler);
+yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
 
 struct catalog;
 struct context;
@@ -103,7 +100,7 @@ using method_call_error_handler = void (*)(
     const method_call_error& error, size_t arity,
     const std::type_info* const tis[]);
 
-YOMM2_API method_call_error_handler
+yOMM2_API method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler);
 
 // end deprecated
@@ -134,11 +131,11 @@ namespace policy {
 
 struct abstract_policy {};
 
-struct YOMM2_API global_context : virtual abstract_policy {
+struct yOMM2_API global_context : virtual abstract_policy {
     static struct context context;
 };
 
-struct YOMM2_API global_catalog : virtual abstract_policy {
+struct yOMM2_API global_catalog : virtual abstract_policy {
     static struct catalog catalog;
 };
 
@@ -153,7 +150,7 @@ struct hash_factors_in_globals : global_catalog, global_context {
 };
 
 struct hash_factors_in_method : global_catalog, global_context {
-    struct YOMM2_API method_info_type : detail::method_info {
+    struct yOMM2_API method_info_type : detail::method_info {
         detail::hash_function hash;
         void install_hash_factors(detail::runtime& rt) override;
     };
@@ -386,7 +383,7 @@ struct class_declaration : detail::class_info {
 template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
 
-YOMM2_API void update_methods();
+yOMM2_API void update_methods();
 
 } // namespace yomm2
 } // namespace yorel

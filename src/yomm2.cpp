@@ -25,10 +25,20 @@
 #include <vector>        // for vector, vector<>:...
 
 #if defined(YOMM2_TRACE) && (YOMM2_TRACE & 1) || !defined(NDEBUG)
-#include <iostream>
+    #include <iostream>
 #endif
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp> // for operator<<, dynam...
+
+#if defined(YOMM2_SHARED)
+    #if defined(_WIN32)
+        #define yOMM2_API __declspec(dllexport)
+    #else
+        #define yOMM2_API __attribute__((__visibility__("default")))
+    #endif
+#else
+    #define yOMM2_API
+#endif
 
 #include <yorel/yomm2.hpp>
 #include <yorel/yomm2/runtime.hpp>

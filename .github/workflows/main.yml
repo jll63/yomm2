@@ -81,6 +81,40 @@ jobs:
         run: |
           cd cmake.bld/examples
           find . -type f -executable -exec {} \;
+  ubuntu-shared:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [g++-10, g++-11, clang++-11, clang++-12]
+        standard: [17]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install g++-11
+        if: ${{ matrix.compiler == 'g++-11' }}
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt update
+          sudo apt install g++-11
+      - name: Install Boost
+        run: |
+          sudo apt update
+          sudo apt install libboost-all-dev
+      - name: Configure
+        run: |
+          mkdir cmake.bld
+          cd cmake.bld
+          cmake .. -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+      - name: Build
+        run: VERBOSE=1 cmake --build cmake.bld
+      - name: Unit Tests
+        run: |
+          cd cmake.bld
+          ctest --rerun-failed --output-on-failure .
+      - name: Examples
+        run: |
+          pwd
+          cd cmake.bld/examples
+          find . -type f -executable -exec {} \;
   windows:
     runs-on: windows-latest
     strategy:
@@ -94,6 +128,35 @@ jobs:
           mkdir cmake.bld
           cd cmake.bld
           cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+      - name: Build
+        run: |
+          cd cmake.bld
+          nmake
+      - name: Unit Tests
+        run: |
+          cd cmake.bld
+          $env:YOMM2_TRACE = 1
+          ctest --rerun-failed --output-on-failure .
+          $global:LASTEXITCODE = 0
+      # - name: Examples
+      #   run: |
+      #     cd cmake.bld/examples
+      #     find . -type f -executable -exec {} \;
+      # - name: Benchmarks
+      #   if: ${{ matrix.config == 'Release' }}
+      #   run: |
+      #     cd cmake.bld/tests
+      #     benchmarks
+  windows-shared:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1.4.1
+      - name: Configure
+        run: |
+          mkdir cmake.bld
+          cd cmake.bld
+          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
           cd cmake.bld
