@@ -37,6 +37,10 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
+// export vtable
+void method_info::install_hash_factors(runtime&) {
+}
+
 std::ostream* logs;
 unsigned trace_flags;
 
