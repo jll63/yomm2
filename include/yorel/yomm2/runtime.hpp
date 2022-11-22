@@ -90,7 +90,7 @@ struct rt_method {
     dispatch_stats_t stats;
 };
 
-struct YOMM2_API runtime {
+struct yOMM2_API runtime {
 
     catalog& cat;
     context& ctx;

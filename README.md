@@ -187,6 +187,8 @@ cd build
 cmake ..
 make
 ```
+By default, YOMM2 is built as a static library. It can also be built as a shared
+library by adding `-DYOMM2_SHARED=1` to the `cmake` command line.
 
 If you want to run the tests:
 
