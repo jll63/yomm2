@@ -125,7 +125,7 @@ using type_next_t = decltype(type_next(std::declval<Container>()));
 template<typename Container, typename Next>
 constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
 
-extern error_handler_type error_handler;
+extern YOMM2_API error_handler_type error_handler;
 
 struct hash_function {
     std::uintptr_t mult;
@@ -164,7 +164,7 @@ struct definition_info : static_chain<definition_info>::static_link {
     void* pf;
 };
 
-struct method_info : static_chain<method_info>::static_link {
+struct YOMM2_API method_info : static_chain<method_info>::static_link {
     std::string_view name;
     const std::type_info *const *vp_begin, *const *vp_end;
     static_chain<definition_info> specs;
@@ -178,8 +178,7 @@ struct method_info : static_chain<method_info>::static_link {
     detail::word* hash_table;
     detail::word slots_strides; // slot 0, slot 1,  stride 1, slot 2, ...
 
-    virtual void install_hash_factors(runtime&) {
-    }
+    virtual void install_hash_factors(runtime&);
 
     auto arity() const {
         return std::distance(vp_begin, vp_end);
