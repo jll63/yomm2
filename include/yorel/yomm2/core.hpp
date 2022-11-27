@@ -22,8 +22,6 @@
         #if defined(_WIN32)
             #define yOMM2_API __declspec(dllimport)
         #else
-            #define YOMM2_SYMBOL_EXPORT                                        \
-                __attribute__((__visibility__("default")))
             #define yOMM2_API
         #endif
     #endif
