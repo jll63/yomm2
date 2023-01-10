@@ -46,22 +46,17 @@ that the selection happens at runtime.
 
 ## API Overview
 
-The library is normally used via a collection of macros, and a single template, ->virtual_, that denotes virtual parameters.
+The library is normally used via the _keyword interface_, provided by the
+`<yorel/yomm2/keywords.hpp>` header. It attempts to present open methods as a
+language feature. It consists of a collection of macros, which are, of course,
+global, but so are keywords. The ->virtual_ template, used to specify
+virtual parameters, is also aliases in the global namespace.
 
-The library can also be used through the public API, without resorting on the
-macros.
-
-The main construct are:
-
-* ->method, a class template that contains:
-  * a static function object [fn](method.md#fn), to call the method
-  * nested class templates [add_function](method.md#add_function) and
-    [add_definition](method.md#add_definition), to add definitions to a method
-  * [next_type](method.md#next_type) and [use_next](method.md#use_next), to call
-    the next most specialised method
-* ->use_classes, a class template, provides the class and inheritance information.
-* ->update_methods, a function that calculates the method dispatch tables, using
-  the method, definition, and class information.
+The library can also be used through the _core interface_, which is almost
+entirely free of macros. The primary use of this interface is to support
+templatized classes, methods and definitions - something that macros are
+incapable of. See [the templates tutorial](tutorials/templates_tutorial.md) for
+more details and examples.
 
 ## Exceptions
 
@@ -74,9 +69,10 @@ exceptions.
 
 ### `<yorel/yomm2/keywords.hpp>`
 
-Since version 1.3.0, this is the recommended main header for normal usage of the
-library. It is used in all the examples and tutorials. The header makes it look
-like the library's features are part of the language:
+This header provides the _keyword interface_. Since version 1.3.0, this is the
+recommended main header for normal usage of the library. It is used in most
+examples and tutorials. The header makes it look like the library's features are
+part of the language:
 
 * It includes `<yorel/yomm2/core.hpp>`.
 * It includes `<yorel/yomm2/cute.hpp>`, thus making the lowercase macros
@@ -85,11 +81,26 @@ like the library's features are part of the language:
 
 ### `<yorel/yomm2/core.hpp>`
 
-This header defines the `yorel::yomm2` namespace, which contains the `method`
-template, and other C++ mechanisms. Since version 1.3.0, the key mechanisms are
-documented; thus, it possible to use the library without resorting on the
-macros. See the [API tutorial](../tutorials/api.md) for an introduction to the
-main features of `core`.
+This header provides the _core interface_, in the `yorel::yomm2` namespace.
+Since version 1.3.0, the key mechanisms are documented; thus, it possible to use
+the library without resorting on the macros. See the [API
+tutorial](../tutorials/api.md) for an introduction to the main features of
+`core`.
+
+The main constructs are:
+
+* ->method, a class template that contains:
+  * a static function object [fn](method.md#fn), to call the method
+  * nested class templates [add_function](method.md#add_function) and
+    [add_definition](method.md#add_definition), to add definitions to a method
+  * [next_type](method.md#next_type) and [use_next](method.md#use_next), to call
+    the next most specialised method
+* ->use_classes, a class template, provides the class and inheritance information.
+* ->update_methods, a function that calculates the method dispatch tables, using
+  the method, definition, and class information.
+
+The header itself does not define any macros, except for its include guard
+(`YOREL_YOMM2_CORE_INCLUDED`).
 
 The header consumes two macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
@@ -104,8 +115,13 @@ The header defines the following macros:
 
 ### `<yorel/yomm2/symbols.hpp>`
 
-This header defines two macros: `YOMM2_GENSYM` and `YOMM2_SYMBOL`, which are
-useful when using the API.
+This header defines two macros: `YOMM2_GENSYM`, which generates a new obfuscated
+symbol each time that is is expanded; and `YOMM2_SYMBOL(seed)`, which generates
+an obfuscated symbol (the same symbol for the same value of `seed`).
+
+These macros are useful when using the core interface, which requires
+instantiating static objects to register classes, methods, and definitions; and
+for defining the "key" type for the ->method template.
 
 ### `<yorel/yomm2/templates.hpp>`
 
