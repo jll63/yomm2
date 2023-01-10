@@ -28,10 +28,7 @@ struct rt_arg {
 };
 
 struct rt_class {
-    explicit rt_class(const class_info* info) : info(info) {
-    }
-
-    const class_info* info;
+    bool is_abstract{false};
     std::vector<const std::type_info*> ti_ptrs;
     std::vector<rt_class*> transitive_bases;
     std::vector<rt_class*> direct_bases;
@@ -47,7 +44,7 @@ struct rt_class {
     detail::word* mptr;
 
     auto name() const {
-        return info->name();
+        return ti_ptrs[0]->name();
     }
 };
 

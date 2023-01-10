@@ -19,7 +19,12 @@ class Dolphin : public Animal {};
 
 #include <yorel/yomm2/keywords.hpp>
 
-register_classes(Animal, Dog, Bulldog, Cat, Dolphin);
+// classes must be registered
+register_classes(Animal, Dog, Cat, Dolphin);
+// but it does not have to be in one call to 'register_classes', as long as
+// inheritance relationships can be deduced - this allows *adding* classes to an
+// existing collection of classes
+register_classes(Dog, Bulldog);
 
 // open method with single virtual argument <=> virtual function "from outside"
 declare_method(std::string, kick, (virtual_<Animal&>));

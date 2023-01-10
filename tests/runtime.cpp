@@ -169,10 +169,10 @@ struct Jet : Expense {};
 using test_policy = test_policy_<Role>;
 // any type from this namespace would work.
 
-use_classes<
-    test_policy, Role, Employee, Manager, Founder, Expense, Public, Bus, Metro,
-    Taxi, Jet>
+use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
     YOMM2_GENSYM;
+
+use_classes<test_policy, Expense, Public, Bus, Metro, Taxi, Jet> YOMM2_GENSYM;
 
 YOMM2_DECLARE(double, pay, (virtual_<const Employee&>), test_policy);
 
@@ -215,20 +215,6 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     runtime rt(test_policy::catalog, test_policy::context);
 
     rt.augment_classes();
-
-    BOOST_TEST_REQUIRE(
-        rt.classes.size() == test_policy::catalog.classes.size());
-
-    {
-        auto c_iter = test_policy::catalog.classes.begin();
-        auto r_iter = rt.classes.rbegin();
-
-        while (r_iter != rt.classes.rend()) {
-            BOOST_TEST(r_iter->info == &*c_iter);
-            ++c_iter;
-            ++r_iter;
-        }
-    }
 
     auto role = get<Role>(rt);
     auto employee = get<Employee>(rt);
@@ -305,7 +291,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST(jet->direct_derived.size() == 0);
 
     BOOST_TEST(
-        sstr(role->covariant_classes) == sstr(role, employee, founder, manager));
+        sstr(role->covariant_classes) ==
+        sstr(role, employee, founder, manager));
     BOOST_TEST(sstr(founder->covariant_classes) == sstr(founder));
     BOOST_TEST(
         sstr(expense->covariant_classes) ==
@@ -813,7 +800,7 @@ BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
             BOOST_REQUIRE(s1 <= 4);
             in_use[s1] = true;
         }
-            
+
         for (auto m2 : methods) {
             if (m1 == m2) {
                 continue;

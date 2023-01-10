@@ -132,7 +132,7 @@ operator<<(std::ostream& os, Container<rt_class*, T...>& classes) {
     os << "(";
     const char* sep = "";
     for (auto cls : classes) {
-        os << sep << cls->info->name();
+        os << sep << cls->name();
         sep = ", ";
     }
 
@@ -188,22 +188,22 @@ void runtime::augment_classes() {
                 }
             }
 
-            auto& entry = class_map[std::type_index(*cr.ti)];
+            auto& rtc = class_map[std::type_index(*cr.ti)];
 
-            if (entry == nullptr) {
-                classes.emplace_front(&cr);
-                entry = &classes.front();
+            if (rtc == nullptr) {
+                rtc = &classes.emplace_back();
+                rtc->is_abstract = cr.is_abstract;
             }
 
             // In the unlikely case that a class does have more than one
             // associated  ti*, collect them in a vector. We don't use an
             // unordered_set because, again, this situation is highly unlikely,
-            // and, were it to occurr, the number of distinct ti*s would
+            // and, were it to occur, the number of distinct ti*s would
             // probably be small.
             if (std::find(
-                    entry->ti_ptrs.begin(), entry->ti_ptrs.end(), cr.ti) ==
-                entry->ti_ptrs.end()) {
-                entry->ti_ptrs.push_back(cr.ti);
+                    rtc->ti_ptrs.begin(), rtc->ti_ptrs.end(), cr.ti) ==
+                rtc->ti_ptrs.end()) {
+                rtc->ti_ptrs.push_back(cr.ti);
             }
         }
     }
@@ -211,9 +211,11 @@ void runtime::augment_classes() {
     // All known classes now have exactly one associated rt_class* in the map.
     // Collect the bases.
 
-    for (auto& rtc : classes) {
-        for (auto base_iter = rtc.info->first_base;
-             base_iter != rtc.info->last_base; ++base_iter) {
+    for (auto& cr : cat.classes) {
+        auto& rtc = class_map[std::type_index(*cr.ti)];
+
+        for (auto base_iter = cr.first_base;
+             base_iter != cr.last_base; ++base_iter) {
             auto rtb = class_map[std::type_index(**base_iter)];
 
             if (!rtb) {
@@ -223,10 +225,10 @@ void runtime::augment_classes() {
                 abort();
             }
 
-            if (&rtc != rtb) {
+            if (rtc != rtb) {
                 // At compile time we collected the class as its own improper
                 // base, as per std::is_base_of. Eliminate that.
-                rtc.transitive_bases.push_back(rtb);
+                rtc->transitive_bases.push_back(rtb);
             }
         }
     }
@@ -455,7 +457,7 @@ std::vector<rt_class*> runtime::layer_classes() {
                 (*class_iter)->layer = layer;
 
                 if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                    trace << " " << (*class_iter)->info->name();
+                    trace << " " << (*class_iter)->name();
                 }
 
                 class_iter = input.erase(class_iter);
@@ -482,7 +484,7 @@ void runtime::allocate_slots() {
             ++trace << mp.method->info->name << "#" << mp.param << ": slot "
                     << slot << "\n";
             with_indent YOMM2_GENSYM(trace);
-            ++trace << cls->info->name();
+            ++trace << cls->name();
 
             if (mp.method->slots.size() <= mp.param) {
                 mp.method->slots.resize(mp.param + 1);
@@ -516,7 +518,7 @@ void runtime::allocate_slot_down(rt_class* cls, size_t slot) {
 
     cls->mark = class_visit;
 
-    trace << " " << cls->info->name();
+    trace << " " << cls->name();
 
     assert(slot >= cls->next_slot);
 
@@ -542,7 +544,7 @@ void runtime::allocate_slot_up(rt_class* cls, size_t slot) {
 
     cls->mark = class_visit;
 
-    trace << " " << cls->info->name();
+    trace << " " << cls->name();
 
     assert(slot >= cls->next_slot);
     cls->next_slot = slot + 1;
@@ -576,12 +578,12 @@ void runtime::build_dispatch_tables() {
             for (auto vp : m.vp) {
                 auto& dim_group = groups[dim];
                 ++trace << "make groups for param #" << dim << ", class "
-                        << vp->info->name() << "\n";
+                        << vp->name() << "\n";
                 with_indent YOMM2_GENSYM(trace);
 
                 for (auto covariant_classes : vp->covariant_classes) {
                     ++trace << "specs applicable to "
-                            << covariant_classes->info->name() << "\n";
+                            << covariant_classes->name() << "\n";
                     bitvec mask;
                     mask.resize(m.specs.size());
 
@@ -601,7 +603,7 @@ void runtime::build_dispatch_tables() {
                     auto& group = dim_group[mask];
                     group.classes.push_back(covariant_classes);
                     group.has_concrete_classes = group.has_concrete_classes ||
-                        !covariant_classes->info->is_abstract;
+                        !covariant_classes->is_abstract;
 
                     ++trace << "-> mask: " << mask << "\n";
                 }
@@ -636,7 +638,7 @@ void runtime::build_dispatch_tables() {
                     with_indent YOMM2_GENSYM(trace);
                     for (auto cls :
                          range{group.classes.begin(), group.classes.end()}) {
-                        ++trace << tip{cls->info->ti} << "\n";
+                        ++trace << tip{cls->ti_ptrs[0]} << "\n";
                     }
                 }
                 ++group_num;
@@ -741,7 +743,7 @@ void runtime::build_dispatch_table(
                     << "\n";
             with_indent YOMM2_GENSYM(trace);
             for (auto cls : range{group.classes.begin(), group.classes.end()}) {
-                ++trace << tip{cls->info->ti} << "\n";
+                ++trace << tip{cls->ti_ptrs[0]} << "\n";
             }
         }
 
@@ -967,7 +969,7 @@ void runtime::install_gv() {
 
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
                 ++trace << std::setw(4) << ctx.gv.size() << " mtbl for "
-                        << cls.info->name() << ": " << cls.mptr << "\n";
+                        << cls.name() << ": " << cls.mptr << "\n";
             }
 
             if (cls.first_used_slot != -1) {
@@ -1000,7 +1002,7 @@ void runtime::optimize() {
             for (auto cls : m.vp[0]->covariant_classes) {
                 auto pf = m.dispatch_table[cls->mptr[slot].i];
                 if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                    ++trace << cls->info->name() << " mtbl[" << slot
+                    ++trace << cls->name() << " mtbl[" << slot
                             << "] = " << pf << " (function)"
                             << "\n";
                 }
@@ -1011,7 +1013,7 @@ void runtime::optimize() {
                 auto pw = m.gv_dispatch_table + cls->mptr[slot].i;
 
                 if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                    ++trace << "    " << cls->info->name() << " mtbl[" << slot
+                    ++trace << "    " << cls->name() << " mtbl[" << slot
                             << "] = gv+" << (pw - ctx.hash_table) << "\n";
                 }
 
