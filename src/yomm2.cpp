@@ -200,8 +200,7 @@ void runtime::augment_classes() {
             // unordered_set because, again, this situation is highly unlikely,
             // and, were it to occur, the number of distinct ti*s would
             // probably be small.
-            if (std::find(
-                    rtc->ti_ptrs.begin(), rtc->ti_ptrs.end(), cr.ti) ==
+            if (std::find(rtc->ti_ptrs.begin(), rtc->ti_ptrs.end(), cr.ti) ==
                 rtc->ti_ptrs.end()) {
                 rtc->ti_ptrs.push_back(cr.ti);
             }
@@ -214,8 +213,8 @@ void runtime::augment_classes() {
     for (auto& cr : cat.classes) {
         auto& rtc = class_map[std::type_index(*cr.ti)];
 
-        for (auto base_iter = cr.first_base;
-             base_iter != cr.last_base; ++base_iter) {
+        for (auto base_iter = cr.first_base; base_iter != cr.last_base;
+             ++base_iter) {
             auto rtb = class_map[std::type_index(**base_iter)];
 
             if (!rtb) {
@@ -911,7 +910,9 @@ void runtime::install_gv() {
         ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
 
         if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-            ++trace << std::setw(4) << ctx.gv.size() << " control table\n";
+            if (pass) {
+                ++trace << std::setw(4) << ctx.gv.size() << " control table\n";
+            }
         }
 
         ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
@@ -950,8 +951,10 @@ void runtime::install_gv() {
             }
 
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                ++trace << std::setw(4) << ctx.gv.size() << ' ' << m.info->name
-                        << " dispatch table\n";
+                if (pass) {
+                    ++trace << std::setw(4) << ctx.gv.size() << ' '
+                            << m.info->name << " dispatch table\n";
+                }
             }
 
             m.gv_dispatch_table = ctx.gv.data() + ctx.gv.size();
@@ -968,8 +971,10 @@ void runtime::install_gv() {
             cls.mptr = ctx.gv.data() + ctx.gv.size() - cls.first_used_slot;
 
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                ++trace << std::setw(4) << ctx.gv.size() << " mtbl for "
-                        << cls.name() << ": " << cls.mptr << "\n";
+                if (pass) {
+                    ++trace << std::setw(4) << ctx.gv.size() << " mtbl for "
+                            << cls.name() << ": " << cls.mptr << "\n";
+                }
             }
 
             if (cls.first_used_slot != -1) {
@@ -1002,8 +1007,8 @@ void runtime::optimize() {
             for (auto cls : m.vp[0]->covariant_classes) {
                 auto pf = m.dispatch_table[cls->mptr[slot].i];
                 if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-                    ++trace << cls->name() << " mtbl[" << slot
-                            << "] = " << pf << " (function)"
+                    ++trace << cls->name() << " mtbl[" << slot << "] = " << pf
+                            << " (function)"
                             << "\n";
                 }
                 cls->mptr[slot].pf = pf;
