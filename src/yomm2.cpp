@@ -1114,8 +1114,8 @@ void default_method_call_error_handler(
     if constexpr (bool(trace_enabled)) {
         const char* explanation[] = {
             "no applicable definition", "ambiguous call"};
-        std::cerr << explanation[error.code] << " for " << error.method_name
-                  << "(";
+        std::cerr << explanation[error.code - resolution_error::no_definition]
+                  << " for " << error.method_name << "(";
         auto comma = "";
         for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
             std::cerr << comma << ti->name();
@@ -1141,7 +1141,7 @@ void default_error_handler(const error_type& error_v) {
 
     if (auto error = std::get_if<unknown_class_error>(&error_v)) {
         if constexpr (bool(trace_enabled)) {
-            std::cerr << "unknown class " << error->ti->name();
+            std::cerr << "unknown class " << error->ti->name() << "\n";
         }
         return;
     }
