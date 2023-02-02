@@ -49,8 +49,8 @@ What if you could solve the so-called [Expression
 Problem](http://wiki.c2.com/?ExpressionProblem):
 
 ```
-behaviors += types
-types += behaviors
+existing behaviors += new types
+existing types += new behaviors
 ```
 
 This is exactly what Open Methods are all about: solving the Expression
@@ -112,7 +112,7 @@ one virtual argument of type `const matrix&` and returns a std::string. The
 to select the appropriate specialization. In essence, this is the same thing
 as having a `virtual std::string to_json() const` inside class Matrix -
 except that the virtual function lives outside of any classes, and you can
-add as many as you want without the classes.
+add as many as you want without changing the classes.
 
 NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 permitted.
