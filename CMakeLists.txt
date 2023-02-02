@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0057 NEW)
-project(YOMM2 VERSION 1.3.0)
+project(YOMM2 VERSION 1.3.1)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
