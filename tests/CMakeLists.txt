@@ -47,3 +47,8 @@ if(${YOMM2_ENABLE_BENCHMARKS})
   add_executable(benchmarks benchmarks.cpp)
   target_link_libraries(benchmarks YOMM2::yomm2 benchmark::benchmark)
 endif()
+
+add_executable(rolex rolex.cpp)
+target_link_libraries(rolex YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+target_compile_options(rolex PUBLIC -save-temps -masm=intel)
+add_test(NAME rolex COMMAND rolex)

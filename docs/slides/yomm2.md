@@ -1,7 +1,3 @@
----
-center: false
----
-
 ## Open Is Good
 
 <br/><br/>
@@ -257,9 +253,9 @@ not bad, actually
 
 <br/><br/>
 
-### behaviors += types
+### existing operations += new types
 
-### types += behaviors
+### existing types += new operations
 
 ## Multi-Layer Architectures
 
@@ -291,30 +287,15 @@ not bad, actually
 
 * free virtual functions
 
-* types += behaviors
+* existing types += new operations
+
 
 ## AST
 
 ```C++
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
-register_class(Node);
-register_class(Plus, Node);
-register_class(Times, Node);
-register_class(Number, Node);
-
-int main() {
-  yorel::yomm2::update_methods();
-  // ...
-}
-```
-
-(the boring part)
-
-## AST
-
-```C++
-using yorel::yomm2::virtual_;
+register_classes(Node, Plus, Times, Number);
 
 declare_method(string, toRPN, (virtual_<Node&>));
 
@@ -328,12 +309,15 @@ define_method(string, toRPN, (Plus& expr)) {
 
 // same for Times
 ```
+## AST
 
-<small>call it like an ordinary function:</small>
+```C++
+int main() {
+  yorel::yomm2::update_methods();
 
-```
-    cout << toRPN(expr) << " = " << expr->value() << "\n";
-    // 2 3 4 * + = 14
+  cout << toRPN(expr) << " = " << expr->value() << "\n";
+  // 2 3 4 * + = 14
+}
 ```
 
 ## AST: what about value?
@@ -352,15 +336,11 @@ define_method(int, value, (Number& expr)) {
 define_method(int, value, (Plus& expr)) {
   return value(expr.left) + value(expr.right);
 }
-
-define_method(int, value, (Times& expr)) {
-  return value(expr.left) * value(expr.right);
-}
 ```
 
-# Multiple Dispatch
+## Multiple Dispatch
 
-## Occasionally Useful
+Sometimes useful.
 
 ```text
 add(Matrix, Matrix)                 -> Matrix
@@ -371,29 +351,23 @@ add(DiagonalMatrix, DiagonalMatrix) -> DiagonalMatrix
 fight(Human, Creature, Axe)    -> not agile enough to wield
 fight(Warrior, Creature, Axe)  -> chop it into pieces
 fight(Warrior, Dragon, Axe)    -> die a honorable death
-fight(Human, Dragon, Hands)    -> you just killed a dragon
-                                  with your bare hands!
-                                  incredible isn't it?
+fight(Human, Dragon, Hands)    -> congratulations! you have just
+                                  vanquished a dragon with your
+                                  bare hands! (unbelievable,
+                                  isn't it?)
 ```
 
 ## Syntax
 
-use `virtual_<>` on multiple arguments:
+`virtual_<>` denotes parameters taken into consideration when selecting the appropriate specialization
 
 ```C++
-declare_method(string, fight,
-  (virtual_<Character&>, virtual_<Creature&>,
-   virtual_<Device&>));
+declare_method(
+  string, fight,
+  (virtual_<Character&>, virtual_<Creature&>, virtual_<Device&>));
 
-define_method(string, fight,
-  (Human& x, Creature& y, Axe& z)) {
+define_method(string, fight, (Human& x, Creature& y, Axe& z)) {
   return "not agile enough to wield";
-}
-
-define_method(string, fight,
-  (Human& x, Dragon& y, Hands& z)) {
-  return "you just killed a dragon with your bare hands."
-         " Incredible isn't it?";
 }
 ```
 
@@ -409,12 +383,10 @@ define_method(string, fight,
 
 ## `next`
 
-calls the next most specific override
+calls the next most specific specialization
 
 ```c++
-register_class(Animal);
-register_class(Dog, Animal);
-register_class(Bulldog, Dog);
+register_classes(Animal, Dog, Bulldog);
 
 declare_method(std::string, kick, (virtual_<Animal&>));
 
@@ -424,24 +396,6 @@ define_method(string, kick, (Dog& dog)) {
 
 define_method(string, kick, (Bulldog& dog)) {
     return next(dog) + " and bite";
-}
-```
-
-## `next`
-
-```c++
-define_method(void, inspect, (Vehicle& v, Inspector& i)) {
-  cout << "Inspect vehicle.\n";
-}
-
-define_method(void, inspect, (Car& v, Inspector& i)) {
-  next(v, i);
-  cout << "Inspect seat belts.\n";
-}
-
-define_method(void, inspect, (Car& v, StateInspector& i)) {
-  next(v, i);
-  cout << "Check road tax.\n";
 }
 ```
 
@@ -474,12 +428,12 @@ define_method(void, inspect, (Car& v, StateInspector& i)) {
     * Employee
         * Manager
     * Founder
-  * _Expense (X)_
-      * Cab, Jet
-      * _Public_
-          * Bus, Train
+* _Expense_
+    * Cab, Jet
+    * _Public_
+        * Bus, Train
 
-## the `pay` Mono- Method
+## the `pay` Uni- Method
 
 ```C++`
 declare_method(double, pay, (virtual_<Employee&>));
@@ -501,17 +455,12 @@ declare_method(double, pay, (virtual_<Employee&>));
 
 
 ```C++
-struct _yomm2_method_pay;
-
-namespace {
-namespace YoMm2_nS_10 {
-using _yOMM2_method =
-  method<void, _yomm2_method_pay,
-    double(virtual_<Employee &>),
-    default_policy>;
-_yOMM2_method::init_method init;
-}
-}
+struct YoMm2_S_pay;
+yomm2::method<
+    YoMm2_S_pay, double(virtual_<const Employee&>),
+    yomm2::policy::default_policy>
+pay_yOMM2_selector_(
+    yomm2::detail::remove_virtual<virtual_<const Employee&>> a0);
 ```
 
 ## declare_method
@@ -522,15 +471,14 @@ declare_method(double, pay, (virtual_<Employee&>));
 
 
 ```C++
-YoMm2_nS_10::_yOMM2_method
-pay(discriminator, Employee & a0);
-
 inline double
-pay(Employee & a0) {
-  auto pf = reinterpret_cast<double (*)(
-    Employee & a0)>(
-    YoMm2_nS_10::_yOMM2_method::resolve(a0));
-  return pf(a0);
+pay(yomm2::detail::remove_virtual<virtual_<const Employee&>> a0) {
+    return yomm2::method<
+        YoMm2_S_pay, double(virtual_<const Employee&>),
+        yomm2::policy::default_policy>::
+        fn(std::forward<
+            yomm2::detail::remove_virtual<virtual_<const Employee&>>>(
+            a0));
 };
 ```
 
@@ -541,17 +489,20 @@ define_method(double, pay, (Employee&)) { return 3000; }
 ```
 
 ```C++
-namespace { namespace YoMm2_nS_12 {
-template <typename T> struct select;
-template <typename... A> struct select<void(A...)> {
-  using type = decltype(
-    pay(discriminator(), declval<A>()...));
+namespace { namespace YoMm2_gS_10 {
+template<typename T> struct _yOMM2_select;
+template<typename... A> struct _yOMM2_select<void(A...)> {
+    using type = decltype(pay_yOMM2_selector_(std::declval<A>()...));
 };
-
-using _yOMM2_method =
-  select<void(Employee &)>::type;
+using _yOMM2_method = _yOMM2_select<void(const Employee&)>::type;
 using _yOMM2_return_t = _yOMM2_method::return_type;
-_yOMM2_return_t (*next)(Employee &);
+_yOMM2_method::function_pointer_type next;
+struct _yOMM2_spec {
+    static YoMm2_gS_10::_yOMM2_method::return_type
+    yOMM2_body(const Employee&);
+};
+_yOMM2_method::add_function<_yOMM2_spec::yOMM2_body>
+    YoMm2_gS_11(&next, typeid(_yOMM2_spec).name()); } }
 ```
 
 ## define_method
@@ -561,31 +512,24 @@ define_method(double, pay, (Employee&)) { return 3000; }
 ```
 
 ```C++
-struct _yOMM2_spec {
-  static double body(Employee &);
-};
-
-register_spec<_yOMM2_return_t, _yOMM2_method,
-                    _yOMM2_spec, void(Employee &)>
-_yOMM2_init((void **)&next);
-} }
-
-double YoMm2_nS_12::_yOMM2_spec::body(Employee &)
-{ return 3000; }
+YoMm2_gS_10::_yOMM2_method::return_type
+YoMm2_gS_10::_yOMM2_spec::yOMM2_body(const Employee&) {
+    return 3000;
+}
 ```
 
 ## update_methods
 
-* process the info registered by static ctors
+Uses the class and method info registered by static ctors.
 
 * build representation of class hierarchies
 
-* build all the dispatch data inside a single vector
+* calculate the hash and dispatch tables
 
-* find a perfect hash function over relevant type_info's
+* find a perfect (not minimal) hash function for the `type_info`s
   * H(x) = (M * x) >> S
 
-## Dispatching a Mono-Method
+## Dispatching a Uni-Method
 
 * pretty much like virtual member functions
 
@@ -593,7 +537,7 @@ double YoMm2_nS_12::_yOMM2_spec::body(Employee &)
 
 * only it is not at a fixed offset in the method table
 
-## Dispatching a Mono-Method
+## Dispatching a Uni-Method
 
 during `update_methods`
 
@@ -613,7 +557,7 @@ mtbls[ H(&typeid(Manager&)) ] = {
 };
 ```
 
-## Dispatching a Mono-Method
+## Dispatching a Uni-Method
 
 ```C++
 pay(bill)
@@ -625,23 +569,22 @@ mtbls[ H(&typeid(bill)) ]          // mtable for type
 (bill)                             // call
 ```
 
-## Performance?
+## Assembler
 
 ```C++
 double call_pay(Employee& e) { return pay(e); }
 ```
 
 ```asm
-;;; g++-6 -DNDEBUG -O2 ...
-movq	mtbls(%rip), %rax                      ; hash table
-movb	mtbls+32(%rip), %cl                    ; shift factor
-movslq  method<pay>::slots_strides(%rip), %rdx ; slot
-movq	(%rdi), %rsi                           ; vptr
-movq	-8(%rsi), %rsi                         ; &type_info
-imulq   mtbls+24(%rip), %rsi                   ; * M
-shrq	%cl, %rsi                              ; >> S
-movq	(%rax,%rsi,8), %rax                    ; method table
-jmpq	*(%rax,%rdx,8)                         ; call
+mov	r8, qword ptr [rip + context+24]              ; hash table
+mov	rdx, qword ptr [rip + context+32]             ; M
+mov	cl, byte ptr [rip + context+40]               ; S
+movsxd rsi, dword ptr [rip + method<pay>::fn+96]  ; slot
+mov	rax, qword ptr [rdi]                          ; vptr
+imul rdx, qword ptr [rax - 8]                     ; M * &typeid(e)
+shr	rdx, cl                                       ; >> S
+mov	rax, qword ptr [r8 + 8*rdx]                   ; method table
+jmp	qword ptr [rax + 8*rsi]                       ; call wrapper
 ```
 
 ## `approve` Multi-Method
@@ -765,9 +708,21 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 
 * methods are ordinary functions
 
-## QA Time
+# Roadmap
+
+* `virtual_ptr` (fat pointer)
+* intrusive mode
+* dispatch on `std::any`
+* header-only
+* tunable runtime
+* allocators (surprised?)
+* "static" mode
+
+# QA Time
 
 * github: https://github.com/jll63/yomm2
 * contact: Jean-Louis Leroy - jl@leroy.nyc
 
+<center>
 <img src="qr.png" />
+</center>

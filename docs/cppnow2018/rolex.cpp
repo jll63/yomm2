@@ -1,12 +1,4 @@
-// clang++-5.0 -std=c++17 -I ~/dev/yomm2/include -O3 -DNDEBUG -save-temps -o rolex rolex.cpp ~/dev/yomm2/src/yomm2.cpp && ./rolex
-// clang++-5.0 -std=c++17 -I ~/dev/yomm2/include -E rolex.cpp | clang-format | perl -pe 's/::yorel::yomm2::(detail::)?//'
-
-// clang++-6.0 -std=c++17 -I ~/dev/yomm2/include -o rolex rolex.cpp ~/dev/yomm2/src/yomm2.cpp && YOMM2_TRACE=1 ./rolex
-
-
-#include <yorel/yomm2/cute.hpp>
-
-using yorel::yomm2::virtual_;
+#include <yorel/yomm2/keywords.hpp>
 
 struct Role {
     virtual ~Role() {}
@@ -68,10 +60,6 @@ define_method(bool, approve, (const Manager& r, const Taxi& e, double amount)) {
 
 define_method(bool, approve, (const Founder& r, const Expense& e, double amount)) {
     return true;
-}
-
-int main() {
-    yorel::yomm2::update_methods();
 }
 
 double call_pay(const Employee& emp) {
