@@ -1,13 +1,15 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::virtual_
-<sub>defined in headers <yorel/yomm2/core.hpp>, also provided by
-<yorel/yomm2/keywords.hpp> and <yorel/yomm2.hpp></sub>
-<!-- -->
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::virtual_**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
+
 ---
-template\<class C\>\
+```
+template<class C>
 struct virtual_;
-<!-- -->
+```
 ---
 
 Mark a method parameter as virtual.
@@ -19,7 +21,6 @@ Mark a method parameter as virtual.
 
 
 ```c++
-
 #include <yorel/yomm2/keywords.hpp>
 
 struct Animal {
@@ -35,5 +36,4 @@ declare_method(void, kick, (virtual_<const Animal*>));
 declare_method(void, kick, (virtual_<const Animal&>));
 declare_method(void, kick, (virtual_<std::shared_ptr<const Animal>>));
 declare_method(void, kick, (virtual_<const std::shared_ptr<const Animal>&>));
-
 ```

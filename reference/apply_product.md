@@ -1,24 +1,24 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::apply_product <small>(experimental)</small>
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::apply_product** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>
-<!-- -->
+
 ---
 ```
 template<typename TemplateList, typename... TypeLists>
 using apply_product = /*unspecified*/;
 ```
-<!-- -->
 ---
-
 `apply_product` takes a [templates](templates.md) list and list of [types](types.md) lists, and
 evaluates to a `types` list consisting of the application of each template to
 the n-fold Cartesian product of the input `types` lists.
 
 ## example
 
-```c++
 
+```c++
 #include <type_traits>
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/templates.hpp>
@@ -49,6 +49,4 @@ static_assert(
             bin2<b, x>, bin2<b, y>, bin2<b, z>
         >
     >);
-
-
 ```

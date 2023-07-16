@@ -1,171 +1,171 @@
-// md<
-// <sub>/ ->home / ->reference </sub>
-// ## yorel::yomm2::method
-// <sub>defined in <yorel/yomm2/core.hpp>, also provided by
-// <yorel/yomm2/keywords.hpp></sub>
-// <!-- -->
-// ---
-// ```
-// template<typename Key, typename Signature, typename... Unspecified>
-// struct method<Key, R(Args...), Unspecified...>; /* undefined */
-// template<typename Key, typename R, typename... Args, typename... Unspecified>
-// struct method<Key, R(Args...), Unspecified...> { ... }
-// ```
-// <!-- -->
-// ---
+#ifdef YOMM2_MD
 
-// `method` implements a function object that takes a list of arguments of type
-// `Args`, *minus* the `virtual_` decorator, and returns a value of type `R`.
+<sub>/ ->home / ->reference </sub>
 
-// The method can be called via the singleton [`method::fn`](#fn). Method
-// definitions can be added with the [`method::add_function`](#add_function) and
-// [`method::add_definition`](#add_definition) class templates.
+entry: yorel::yomm2::method
+headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
-// At least one of the `Args` parameter types must be decorated with ->virtual_. 
+---
+```
+template<typename Key, typename R, typename... Args, typename... Unspecified>
+struct method<Key, R(Args...), Unspecified...> { ... }
+```
+---
 
-// `Key` is a user-suplied type that makes it possible to have distinct methods
-// with the same signature.
+`method` implements a function object that takes a list of arguments of type
+`Args`, *minus* the `virtual_` decorator, and returns a value of type `R`.
 
-// ### member functions
-// |                              |                                    |
-// | ---------------------------- | ---------------------------------- |
-// | [constructor](#constructor)  | construct and register the method  |
-// | [destructor](#destructor)    | destruct and unregister the method |
-// | [operator()](#call-operator) | call the method                    |
+The method can be called via the singleton [`method::fn`](#fn). Method
+definitions can be added with the [`method::add_function`](#add_function) and
+[`method::add_definition`](#add_definition) class templates.
 
-// ### static member variable
-// |           |                               |
-// | --------- | ----------------------------- |
-// | [fn](#fn) | function object to call the method |
+At least one of the `Args` parameter types must be decorated with ->virtual_. 
 
-// ### member types
-// |                         |                                                           |
-// | ----------------------- | --------------------------------------------------------- |
-// | [next_type](#next_type) | type of a pointer to the next most specialised definition |
+`Key` is a user-suplied type that makes it possible to have distinct methods
+with the same signature.
 
-// ### member class templates
-// |                                   |                                           |
-// | --------------------------------- | ----------------------------------------- |
-// | [add_function](#add_function)     | add a definition to the method            |
-// | [add_definition](#add_definition) | add a definition container to the method  |
-// | [use_next](#use_next)             | CRTP base for definitions that use `next` |
+### member functions
+|                              |                                    |
+| ---------------------------- | ---------------------------------- |
+| [constructor](#constructor)  | construct and register the method  |
+| [destructor](#destructor)    | destruct and unregister the method |
+| [operator()](#call-operator) | call the method                    |
 
-// ### constructor
-// ```c++
-// method<Key, R(Args...)>::method();
-// ```
-// Add the method to the global method list.
+### static member variable
+|           |                               |
+| --------- | ----------------------------- |
+| [fn](#fn) | function object to call the method |
 
-// ### destructor
-// ```c++
-// method<Key, R(Args...)>::~method();
-// ```
-// Remove the method from the global method list.
+### member types
+|                         |                                                           |
+| ----------------------- | --------------------------------------------------------- |
+| [next_type](#next_type) | type of a pointer to the next most specialised definition |
 
-// ### call operator
-// ```c++
-// method<Key, R(Args...)>::operator()(args...);
-// ```
-// Call the method. The dynamic types of the arguments corresponding to a
-// ->virtual_ parameter determine which method definition to call.
+### member class templates
+|                                   |                                           |
+| --------------------------------- | ----------------------------------------- |
+| [add_function](#add_function)     | add a definition to the method            |
+| [add_definition](#add_definition) | add a definition container to the method  |
+| [use_next](#use_next)             | CRTP base for definitions that use `next` |
 
-// ### fn
-// ```c++
-// method<Key, R(Args...)>::fn;
-// ```
+### constructor
+```c++
+method<Key, R(Args...)>::method();
+```
+Add the method to the global method list.
 
-// The single instance of `method<Key, R(Args...)>`. Used to call the method.
+### destructor
+```c++
+method<Key, R(Args...)>::~method();
+```
+Remove the method from the global method list.
 
-// ### next_type
-// ```c++
-// template<typename Key, typename R, typename... Args>
-// struct method<Key, R(Args...)> {
-//     using next_type = /*unspecified*/;
-// };
-// ```
+### call operator
+```c++
+method<Key, R(Args...)>::operator()(args...);
+```
+Call the method. The dynamic types of the arguments corresponding to a
+->virtual_ parameter determine which method definition to call.
 
-// Register `Function` as a definition of the `method`. If specified, `next` is
-// set to a pointer to the next most specialised definition, or to an error
-// handler if the next definition does not excist, or is ambiguous.
+### fn
+```c++
+method<Key, R(Args...)>::fn;
+```
 
-// The parameters of `Function` must be covariant with the corresponding
-// parameters in the method when virtual, and invariant otherwise. The return
-// type of `Function` must be covariant with the return type of the method.
+The single instance of `method<Key, R(Args...)>`. Used to call the method.
 
-// ### add_function
-// ```c++
-// template<typename Key, typename R, typename... Args>
-// struct method<Key, R(Args...)> {
-//     template<auto Function>
-//     struct add_function {
-//         explicit add_function(next_type* next = nullptr);
-//     };
-// };
-// ```
+### next_type
+```c++
+template<typename Key, typename R, typename... Args>
+struct method<Key, R(Args...)> {
+    using next_type = /*unspecified*/;
+};
+```
 
-// Register `Function` as a definition of the `method`. If specified, `next` is
-// set to a pointer to the next most specialised definition, or to an error
-// handler if the next definition does not excist, or is ambiguous.
+Register `Function` as a definition of the `method`. If specified, `next` is
+set to a pointer to the next most specialised definition, or to an error
+handler if the next definition does not excist, or is ambiguous.
 
-// The parameters of `Function` must be covariant with the corresponding
-// parameters in the method when virtual, and invariant otherwise. The return
-// type of `Function` must be covariant with the return type of the method.
+The parameters of `Function` must be covariant with the corresponding
+parameters in the method when virtual, and invariant otherwise. The return
+type of `Function` must be covariant with the return type of the method.
 
-// ### add_definition
-// ```c++
-// template<typename Key, typename R, typename... Args>
-// struct method<Key, R(Args...)> {
-//     template<typename Container>
-//     struct add_definition {
-//         add_definition();
-//     };
-// };
-// ```
-//
-// Register static member function `Container::fn` as a definition of the
-// `method`. If static member variable `Container::next` exists, it is set to a
-// pointer to the next most specialised definition, or to an error handler if
-// the next definition does not exist, or is ambiguous.
+### add_function
+```c++
+template<typename Key, typename R, typename... Args>
+struct method<Key, R(Args...)> {
+    template<auto Function>
+    struct add_function {
+        explicit add_function(next_type* next = nullptr);
+    };
+};
+```
 
-// The parameters of `Container::fn` must be covariant with the corresponding
-// parameters in the method when virtual, and invariant otherwise. The return
-// type of `Function` must be covariant with the return type of the method.
+Register `Function` as a definition of the `method`. If specified, `next` is
+set to a pointer to the next most specialised definition, or to an error
+handler if the next definition does not excist, or is ambiguous.
 
-// ### use_next
-// ```c++
-// template<typename Key, typename R, typename... Args, typename... Unspecified>
-// struct method<Key, R(Args...)> {
-//     template<typename Container>
-//     struct use_next {
-//         static next_type next;
-//     };
-// };
-// template<typename Key, typename R, typename... A, typename... Unspecified>
-// template<typename Container>
-// typename method<Key, R(A...), Unspecified...>::next_type
-// method<Key, R(A...), Unspecified...>::use_next<Container>::next;
-// ```
+The parameters of `Function` must be covariant with the corresponding
+parameters in the method when virtual, and invariant otherwise. The return
+type of `Function` must be covariant with the return type of the method.
 
-// [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
-// base class for definition containers that need to call the next most
-// specialised method.
+### add_definition
+```c++
+template<typename Key, typename R, typename... Args>
+struct method<Key, R(Args...)> {
+    template<typename Container>
+    struct add_definition {
+        add_definition();
+    };
+};
+```
 
-// Static member variables must be declared inside the class definition, and
-// defined outside of it. This is cumbersome. `use_next` declares, and defines,
-// a static `next` function pointer, which can be injected in the container's
-// scope via inheritance, to be picked up by `add_container`. If this doesn't
-// make sense, see the example below.
+Register static member function `Container::fn` as a definition of the
+`method`. If static member variable `Container::next` exists, it is set to a
+pointer to the next most specialised definition, or to an error handler if
+the next definition does not exist, or is ambiguous.
 
-// ## example
-// >
+The parameters of `Container::fn` must be covariant with the corresponding
+parameters in the method when virtual, and invariant otherwise. The return
+type of `Function` must be covariant with the return type of the method.
 
-#define BOOST_TEST_MODULE runtime
-#include <boost/test/included/unit_test.hpp>
+### use_next
+```c++
+template<typename Key, typename R, typename... Args, typename... Unspecified>
+struct method<Key, R(Args...)> {
+    template<typename Container>
+    struct use_next {
+        static next_type next;
+    };
+};
+template<typename Key, typename R, typename... A, typename... Unspecified>
+template<typename Container>
+typename method<Key, R(A...), Unspecified...>::next_type
+method<Key, R(A...), Unspecified...>::use_next<Container>::next;
+```
+
+[CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
+base class for definition containers that need to call the next most
+specialised method.
+
+Static member variables must be declared inside the class definition, and
+defined outside of it. This is cumbersome. `use_next` declares, and defines,
+a static `next` function pointer, which can be injected in the container's
+scope via inheritance, to be picked up by `add_container`. If this doesn't
+make sense, see the example below.
+
+## example
+
+#endif
 
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 
-// code<
+#define BOOST_TEST_MODULE runtime
+#include <boost/test/included/unit_test.hpp>
+
+#ifdef YOMM2_CODE
+
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
 
@@ -177,12 +177,13 @@ struct Cat : Animal {};
 struct Dog : Animal {};
 struct Bulldog : Dog {};
 
-using namespace yorel::yomm2; // for brevity
+namespace yomm2 = yorel::yomm2; // for brevity
+using yomm2::virtual_;
 
-use_classes<Animal, Cat, Dog, Bulldog> YOMM2_GENSYM;
+yomm2::use_classes<Animal, Cat, Dog, Bulldog> YOMM2_GENSYM;
 
 struct YOMM2_SYMBOL(kick_methods);
-using kick = method<YOMM2_SYMBOL(kick_methods), std::string(virtual_<Animal&>)>;
+using kick = yomm2::method<YOMM2_SYMBOL(kick_methods), std::string(virtual_<Animal&>)>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
 kick::add_function<kick_cat> YOMM2_GENSYM;
@@ -196,7 +197,7 @@ struct kick_bulldog : kick::use_next<kick_bulldog> {
 kick::add_definition<kick_bulldog> YOMM2_GENSYM;
 
 struct YOMM2_SYMBOL(pet_methods);
-using pet = method<YOMM2_SYMBOL(pet_methods), std::string(virtual_<Animal&>)>;
+using pet = yomm2::method<YOMM2_SYMBOL(pet_methods), std::string(virtual_<Animal&>)>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
 pet::add_function<pet_cat> YOMM2_GENSYM;
@@ -204,13 +205,13 @@ pet::add_function<pet_cat> YOMM2_GENSYM;
 std::string pet_dog(Dog& dog) { return "wag tail"; }
 pet::add_function<pet_dog> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE(call_method) {
-    update_methods();
+BOOST_AUTO_TEST_CASE(reference_method_example) {
+    yomm2::update_methods();
 
-    std::shared_ptr<Animal>
-        felix = std::make_shared<Cat>(),
-        snoopy = std::make_shared<Dog>(),
-        hector = std::make_shared<Bulldog>();
+    std::unique_ptr<Animal>
+        felix = std::make_unique<Cat>(),
+        snoopy = std::make_unique<Dog>(),
+        hector = std::make_unique<Bulldog>();
 
     BOOST_TEST(kick::fn(*felix) == "hiss");
     BOOST_TEST(kick::fn(*snoopy) == "bark");
@@ -220,4 +221,5 @@ BOOST_AUTO_TEST_CASE(call_method) {
     BOOST_TEST(pet::fn(*snoopy) == "wag tail");
     BOOST_TEST(pet::fn(*hector) == "wag tail");
 }
-// >
+
+#endif

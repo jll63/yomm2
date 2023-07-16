@@ -5,15 +5,21 @@ import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple, get_type_hints
+from typing import Iterable, NamedTuple, Optional, get_type_hints
 
 logger = logging.getLogger(__name__)
 
 axes = dict(
-    policy=("virtual", "hash_factors_in_globals", "hash_factors_in_method"),
+    dispatch=(
+        "virtual_function",
+        "basic_policy",
+        "direct_intrusive",
+        "indirect_intrusive",
+        "direct_virtual_ptr",
+        "indirect_virtual_ptr",
+    ),
     arity=("arity_1", "arity_2"),
     inheritance=("ordinary_base", "virtual_base"),
-    work=("no_work", "some_work"),
 )
 
 
@@ -32,7 +38,7 @@ class Benchmark:
     median: float = 0
     stddev: float = 0
     cv: float = 0
-    base: "Benchmark" = None
+    base: Optional["Benchmark"] = None
 
     @property
     def dispatch(self) -> str:
@@ -115,35 +121,34 @@ class Context(NamedTuple):
 class Benchmarks(NamedTuple):
     data: dict
     context: Context
-    benchmarks: list[Benchmark]
-    index: dict[str, dict[int, dict[str, Benchmark]]]
+    index: dict[str, Benchmark]
 
     @classmethod
     def parse(cls, data: dict):
-        benchmarks: list[Benchmark] = []
-        index: dict[str, dict[int, dict[str, Benchmark]]] = {}
-        baseline: Benchmark = None
+        index: dict[str, Benchmark] = {}
+        baseline: Benchmark | None = None
 
         for benchmark_data in data["benchmarks"]:
             run_name = benchmark_data["run_name"]
-            tags = run_name.split()
+            tags = run_name.split("-")
             benchmark = index.setdefault(run_name, Benchmark(tags))
             setattr(
                 benchmark, benchmark_data["aggregate_name"], benchmark_data["cpu_time"]
             )
-            if run_name.startswith("baseline"):
-                baseline = benchmark
-                continue
-            if benchmark_data["aggregate_name"] == "mean":
-                benchmarks.append(benchmark)
 
-        for benchmark in benchmarks:
+        baseline = index.pop("baseline")
+
+        for benchmark in index.values():
             benchmark.mean -= baseline.mean
             benchmark.median -= baseline.median
-            if benchmark.dispatch != "virtual":
-                benchmark.base = index[" ".join(["virtual", *benchmark.tags[1:]])]
+            if benchmark.mean < 0:
+                breakpoint()
+            if benchmark.dispatch != "virtual_function":
+                benchmark.base = index[
+                    "-".join(["virtual_function", *benchmark.tags[1:]])
+                ]
 
-        return cls(data, Context.parse(data["context"]), benchmarks, index)
+        return cls(data, Context.parse(data["context"]), index)
 
     @classmethod
     def run(cls, exe: Path, *benchmark_args, objects: int = None):
@@ -171,7 +176,11 @@ class Benchmarks(NamedTuple):
             return Benchmarks.parse(json.load(bm.stdout))
 
     def get(self, *tags: str) -> Benchmark:
-        return self.index[" ".join(map(str, tags))]
+        return self.index["-".join(map(str, tags))]
+
+    @property
+    def all(self) -> Iterable[Benchmark]:
+        return self.index.values()
 
 
 PARAMETERS_HEADER = Path("tests/benchmarks_parameters.hpp")

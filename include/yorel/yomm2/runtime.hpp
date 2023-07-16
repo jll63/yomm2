@@ -40,8 +40,9 @@ struct rt_class {
     int layer{0};
     size_t mark{0};   // to detect cycles, aka temporary mark
     size_t weight{0}; // number of proper direct or indirect bases
-    std::vector<int> mtbl;
+    std::vector<size_t> mtbl;
     detail::word* mptr;
+    detail::word** intrusive_mptr;
 
     auto name() const {
         return ti_ptrs[0]->name();
@@ -77,8 +78,8 @@ struct rt_method {
     method_info* info;
     std::vector<rt_class*> vp;
     std::vector<rt_spec> specs;
-    std::vector<int> slots;
-    std::vector<int> strides;
+    std::vector<size_t> slots;
+    std::vector<size_t> strides;
     std::vector<void*> dispatch_table;
     const detail::word* gv_dispatch_table{nullptr};
     auto arity() const {

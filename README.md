@@ -1,10 +1,17 @@
-
-
 # YOMM2
 
 This library implements fast, open, multi-methods for C++17. It is strongly
 inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
+- [YOMM2](#yomm2)
+  - [TL;DR](#tldr)
+  - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
+    - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
+    - [Multiple Dispatch](#multiple-dispatch)
+  - [Performance](#performance)
+  - [Building and Installing](#building-and-installing)
+  - [Going Further](#going-further)
+  - [Roadmap](#roadmap)
 
 ## TL;DR
 
@@ -158,23 +165,19 @@ define_method(
 ## Performance
 
 Open methods are almost as fast as ordinary virtual member functions once you
-turn on optimization (-O2). With both clang and gcc, dispatching a call to a
-method with one virtual argument takes 15-30% more time than calling the
-equivalent virtual member function (unless the call goes through a virtual
-base, which requires a dynamic cast). It does not involve branching or
-looping, only a few memory reads (which the CPU can be parallelize), a
-multiplication, a bit shift, a final memory read, then an indirect call. If
-the body of the method does any amount of work, the difference is
-unnoticeable. See the implementation notes for benchmarks and assembly
-listings.
+turn on optimization (-O2). With both `clang` and `gcc`, calling a method with
+one virtual argument takes 15-30% more time than calling the equivalent virtual
+member function. If the body of the method does any amount of work, the
+difference is unnoticeable. If the direct [intrusive
+mode](reference/intrusive_modes.md) is used, the overhead drops to 2%.
 
 ## Building and Installing
 
 Make sure that you have the following dependencies:
 
-* a C++17 capable compiler
+* a C++17 capable optimising compiler
 
-* cmake version 3.20 or above
+* `cmake` version 3.20 or above
 
 Clone the repository:
 
@@ -192,6 +195,9 @@ cmake ..
 make
 ```
 
+By default, YOMM2 is built as a static library. It can also be built as a shared
+library by adding -DYOMM2_SHARED=1 to the `cmake` invocation.
+
 If you want to run the tests:
 
 ```
@@ -207,7 +213,7 @@ YOMM2 uses several Boost libraries:
 
 If these libraries are already available on your machine, and they can be found
 by `cmake`, they will be used. In this case, make sure that the pre-installed
-libraries are at version 1.65 or above. If Boost is not found, the latest
+libraries are at version 1.74 or above. If Boost is not found, the latest
 version will be downloaded, and the Boost headers mentioned in section (1) will
 be installed along YOMM2 (if you decide to `make install`).
 
@@ -230,14 +236,16 @@ sudo make install
 # or:
 make install DESTDIR=/path/to/my/libs
 ```
-This will install the library and headers, as well as a CMake package
-configuration.
+Once this is done, link with `libyomm2.a` or `libyomm2.so`. For example:
 
-Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
-`find_package(YOMM2)` from your including project. For linking, the use
-`target_link_library(<your_target> YOMM2::yomm2)`. This will automatically add
-the necessary include directories, so this should be all you need to do to link
-to yomm2.
+```
+clang++ -std=c++17 synopsis.cpp -o synopsis -lyomm2
+```
+
+A CMake package configuration is also installed. If the install location is in
+`CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2, then
+`target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary include
+paths and the library. See [this example](examples/cmakeyomm2).
 
 ## Going Further
 
@@ -263,4 +271,24 @@ The library comes with a series of examples:
 
 I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
 
+## Roadmap
 
+YOMM2 has been stable (in the sense of being backward-compatible) for a years,
+but it is still evolving. Here are the items on which I intend to work in the
+future. No promises, no time table!
+
+* Speed up dispatch in presence of virtual inheritance.
+* Intrusive mode, &agrave; la YOMM11, for faster dispatch.
+* Fat pointers, carrying the method table pointer, for faster dispatch.
+* Static linking of dispatch data.
+* *Minimal* perfect hash tables as an option.
+* Multi-threaded hash search.
+* Make error handler a `std::function`.
+* Get closer to Stroustrup et al's papers (version 2.0):
+  * use covariant return types for disambiguation
+  * move support for `shared_ptr` and `unique_ptr` to an optional header
+* Go header-only.
+* 
+If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
+would appreciate it if you take the time to send me a description of your use
+case(s), and links to the project(s), if they are publicly available.

@@ -1,31 +1,35 @@
-// md<
-// <sub>/ ->home / ->reference </sub>
-// ## YOMM2_SYMBOL
-// <sub>defined in header <yorel/yomm2/symbols.hpp>, also provided
-// by<yorel/yomm2/keywords.hpp></sub>
+#ifdef YOMM2_MD
 
-// ---
-// ```
-// #define YOMM2_SYMBOL(seed) /*unspecified*/
-// ```
-// ---
-// Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, that is unlikely
-// to clash with other names in scope.
+<sub>/ ->home / ->reference </sub>
+
+entry: YOMM2_SYMBOL
+headers: yorel/yomm2/symbols.hpp, yorel/yomm2/keywords.hpp
+
+---
+```
+#define YOMM2_SYMBOL(seed) /*unspecified*/
+```
+---
+Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely
+to clash with other names in scope.
 
 
-// ## example
-// >
+## example
+
+#endif
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
-// code<
+#ifdef YOMM2_CODE
+
 #include <yorel/yomm2/symbols.hpp>
 
-BOOST_AUTO_TEST_CASE(example) {
+BOOST_AUTO_TEST_CASE(reference_example) {
     int foo = 1;
     int YOMM2_SYMBOL(foo) = 2;
     BOOST_TEST(foo == 1);
     BOOST_TEST(YOMM2_SYMBOL(foo) == 2);
 }
-// >
+
+#endif

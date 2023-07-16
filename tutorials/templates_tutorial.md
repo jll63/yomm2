@@ -80,7 +80,6 @@ lifetime. Here is is:
 
 
 ```c++
-
 class ref_count {
     mutable std::size_t refs{0};
   public:
@@ -100,8 +99,6 @@ class handle {
     ~handle() { if (rep) { rep->remove_ref(); }}
     // etc
 };
-
-
 ```
 
 
@@ -113,7 +110,6 @@ type erased. Here is is:
 
 
 ```c++
-
 namespace vector_algebra {
 
 struct abstract_vector : public ref_count {
@@ -137,7 +133,6 @@ using vector = handle<abstract_vector>;
 
 vector ints(new concrete_vector<int>{1, 2, 3});
 vector reals(new concrete_vector<double>{4., 5., 6.});
-
 ```
 
 
@@ -149,7 +144,6 @@ and yield a vector. The third takes two vectors and yields a boolean.
 
 
 ```c++
-
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
@@ -178,7 +172,6 @@ using comparison = method<
     bool(
         virtual_<abstract_vector&>,
         virtual_<abstract_vector&>)>;
-
 ```
 
 
@@ -186,7 +179,6 @@ For the user's convenience, we wrap the method call in an operator:
 
 
 ```c++
-
 inline vector operator+(vector& a, const vector& b) {
     return addition::fn(*a.get(), *b.get());
 }
@@ -198,7 +190,6 @@ inline vector operator-(vector& a, const vector& b) {
 inline bool operator==(vector& a, const vector& b) {
     return comparison::fn(*a.get(), *b.get());
 }
-
 ```
 
 
@@ -257,10 +248,8 @@ template:
 
 
 ```c++
-
 template<typename Method, typename...>
 struct definition;
-
 ```
 
 
@@ -269,7 +258,6 @@ comparison for vectors or two underlying types:
 
 
 ```c++
-
 template<typename T, typename U>
 struct definition<addition, T, U> {
     static vector fn(concrete_vector<T>& a, concrete_vector<U>& b) {
@@ -306,7 +294,6 @@ struct definition<comparison, T, U> {
         return true;
     }
 };
-
 ```
 
 
@@ -336,8 +323,6 @@ example:
 
 
 ```c++
-
-
 static_assert(
     std::is_same_v<
         product< 
@@ -349,8 +334,6 @@ static_assert(
             types<double, int>, types<double, double>, types<double, float>
         >
 >);
-
-
 ```
 
 
@@ -365,8 +348,6 @@ Finally, we must not forget to register the `vector` classes themselves.
 
 
 ```c++
-
-
 use_classes<
     abstract_vector, concrete_vector<int>, concrete_vector<double>
 > YOMM2_GENSYM;
@@ -379,8 +360,6 @@ use_definitions<
         types<int, double>
     >    
 > YOMM2_GENSYM;
-
-
 ```
 
 
@@ -389,8 +368,6 @@ exercise the vector methods:
 
 
 ```c++
-
-
 BOOST_AUTO_TEST_CASE(test_vectors) {
     update_methods();
 
@@ -414,8 +391,6 @@ BOOST_AUTO_TEST_CASE(test_vectors) {
         BOOST_TEST(correct);
     }
 }
-
-
 ```
 
 
@@ -427,8 +402,6 @@ to initialize the library for the types they need. For that we use
 
 
 ```c++
-
-
 template<typename... NumericTypes>
 using use_vector_library = std::tuple<
     use_classes<
@@ -443,8 +416,6 @@ using use_vector_library = std::tuple<
         >
     >
 >;
-
-
 ```
 
 
@@ -453,11 +424,7 @@ of `use_vector_library`, instantiated with the required types:
 
 
 ```c++
-
-
 use_vector_library<int, double> init_vectors;
-
-
 ```
 
 
@@ -516,8 +483,6 @@ classes:
 
 
 ```c++
-    
-
 // ---------------------------------------------------------------------------
 // matrix root class, parameterized by underlying numeric type
 
@@ -568,8 +533,6 @@ template<typename T>
 struct symmetric : any_symmetric<T> {
     void concrete() override {}
 };
-
-
 ```
 
 
@@ -613,8 +576,6 @@ Let's start by implementing the three operations in a fully typed manner:
 
 
 ```c++
-
-
 // transposition
 
 template <typename T>
@@ -702,8 +663,6 @@ template <typename T, typename U>
 auto operator*(T a, const handle<symmetric<U>> &b) {
     return handle(new symmetric<std::common_type_t<T, U>>(...));
 }
-
-
 ```
 
 
@@ -711,8 +670,6 @@ Let's exercise the operators with a test case:
 
 
 ```c++
-
-
 BOOST_AUTO_TEST_CASE(test_static_operations) {
     {
         handle<ordinary<double>> o(new ordinary<double>);
@@ -762,8 +719,6 @@ BOOST_AUTO_TEST_CASE(test_static_operations) {
         handle<symmetric<double>> p = 2. * m;
     }
 }
-
-
 ```
 
 
@@ -780,8 +735,6 @@ classes.
 
 
 ```c++
-
-
 struct YOMM2_SYMBOL(transpose);
 
 template<typename Matrix>
@@ -798,8 +751,6 @@ template<
 auto operator~(const handle<Matrix<T>> &m) {
     return transpose<Matrix<T>>::fn(*m.get());
 }
-
-
 ```
 
 
@@ -860,8 +811,6 @@ We can now implement `unary_definition`:
 
 
 ```c++
-
-
 template<
     typename Method, typename Abstract, typename Concrete, typename T,
     typename = std::bool_constant<
@@ -889,8 +838,6 @@ struct unary_definition<
         return ~handle<Concrete<T>>(&m);    // see note 5
     }
 };
-
-
 ```
 
 
@@ -907,10 +854,8 @@ Let's create a few convenient aliases for `templates` lists:
 
 
 ```c++
-
 using abstract_matrix_templates = templates<any, any_square, any_symmetric>;
 using concrete_matrix_templates = templates<ordinary, square, symmetric>;
-
 ```
 
 
@@ -919,12 +864,10 @@ that we can use `boost::mp11::mp_append`:
 
 
 ```c++
-
 using matrix_templates = boost::mp11::mp_append<
     abstract_matrix_templates,
     concrete_matrix_templates
 >;
-
 ```
 
 
@@ -933,7 +876,6 @@ We can now use `product` to create all the combinations, and pass them to
 
 
 ```c++
-
 use_definitions<
     unary_definition,
     product<
@@ -943,7 +885,6 @@ use_definitions<
         types<double, int>
     >
 > YOMM2_GENSYM;
-
 ```
 
 
@@ -960,14 +901,11 @@ list of `types` lists. We can thus inject the result of `apply_product` into
 
 
 ```c++
-
 use_classes<
     apply_product<matrix_templates, types<double, int>>
 > YOMM2_GENSYM;
-
 ```
 ```c++
-
 BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {
     update_methods();
     
@@ -983,7 +921,6 @@ BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {
     handle<any_square<double>> tsy = ~sy;
     BOOST_TEST(sy.get() == tsy.get());
 }
-
 ```
 
 
@@ -1006,8 +943,6 @@ finally, we convert that type to its abstract base class, using
 
 
 ```c++
-
-
 template<typename M1, typename M2>
 using binary_result_type = typename decltype(
     std::declval<const handle<typename M1::concrete_type>>() +
@@ -1025,8 +960,6 @@ static_assert(std::is_same_v<
 >);
 
 // etc
-
-
 ```
 
 
@@ -1034,8 +967,6 @@ We can now declare the `add` method:
 
 
 ```c++
-
-
 struct YOMM2_SYMBOL(add);
 
 template<typename M1, typename M2>
@@ -1058,8 +989,6 @@ auto operator+(const handle<M1> &a, const handle<M2> &b) {
         typename M2::abstract_type
     >::fn(*a, *b);
 }
-
-
 ```
 
 
@@ -1100,8 +1029,6 @@ methods, let's factorize it:
 
 
 ```c++
-
-
 template<
     typename A1, typename C1, typename T1,
     typename A2, typename C2, typename T2
@@ -1124,8 +1051,6 @@ struct enable_binary_definition<
         binary_result_type<C1<T1>, C2<T2>>
     >
 > {};
-
-
 ```
 
 
@@ -1133,8 +1058,6 @@ We can now implement `binary_defintion`:
 
 
 ```c++
-
-
 template<
     typename Method,
     typename A1, typename C1, typename T1,
@@ -1161,8 +1084,6 @@ struct binary_definition<
         return handle<D1<T1>>(&a) + handle<D2<T2>>(&b);
     }
 };
-
-
 ```
 
 
@@ -1171,8 +1092,6 @@ struct binary_definition<
 
 
 ```c++
-
-
 use_definitions<
     binary_definition,
     product<
@@ -1185,10 +1104,8 @@ use_definitions<
         types<double, int>
     >
 > YOMM2_GENSYM;
-
 ```
 ```c++
-
 BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
     update_methods();
 
@@ -1213,7 +1130,6 @@ BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
         BOOST_TEST(s.type() == typeid(symmetric<double>));
     }
 }
-
 ```
 
 
@@ -1224,8 +1140,6 @@ underlying numeric types, the matrix types, and the methods. For example:
 
 
 ```c++
-
-
 template<typename>
 struct template_of;
 
@@ -1238,8 +1152,6 @@ static_assert(std::is_same_v<
     template_of<square<int>::abstract_type>::type,
     template_<any_square>
 >);
-
-
 ```
 
 
@@ -1248,8 +1160,6 @@ products. We can handle this with traits:
 
 
 ```c++
-
-
 template<template<typename...> typename Definition>
 struct unary_definition_traits {
     template<
@@ -1297,7 +1207,6 @@ struct definition_traits<transpose> : unary_definition_traits<transpose> {};
 
 template<>
 struct definition_traits<add> : binary_definition_traits<add> {};
-
 ```
 
 
@@ -1305,8 +1214,6 @@ We can now write `use_polymorphic_matrices` and its nested templates:
 
 
 ```c++
-
-
 template<template<typename> typename... Ms>
 struct use_polymorphic_matrices {
     using abstract_matrix_templates = types<
@@ -1339,5 +1246,4 @@ struct use_polymorphic_matrices {
 
 template<>
 struct use_polymorphic_matrices<> : use_polymorphic_matrices<ordinary, square, symmetric> {};
-
 ```

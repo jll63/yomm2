@@ -57,8 +57,8 @@ define_method(std::string, fight, (Warrior & x, Dragon& y, Axe& z)) {
 }
 
 define_method(std::string, fight, (Character & x, Dragon& y, Hands& z)) {
-    return "you just killed a dragon with your bare hands. Incredible isn't "
-           "it?";
+    return "Congratulations! You have just vainquished a dragon with your bare hands"
+           " (unbelievable, isn't it?)";
 }
 
 int main() {
@@ -96,8 +96,8 @@ int main() {
 
     std::cout << "bob fights elliot with hands:\n"
               << fight(*bob, *elliott, *hands) << "\n";
-    // bob fights elliot with hands:
-    // you just killed a dragon with your bare hands. Incredible isn't it?
+    // bob fights elliot with hands: Congratulations! You have just vainquished
+    // a dragon with your bare hands (unbelievable, isn't it?)
 
     std::cout << "rambo fights elliot with hands:\n"
               << fight(*rambo, *elliott, *hands) << "\n";
@@ -105,4 +105,8 @@ int main() {
     // you just killed a dragon with your bare hands. Incredible isn't it?
 
     return 0;
+}
+
+auto call_fight(Character& character, Creature& creature, Device& device) {
+    return fight(character, creature, device);
 }

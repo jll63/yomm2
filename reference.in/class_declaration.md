@@ -1,7 +1,8 @@
 <sub>/ ->home / ->reference </sub>
-## yorel::yomm2::class_declaration
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
-<!---->
+
+entry: yorel::yomm2::class_declaration
+headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+
 ---
 
 ```c++

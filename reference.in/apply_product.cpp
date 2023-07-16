@@ -1,26 +1,28 @@
-// md<
-// <sub>/ ->home / ->reference </sub>
-// ## yorel::yomm2::apply_product <small>(experimental)</small>
-// <sub>defined in <yorel/yomm2/templates.hpp></sub>
-// <!-- -->
-// ---
-// ```
-// template<typename TemplateList, typename... TypeLists>
-// using apply_product = /*unspecified*/;
-// ```
-// <!-- -->
-// ---
+#ifdef YOMM2_MD
 
-// `apply_product` takes a ->templates list and list of ->types lists, and
-// evaluates to a `types` list consisting of the application of each template to
-// the n-fold Cartesian product of the input `types` lists.
+<sub>/ ->home / ->reference </sub>
 
-// ## example
-// >
+experimental: yorel::yomm2::apply_product
+headers: yorel/yomm2/templates.hpp
+
+---
+```
+template<typename TemplateList, typename... TypeLists>
+using apply_product = /*unspecified*/;
+```
+---
+`apply_product` takes a ->templates list and list of ->types lists, and
+evaluates to a `types` list consisting of the application of each template to
+the n-fold Cartesian product of the input `types` lists.
+
+## example
+
+#endif
 
 // clang-format off
 
-// code<
+#ifdef YOMM2_CODE
+
 #include <type_traits>
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/templates.hpp>
@@ -52,11 +54,6 @@ static_assert(
         >
     >);
 
-// >
+#endif
 
-#define BOOST_TEST_MODULE runtime
-#include <boost/test/included/unit_test.hpp>
-#include <yorel/yomm2/keywords.hpp>
-
-BOOST_AUTO_TEST_CASE(test) {
-}
+int main() {}

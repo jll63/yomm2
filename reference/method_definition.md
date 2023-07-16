@@ -1,8 +1,9 @@
-<!-- target: YOMM2_DEFINITION -->
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
 
-## method_definition
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**method_definition**<br>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```

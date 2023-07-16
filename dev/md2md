@@ -1,14 +1,21 @@
 #!/usr/bin/python3
 
+import contextlib
 from pathlib import Path
 import re
 import sys
 
 import mdgen
 
-mdgen.index_targets()
+out_path = Path(sys.argv[2]).absolute()
 
-with open(sys.argv[1]) as rh, open(sys.argv[2], "w") as wh:
+with contextlib.suppress(FileNotFoundError):
+    out_path.chmod(0o600)
+
+
+with open(sys.argv[1]) as rh, open(out_path, "w") as wh:
     for text in rh.readlines():
-        text = mdgen.replace_link(text)
+        text = mdgen.replace_md(text)
         print(text, file=wh, end="")
+
+out_path.chmod(0o400)

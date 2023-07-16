@@ -27,7 +27,7 @@ std::ostream& operator<<(std::ostream& os, const std::type_info& ti) {
 
 // YOMM2 provides a public interface that does not require using macros. This
 // can be useful in certain situations, for example when combining open methods
-// and templates - see the [templates tutorial](templates.md).
+// and templates - see the [templates tutorial](templates_tutorial.md).
 
 // The following code is a partial rewrite of the synopsis example that does not
 // use any macros.
@@ -112,7 +112,7 @@ kick_method::add_function<kick_dog> add_kick_dog;
 // md<
 
 // Note that the name of the function serving as a method definition must be
-// unique; in presence of overloads, we would hav eno means of picking the
+// unique; in presence of overloads, we would have no means of picking the
 // appropriate function. Function templates and explicit specialization can also
 // be used for this purpose.
 

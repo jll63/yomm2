@@ -1,9 +1,11 @@
-<sub>/ ->home / ->reference </sub>
+<sub> ->home / ->reference </sub>
 
-## friend_method
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp>
-## YOMM2_FRIEND
-<sub>defined in <yorel/yomm2/macros.hpp>, also provided by <yorel/yomm2.hpp>
+entry: friend_method
+headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+
+entry: YOMM2_FRIEND
+headers: yorel/yomm2/macros.hpp, yorel/yomm2.hpp
+
 ---
 ```
 #define friend_method(container) /*unspecified*/

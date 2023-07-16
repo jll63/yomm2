@@ -155,13 +155,6 @@ using use_definitions = boost::mp11::mp_apply<
     >
 >;
 
-struct yomm2_end_of_dump {};
-
-template<typename T>
-struct dump_type {
-    static_assert(std::is_same_v<T, yomm2_end_of_dump>);
-};
-
 }}  // namespace yorel::yomm2
 
 #endif

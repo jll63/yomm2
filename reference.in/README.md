@@ -12,7 +12,7 @@ Yuriy Solodkyy, and Bjarne Stroustrup.
 
 This implementation diverges from the paper on the following points:
 * A "base-method" is called a "method declaration" in YOMM2, and an "overrider"
-  is called a "method definition". This is because 
+  is called a "method definition". This is because
 * YOMM2 has a mechanism (`next`) to call the next most specialised method.
 * The paper allows only references for virtual parameters. YOMM2 also allows
   pointers and smart pointers.
@@ -145,42 +145,48 @@ This was the recommended header before version 1.3.0. Includes
 
 ## Index
 
-| name                             | type           | purpose                                                                  |
-| -------------------------------- | -------------- | ------------------------------------------------------------------------ |
-| ->class_declaration              | class template | declare a class and its bases                                            |
-| ->declare_method                 | macro          | declare a method                                                         |
-| ->declare_static_method          | macro          | declare a static method inside a class                                   |
-| ->define_method                  | macro          | add a definition to a method                                             |
-| ->define_method_inline           | macro          | add an definition to a method in a container, and make it inline         |
-| ->error_handler_type             | type           | handler function                                                         |
-| ->error_type                     | variant        | object passed to error handler                                           |
-| ->friend_method                  | macro          | make a method in a container, or the entire container, a friend          |
-| ->hash_search_error              | class          | failure to find a hash function for registered classes                   |
-| ->method                         | class template | implements a method                                                      |
-| ->method_call_error              | class          | information about a failed method call                                   |
-| ->method_call_error_handler      | type           | the type of a function called when a method call fails                   |
-| ->method_container               | macro          | declare a method definition container                                    |
-| ->method_definition              | macro          | retrieve a definition from a container                                   |
-| ->register_class                 | macro          | register a class and its bases                                           |
-| ->register_classes               | macro          | register classes and their inheritance relationships                     |
-| ->resolution_error               | class          | method call does not resolve to exactly one definition                   |
-| ->set_error_handler              | function       | set the function called for all errors                                   |
-| ->set_method_call_error_handler  | function       | set function to call when a method call fails                            |
-| ->unknown_class_error            | class          | class used in method declaration, definition, or call was not registered |
-| ->update_methods                 | function       | set up dispatch tables                                                   |
-| ->use_classes                    | class template | register classes and their inheritance relationships                     |
-| ->virtual_                       | class template | mark a method parameter as virtual                                       |
-| ->YOMM2_CLASS                    | macro          | same as `register_class`                                                 |
-| ->YOMM2_CLASSES                  | macro          | same as `register_classes`                                               |
-| ->YOMM2_DECLARE                  | macro          | same as `declare_method`                                                 |
-| ->YOMM2_DECLARE_METHOD_CONTAINER | macro          | same as `method_container`                                               |
-| ->YOMM2_DEFINE                   | macro          | same as `define_method`                                                  |
-| ->YOMM2_DEFINE_INLINE            | macro          | same as `define_method_inline`                                           |
-| ->YOMM2_DEFINITION               | macro          | same as `method_definition`                                              |
-| ->YOMM2_FRIEND                   | macro          | same as `friend_method`                                                  |
-| ->YOMM2_GENSYM                   | macro          | generate a unique symbol                                                 |
-| ->YOMM2_STATIC_DECLARE           | macro          | declare a static method inside a class                                   |
-| ->YOMM2_SYMBOL                   | macro          | generate an obfuscated symbol                                            |
+| name                             | type              | purpose                                                                  |
+| -------------------------------- | ----------------- | ------------------------------------------------------------------------ |
+| ->class_declaration              | class template    | declares a class and its bases                                           |
+| ->declare_method                 | macro             | declares a method                                                        |
+| ->declare_static_method          | macro             | declares a static method inside a class                                  |
+| ->define_method                  | macro             | adds a definition to a method                                            |
+| ->define_method_inline           | macro             | adds an definition to a method in a container, and make it inline        |
+| ->derived                        | class template    | helper for intrusive modes                                               |
+| ->error_handler_type             | type              | handler function                                                         |
+| ->error_type                     | variant           | object passed to error handler                                           |
+| ->friend_method                  | macro             | makes a method in a container, or the entire container, a friend         |
+| ->hash_search_error              | class             | failure to find a hash function for registered classes                   |
+| ->make_virtual_shared            | function template | creates an object and return a `virtual_shared_ptr`                      |
+| ->method                         | class template    | implements a method                                                      |
+| ->method_call_error              | class             | information about a failed method call                                   |
+| ->method_call_error_handler      | type              | type of a function called when a method call fails                       |
+| ->method_container               | macro             | declares a method definition container                                   |
+| ->method_definition              | macro             | retrieves a definition from a container                                  |
+| ->method_table                   | template          | method table                                                             |
+| ->register_class                 | macro             | registers a class and its bases (deprecated)                             |
+| ->register_classes               | macro             | registers classes and their inheritance relationships                    |
+| ->resolution_error               | class             | method call does not resolve to exactly one definition                   |
+| ->root                           | class template    | helper for intrusive modes                                               |
+| ->set_error_handler              | function          | sets the function called for all errors                                  |
+| ->set_method_call_error_handler  | function          | sets function to call when a method call fails                           |
+| ->unknown_class_error            | class             | class used in method declaration, definition, or call was not registered |
+| ->update_methods                 | function          | sets up dispatch tables                                                  |
+| ->use_classes                    | class template    | registers classes and their inheritance relationships                    |
+| ->virtual_                       | class template    | marks a method parameter as virtual                                      |
+| ->virtual_ptr                    | class template    | fat pointer for optimal method dispatch                                  |
+| ->virtual_shared_ptr             | class template    | `virtual_ptr` using a `std::shared_ptr`                                  |
+| ->YOMM2_CLASS                    | macro             | same as `register_class` (deprecated)                                    |
+| ->YOMM2_CLASSES                  | macro             | same as `register_classes`                                               |
+| ->YOMM2_DECLARE                  | macro             | same as `declare_method`                                                 |
+| ->YOMM2_DECLARE_METHOD_CONTAINER | macro             | same as `method_container`                                               |
+| ->YOMM2_DEFINE                   | macro             | same as `define_method`                                                  |
+| ->YOMM2_DEFINE_INLINE            | macro             | same as `define_method_inline`                                           |
+| ->YOMM2_DEFINITION               | macro             | same as `method_definition`                                              |
+| ->YOMM2_FRIEND                   | macro             | same as `friend_method`                                                  |
+| ->YOMM2_GENSYM                   | macro             | generates a unique symbol                                                |
+| ->YOMM2_STATIC_DECLARE           | macro             | declares a static method inside a class                                  |
+| ->YOMM2_SYMBOL                   | macro             | generates an obfuscated symbol                                           |
 
 
 
@@ -195,4 +201,3 @@ This was the recommended header before version 1.3.0. Includes
 | ->templates       | class template | wrap templates in a `types` list                                 |
 | ->types           | class template | sequence of types                                                |
 | ->use_definitions | class template | add batch of definitions from a generic container to methods     |
-

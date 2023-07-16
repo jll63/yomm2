@@ -1,7 +1,8 @@
-<!-- target: YOMM2_DEFINE_INLINE -->
+hrefs: YOMM2_DEFINE_INLINE 
 <sub>/ ->home / ->reference </sub>
-## define_method_inline
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp>
+
+entry: define_method_inline
+headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```

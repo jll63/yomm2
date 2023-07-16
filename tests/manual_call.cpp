@@ -49,10 +49,10 @@ auto call_kick(Dog& obj) {
 }
 
 auto call_kick_manual(Dog& obj) {
-    const auto hash_table = policy::global_context::context.hash_table;
+    const auto hash_table = policy::global_context::context.mptrs.data();
     const auto mult = policy::global_context::context.hash.mult;
     const auto shift = policy::global_context::context.hash.shift;
-    const auto index = kick::fn.slots_strides.i;
+    const auto index = kick::fn.slots_strides[0];
     const auto vptr = *(void***) &obj; // typeid 1
 	// movq	    context+24(%rip), %r8
 	// movq	    context+32(%rip), %rdx
@@ -66,7 +66,7 @@ auto call_kick_manual(Dog& obj) {
     const auto h2 = h1 >> shift;
 	// shrq	    %cl, %rdx
 
-    const auto method_table = hash_table[h2].pw;
+    const auto method_table = hash_table[h2];
 	// movq	    (%r8,%rdx,8), %rax
 
     const auto fptr = method_table[index].pw;

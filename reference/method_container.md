@@ -1,8 +1,11 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## method_container
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by
-<yorel/yomm2/keywords.hpp></sub>
+
+
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**method_container**<br>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```
@@ -31,8 +34,8 @@ the same namespace as the container itself.
 
 ## example
 
-```c++
 
+```c++
 #include <string>
 #include <yorel/yomm2/keywords.hpp>
 
@@ -68,7 +71,7 @@ define_method(kicks, std::string, kick, (Bulldog* dog)) {
     return kicks<std::string(Dog*)>::fn(dog) + " and bites";
 }
 
-BOOST_AUTO_TEST_CASE(example) {
+BOOST_AUTO_TEST_CASE(reference_example) {
     yorel::yomm2::update_methods();
 
     Dog snoopy("Snoopy");
@@ -81,8 +84,12 @@ BOOST_AUTO_TEST_CASE(example) {
     animal = &hector;
     BOOST_TEST(kick(animal) == "Hector barks and bites");
 }
-
 ```
- Also see the [containers example](../examples/containers), which uses
-multiple containers in multiple namespaces.
+
+
+## see also
+
+The [containers example](../examples/containers) uses
+multiple containers across multiple namespaces and source files.
+
 

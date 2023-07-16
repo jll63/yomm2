@@ -1,7 +1,7 @@
 <sub>/ ->home / ->reference </sub>
 
-## yorel::yomm2::templates <small>(experimental)</small>
-<sub>defined in <yorel/yomm2/core.hpp></sub>
+experimental: yorel::yomm2::templates
+headers: yorel/yomm2/core.hpp
 <!-- -->
 ---
 ```

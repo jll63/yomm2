@@ -1,8 +1,9 @@
-<!-- target: YOMM2_DEFINITION -->
+hrefs: YOMM2_DEFINITION 
+
 <sub>/ ->home / ->reference </sub>
 
-## method_definition
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
+entry: method_definition
+headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```

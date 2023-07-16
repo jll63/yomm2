@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import contextlib
 from pathlib import Path
 import re
 import sys
@@ -11,26 +12,35 @@ with open(sys.argv[1]) as fh:
 
 out_path = Path(sys.argv[2]).absolute()
 
-mdgen.index_targets()
+with contextlib.suppress(FileNotFoundError):
+    out_path.chmod(0o600)
 
 with open(out_path, "w") as out:
-    #print(f"{out_path}...")
+    # print(f"{out_path}...")
     fragments = re.findall(
-        r"// (md|code)<(.*?)// > *", 
-        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL), 
-        flags=re.MULTILINE | re.DOTALL)
+        r"// (md|code)<(.*?)// > *",
+        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL),
+        flags=re.MULTILINE | re.DOTALL,
+    ) + re.findall(
+        r"# *ifdef YOMM2_(MD|CODE)(.*?)# *endif",
+        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL),
+        flags=re.MULTILINE | re.DOTALL,
+    )
 
     def code(text):
         print("```c++", file=out)
-        print(text.replace("elided", "..."), file=out)
+        text = text.replace("elided", "...")
+        text = text.strip()
+        print(text, file=out)
         print("```", file=out)
 
     def md(text):
         text = re.sub(r"^// ?", "", text, flags=re.MULTILINE)
-        text = mdgen.replace_link(text, flags=re.MULTILINE)
+        text = mdgen.replace_md(text)
         print(text, file=out)
 
     for fragment in fragments:
         action, content = fragment
-        globals()[action](content)
-        
+        globals()[action.lower()](content)
+
+out_path.chmod(0o400)

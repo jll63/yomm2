@@ -1,7 +1,8 @@
-<!-- target: static-object -->
+hrefs: static-object 
+
 // <sub>/ ->home / ->reference </sub>
 
-## YOMM2 static objects
+entry: YOMM2 static objects
 
 YOMM2 uses instances of various classes to register user classes, methods, and
 method definitions. The constructors adds the object to an intrusive forward

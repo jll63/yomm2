@@ -5,7 +5,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0057 NEW)
-project(YOMM2 VERSION 1.3.1)
+project(YOMM2 VERSION 1.4.0)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -19,7 +19,7 @@ find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  add_compile_options(-save-temps)
+  add_compile_options(-save-temps -fverbose-asm -masm=intel)
 endif()
 
 if(MSVC)
@@ -73,6 +73,14 @@ if(${YOMM2_ENABLE_DOC})
     add_subdirectory(reference.in)
   add_subdirectory(tutorials)
 endif()
+
+set(YOMM2_TRACE "" CACHE STRING "Set trace level (compile time)")
+
+if(NOT "${YOMM2_TRACE}" EQUAL "")
+  message(STATUS "Compiling with YOMM2_TRACE=${YOMM2_ENABLE_TRACE}")
+  add_compile_definitions(YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE})
+endif()
+
 
 ## Install instruction
 # Create version file for cmake package

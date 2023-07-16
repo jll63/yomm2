@@ -1,10 +1,10 @@
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
-## yorel::yomm2::method_call_error
-## yorel::yomm2::method_call_error_handler
-## yorel::yomm2::set_method_call_error_handler
-<sub>defined in header <yorel/yomm2/core.hpp>; also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
-<!-- -->
+**yorel::yomm2::method_call_error**<br>
+**yorel::yomm2::method_call_error_handler**<br>
+**yorel::yomm2::set_method_call_error_handler**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+
 ---
 ```
 struct method_call_error {

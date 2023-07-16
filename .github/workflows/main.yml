@@ -14,7 +14,7 @@ jobs:
         standard: [17, 20]
         config: [Debug, Release]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install g++-11
         if: ${{ matrix.compiler == 'g++-11' }}
         run: |
@@ -62,7 +62,7 @@ jobs:
         standard: [17]
         config: [ReleaseDebug, DebugRelease]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Boost
         run: |
           sudo apt update
@@ -90,7 +90,7 @@ jobs:
         compiler: [g++-10, g++-11, clang++-11, clang++-12]
         standard: [17]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install g++-11
         if: ${{ matrix.compiler == 'g++-11' }}
         run: |
@@ -129,7 +129,7 @@ jobs:
       matrix:
         config: [Debug, Release, ReleaseDebug, DebugRelease]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1.4.1
       - name: Configure
         run: |
@@ -159,7 +159,7 @@ jobs:
   windows-shared:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1.4.1
       - name: Configure
         run: |
@@ -192,7 +192,7 @@ jobs:
         # config: [Debug, Release, ReleaseDebug, DebugRelease]
         config: [Debug, Release]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Configure
         run: |
           echo "#define YOMM2_BENCHMARK_HIERARCHIES 10" > tests/benchmarks_parameters.hpp
@@ -218,7 +218,7 @@ jobs:
           # ./asteroids
           # ./matrix
           # ./next
-          # ./synopsis          
+          # ./synopsis
       - name: Benchmarks
         if: ${{ matrix.config == 'Release' }}
         run: |

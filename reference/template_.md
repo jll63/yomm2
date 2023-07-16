@@ -1,6 +1,7 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::template_ <small>(experimental)</small>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::template_** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>
 <!-- -->
 ---
@@ -20,8 +21,8 @@ the template with the specified types.
 
 ## example
 
-```c++
 
+```c++
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/templates.hpp>
 
@@ -38,5 +39,4 @@ static_assert(
         template_<std::pair>::fn<char, int>,
         std::pair<char, int>
     >);
-
 ```

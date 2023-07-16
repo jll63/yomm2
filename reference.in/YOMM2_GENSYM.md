@@ -1,11 +1,10 @@
 <sub>/ ->home / ->reference </sub>
 
-## YOMM2_GENSYM()
-<sub>defined in header <yorel/yomm2/symbols.hpp>
-<yorel/yomm2/keywords.hpp></sub>
+entry: YOMM2_GENSYM
+headers: yorel/yomm2/symbols.hpp, yorel/yomm2/keywords.hpp
 
 ---
-Macro `YOMM2_GENSYM` expands to a new C++ identifier each time it is called. The
+`YOMM2_GENSYM` expands to a new C++ identifier each time it is called. The
 symbol is based on the `__COUNTER__` preprocessor macro, and decorated in such a
 way that it is unlikely to clash with user-defined symbols.
 

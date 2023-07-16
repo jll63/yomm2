@@ -7,6 +7,7 @@
 #include <cstring>
 #include <dlfcn.h>
 #include <iostream>
+#include <unistd.h>
 
 #include <yorel/yomm2/keywords.hpp>
 

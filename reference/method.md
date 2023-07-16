@@ -1,17 +1,15 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::method
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by
-<yorel/yomm2/keywords.hpp></sub>
-<!-- -->
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::method**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+
 ---
 ```
-template<typename Key, typename Signature, typename... Unspecified>
-struct method<Key, R(Args...), Unspecified...>; /* undefined */
 template<typename Key, typename R, typename... Args, typename... Unspecified>
 struct method<Key, R(Args...), Unspecified...> { ... }
 ```
-<!-- -->
 ---
 
 `method` implements a function object that takes a list of arguments of type
@@ -158,8 +156,8 @@ make sense, see the example below.
 
 ## example
 
-```c++
 
+```c++
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
 
@@ -171,12 +169,13 @@ struct Cat : Animal {};
 struct Dog : Animal {};
 struct Bulldog : Dog {};
 
-using namespace yorel::yomm2; // for brevity
+namespace yomm2 = yorel::yomm2; // for brevity
+using yomm2::virtual_;
 
-use_classes<Animal, Cat, Dog, Bulldog> YOMM2_GENSYM;
+yomm2::use_classes<Animal, Cat, Dog, Bulldog> YOMM2_GENSYM;
 
 struct YOMM2_SYMBOL(kick_methods);
-using kick = method<YOMM2_SYMBOL(kick_methods), std::string(virtual_<Animal&>)>;
+using kick = yomm2::method<YOMM2_SYMBOL(kick_methods), std::string(virtual_<Animal&>)>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
 kick::add_function<kick_cat> YOMM2_GENSYM;
@@ -190,7 +189,7 @@ struct kick_bulldog : kick::use_next<kick_bulldog> {
 kick::add_definition<kick_bulldog> YOMM2_GENSYM;
 
 struct YOMM2_SYMBOL(pet_methods);
-using pet = method<YOMM2_SYMBOL(pet_methods), std::string(virtual_<Animal&>)>;
+using pet = yomm2::method<YOMM2_SYMBOL(pet_methods), std::string(virtual_<Animal&>)>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
 pet::add_function<pet_cat> YOMM2_GENSYM;
@@ -198,13 +197,13 @@ pet::add_function<pet_cat> YOMM2_GENSYM;
 std::string pet_dog(Dog& dog) { return "wag tail"; }
 pet::add_function<pet_dog> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE(call_method) {
-    update_methods();
+BOOST_AUTO_TEST_CASE(reference_method_example) {
+    yomm2::update_methods();
 
-    std::shared_ptr<Animal>
-        felix = std::make_shared<Cat>(),
-        snoopy = std::make_shared<Dog>(),
-        hector = std::make_shared<Bulldog>();
+    std::unique_ptr<Animal>
+        felix = std::make_unique<Cat>(),
+        snoopy = std::make_unique<Dog>(),
+        hector = std::make_unique<Bulldog>();
 
     BOOST_TEST(kick::fn(*felix) == "hiss");
     BOOST_TEST(kick::fn(*snoopy) == "bark");
@@ -214,5 +213,4 @@ BOOST_AUTO_TEST_CASE(call_method) {
     BOOST_TEST(pet::fn(*snoopy) == "wag tail");
     BOOST_TEST(pet::fn(*hector) == "wag tail");
 }
-
 ```

@@ -4,6 +4,7 @@
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/cute.hpp>
 
-using ::yorel::yomm2::virtual_;
+namespace yomm2 = yorel::yomm2;
+using yomm2::virtual_;
 
 #endif

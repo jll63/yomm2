@@ -1,17 +1,25 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## define_method
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
+
+
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**define_method**<br>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub></sub>
+
+---
 ```
 #define_method(/*unspecified*/) /*unspecified*/
 ```
+---
+
 ### usage
 ```
-define_method(return-type, name, (function-parameter-list)) {
+define_method(return-type, name, (method-parameter-list)) {
     ...
 }
 
-define_method(container, return-type, name, (function-parameter-list)) {
+define_method(container, return-type, name, (method-parameter-list)) {
     ...
 }
 ```
@@ -19,11 +27,11 @@ define_method(container, return-type, name, (function-parameter-list)) {
 Add a definition to a method.
 
 Locate a method with the same name, with a signature compatible with
-`function-parameter-list`, and add the definition to the method's list of
+`method-parameter-list`, and add the definition to the method's list of
 definitions. The method must exist and must be unique. `return-type` must be
 covariant with the method's return type. `return-type` may be `auto`.
 
-The types of the arguments are _not_ marked with `virtual_`.
+The types of the arguments must _not_ be decorated with `virtual_`.
 
 Inside the block, a function pointer named `next` points to the next most
 specific definition, if one exists, and it is unique. Otherwise, `next` points
@@ -41,8 +49,8 @@ documentation of [`method_container`](method_container.md) for more information 
 
 ## example
 
-```c++
 
+```c++
 #include <string>
 #include <yorel/yomm2/keywords.hpp>
 
@@ -62,7 +70,7 @@ define_method(std::string, kick, (Bulldog* dog)) {
     return next(dog) + " and bite";
 }
 
-BOOST_AUTO_TEST_CASE(example) {
+BOOST_AUTO_TEST_CASE(reference_example) {
     yorel::yomm2::update_methods();
 
     Dog snoopy;
@@ -75,5 +83,4 @@ BOOST_AUTO_TEST_CASE(example) {
     animal = &hector;
     BOOST_TEST(kick(animal) == "bark and bite");
 }
-
 ```

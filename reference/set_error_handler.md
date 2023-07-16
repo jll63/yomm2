@@ -1,14 +1,14 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::hash_search_error
-## yorel::yomm2::resolution_error
-## yorel::yomm2::unknown_class_error
-## yorel::yomm2::error_type
-## yorel::yomm2::error_handler_type
-## yorel::yomm2::set_error_handler
-<sub>defined in header <yorel/yomm2/core.hpp>; also provided by
-<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
-<!-- -->
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::error_type**<br>
+**yorel::yomm2::error_handler_type**<br>
+**yorel::yomm2::set_error_handler**<br>
+**yorel::yomm2::hash_search_error**<br>
+**yorel::yomm2::resolution_error**<br>
+**yorel::yomm2::unknown_class_error**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
+
 ---
 ```
 struct resolution_error {
@@ -52,34 +52,40 @@ variant:
 
 
 ```c++
-
 #include <stdexcept>
 #include <yorel/yomm2/keywords.hpp>
 
-struct Dog {
-    virtual ~Dog() {
+struct Animal {
+    virtual ~Animal() {
     }
 };
 
-register_classes(Dog);
+struct Dog : Animal {};
 
-declare_method(void, kick, (virtual_<Dog&>));
+register_classes(Animal, Dog);
+
+declare_method(void, kick, (virtual_<Animal&>));
 
 using namespace yorel::yomm2; // for brevity
 
-void (*next_error_handler)(const error_type& ev);
+error_handler_type next_error_handler;
 
 void no_definition_handler(const error_type& ev) {
     if (auto error = std::get_if<resolution_error>(&ev)) {
         if (error->status == resolution_error::no_definition) {
-            throw std::runtime_error("not defined");
+            if (error->tis[0] == &typeid(Dog)) {
+                throw std::runtime_error("not defined");
+            } else {
+                throw std::runtime_error(
+                    std::string("wrong typeid: ") + error->tis[0]->name());
+            }
         }
     }
-    
+
     next_error_handler(ev);
 }
 
-BOOST_AUTO_TEST_CASE(set_error_handler_example) {
+BOOST_AUTO_TEST_CASE(reference_set_error_handler_example) {
     next_error_handler = set_error_handler(no_definition_handler);
     update_methods();
 
@@ -90,8 +96,7 @@ BOOST_AUTO_TEST_CASE(set_error_handler_example) {
         BOOST_TEST(error.what() == "not defined");
         return;
     }
+
     BOOST_FAIL("did not throw");
 }
-
-
 ```

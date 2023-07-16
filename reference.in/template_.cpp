@@ -1,29 +1,32 @@
-// md<
-// <sub>/ ->home / ->reference </sub>
-// ## yorel::yomm2::template_ <small>(experimental)</small>
-// <sub>defined in <yorel/yomm2/templates.hpp></sub>
-// <!-- -->
-// ---
-// ```
-// template<template<typename...> typename Template>
-// struct template_ {
-//     template<typename... Ts>
-//     using fn = /*unspecified*/;
-// };
-// ```
-// <!-- -->
-// ---
+#ifdef YOMM2_MD
+<sub>/ ->home / ->reference </sub>
 
-// `template_` wraps a template in a type, making it possible to appear in
-// ->types lists. Nested template `fn<Ts...>` evaluates to the instantiation of
-// the template with the specified types.
+experimental: yorel::yomm2::template_
+<sub>defined in <yorel/yomm2/templates.hpp></sub>
+<!-- -->
+---
+```
+template<template<typename...> typename Template>
+struct template_ {
+    template<typename... Ts>
+    using fn = /*unspecified*/;
+};
+```
+<!-- -->
+---
 
-// ## example
-// >
+`template_` wraps a template in a type, making it possible to appear in
+->types lists. Nested template `fn<Ts...>` evaluates to the instantiation of
+the template with the specified types.
+
+## example
+
+#endif
 
 // clang-format off
 
-// code<
+#ifdef YOMM2_CODE
+
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/templates.hpp>
 
@@ -40,11 +43,7 @@ static_assert(
         template_<std::pair>::fn<char, int>,
         std::pair<char, int>
     >);
-// >
 
-#define BOOST_TEST_MODULE runtime
-#include <boost/test/included/unit_test.hpp>
-#include <yorel/yomm2/keywords.hpp>
+#endif
 
-BOOST_AUTO_TEST_CASE(test) {
-}
+int main() {}

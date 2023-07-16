@@ -48,7 +48,18 @@ if(${YOMM2_ENABLE_BENCHMARKS})
   target_link_libraries(benchmarks YOMM2::yomm2 benchmark::benchmark)
 endif()
 
-add_executable(rolex rolex.cpp)
-target_link_libraries(rolex YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-target_compile_options(rolex PUBLIC -save-temps -masm=intel)
-add_test(NAME rolex COMMAND rolex)
+add_executable(intrusive intrusive.cpp)
+target_link_libraries(intrusive YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME intrusive COMMAND intrusive)
+
+add_executable(test_virtual_ptr_basic test_virtual_ptr_basic.cpp)
+target_link_libraries(test_virtual_ptr_basic YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_virtual_ptr_basic COMMAND test_virtual_ptr_basic)
+
+add_executable(test_virtual_ptr test_virtual_ptr.cpp)
+target_link_libraries(test_virtual_ptr YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_virtual_ptr COMMAND test_virtual_ptr)
+
+add_executable(test_virtual_ptr_all test_virtual_ptr_all.cpp)
+target_link_libraries(test_virtual_ptr_all YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_virtual_ptr_all COMMAND test_virtual_ptr_all)

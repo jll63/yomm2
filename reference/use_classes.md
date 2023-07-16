@@ -1,19 +1,20 @@
 
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::use_classes
+
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yomm2::use_classes**<br>
 <sub>defined in <yorel/yomm2/core.hpp></sub>
-## register_classes
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by
-<yorel/yomm2/keywords.hpp></sub>
-## YOMM2_CLASSES
-<sub>defined in <yorel/yomm2/macros.hpp></sub>, also provided by
-<yorel/yomm2/yomm2.hpp>
-<!-- -->
+<br>
+**register_classes**<br>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<<yorel/yomm2/keywords.hpp></sub>
+<br>
+**YOMM2_CLASSES**<br>
+<sub>defined in <yorel/yomm2/macros.hpp>, also provided by<yorel/yomm2/yomm2.hpp></sub>
+
 ---
 ```
 template<typename... Cs> struct use_classes;
 ```
-<!-- -->
 ---
 
 `use_classes`, instantiated as a [static object](static-object.md), registers
@@ -50,7 +51,7 @@ incrementally.
 ## macros
 
 `register_classes(...)`  and `YOMM2_CLASSES(...)` are simple wrappers around
-`use_classes`, both equivalent to `use_classes<...> YOMM2_GENSYM`.
+`use_classes`. Both are equivalent to `use_classes<...> YOMM2_GENSYM`.
 
 ## example
 
@@ -58,7 +59,6 @@ Given the following hierarchy:
 
 
 ```c++
-
 struct Animal {
     virtual ~Animal() {
     }
@@ -69,38 +69,31 @@ struct Omnivore : Herbivore, Carnivore {};
 struct Human : Omnivore {};
 struct Wolf : Omnivore {};
 struct Sheep : Herbivore {};
-
 ```
 
 All the classes can be registered with a single static object:
 
 ```c++
-
 // at file scope
 using yorel::yomm2::use_classes;
 use_classes<
     Animal, Herbivore, Carnivore, Omnivore, Human, Wolf, Sheep
 > YOMM2_GENSYM;
-
 ```
 
 Or, using either macro:
 
 ```c++
-
 register_classes(Animal, Herbivore, Carnivore, Omnivore, Human, Wolf, Sheep);
 YOMM2_CLASSES(Animal, Herbivore, Carnivore, Omnivore, Human, Wolf, Sheep);
-
 ```
 
 Classes can also be registered incrementally:
 
 ```c++
-
 use_classes<Animal, Herbivore, Carnivore> YOMM2_GENSYM;
 use_classes<Omnivore, Human, Wolf> YOMM2_GENSYM;
 use_classes<Sheep, Herbivore> YOMM2_GENSYM;
-
 ```
 
 
@@ -109,11 +102,9 @@ and `Wolf` derive from `Omnivore`.
 
 
 ```c++
-
 use_classes<Animal, Herbivore, Carnivore, Omnivore> YOMM2_GENSYM;
 use_classes<Human, Wolf> YOMM2_GENSYM;      // wrong!
 use_classes<Sheep, Herbivore> YOMM2_GENSYM; // ok
-
 ```
 
 
@@ -122,7 +113,5 @@ use_classes<Sheep, Herbivore> YOMM2_GENSYM; // ok
 |  | |
 |---|---|
 | [YOMM2_GENSYM](YOMM2_GENSYM.md) | generate a symbol
-
-
 
 

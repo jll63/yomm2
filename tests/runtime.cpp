@@ -71,7 +71,7 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
 }
 
 template<typename Key>
-struct test_policy_ : policy::hash_factors_in_method {
+struct test_policy_ : policy::basic_policy {
     static struct catalog catalog;
     static struct context context;
 };
@@ -204,10 +204,6 @@ YOMM2_DEFINE(bool, approve, (const Manager& r, const Taxi& e, double amount)) {
 YOMM2_DEFINE(
     bool, approve, (const Founder& r, const Expense& e, double amount)) {
     return true;
-}
-
-inline const word* mptr(const context& t, const std::type_info* ti) {
-    return t.hash_table[t.hash(ti)].pw;
 }
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
@@ -361,12 +357,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     rt.allocate_slots();
 
     {
-        const std::vector<int> expected = {1};
+        const std::vector<size_t> expected = {1};
         BOOST_TEST(expected == pay_method.slots);
     }
 
     {
-        const std::vector<int> expected = {0, 0};
+        const std::vector<size_t> expected = {0, 0};
         BOOST_TEST(expected == approve_method.slots);
     }
 
@@ -446,52 +442,52 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     {
-        const std::vector<int> expected = {0};
+        const std::vector<size_t> expected = {0};
         BOOST_TEST(expected == role->mtbl);
     }
 
     {
-        const std::vector<int> expected = {1, 0};
+        const std::vector<size_t> expected = {1, 0};
         BOOST_TEST(expected == employee->mtbl);
     }
 
     {
-        const std::vector<int> expected = {2, 1};
+        const std::vector<size_t> expected = {2, 1};
         BOOST_TEST(expected == manager->mtbl);
     }
 
     {
-        const std::vector<int> expected = {3};
+        const std::vector<size_t> expected = {3};
         BOOST_TEST(expected == founder->mtbl);
     }
 
     {
-        const std::vector<int> expected = {0};
+        const std::vector<size_t> expected = {0};
         BOOST_TEST(expected == expense->mtbl);
     }
 
     {
-        const std::vector<int> expected = {1};
+        const std::vector<size_t> expected = {1};
         BOOST_TEST(expected == public_->mtbl);
     }
 
     {
-        const std::vector<int> expected = {1};
+        const std::vector<size_t> expected = {1};
         BOOST_TEST(expected == bus->mtbl);
     }
 
     {
-        const std::vector<int> expected = {1};
+        const std::vector<size_t> expected = {1};
         BOOST_TEST(expected == metro->mtbl);
     }
 
     {
-        const std::vector<int> expected = {2};
+        const std::vector<size_t> expected = {2};
         BOOST_TEST(expected == taxi->mtbl);
     }
 
     {
-        const std::vector<int> expected = {0};
+        const std::vector<size_t> expected = {0};
         BOOST_TEST(expected == jet->mtbl);
     }
 
@@ -504,23 +500,20 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         // pay
-        // clang-format off
-        BOOST_TEST_REQUIRE(test_policy::context.gv.size() ==
-                           1       // ptr to control table
-                           + rt.metrics.hash_table_size // mptr table
-                           + rt.metrics.hash_table_size // control table
-                           + 15    // approve: 3 slots and 12 cells for dispatch table
-                           + 12);  // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for Expenses
-        // clang-format on
+        BOOST_TEST_REQUIRE(
+            test_policy::context.gv.size() ==
+            +12        // approve: 3 slots and 12 cells for dispatch table
+                + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
+                       // Expenses
+        BOOST_TEST_REQUIRE(
+            test_policy::context.mptrs.size() == rt.metrics.hash_table_size);
+        BOOST_TEST_REQUIRE(
+            test_policy::context.hash.control.size() == rt.metrics.hash_table_size);
 
-        auto gv_iter =
-            test_policy::context.hash_table + 2 * rt.metrics.hash_table_size;
+        auto gv_iter = test_policy::context.gv.data();
         // no slots nor fun* for 1-method
 
         // approve
-        BOOST_TEST(gv_iter++->i == 0); // slot for approve/0
-        BOOST_TEST(gv_iter++->i == 0); // slot for approve/1
-        BOOST_TEST(gv_iter++->i == 4); // stride for approve/1
         // 12 fun*
         auto approve_dispatch_table = gv_iter;
         BOOST_TEST(std::equal(
@@ -616,17 +609,22 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             const auto& pay_method =
                 decltype(yOMM2_SELECTOR(pay)(Employee()))::fn;
             BOOST_TEST(pay_method.arity == 1);
-            BOOST_TEST(pay_method.resolve(employee) == pay_Employee->info->pf);
+            BOOST_TEST(
+                pay_method.resolve<virtual_<const Employee&>>(employee) ==
+                pay_Employee->info->pf);
             BOOST_TEST(&typeid(manager) == &typeid(Manager));
-            BOOST_TEST(pay_method.resolve(manager) == pay_Manager->info->pf);
+            BOOST_TEST(
+                pay_method.resolve<virtual_<const Employee&>>(manager) ==
+                pay_Manager->info->pf);
 
             using approve_method =
                 decltype(yOMM2_SELECTOR(approve)(Role(), Expense(), 0.));
             BOOST_TEST(approve_method::fn.arity == 2);
 
             BOOST_TEST(
-                approve_method::fn.resolve(role, expense, 0.) ==
-                approve_Role_Expense->info->pf);
+                (approve_method::fn.resolve<
+                    virtual_<const Role&>, virtual_<const Expense&>, double>(
+                    role, expense, 0.)) == approve_Role_Expense->info->pf);
 
             {
                 std::vector<const Role*> Roles = {
@@ -653,8 +651,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                             ? approve_Employee_public
                             : approve_Role_Expense;
                         BOOST_TEST(
-                            approve_method::fn.resolve(*r, *e, 0.) ==
-                            expected->info->pf);
+                            (approve_method::fn.resolve<
+                                virtual_<const Role&>, virtual_<const Expense&>,
+                                double>(*r, *e, 0.)) == expected->info->pf);
                         ++j;
                     }
                     ++i;

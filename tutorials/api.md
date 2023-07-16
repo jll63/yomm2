@@ -4,14 +4,13 @@
 
 YOMM2 provides a public interface that does not require using macros. This
 can be useful in certain situations, for example when combining open methods
-and templates - see the [templates tutorial](templates.md).
+and templates - see the [templates tutorial](templates_tutorial.md).
 
 The following code is a partial rewrite of the synopsis example that does not
 use any macros.
 
 
 ```c++
-
 #include <yorel/yomm2/core.hpp>
 
 using namespace yorel::yomm2;
@@ -25,8 +24,6 @@ class Dog : public Animal {};
 class Bulldog : public Dog {};
 
 use_classes<Animal, Dog, Bulldog> use_animal_classes;
-
-
 ```
 
 
@@ -38,10 +35,8 @@ invocations of `register_class`.
 
 
 ```c++
-
 struct kick_key;
 using kick_method = method<kick_key, std::string(virtual_<Animal&>)>;
-
 ```
 
 
@@ -54,10 +49,8 @@ the same signature. Consider a more animal-friendly method:
 
 
 ```c++
-
 struct feed_key;
 using feed_method = method<feed_key, std::string(virtual_<Animal&>)>;
-
 ```
 
 
@@ -74,18 +67,16 @@ Now let's add a definition to the method:
 
 
 ```c++
-
 std::string kick_dog(Dog& dog) {
     return "bark";
 }
 
 kick_method::add_function<kick_dog> add_kick_dog;
-
 ```
 
 
 Note that the name of the function serving as a method definition must be
-unique; in presence of overloads, we would hav eno means of picking the
+unique; in presence of overloads, we would have no means of picking the
 appropriate function. Function templates and explicit specialization can also
 be used for this purpose.
 
@@ -95,7 +86,6 @@ to a function that will be set to the function's next definition by
 
 
 ```c++
-
 kick_method::next_type kick_bulldog_next;
 
 std::string kick_bulldog(Bulldog& dog) {
@@ -103,7 +93,6 @@ std::string kick_bulldog(Bulldog& dog) {
 }
 
 kick_method::add_function<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
-
 ```
 
 
@@ -113,7 +102,6 @@ declaration, minus the `virtual_<>` decorators.
 
 
 ```c++
-
 BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     update_methods();
 
@@ -123,7 +111,6 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
     BOOST_TEST(kick_method::fn(*hector) == "bark and bite back");
 }
-
 ```
 
 
@@ -182,7 +169,6 @@ a helper.
 
 
 ```c++
-
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
@@ -193,8 +179,6 @@ use_classes<Animal, Dog, Bulldog> YOMM2_GENSYM;
 struct YOMM2_SYMBOL(kick);
 
 using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
-
-
 ```
 
 
@@ -208,13 +192,11 @@ function named `fn`. Containers are added to methods via the
 
 
 ```c++
-
 struct kick_dog {
     static std::string fn(Dog& dog) { return "bark"; }
 };
 
 kick_method::add_definition<kick_dog> YOMM2_GENSYM;
-
 ```
 
 
@@ -227,7 +209,6 @@ nested CRTP helper to inject a `next` into a container.
 
 
 ```c++
-
 struct kick_bulldog : kick_method::next<kick_bulldog> {
     static std::string fn(Bulldog& dog) {
         return next(dog) + " and bite back";
@@ -235,7 +216,6 @@ struct kick_bulldog : kick_method::next<kick_bulldog> {
 };
 
 kick_method::add_definition<kick_bulldog> YOMM2_GENSYM;
-
 ```
 
 

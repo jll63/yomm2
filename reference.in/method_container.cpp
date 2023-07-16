@@ -1,41 +1,46 @@
-// target: YOMM2_DECLARE_METHOD_CONTAINER
-// md<
-// <sub>/ ->home / ->reference </sub>
-// ## method_container
-// <sub>defined in <yorel/yomm2/cute.hpp>, also provided by
-// <yorel/yomm2/keywords.hpp></sub>
-//
-// ---
-// ```
-// #define method_container(container) /*unspecified*/
-// #define method_container(container, return_type, name,
-// (function-parameter-list)) /*unspecified*/
-// ```
-// ---
-// Declare a method container, and optionally a method definition inside that
-// container.
+#ifdef YOMM2_MD
 
-// Method containers are collections of definitions for a method, wrapped in a
-// template, parameterized by the definition's signature. This makes it possible
-// for a class to grant friendship to a set of definitions, or to all the
-// definitions, of a method. It also makes it possible to retrieve a specific
-// method, for example to call it. This is especially useful for definitions
-// created with ->define_method_inline.
+hrefs: YOMM2_DECLARE_METHOD_CONTAINER 
 
-// This macro only creates declarations, and thus can be placed in a header
-// file. The four argument form makes it possible to access a method definition
-// across translation units.
+<sub>/ ->home / ->reference </sub>
 
-// A definition placed in a container is a static member function, called `fn`,
-// of the a specialisation of the container. Consequently, it must be created in
-// the same namespace as the container itself.
+entry: method_container
+headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 
-// ## example
-// >
+---
+```
+#define method_container(container) /*unspecified*/
+#define method_container(container, return_type, name,
+(function-parameter-list)) /*unspecified*/
+```
+---
+Declare a method container, and optionally a method definition inside that
+container.
+
+Method containers are collections of definitions for a method, wrapped in a
+template, parameterized by the definition's signature. This makes it possible
+for a class to grant friendship to a set of definitions, or to all the
+definitions, of a method. It also makes it possible to retrieve a specific
+method, for example to call it. This is especially useful for definitions
+created with ->define_method_inline.
+
+This macro only creates declarations, and thus can be placed in a header
+file. The four argument form makes it possible to access a method definition
+across translation units.
+
+A definition placed in a container is a static member function, called `fn`,
+of the a specialisation of the container. Consequently, it must be created in
+the same namespace as the container itself.
+
+## example
+
+#endif
+
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
-// code<
+#ifdef YOMM2_CODE
+
 #include <string>
 #include <yorel/yomm2/keywords.hpp>
 
@@ -71,7 +76,7 @@ define_method(kicks, std::string, kick, (Bulldog* dog)) {
     return kicks<std::string(Dog*)>::fn(dog) + " and bites";
 }
 
-BOOST_AUTO_TEST_CASE(example) {
+BOOST_AUTO_TEST_CASE(reference_example) {
     yorel::yomm2::update_methods();
 
     Dog snoopy("Snoopy");
@@ -84,8 +89,14 @@ BOOST_AUTO_TEST_CASE(example) {
     animal = &hector;
     BOOST_TEST(kick(animal) == "Hector barks and bites");
 }
-// >
 
-// md< Also see the [containers example](../examples/containers), which uses
-// multiple containers in multiple namespaces.
-// >
+#endif
+
+#ifdef YOMM2_MD
+
+## see also
+
+The [containers example](../examples/containers) uses
+multiple containers across multiple namespaces and source files.
+
+#endif

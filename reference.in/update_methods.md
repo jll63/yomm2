@@ -1,7 +1,8 @@
 <sub>/ ->home / ->reference </sub>
 
-## yorel::yomm2::update_methods()
-<sub>defined in header <yorel/yomm2/core.hpp>
+entry: yorel::yomm2::update_methods
+headers:yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+
 ---
 Initialise the data used during method dispatch.
 

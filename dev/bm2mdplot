@@ -41,12 +41,12 @@ for nh in range(n_first, n_first + h_step * h_count, h_step):
     for no in range(o_first, o_first + o_step * o_count, o_step):
         bm = Benchmarks.run(
             nh_exe,
-            f"--benchmark_filter=(baseline)|((virtual|{policy}) {' '.join(other_tags)})",
+            f"--benchmark_filter=(arity_0)|((virtual_function|{policy})-{'-'.join(other_tags)})",
             *other_args,
             objects=no,
         )
 
-        virtual_result = bm.get("virtual", *other_tags)
+        virtual_result = bm.get("virtual_function", *other_tags)
         method_result = bm.get(policy, *other_tags)
         row_cv = 100 * method_result.cv
         max_cv = max(max_cv, method_result.cv)

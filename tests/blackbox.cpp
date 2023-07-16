@@ -275,36 +275,33 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
 
     try {
         times(dense_matrix(), dense_matrix());
+        BOOST_FAIL("did not throw");
     } catch (const resolution_error& error) {
         BOOST_TEST(error.status == resolution_error::no_definition);
-        return;
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
-    BOOST_FAIL("did not throw");
 
     try {
         times(diagonal_matrix(), diagonal_matrix());
+        BOOST_FAIL("did not throw");
     } catch (const resolution_error& error) {
         BOOST_TEST(error.status == resolution_error::ambiguous);
-        return;
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
-    BOOST_FAIL("did not throw");
 
 #ifndef NDEBUG
     struct identity_matrix : matrix {};
 
     try {
         times(diagonal_matrix(), identity_matrix());
+        BOOST_FAIL("did not throw");
     } catch (const unknown_class_error& error) {
         BOOST_TEST(error.ti == &typeid(identity_matrix));
-        return;
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
-    BOOST_FAIL("did not throw");
 #endif
 }
 
@@ -312,7 +309,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
 
 namespace update_error_handling {
 
-struct test_policy : policy::default_policy {
+struct test_policy : default_policy {
     static struct catalog catalog;
     static struct context context;
 };

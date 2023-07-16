@@ -24,10 +24,6 @@
 #include <utility>       // for pair
 #include <vector>        // for vector, vector<>:...
 
-#if defined(YOMM2_TRACE) && (YOMM2_TRACE & 1) || !defined(NDEBUG)
-    #include <iostream>
-#endif
-
 #include <boost/dynamic_bitset/dynamic_bitset.hpp> // for operator<<, dynam...
 
 #if defined(YOMM2_SHARED)
@@ -40,19 +36,20 @@
     #define yOMM2_API
 #endif
 
-#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/core.hpp>
+
+#if defined(YOMM2_TRACE) && (YOMM2_TRACE & 1)
+    #include <iostream>
+#endif
+
 #include <yorel/yomm2/runtime.hpp>
 
 namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-// export vtable
-void method_info::install_hash_factors(runtime&) {
-}
-
-std::ostream* logs;
-unsigned trace_flags;
+yOMM2_API std::ostream* logs;
+yOMM2_API unsigned trace_flags;
 
 template<unsigned Flags>
 inline trace_type<Flags>& trace_type<Flags>::operator++() {
@@ -193,6 +190,7 @@ void runtime::augment_classes() {
             if (rtc == nullptr) {
                 rtc = &classes.emplace_back();
                 rtc->is_abstract = cr.is_abstract;
+                rtc->intrusive_mptr = cr.intrusive_mptr;
             }
 
             // In the unlikely case that a class does have more than one
@@ -306,24 +304,6 @@ void runtime::augment_classes() {
     }
 }
 
-// void runtime::calculate_conforming_classes() {
-//     ++trace << "Conforming classes...\n";
-//     with_indent YOMM2_GENSYM(trace);
-
-//     for (auto& cls : classes) {
-//         if (cls.covariant_classes.empty()) {
-//             calculate_conforming_classes(cls);
-// #if YOMM2_TRACE
-//             ++trace << cls.info->name() << ":\n";
-//             with_indent YOMM2_GENSYM(trace);
-//             for (auto conf : cls.covariant_classes) {
-//                 ++trace << tip{conf->info->ti} << "\n";
-//             }
-// #endif
-//         }
-//     }
-// }
-
 void runtime::calculate_conforming_classes(rt_class& cls) {
     if (!cls.covariant_classes.empty()) {
         return;
@@ -383,7 +363,8 @@ void runtime::augment_methods() {
         // reverse the reversed order from 'chain'
 
         for (auto& definition_info : meth_info.specs) {
-            ++trace << definition_info.name << "\n";
+            ++trace << definition_info.name << " (" << definition_info.pf
+                    << ")\n";
             spec_iter->info = &definition_info;
             spec_iter->vp.reserve(meth_info.arity());
             size_t param_index = 0;
@@ -801,7 +782,7 @@ void runtime::build_dispatch_table(
 void runtime::find_hash_function(
     const std::deque<rt_class>& classes, hash_function& hash,
     metrics_t& metrics) {
-    std::vector<const void*> keys;
+    std::vector<ti_ptr> keys;
     auto start_time = std::chrono::steady_clock::now();
 
     for (auto& cls : classes) {
@@ -841,7 +822,8 @@ void runtime::find_hash_function(
             hash.mult = uniform_dist(rnd) | 1;
 
             for (auto key : keys) {
-                auto h = hash(key);
+                auto h = hash.unchecked_hash(key);
+
                 if (buckets[h]++) {
                     found = false;
                     break;
@@ -882,6 +864,9 @@ void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
 }
 
 void runtime::install_gv() {
+    ctx.mptrs.resize(metrics.hash_table_size);
+    ctx.hash.control.resize(metrics.hash_table_size);
+    ctx.indirect_mptrs.resize(metrics.hash_table_size);
 
     for (size_t pass = 0; pass != 2; ++pass) {
         ctx.gv.resize(0);
@@ -889,33 +874,9 @@ void runtime::install_gv() {
         if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
             if (pass) {
                 ++trace << "Initializing global vector at " << ctx.gv.data()
-                        << "\n"
-                        << std::setw(4) << ctx.gv.size()
-                        << " pointer to control table\n";
+                        << "\n";
             }
         }
-
-        // reserve a work for control table
-        ctx.gv.emplace_back(make_word(nullptr));
-
-        auto hash_table = ctx.gv.data() + 1;
-        ctx.hash_table = hash_table;
-
-        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-            if (pass) {
-                ++trace << std::setw(4) << ctx.gv.size() << " hash table\n";
-            }
-        }
-
-        ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
-
-        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
-            if (pass) {
-                ++trace << std::setw(4) << ctx.gv.size() << " control table\n";
-            }
-        }
-
-        ctx.gv.resize(ctx.gv.size() + metrics.hash_table_size);
 
         for (auto& m : methods) {
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
@@ -925,29 +886,22 @@ void runtime::install_gv() {
                 }
             }
 
-            m.info->slots_strides.pw = ctx.gv.data() + ctx.gv.size();
-            m.info->install_hash_factors(*this);
-
             if (m.info->arity() == 1) {
                 // Uni-methods just need an index in the method table.
-                m.info->slots_strides.i = m.slots[0];
+                *m.info->slots_strides_p = m.slots[0];
                 continue;
             }
 
             // multi-methods only
 
-            // TODO: experiment with putting the slots and strides in the
-            // method object instead of the global vector. This should speed
-            // up multi-methods a bit (one indirection), but not help
-            // uni-methods.
-
             auto slot_iter = m.slots.begin();
             auto stride_iter = m.strides.begin();
-            ctx.gv.emplace_back(make_word(*slot_iter++));
+            auto offsets_iter = m.info->slots_strides_p;
+            *offsets_iter++ = *slot_iter++;
 
             while (slot_iter != m.slots.end()) {
-                ctx.gv.emplace_back(make_word(*slot_iter++));
-                ctx.gv.emplace_back(make_word(*stride_iter++));
+                *offsets_iter++ = *slot_iter++;
+                *offsets_iter++ = *stride_iter++;
             }
 
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
@@ -964,12 +918,13 @@ void runtime::install_gv() {
                 [](void* pf) { return make_word(pf); });
         }
 
-        auto control_table = hash_table + metrics.hash_table_size;
-        ctx.gv[0].pw = control_table;
-
         for (auto& cls : classes) {
-            cls.mptr = ctx.gv.data() + ctx.gv.size() - cls.first_used_slot;
-
+            if (cls.first_used_slot == -1) {
+                // corner case: no methods for this class
+                cls.mptr = ctx.gv.data() + ctx.gv.size();
+            } else {
+                cls.mptr = ctx.gv.data() + ctx.gv.size() - cls.first_used_slot;
+            }
             if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
                 if (pass) {
                     ++trace << std::setw(4) << ctx.gv.size() << " mtbl for "
@@ -986,9 +941,11 @@ void runtime::install_gv() {
 
             if (pass) {
                 for (auto ti : cls.ti_ptrs) {
-                    auto index = ctx.hash(ti);
-                    hash_table[index].pw = cls.mptr;
-                    control_table[index].ti = ti;
+                    auto index = ctx.hash.unchecked_hash(ti);
+                    ctx.mptrs[index] = cls.mptr;
+                    ctx.hash.control[index] = ti;
+                    ctx.indirect_mptrs[index] = cls.intrusive_mptr;
+                    *cls.intrusive_mptr = cls.mptr;
                 }
             }
         }
@@ -1019,7 +976,7 @@ void runtime::optimize() {
 
                 if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
                     ++trace << "    " << cls->name() << " mtbl[" << slot
-                            << "] = gv+" << (pw - ctx.hash_table) << "\n";
+                            << "] = gv+" << (pw - ctx.gv.data()) << "\n";
                 }
 
                 cls->mptr[slot].pw = pw;
@@ -1111,7 +1068,7 @@ void runtime::print(const dispatch_stats_t& stats) const {
 
 void default_method_call_error_handler(
     const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
-    if constexpr (bool(trace_enabled)) {
+    if constexpr (bool(debug)) {
         const char* explanation[] = {
             "no applicable definition", "ambiguous call"};
         std::cerr << explanation[error.code - resolution_error::no_definition]
@@ -1136,23 +1093,31 @@ void default_error_handler(const error_type& error_v) {
         old_error.method_name = error->method->name();
         method_call_error_handler_p(
             std::move(old_error), error->arity, error->tis);
-        return;
+        abort();
     }
 
     if (auto error = std::get_if<unknown_class_error>(&error_v)) {
-        if constexpr (bool(trace_enabled)) {
+        if constexpr (bool(debug)) {
             std::cerr << "unknown class " << error->ti->name() << "\n";
         }
-        return;
+        abort();
+    }
+
+    if (auto error = std::get_if<method_table_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "invalid method table for " << error->ti->name()
+                      << "\n";
+        }
+        abort();
     }
 
     if (auto error = std::get_if<hash_search_error>(&error_v)) {
-        if constexpr (bool(trace_enabled & TRACE_RUNTIME)) {
+        if constexpr (bool(debug)) {
             std::cerr << "could not find hash factors after " << error->attempts
                       << " in " << error->duration.count() << "s using "
                       << error->buckets << " buckets\n";
         }
-        return;
+        abort();
     }
 }
 
@@ -1172,17 +1137,10 @@ namespace policy {
 catalog global_catalog::catalog;
 context global_context::context;
 
-void hash_factors_in_method::method_info_type::install_hash_factors(
-    runtime& rt) {
-    this->hash_table = rt.ctx.hash_table;
-    this->hash = rt.ctx.hash;
-}
-
 } // namespace policy
 
 void update_methods() {
-    detail::update_methods(
-        policy::default_policy::catalog, policy::default_policy::context);
+    detail::update_methods(default_policy::catalog, default_policy::context);
 }
 
 error_handler_type set_error_handler(error_handler_type handler) {

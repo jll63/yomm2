@@ -1,7 +1,8 @@
-<sub>/ [home](/README.md) / [reference](README.md) </sub>
-## yorel::yomm2::class_declaration
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
-<!---->
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+
+**yorel::yomm2::class_declaration**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+
 ---
 
 ```c++

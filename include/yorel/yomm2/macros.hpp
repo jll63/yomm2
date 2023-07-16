@@ -57,7 +57,7 @@
 #define YOMM2_DECLARE_3(R, ID, ARGS)                                           \
     yOMM2_DECLARE(                                                             \
         R, ID, ARGS, yOMM2_WHEN_NOT_STATIC,                                    \
-        ::yorel::yomm2::policy::default_policy)
+        ::yorel::yomm2::default_policy)
 
 #define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                   \
     yOMM2_DECLARE(R, ID, ARGS, yOMM2_WHEN_NOT_STATIC, POLICY)
@@ -65,7 +65,7 @@
 #define YOMM2_STATIC_DECLARE_3(R, ID, ARGS)                                    \
     yOMM2_DECLARE(                                                             \
         R, ID, ARGS, yOMM2_WHEN_STATIC,                                        \
-        ::yorel::yomm2::policy::default_policy)
+        ::yorel::yomm2::default_policy)
 
 #define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY)                            \
     yOMM2_DECLARE(R, ID, ARGS, yOMM2_WHEN_STATIC, POLICY)
