@@ -273,13 +273,12 @@ I presented the library at CppCon 2018. Here are [the video recording](https://w
 
 ## Roadmap
 
-YOMM2 has been stable (in the sense of being backward-compatible) for a years,
+YOMM2 has been stable (in the sense of being backward-compatible) for manyyears,
 but it is still evolving. Here are the items on which I intend to work in the
 future. No promises, no time table!
 
 * Speed up dispatch in presence of virtual inheritance.
 * Intrusive mode, &agrave; la YOMM11, for faster dispatch.
-* Fat pointers, carrying the method table pointer, for faster dispatch.
 * Static linking of dispatch data.
 * *Minimal* perfect hash tables as an option.
 * Multi-threaded hash search.
@@ -288,7 +287,7 @@ future. No promises, no time table!
   * use covariant return types for disambiguation
   * move support for `shared_ptr` and `unique_ptr` to an optional header
 * Go header-only.
-* 
+*
 If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 would appreciate it if you take the time to send me a description of your use
 case(s), and links to the project(s), if they are publicly available.
