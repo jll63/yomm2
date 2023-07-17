@@ -301,7 +301,7 @@ int main() {
 //   * use covariant return types for disambiguation
 //   * move support for `shared_ptr` and `unique_ptr` to an optional header
 // * Go header-only.
-// *
+
 // If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 // would appreciate it if you take the time to send me a description of your use
 // case(s), and links to the project(s), if they are publicly available.

@@ -63,14 +63,14 @@ option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 
 if(${YOMM2_ENABLE_DOC})
   message(STATUS "Documentation generation enabled")
-    set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
-    set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
-    add_custom_command(
-        OUTPUT "${readme_md}"
-        COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
-        DEPENDS "${readme_cpp}")
-    add_custom_target(README ALL DEPENDS "${readme_md}")
-    add_subdirectory(reference.in)
+  set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
+  set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
+  add_custom_command(
+      OUTPUT "${readme_md}"
+      COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
+      DEPENDS "${readme_cpp}")
+  add_custom_target(README ALL DEPENDS "${readme_md}")
+  add_subdirectory(reference.in)
   add_subdirectory(tutorials)
 endif()
 
