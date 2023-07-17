@@ -5,4 +5,4 @@
 
 ---
 
-These macros are deprecated. Use [register_classes](use_classes.md) or [YOMM2_CLASSES](None).
+These macros are deprecated. Use [register_classes](use_classes.md) or [YOMM2_CLASSES](use_classes.md).

@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
 #define BOOST_TEST_MODULE yomm2
@@ -55,7 +55,7 @@ YOMM2_DEFINE(string, name, (const Cat& cat)) {
 }
 
 BOOST_AUTO_TEST_CASE(initializing) {
-    update_methods();
+    update();
     const Animal& dog = Dog("spot");
     BOOST_TEST("dog spot" == name(dog));
     const Animal& cat = Cat("felix");
@@ -167,7 +167,7 @@ YOMM2_DEFINE(Subtype, zero_ptr, (diagonal_matrix * m)) {
 }
 
 BOOST_AUTO_TEST_CASE(simple) {
-    update_methods();
+    update();
 
     {
         const matrix& dense = dense_matrix();
@@ -230,7 +230,7 @@ void deprecated_test_handler(
 }
 
 BOOST_AUTO_TEST_CASE(deprecated_error_handling) {
-    update_methods();
+    update();
     set_method_call_error_handler(deprecated_test_handler);
 
     try {
@@ -269,7 +269,7 @@ void test_handler(const error_type& error_v) {
 }
 
 BOOST_AUTO_TEST_CASE(call_error_handling) {
-    update_methods();
+    update();
 
     set_error_handler(test_handler);
 
@@ -328,7 +328,7 @@ class_declaration<types<derived, base>, test_policy> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
     try {
-        detail::update_methods(test_policy::catalog, test_policy::context);
+        update<test_policy>();
     } catch (const unknown_class_error& error) {
         BOOST_TEST(error.ti == &typeid(base));
         return;
@@ -401,7 +401,7 @@ YOMM2_DEFINE(void, test, (Cat && cat)) {
 }
 
 BOOST_AUTO_TEST_CASE(moving) {
-    update_methods();
+    update();
 
     Dog dog;
     test(std::move(dog));

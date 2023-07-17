@@ -105,8 +105,8 @@ The header itself does not define any macros, except for its include guard
 The header consumes two macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
-* `YOMM2_TRACE`: controls tracing. This feature is, at the moment, not
-  documented.
+* `YOMM2_ENABLE_TRACE`: enables tracing. This feature is not documented at the
+  moment.
 * `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
 
 The header defines the following macros:
@@ -143,6 +143,12 @@ etc).
 This was the recommended header before version 1.3.0. Includes
 `<yorel/yomm2/core.hpp>` and `<yorel/yomm2/macros.hpp>`.
 
+## Libraries
+
+40488
+99424
+~58K
+
 ## Index
 
 | name                             | type              | purpose                                                                  |
@@ -163,7 +169,6 @@ This was the recommended header before version 1.3.0. Includes
 | [method_call_error_handler](method_call_error.md)      | type              | type of a function called when a method call fails                       |
 | [method_container](method_container.md)               | macro             | declares a method definition container                                   |
 | [method_definition](method_definition.md)              | macro             | retrieves a definition from a container                                  |
-| [method_table](None)                   | template          | method table                                                             |
 | [register_class](register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
 | [register_classes](use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
 | [resolution_error](set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
@@ -171,13 +176,14 @@ This was the recommended header before version 1.3.0. Includes
 | [set_error_handler](set_error_handler.md)              | function          | sets the function called for all errors                                  |
 | [set_method_call_error_handler](method_call_error.md)  | function          | sets function to call when a method call fails                           |
 | [unknown_class_error](set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |
-| [update_methods](update_methods.md)                 | function          | sets up dispatch tables                                                  |
+| [update](update.md)                         | function          | sets up dispatch tables                                                  |
+| [update_methods](update_methods.md)                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
 | [use_classes](use_classes.md)                    | class template    | registers classes and their inheritance relationships                    |
 | [virtual_](virtual_.md)                       | class template    | marks a method parameter as virtual                                      |
 | [virtual_ptr](virtual_ptr.md)                    | class template    | fat pointer for optimal method dispatch                                  |
 | [virtual_shared_ptr](virtual_ptr.md)             | class template    | `virtual_ptr` using a `std::shared_ptr`                                  |
 | [YOMM2_CLASS](register_class.md)                    | macro             | same as `register_class` (deprecated)                                    |
-| [YOMM2_CLASSES](None)                  | macro             | same as `register_classes`                                               |
+| [YOMM2_CLASSES](use_classes.md)                  | macro             | same as `register_classes`                                               |
 | [YOMM2_DECLARE](declare_method.md)                  | macro             | same as `declare_method`                                                 |
 | [YOMM2_DECLARE_METHOD_CONTAINER](method_container.md) | macro             | same as `method_container`                                               |
 | [YOMM2_DEFINE](define_method.md)                   | macro             | same as `define_method`                                                  |

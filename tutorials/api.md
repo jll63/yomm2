@@ -82,7 +82,7 @@ be used for this purpose.
 
 What about `next`? The constructor of `add_function` can be passed a pointer
 to a function that will be set to the function's next definition by
-`update_methods`. The pointer type is available in the method as `next_type`.
+`update`. The pointer type is available in the method as `next_type`.
 
 
 ```c++
@@ -103,7 +103,7 @@ declaration, minus the `virtual_<>` decorators.
 
 ```c++
 BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
-    update_methods();
+    update();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
     BOOST_TEST(kick_method::fn(*snoopy) == "bark");
@@ -202,7 +202,7 @@ kick_method::add_definition<kick_dog> YOMM2_GENSYM;
 
 This may not seem like a huge improvement, until we need a `next` function.
 If the container has a static member variable called `next`, and it is of the
-appropriate type, `add_definition` will pick it up for `update_methods` to
+appropriate type, `add_definition` will pick it up for `update` to
 fill. Static member variables are a bit clumsy, because, unlike functions,
 they must be declared inside the class, and defined outside. Methods have a
 nested CRTP helper to inject a `next` into a container.

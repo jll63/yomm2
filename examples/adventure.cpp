@@ -62,7 +62,7 @@ define_method(std::string, fight, (Character & x, Dragon& y, Hands& z)) {
 }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     std::unique_ptr<Character> bob = std::make_unique<Character>(),
                                rambo = std::make_unique<Warrior>();

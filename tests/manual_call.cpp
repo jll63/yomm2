@@ -49,9 +49,9 @@ auto call_kick(Dog& obj) {
 }
 
 auto call_kick_manual(Dog& obj) {
-    const auto hash_table = policy::global_context::context.mptrs.data();
-    const auto mult = policy::global_context::context.hash.mult;
-    const auto shift = policy::global_context::context.hash.shift;
+    const auto hash_table = default_policy::context.mptrs.data();
+    const auto mult = default_policy::context.hash.mult;
+    const auto shift = default_policy::context.hash.shift;
     const auto index = kick::fn.slots_strides[0];
     const auto vptr = *(void***) &obj; // typeid 1
 	// movq	    context+24(%rip), %r8
@@ -59,7 +59,7 @@ auto call_kick_manual(Dog& obj) {
 	// movb	    context+40(%rip), %cl
 	// movslq	method<kick_, char const* (virtual_<Dog&>)>::fn+96(%rip), %rsi
     // movq	    (%rdi), %rax
-    
+
     const auto h1 = mult * std::uintptr_t(vptr[-1]) /* typeid 2*/;
 	// imulq	-8(%rax), %rdx
 
@@ -78,7 +78,7 @@ auto call_kick_manual(Dog& obj) {
 #include <boost/test/included/unit_test.hpp>
 
 BOOST_AUTO_TEST_CASE(test_manual_call) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     Dog o;
     BOOST_TEST(call_kick_manual(o) == std::string("bark"));
 }

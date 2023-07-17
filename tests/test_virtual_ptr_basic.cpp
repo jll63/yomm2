@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include <iostream>
 #include <memory>
@@ -40,7 +40,7 @@ using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_value) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         }
     });
 
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     bool threw = false;
 
     try {
@@ -100,7 +100,7 @@ using kick = method<void, void(const virtual_ptr<Animal>&, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_reference) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;
@@ -122,7 +122,7 @@ using kick = method<void, void(virtual_shared_ptr<Animal>, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;
@@ -144,7 +144,7 @@ using kick = method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;
@@ -172,7 +172,7 @@ using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;

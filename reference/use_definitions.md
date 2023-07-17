@@ -69,13 +69,13 @@ use_definitions<
     definition,
     product< // 4
         types<same_type>,
-        types<ordinary_matrix, square_matrix, sparse_matrix>, 
+        types<ordinary_matrix, square_matrix, sparse_matrix>,
         types<ordinary_matrix, square_matrix, sparse_matrix>
     >
 > YOMM2_GENSYM; // 5
 
 BOOST_AUTO_TEST_CASE(reference_use_definitions) {
-    update_methods();
+    update();
 
     const abstract_matrix& ordinary = ordinary_matrix();
     const abstract_matrix& square = square_matrix();

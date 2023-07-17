@@ -3,9 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#define YOMM2_ENABLE_TRACE 3
-
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/runtime.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "test_policy.hpp"
@@ -70,7 +69,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    detail::update<Policy>();
+    update<Policy>();
 
     using vptr_player = virtual_ptr<Player, Policy>;
     static_assert(detail::is_virtual_ptr<vptr_player>);
@@ -105,7 +104,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         Policy::context.gv.resize(2 * Policy::context.gv.size());
     }
 
-    detail::update<Policy>();
+    update<Policy>();
 
     BOOST_TEST(
         (virtual_cat_ptr.method_table() == method_table<Bear, Policy>) ==
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    detail::update<Policy>();
+    update<Policy>();
 
     Bear bear;
     BOOST_TEST(kick::fn(virtual_ptr<Player, Policy>(bear)) == "growl");
@@ -188,7 +187,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    detail::update<Policy>();
+    update<Policy>();
 
     auto bear = make_virtual_shared<Bear, Policy>();
     auto warrior = make_virtual_shared<Warrior, Policy>();

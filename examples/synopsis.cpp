@@ -82,7 +82,7 @@ define_method(void, meet, (Cat& cat, Dog& dog, std::ostream& os)) {
 
 int main() {
     // Initialise method dispatch tables.
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     // Create a few objects.
     // Note that the actual classes are type-erased to base class Animal!
@@ -169,7 +169,7 @@ void call_meet(Animal& a, Animal& b, std::ostream& os) {
 	// shr	r9, cl                              ; index of method table for 'b'
 
 	// mov	rcx, qword ptr [rip + method+96]    ; offset of 'meet' in method table for 'a'
-    
+
 	// mov	r10, qword ptr [rax + 8*rcx]        ; pointer to row for 'a' in dispatch table
 	// mov	rcx, qword ptr [r8 + 8*r9]          ; method table for 'b'
 	// mov	rax, qword ptr [rip + method+104]   ; offset of 'meet' in method table for 'b'

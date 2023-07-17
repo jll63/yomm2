@@ -147,7 +147,7 @@ namespace { struct Init {
 Init init;
 } }
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 using yorel::yomm2::virtual_;
 
@@ -197,7 +197,7 @@ int main() {
     cout << visitor::toRPN(*expr) << " = " << expr->value() << "\n";
     cout << funtable::toRPN(*expr) << " = " << expr->value() << "\n";
 
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     cout << openmethods::toRPN(*expr) << " = " << expr->value() << "\n";
 
 

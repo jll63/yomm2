@@ -76,7 +76,7 @@ define_method(std::string, kick, (Bulldog* dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_example) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy;
     Bulldog hector;

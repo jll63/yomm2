@@ -23,15 +23,16 @@ namespace delphinus {
 class Dolphin : public interfaces::Animal {};
 }
 
-#include <yorel/yomm2/cute.hpp>
 #include <string>
+
+#include <yorel/yomm2/keywords.hpp>
 
 using yorel::yomm2::virtual_;
 
 register_classes(
-  interfaces::Animal, 
-  canis::Dog, canis::Bulldog, 
-  felis::Cat, 
+  interfaces::Animal,
+  canis::Dog, canis::Bulldog,
+  felis::Cat,
   delphinus::Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
@@ -79,7 +80,7 @@ define_method(std::string, meet, (felis::Cat& cat, canis::Dog& dog)) {
 
 int main()
 {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     std::unique_ptr<interfaces::Animal>
         hector = std::make_unique<canis::Bulldog>(),

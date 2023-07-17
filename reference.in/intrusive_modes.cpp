@@ -82,7 +82,7 @@ void call_meet(Animal& a, Animal& b) {
 register_classes(Animal, Dog);
 
 BOOST_AUTO_TEST_CASE(reference_direct_intrusive) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     Dog dog;
     call_kick(dog);
     call_meet(dog, dog);
@@ -128,12 +128,12 @@ error is raised. This helps detect missing `derived` specifications.
 The second template argument - either `direct`, the default, or `indirect` -
 specifies how the method pointer is stored inside the objects. In `direct` mode,
 it is a straight pointer to the method table. While such objects exist,
-`update_methods` cannot be called safely (for example, after dynamically loading
+`update` cannot be called safely (for example, after dynamically loading
 a library), because the pointers would be invalidated.
 
 In indirect mode, objects contains a pointer to a pointer to the method
 table. Because of the indirection, this makes method calls slightly slower, but
-`update_methods` can be safely called at any time.
+`update` can be safely called at any time.
 
 Intrusive mode works with multiple inheritance, but not with repeated
 inheritance, just like the orthogonal mode [^1]. If a class inherits from more
@@ -188,7 +188,7 @@ define_method(void*, sell, (Dog & dog)) {
 #endif
 
 BOOST_AUTO_TEST_CASE(reference_direct_intrusive_mi) {
-    yomm2::update_methods();
+    yomm2::update();
     Pitbull dog;
     Animal& animal = dog;
     Property& property = dog;

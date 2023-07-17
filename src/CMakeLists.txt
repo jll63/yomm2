@@ -4,27 +4,34 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
+
 if(YOMM2_SHARED)
   message(STATUS "Building a shared library")
   add_library(yomm2 SHARED)
+  target_sources(yomm2 PRIVATE yomm2.cpp)
   if(NOT WIN32)
     target_compile_options(yomm2 PRIVATE -fvisibility=hidden)
   endif()
-  target_compile_definitions(yomm2
-    PUBLIC -DYOMM2_SHARED=1
+  target_compile_definitions(yomm2 PUBLIC -DYOMM2_SHARED=1)
+  target_include_directories(
+    yomm2 PUBLIC
+    $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
   )
+  target_link_libraries(yomm2 PUBLIC Boost::headers)
 else()
-    add_library(yomm2 STATIC)
+  message(STATUS "Building a headers only library")
+  add_library(yomm2 INTERFACE)
+  target_include_directories(
+    yomm2 INTERFACE
+    $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:Boost::yomm2>
+  )
+  target_link_libraries(yomm2 INTERFACE Boost::headers)
 endif()
 
-target_sources(yomm2 PRIVATE yomm2.cpp)
-
-target_include_directories(yomm2 PUBLIC
-  $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>
-  PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
-)
-target_link_libraries(yomm2 PUBLIC Boost::headers)
 
 install(TARGETS yomm2
   EXPORT YOMM2Targets

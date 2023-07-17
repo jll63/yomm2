@@ -3,14 +3,11 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <iostream>
-#include <type_traits>
-#include <yorel/yomm2.hpp>
+#include "yorel/yomm2/detail/chain.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
-using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
 struct value : chain<value>::link {

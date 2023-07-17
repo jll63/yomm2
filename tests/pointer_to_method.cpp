@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include <string>
 
@@ -34,7 +34,7 @@ define_method(std::string, kick, (Dog & dog))
 
 BOOST_AUTO_TEST_CASE(noadl)
 {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     auto stimulus = &kick;
     Dog snoopy;
     Animal &animal = snoopy;

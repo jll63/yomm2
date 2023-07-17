@@ -2,6 +2,7 @@
 #define YOREL_YOMM2_CORE_INCLUDED
 
 #include <chrono>
+#include <iostream>
 #include <memory>
 #include <string_view>
 #include <variant>
@@ -58,8 +59,22 @@ using error_type = std::variant<
     method_table_error>;
 
 using error_handler_type = void (*)(const error_type& error);
+error_handler_type set_error_handler(error_handler_type handler);
 
-yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
+// deprecated
+
+struct method_call_error {
+    resolution_error::status_type code;
+    static constexpr auto not_implemented = resolution_error::no_definition;
+    static constexpr auto ambiguous = resolution_error::ambiguous;
+    std::string_view method_name;
+};
+
+using method_call_error_handler = void (*)(
+    const method_call_error& error, size_t arity,
+    const std::type_info* const tis[]);
+
+// end deprecated
 
 namespace detail {
 
@@ -78,7 +93,96 @@ union word {
 
 using ti_ptr = const std::type_info*;
 
-extern yOMM2_API error_handler_type error_handler;
+template<typename Iterator>
+struct range {
+    Iterator first, last;
+    Iterator begin() const {
+        return first;
+    }
+    Iterator end() const {
+        return last;
+    }
+};
+
+template<typename Iterator>
+range(Iterator b, Iterator e) -> range<Iterator>;
+
+struct tip {
+    const ti_ptr ptr;
+};
+
+inline std::ostream& operator<<(std::ostream& os, tip t) {
+    return os << t.ptr->name() << "(" << t.ptr << ")";
+}
+
+inline std::ostream&
+operator<<(std::ostream& os, const range<const ti_ptr*>& tips) {
+    os << "(";
+    const char* sep = "";
+    for (auto t : tips) {
+        os << sep << tip{t};
+        sep = ", ";
+    }
+
+    return os << ")";
+}
+
+inline void default_method_call_error_handler(
+    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
+    if constexpr (bool(debug)) {
+        const char* explanation[] = {
+            "no applicable definition", "ambiguous call"};
+        std::cerr << explanation[error.code - resolution_error::no_definition]
+                  << " for " << error.method_name << "(";
+        auto comma = "";
+        for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
+            std::cerr << comma << ti->name();
+            comma = ", ";
+        }
+        std::cerr << ")\n" << std::flush;
+    }
+    abort();
+}
+
+inline method_call_error_handler method_call_error_handler_p =
+    default_method_call_error_handler;
+
+inline void default_error_handler(const error_type& error_v) {
+    if (auto error = std::get_if<resolution_error>(&error_v)) {
+        method_call_error old_error;
+        old_error.code = error->status;
+        old_error.method_name = error->method->name();
+        method_call_error_handler_p(
+            std::move(old_error), error->arity, error->tis);
+        abort();
+    }
+
+    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "unknown class " << error->ti->name() << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<method_table_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "invalid method table for " << error->ti->name()
+                      << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<hash_search_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "could not find hash factors after " << error->attempts
+                      << " in " << error->duration.count() << "s using "
+                      << error->buckets << " buckets\n";
+        }
+        abort();
+    }
+}
+
+inline error_handler_type error_handler = detail::default_error_handler;
 
 struct hash_function {
     std::uintptr_t mult;
@@ -92,6 +196,7 @@ struct hash_function {
 
     auto operator()(ti_ptr tip) const {
         auto index = unchecked_hash(tip);
+        const void* test = &control;
 
         if constexpr (debug) {
             auto control_tip = control[index];
@@ -138,9 +243,6 @@ using default_policy = policy::basic_policy;
 template<typename Class, typename... Rest>
 struct class_declaration;
 
-struct direct;
-struct indirect;
-
 template<
     class Class, class Policy = default_policy,
     bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
@@ -149,28 +251,17 @@ class virtual_ptr;
 } // namespace yomm2
 } // namespace yorel
 
-#include <yorel/yomm2/detail.hpp>
+#include "detail.hpp"
 
 namespace yorel {
 namespace yomm2 {
 
-// deprecated
-
-struct method_call_error {
-    resolution_error::status_type code;
-    static constexpr auto not_implemented = resolution_error::no_definition;
-    static constexpr auto ambiguous = resolution_error::ambiguous;
-    std::string_view method_name;
-};
-
-using method_call_error_handler = void (*)(
-    const method_call_error& error, size_t arity,
-    const std::type_info* const tis[]);
-
-yOMM2_API method_call_error_handler
-set_method_call_error_handler(method_call_error_handler handler);
-
-// end deprecated
+inline method_call_error_handler yOMM2_API
+set_method_call_error_handler(method_call_error_handler handler) {
+    auto prev = detail::method_call_error_handler_p;
+    detail::method_call_error_handler_p = handler;
+    return prev;
+}
 
 template<typename T>
 struct virtual_;
@@ -184,8 +275,8 @@ struct catalog {
         return *this;
     }
 
-    static_chain<detail::class_info> classes;
-    static_chain<detail::method_info> methods;
+    detail::static_chain<detail::class_info> classes;
+    detail::static_chain<detail::method_info> methods;
 };
 
 namespace policy {
@@ -200,13 +291,16 @@ struct abstract_policy {
     ;
 };
 
-struct yOMM2_API global_context : virtual abstract_policy {
+template<class Policy>
+struct with_scope : virtual abstract_policy {
     static struct context context;
-};
-
-struct yOMM2_API global_catalog : virtual abstract_policy {
     static struct catalog catalog;
 };
+
+template<class Policy>
+catalog with_scope<Policy>::catalog;
+template<class Policy>
+context with_scope<Policy>::context;
 
 template<class Policy>
 struct with_method_tables {
@@ -223,8 +317,10 @@ static detail::mptr_type method_table;
 template<typename>
 static detail::mptr_type* indirect_method_table;
 
-struct basic_policy : global_catalog, global_context {
+struct yOMM2_API basic_policy : virtual abstract_policy {
     using method_info_type = detail::method_info;
+    static struct context context;
+    static struct catalog catalog;
 };
 
 } // namespace policy
@@ -253,10 +349,10 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
     size_t slots_strides[arity == 1 ? 1 : 2 * arity - 1];
     // For 1-method: the offset of the method in the method table, which
     // contains a pointer to a function.
-    // For multi-methods: the offset of the first virtual argument in the method
-    // table, which contains a pointer to the corresponding cell in the dispatch
-    // table, followed by the offset of the second argument and the stride in
-    // the second dimension, etc.
+    // For multi-methods: the offset of the first virtual argument in the
+    // method table, which contains a pointer to the corresponding cell in
+    // the dispatch table, followed by the offset of the second argument and
+    // the stride in the second dimension, etc.
 
     static method fn;
     static function_pointer_type fake_definition;
@@ -318,10 +414,10 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
                 call_trace << " slot = " << slot;
             }
 
-            // The first virtual parameter is special.  Since its stride is 1,
-            // there is no need to store it. Also, the method table contains a
-            // pointer into the multi-dimensional dispatch table, already
-            // resolved to the appropriate group.
+            // The first virtual parameter is special.  Since its stride is
+            // 1, there is no need to store it. Also, the method table
+            // contains a pointer into the multi-dimensional dispatch table,
+            // already resolved to the appropriate group.
             auto dispatch = mptr[slot].pw;
 
             if constexpr (bool(trace_enabled & TRACE_CALLS)) {
@@ -793,12 +889,32 @@ inline auto make_virtual_shared() {
     return virtual_shared_ptr<Class, Policy>(std::make_shared<Class>());
 }
 
-// =============================================================================
-// update_methods
+inline error_handler_type set_error_handler(error_handler_type handler) {
+    auto prev = detail::error_handler;
+    detail::error_handler = handler;
+    return prev;
+}
 
-yOMM2_API void update_methods();
+template<class Policy>
+yOMM2_API void update();
+
+#ifdef YOMM2_SHARED
+yOMM2_API void update();
+#else
+yOMM2_API inline void update() {
+    update<default_policy>();
+}
+#endif
+
+[[deprecated("use update() instead")]] yOMM2_API inline void update_methods() {
+    update();
+}
 
 } // namespace yomm2
 } // namespace yorel
+
+#ifndef YOMM2_SHARED
+    #include <yorel/yomm2/runtime.hpp>
+#endif
 
 #endif

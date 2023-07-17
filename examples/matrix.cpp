@@ -107,7 +107,7 @@ int main() {
     using std::cout;
     using std::cerr;
 
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     shared_ptr<const matrix> a = make_shared<dense_matrix>();
     shared_ptr<const matrix> b = make_shared<diagonal_matrix>();

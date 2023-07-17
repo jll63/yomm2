@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include <iostream>
 #include <memory>
@@ -20,6 +20,6 @@ using std::cout;
 // }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
     return 0;
 }

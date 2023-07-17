@@ -105,8 +105,8 @@ The header itself does not define any macros, except for its include guard
 The header consumes two macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
-* `YOMM2_TRACE`: controls tracing. This feature is, at the moment, not
-  documented.
+* `YOMM2_ENABLE_TRACE`: enables tracing. This feature is not documented at the
+  moment.
 * `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
 
 The header defines the following macros:
@@ -143,6 +143,12 @@ etc).
 This was the recommended header before version 1.3.0. Includes
 `<yorel/yomm2/core.hpp>` and `<yorel/yomm2/macros.hpp>`.
 
+## Libraries
+
+40488
+99424
+~58K
+
 ## Index
 
 | name                             | type              | purpose                                                                  |
@@ -163,7 +169,6 @@ This was the recommended header before version 1.3.0. Includes
 | ->method_call_error_handler      | type              | type of a function called when a method call fails                       |
 | ->method_container               | macro             | declares a method definition container                                   |
 | ->method_definition              | macro             | retrieves a definition from a container                                  |
-| ->method_table                   | template          | method table                                                             |
 | ->register_class                 | macro             | registers a class and its bases (deprecated)                             |
 | ->register_classes               | macro             | registers classes and their inheritance relationships                    |
 | ->resolution_error               | class             | method call does not resolve to exactly one definition                   |
@@ -171,7 +176,8 @@ This was the recommended header before version 1.3.0. Includes
 | ->set_error_handler              | function          | sets the function called for all errors                                  |
 | ->set_method_call_error_handler  | function          | sets function to call when a method call fails                           |
 | ->unknown_class_error            | class             | class used in method declaration, definition, or call was not registered |
-| ->update_methods                 | function          | sets up dispatch tables                                                  |
+| ->update                         | function          | sets up dispatch tables                                                  |
+| ->update_methods                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
 | ->use_classes                    | class template    | registers classes and their inheritance relationships                    |
 | ->virtual_                       | class template    | marks a method parameter as virtual                                      |
 | ->virtual_ptr                    | class template    | fat pointer for optimal method dispatch                                  |

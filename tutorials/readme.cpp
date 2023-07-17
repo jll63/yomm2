@@ -101,7 +101,7 @@ define_method(std::string, to_json, (const diagonal_matrix& m)) {
 }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     const matrix& a = dense_matrix();
     const matrix& b = diagonal_matrix();
@@ -116,21 +116,35 @@ int main() {
 
 // md<
 
-// The `declare_method` line declares an open method called `to_json`that takes
-// one virtual argument of type `const matrix&` and returns a std::string. The
+// `<yorel/yomm2/keywords.hpp>` is the library's main entry point. It declares a
+// set of macros, and injects a single name, ->`virtual_`, in the global
+// namespace. The purpose of the header is to make it look as if open methods
+// are part of the language.
+
+// ->`register_classes` informs the library of the existence of the classes, and
+// their inheritance relationships. Any class that can appear in a method call
+// needs to be registered, even if it is not directly referenced by a method.
+
+// `declare_method` declares an open method called `to_json`, which takes one
+// virtual argument of type `const matrix&` and returns a std::string. The
 // `virtual_<>` decorator specifies that the argument must be taken into account
 // to select the appropriate specialization. In essence, this is the same thing
 // as having a `virtual std::string to_json() const` inside class Matrix -
 // except that the virtual function lives outside of any classes, and you can
-// add as many as you want without changing the classes.
-// NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
-// permitted.
+// add as many as you want without changing the classes. NOTE: DO NOT specify
+// argument names, i.e. `virtual_<const matrix&> arg` is _not permitted_.
 
-// The following `define_method` blocks define two implementations for the
-// `to_json` method: one for dense matrices, and one for diagonal matrices.
+// `define_method` defines two implementations for the `to_json` method: one for
+// dense matrices, and one for diagonal matrices.
 
-// `yorel::yomm2::update_methods()` must be called before any method is called,
-// and after dynamically loading and unloading shared libraries.
+// `yorel::yomm2::update()` creates the dispatch tables; it must be called
+// before any method is called, and after dynamically loading and unloading
+// shared libraries.
+
+// The example can be compiled (from the root of the repository) with:
+// ```shell
+// clang++-14 -I include -std=c++17 tutorials/readme.cpp -o example
+// ```
 
 // ### Multiple Dispatch
 
@@ -201,9 +215,7 @@ int main() {
 // make
 // ```
 
-// By default, YOMM2 is built as a static library. It can also be built as a shared
-// library by adding -DYOMM2_SHARED=1 to the `cmake` invocation.
-// If you want to run the tests:
+// If you want to run the tests, specify it when running `cmake`:
 
 // ```
 // cmake .. -DYOMM2_ENABLE_TESTS=1
@@ -216,24 +228,24 @@ int main() {
 
 // 2. Boost.Test: only used to run the test suite
 
-// If these libraries are already available on your machine, and they can be found
-// by `cmake`, they will be used. In this case, make sure that the pre-installed
-// libraries are at version 1.74 or above. If Boost is not found, the latest
-// version will be downloaded, and the Boost headers mentioned in section (1) will
-// be installed along YOMM2 (if you decide to `make install`).
+// If these libraries are already available on your machine, and they can be
+// found by `cmake`, they will be used. In this case, make sure that the
+// pre-installed libraries are at version 1.74 or above. If Boost is not found,
+// the latest version will be downloaded, and the Boost headers mentioned in
+// section (1) will be installed along YOMM2 (if you decide to `make install`).
 
 // If you also want to run the benchmarks (and in this case you really want a
 // release build):
 
 // ```
 // cmake .. -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
-// make && tests/benchmarks # wow it's fast!
+// make && tests/benchmarks
 // ```
 // This will automatically download the dependency
 // [benchmark](https://github.com/google/benchmark), build it and finally install
 // it to `./extern` within the root directory of yomm2.
 
-// Finally, if you like it and you want to install it:
+// If you like YOMM2, and you want to install it:
 
 // ```
 // # either:
@@ -241,25 +253,37 @@ int main() {
 // # or:
 // make install DESTDIR=/path/to/my/libs
 // ```
-// This will install the library and headers, as well as a CMake package
-// configuration.
 
-// Once this is done, link with `libyomm2.a` or `libyomm2.so`. For example:
+// This will install the headers and a CMake package configuration. By default,
+// YOMM2 is installed as a headers only library. The examples can be compiled
+// like this (after installation):
 
 // ```
-// clang++ -std=c++17 synopsis.cpp -o synopsis -lyomm2
+// clang++ -std=c++17 -O3 examples/synopsis.cpp -o synopsis
 // ```
 
-// A CMake package configuration is also installed. If the install location is in
-// `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2, then
-// `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary include
-// paths and the library. See [this example](examples/cmakeyomm2).
+// Or directly from the repository (i.e. without installing):
 
-// Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
-// `find_package(YOMM2)` from your including project. For linking, the use
-// `target_link_library(<your_target> YOMM2::yomm2)`. This will automatically add
-// the necessary include directories, so this should be all you need to do to link
-// to yomm2.
+// ```
+// clang++ -std=c++17 -O3 -Iinclude examples/synopsis.cpp -o synopsis
+// ```
+
+// The YOMM2 runtime - responsible for building the dispatch tables - adds ~75K
+// to the image, or ~64K after stripping.
+
+// The runtime can also be built and installed as a shared library, by adding
+// -DYOMM2_SHARED=1 to the `cmake` command line.
+
+// A CMake package configuration is also installed. If the install location is
+// in `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2,
+// then `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary
+// include paths and the library. See [this example](examples/cmakeyomm2).
+
+// Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can
+// use `find_package(YOMM2)` from your including project. For linking, the use
+// `target_link_library(<your_target> YOMM2::yomm2)`. This will automatically
+// add the necessary include directories, so this should be all you need to do
+// to link to yomm2.
 
 // ## Going Further
 
@@ -283,16 +307,18 @@ int main() {
 // * [friendship: an example with namespaces, method containers and friend
 //   declarations](examples/containers)
 
-// I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
+// I presented the library at CppCon 2018. Here are [the video
+// recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the
+// slides](https://jll63.github.io/yomm2/slides/).
 
 // ## Roadmap
 
-// YOMM2 has been stable (in the sense of being backward-compatible) for manyyears,
-// but it is still evolving. Here are the items on which I intend to work in the
-// future. No promises, no time table!
+// YOMM2 has been stable (in the sense of being backward-compatible) for many
+// years, but it is still evolving. Here are the items on which I intend to work
+// in the future. No promises, no time table.
 
-// * Speed up dispatch in presence of virtual inheritance.
-// * Intrusive mode, &agrave; la YOMM11, for faster dispatch.
+// * Dispatch on `std::any` and `std::variant`.
+// * Tunable runtime.
 // * Static linking of dispatch data.
 // * *Minimal* perfect hash tables as an option.
 // * Multi-threaded hash search.
@@ -300,7 +326,6 @@ int main() {
 // * Get closer to Stroustrup et al's papers (version 2.0):
 //   * use covariant return types for disambiguation
 //   * move support for `shared_ptr` and `unique_ptr` to an optional header
-// * Go header-only.
 
 // If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 // would appreciate it if you take the time to send me a description of your use

@@ -19,6 +19,7 @@ int main() {}
 #include <utility>
 
 #include <benchmark/benchmark.h>
+
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/intrusive.hpp>
 #include <yorel/yomm2/templates.hpp>
@@ -544,7 +545,7 @@ int main(int argc, char** argv) {
         >
     > YOMM2_GENSYM;
 
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     mp_for_each<mp_iota_c<NH>>([](auto I_value) {
         using I = decltype(I_value);

@@ -20,7 +20,7 @@ define_method(string, encounter, (const Animal&, const Animal&)) {
 }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     cout << "Before loading library\n";
     cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
@@ -44,7 +44,7 @@ int main() {
     }
 
     cout << "\nAfter loading library\n";
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     using make_tyget_type = Animal* (*)();
     make_tyget_type make_tiger =
@@ -62,7 +62,7 @@ int main() {
     dlclose(handle);
 
     cout << "\nAfter unloading library\n";
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     cout << "encounter(Cow(), Wolf()) -> " << encounter(Cow(), Wolf()) << endl;
     cout << "encounter(Wolf(), Cow()) -> " << encounter(Wolf(), Cow()) << endl;

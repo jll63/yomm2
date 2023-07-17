@@ -53,7 +53,7 @@ Payroll::pay_functions YOMM2_GENSYM;
 #include <boost/test/included/unit_test.hpp>
 
 BOOST_AUTO_TEST_CASE(member_method) {
-    update_methods();
+    update();
 
     Payroll pr;
     const Employee& alice = Employee();

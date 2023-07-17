@@ -37,7 +37,7 @@ message to `std::cerr` in debug mode.
 
 The handler can determine the exact type of the error by examining the
 variant:
-- `hash_search_error`: ->update_methods could not find a hash function for
+- `hash_search_error`: ->update could not find a hash function for
   the registered classes.
 - `resolution_error`: there is no applicable definition for the arguments of
   a method call or (next)[method.md#add_definition], or it is ambiguous; the
@@ -95,7 +95,7 @@ void no_definition_handler(const error_type& ev) {
 
 BOOST_AUTO_TEST_CASE(reference_set_error_handler_example) {
     next_error_handler = set_error_handler(no_definition_handler);
-    update_methods();
+    update();
 
     try {
         Dog snoopy;

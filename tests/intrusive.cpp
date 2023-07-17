@@ -3,9 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#define YOMM2_ENABLE_TRACE 3
-
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/runtime.hpp>
 #include <yorel/yomm2/intrusive.hpp>
 #include <yorel/yomm2/templates.hpp>
 
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         typename fight::template add_function<fight_bear<Warrior, Axe, Bear>>
             YOMM2_GENSYM;
 
-    detail::update<Policy>();
+    update<Policy>();
 
     Bear bear;
     Warrior warrior;
@@ -121,7 +120,7 @@ BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
         }
     });
 
-    detail::update<policy>();
+    update<policy>();
 
     try {
         Dog snoopy;

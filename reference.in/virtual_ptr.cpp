@@ -32,7 +32,7 @@ passing by value should be preferred, as it makes it possible to pass the two
 embedded pointers via registers. However, see the paragraph about
 specializations below.
 
-*Note*: calling `update_methods` invalidates existing `virtual_ptr`s.
+*Note*: calling `update` invalidates existing `virtual_ptr`s.
 
 ### Template parameters
 
@@ -185,7 +185,7 @@ function calls, because they do not require a hash table lookup, unlike calls
 made using the orthogonal mode. The lookup is performed only once, when the
 pointer is created via a call to the constructor, and the result is cached.
 
-Calling `update_methods` invalidates all the existing `virtual_ptr`s.
+Calling `update` invalidates all the existing `virtual_ptr`s.
 
 ## Example
 
@@ -240,7 +240,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(reference_virtual_ptr) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy, hector;
     Cat sylvester;
@@ -367,7 +367,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(reference_virtual_ptr_final) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy, hector;
     Cat sylvester;
@@ -420,7 +420,7 @@ define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_virtual_ptr_final_incorrect) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy;
     Animal& animal = snoopy;
@@ -506,7 +506,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(reference_make_virtual_shared) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     using yorel::yomm2::make_virtual_shared;
 

@@ -6,7 +6,7 @@
 // This exmaple is based on sample code provided by Github user matpen in
 // https://github.com/jll63/yomm2/issues/7
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 #include <iostream>
 
@@ -17,7 +17,7 @@ using yorel::yomm2::virtual_;
 using std::cout;
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     const geometries::Geometry& arc = geometries::Arc();
     const geometries::Geometry& segment = geometries::Segment();

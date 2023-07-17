@@ -37,6 +37,7 @@ the same namespace as the container itself.
 
 ```c++
 #include <string>
+
 #include <yorel/yomm2/keywords.hpp>
 
 method_container(kicks);
@@ -72,7 +73,7 @@ define_method(kicks, std::string, kick, (Bulldog* dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_example) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy("Snoopy");
     Bulldog hector("Hector");

@@ -4,7 +4,7 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 add_executable(chain chain.cpp)
-target_link_libraries(chain YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(chain YOMM2::yomm2)
 add_test(NAME chain COMMAND chain)
 
 add_executable(core core.cpp)

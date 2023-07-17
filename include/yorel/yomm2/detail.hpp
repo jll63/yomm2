@@ -22,15 +22,20 @@ struct dump_type {
     static_assert(std::is_same_v<T, yomm2_end_of_dump>);
 };
 
+template<class Policy>
 struct runtime;
-
-yOMM2_API void update_methods(catalog& cat, context& ht);
 
 namespace mp11 = boost::mp11;
 
 enum { TRACE_RUNTIME = 1, TRACE_CALLS = 2 };
-yOMM2_API extern std::ostream* logs;
-yOMM2_API extern unsigned trace_flags;
+
+#if defined(YOMM2_SHARED)
+extern yOMM2_API std::ostream* logs;
+extern yOMM2_API unsigned trace_flags;
+#else
+inline std::ostream* logs;
+inline unsigned trace_flags;
+#endif
 
 #if defined(YOMM2_ENABLE_TRACE)
 constexpr unsigned trace_enabled = YOMM2_ENABLE_TRACE;
@@ -836,11 +841,6 @@ struct use_classes_aux<types<Classes...>, ClassLists...>
 
 std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
-
-template<class Policy = default_policy>
-void update() {
-    update_methods(Policy::catalog, Policy::context);
-}
 
 } // namespace detail
 } // namespace yomm2

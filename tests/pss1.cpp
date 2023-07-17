@@ -8,7 +8,7 @@
 
 using std::string;
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 using yorel::yomm2::virtual_;
 
@@ -37,7 +37,7 @@ define_method(string, foobar, (C&)) {
 
 int main()
 {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     D d;
     B& db = d; // B part of D

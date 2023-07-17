@@ -38,7 +38,7 @@ T& ref(T& value) {
 }
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_basic) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         Dog dog;

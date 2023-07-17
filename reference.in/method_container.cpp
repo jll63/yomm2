@@ -1,6 +1,6 @@
 #ifdef YOMM2_MD
 
-hrefs: YOMM2_DECLARE_METHOD_CONTAINER 
+hrefs: YOMM2_DECLARE_METHOD_CONTAINER
 
 <sub>/ ->home / ->reference </sub>
 
@@ -42,6 +42,7 @@ the same namespace as the container itself.
 #ifdef YOMM2_CODE
 
 #include <string>
+
 #include <yorel/yomm2/keywords.hpp>
 
 method_container(kicks);
@@ -77,7 +78,7 @@ define_method(kicks, std::string, kick, (Bulldog* dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_example) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Dog snoopy("Snoopy");
     Bulldog hector("Hector");

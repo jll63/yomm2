@@ -1,25 +1,31 @@
 #ifndef YOREL_YOMM2_CHAIN_INCLUDED
 #define YOREL_YOMM2_CHAIN_INCLUDED
 
-#include <algorithm> // IWYU pragma: keep
+#include <algorithm>
 #include <cassert>
-#include <iterator> // IWYU pragma: keep
 
+namespace yorel {
+namespace yomm2 {
+namespace detail {
 template<typename T>
 class static_chain {
   public:
     static_chain(static_chain&) = delete;
     static_chain() = default;
 
-    explicit static_chain(int) : first(nullptr), removed_prev(nullptr) {}
+    explicit static_chain(int) : first(nullptr), removed_prev(nullptr) {
+    }
 
     class static_link {
       public:
         static_link(const static_link&) = delete;
         static_link() = default;
-        explicit static_link(int) : _next(nullptr) {}
+        explicit static_link(int) : _next(nullptr) {
+        }
 
-        T* next() { return _next; }
+        T* next() {
+            return _next;
+        }
 
       protected:
         friend class static_chain;
@@ -27,7 +33,8 @@ class static_chain {
     };
 
     struct link : static_link {
-        link() : static_link(0) {}
+        link() : static_link(0) {
+        }
     };
 
     void push_front(T& node) {
@@ -47,9 +54,10 @@ class static_chain {
         }
 
         if (removed_prev != nullptr && removed_prev != &node) {
-            iter = std::find_if(
-                iterator(removed_prev), end(),
-                [&node](T& other) { return other._next == &node; });
+            iter =
+                std::find_if(iterator(removed_prev), end(), [&node](T& other) {
+                    return other._next == &node;
+                });
             if (iter == end()) {
                 iter = std::find_if(
                     begin(), iterator(removed_prev),
@@ -78,11 +86,17 @@ class static_chain {
         using pointer = value_type*;
         using reference = value_type&;
 
-        iterator() : ptr(nullptr) {}
-        explicit iterator(T* p) : ptr(p) {}
+        iterator() : ptr(nullptr) {
+        }
+        explicit iterator(T* p) : ptr(p) {
+        }
 
-        reference operator*() { return *ptr; }
-        pointer operator->() { return ptr; }
+        reference operator*() {
+            return *ptr;
+        }
+        pointer operator->() {
+            return ptr;
+        }
 
         iterator& operator++() {
             assert(ptr);
@@ -107,9 +121,13 @@ class static_chain {
         T* ptr;
     };
 
-    iterator begin() { return iterator(first); }
+    iterator begin() {
+        return iterator(first);
+    }
 
-    iterator end() { return iterator(nullptr); }
+    iterator end() {
+        return iterator(nullptr);
+    }
 
     class const_iterator {
       public:
@@ -119,11 +137,17 @@ class static_chain {
         using pointer = value_type*;
         using reference = value_type&;
 
-        const_iterator() : ptr(nullptr) {}
-        explicit const_iterator(T* p) : ptr(p) {}
+        const_iterator() : ptr(nullptr) {
+        }
+        explicit const_iterator(T* p) : ptr(p) {
+        }
 
-        reference operator*() { return *ptr; }
-        pointer operator->() { return ptr; }
+        reference operator*() {
+            return *ptr;
+        }
+        pointer operator->() {
+            return ptr;
+        }
 
         const_iterator& operator++() {
             assert(ptr);
@@ -150,11 +174,17 @@ class static_chain {
         T* ptr;
     };
 
-    const_iterator begin() const { return const_iterator(first); }
+    const_iterator begin() const {
+        return const_iterator(first);
+    }
 
-    const_iterator end() const { return const_iterator(nullptr); }
+    const_iterator end() const {
+        return const_iterator(nullptr);
+    }
 
-    size_t size() const { return std::distance(begin(), end()); }
+    size_t size() const {
+        return std::distance(begin(), end());
+    }
 
   protected:
     T* first;
@@ -170,4 +200,7 @@ class chain : public static_chain<T> {
     }
 };
 
+} // namespace detail
+} // namespace yomm2
+} // namespace yorel
 #endif

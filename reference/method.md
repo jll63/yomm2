@@ -19,7 +19,7 @@ The method can be called via the singleton [`method::fn`](#fn). Method
 definitions can be added with the [`method::add_function`](#add_function) and
 [`method::add_definition`](#add_definition) class templates.
 
-At least one of the `Args` parameter types must be decorated with [virtual_](virtual_.md). 
+At least one of the `Args` parameter types must be decorated with [virtual_](virtual_.md).
 
 `Key` is a user-suplied type that makes it possible to have distinct methods
 with the same signature.
@@ -198,7 +198,7 @@ std::string pet_dog(Dog& dog) { return "wag tail"; }
 pet::add_function<pet_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(reference_method_example) {
-    yomm2::update_methods();
+    yomm2::update();
 
     std::unique_ptr<Animal>
         felix = std::make_unique<Cat>(),

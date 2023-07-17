@@ -27,8 +27,9 @@ create functions that can be picked via ADL.
 
 #ifdef YOMM2_CODE
 
-#include <yorel/yomm2/keywords.hpp>
 #include <string>
+
+#include <yorel/yomm2/keywords.hpp>
 
 struct Engineer { virtual ~Engineer() {} };
 struct SeniorEngineer : Engineer {};
@@ -58,7 +59,7 @@ define_method(std::string, no_adl::speak, (const SeniorEngineer& engineer)) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_love_adl) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         const Engineer &engineer = Engineer();
@@ -72,7 +73,7 @@ BOOST_AUTO_TEST_CASE(reference_love_adl) {
 }
 
 BOOST_AUTO_TEST_CASE(reference_hate_adl) {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     {
         const Engineer &engineer = Engineer();
@@ -86,4 +87,3 @@ BOOST_AUTO_TEST_CASE(reference_hate_adl) {
 }
 
 #endif
-

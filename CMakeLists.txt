@@ -74,10 +74,10 @@ if(${YOMM2_ENABLE_DOC})
   add_subdirectory(tutorials)
 endif()
 
-set(YOMM2_TRACE "" CACHE STRING "Set trace level (compile time)")
+option(YOMM2_ENABLE_TRACE "Enable trace (compile time)" OFF)
 
-if(NOT "${YOMM2_TRACE}" EQUAL "")
-  message(STATUS "Compiling with YOMM2_TRACE=${YOMM2_ENABLE_TRACE}")
+if(NOT "${YOMM2_ENABLE_TRACE}" EQUAL "")
+  message(STATUS "Compiling with YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE}")
   add_compile_definitions(YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE})
 endif()
 
@@ -94,18 +94,18 @@ write_basic_package_version_file(
 install(EXPORT YOMM2Targets
   FILE YOMM2Targets.cmake
   NAMESPACE YOMM2::
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+  DESTINATION lib/cmake/YOMM2
 )
 # Configure package config (tells using code about dependencies)
 configure_package_config_file(
   cmake/Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+  INSTALL_DESTINATION lib/cmake/YOMM2
 )
 # Copy config files to install directory
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/YOMM2ConfigVersion.cmake"
-  DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/cmake/YOMM2
+  DESTINATION lib/cmake/YOMM2
 )
 
 install(DIRECTORY include/yorel DESTINATION include)

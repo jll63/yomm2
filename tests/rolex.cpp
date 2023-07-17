@@ -4,7 +4,7 @@
 // clang++ -std=c++17 -I ~/dev/yomm2/include -o rolex rolex.cpp ~/dev/yomm2/src/yomm2.cpp && YOMM2_TRACE=1 ./rolex
 
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 using yorel::yomm2::virtual_;
 
@@ -71,7 +71,7 @@ define_method(bool, approve, (const Founder& r, const Expense& e, double amount)
 }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 }
 
 double call_pay(const Employee& emp) {

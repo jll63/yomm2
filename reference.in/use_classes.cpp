@@ -5,7 +5,7 @@
 entry:yomm2::use_classes
 headers: yorel/yomm2/core.hpp
 <br>
-entry: register_classes
+entry: register_classes, YOMM2_CLASSES
 headers: yorel/yomm2/cute.hpp, <yorel/yomm2/keywords.hpp
 <br>
 entry:YOMM2_CLASSES
@@ -45,7 +45,7 @@ release mode, and not all the classes have been registered, the program will
 segfault, or worse, the wrong method definition may be called.
 
 The time complexity of `use_classes` is O(n^2) a compile time and at runtime
-(during `update_methods`). If necessary, large hierarchies can be registered
+(during `update`). If necessary, large hierarchies can be registered
 incrementally.
 
 ## macros

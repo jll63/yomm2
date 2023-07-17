@@ -44,7 +44,7 @@ define_method(void, collideWith, (Spaceship& left, Spaceship& right)) {
 }
 
 int main() {
-    yorel::yomm2::update_methods();
+    yorel::yomm2::update();
 
     Asteroid  a1, a2;
     Spaceship s1, s2;
