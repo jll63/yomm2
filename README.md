@@ -1,8 +1,11 @@
+
+
 # YOMM2
 
 This library implements fast, open, multi-methods for C++17. It is strongly
 inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
+
 - [YOMM2](#yomm2)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
@@ -67,8 +70,6 @@ Let's look at an example.
 
 
 ```c++
-
-
 // -----------------------------------------------------------------------------
 // library code
 
@@ -108,8 +109,6 @@ int main() {
 
     return 0;
 }
-
-
 ```
 
 
@@ -120,7 +119,6 @@ to select the appropriate specialization. In essence, this is the same thing
 as having a `virtual std::string to_json() const` inside class Matrix -
 except that the virtual function lives outside of any classes, and you can
 add as many as you want without changing the classes.
-
 NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 permitted.
 
@@ -165,19 +163,23 @@ define_method(
 ## Performance
 
 Open methods are almost as fast as ordinary virtual member functions once you
-turn on optimization (-O2). With both `clang` and `gcc`, calling a method with
-one virtual argument takes 15-30% more time than calling the equivalent virtual
-member function. If the body of the method does any amount of work, the
-difference is unnoticeable. If the direct [intrusive
-mode](reference/intrusive_modes.md) is used, the overhead drops to 2%.
+turn on optimization (-O2). With both clang and gcc, dispatching a call to a
+method with one virtual argument takes 15-30% more time than calling the
+equivalent virtual member function (unless the call goes through a virtual
+base, which requires a dynamic cast). It does not involve branching or
+looping, only a few memory reads (which the CPU can be parallelize), a
+multiplication, a bit shift, a final memory read, then an indirect call. If
+the body of the method does any amount of work, the difference is
+unnoticeable. See the implementation notes for benchmarks and assembly
+listings.
 
 ## Building and Installing
 
 Make sure that you have the following dependencies:
 
-* a C++17 capable optimising compiler
+* a C++17 capable compiler
 
-* `cmake` version 3.20 or above
+* cmake version 3.20 or above
 
 Clone the repository:
 
@@ -197,7 +199,6 @@ make
 
 By default, YOMM2 is built as a static library. It can also be built as a shared
 library by adding -DYOMM2_SHARED=1 to the `cmake` invocation.
-
 If you want to run the tests:
 
 ```
@@ -236,6 +237,9 @@ sudo make install
 # or:
 make install DESTDIR=/path/to/my/libs
 ```
+This will install the library and headers, as well as a CMake package
+configuration.
+
 Once this is done, link with `libyomm2.a` or `libyomm2.so`. For example:
 
 ```
@@ -246,6 +250,12 @@ A CMake package configuration is also installed. If the install location is in
 `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2, then
 `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary include
 paths and the library. See [this example](examples/cmakeyomm2).
+
+Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
+`find_package(YOMM2)` from your including project. For linking, the use
+`target_link_library(<your_target> YOMM2::yomm2)`. This will automatically add
+the necessary include directories, so this should be all you need to do to link
+to yomm2.
 
 ## Going Further
 
@@ -291,3 +301,4 @@ future. No promises, no time table!
 If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 would appreciate it if you take the time to send me a description of your use
 case(s), and links to the project(s), if they are publicly available.
+

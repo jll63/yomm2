@@ -6,6 +6,16 @@
 // inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 // Stroustrup.
 
+// - [YOMM2](#yomm2)
+//   - [TL;DR](#tldr)
+//   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
+//     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
+//     - [Multiple Dispatch](#multiple-dispatch)
+//   - [Performance](#performance)
+//   - [Building and Installing](#building-and-installing)
+//   - [Going Further](#going-further)
+//   - [Roadmap](#roadmap)
+
 // ## TL;DR
 
 // If you are familiar with the concept of open multi-methods, or if you prefer
@@ -49,8 +59,8 @@
 // Problem](http://wiki.c2.com/?ExpressionProblem):
 
 // ```
-// behaviors += types
-// types += behaviors
+// existing behaviors += new types
+// existing types += new behaviors
 // ```
 
 // This is exactly what Open Methods are all about: solving the Expression
@@ -112,8 +122,7 @@ int main() {
 // to select the appropriate specialization. In essence, this is the same thing
 // as having a `virtual std::string to_json() const` inside class Matrix -
 // except that the virtual function lives outside of any classes, and you can
-// add as many as you want without the classes.
-
+// add as many as you want without changing the classes.
 // NOTE: DO NOT specify argument names, i.e. `virtual_<const matrix&> arg` is not
 // permitted.
 
@@ -192,6 +201,8 @@ int main() {
 // make
 // ```
 
+// By default, YOMM2 is built as a static library. It can also be built as a shared
+// library by adding -DYOMM2_SHARED=1 to the `cmake` invocation.
 // If you want to run the tests:
 
 // ```
@@ -207,7 +218,7 @@ int main() {
 
 // If these libraries are already available on your machine, and they can be found
 // by `cmake`, they will be used. In this case, make sure that the pre-installed
-// libraries are at version 1.65 or above. If Boost is not found, the latest
+// libraries are at version 1.74 or above. If Boost is not found, the latest
 // version will be downloaded, and the Boost headers mentioned in section (1) will
 // be installed along YOMM2 (if you decide to `make install`).
 
@@ -232,6 +243,17 @@ int main() {
 // ```
 // This will install the library and headers, as well as a CMake package
 // configuration.
+
+// Once this is done, link with `libyomm2.a` or `libyomm2.so`. For example:
+
+// ```
+// clang++ -std=c++17 synopsis.cpp -o synopsis -lyomm2
+// ```
+
+// A CMake package configuration is also installed. If the install location is in
+// `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2, then
+// `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary include
+// paths and the library. See [this example](examples/cmakeyomm2).
 
 // Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can use
 // `find_package(YOMM2)` from your including project. For linking, the use
@@ -263,4 +285,24 @@ int main() {
 
 // I presented the library at CppCon 2018. Here are [the video recording](https://www.youtube.com/watch?v=xkxo0lah51s) and [the slides](https://jll63.github.io/yomm2/slides/).
 
+// ## Roadmap
+
+// YOMM2 has been stable (in the sense of being backward-compatible) for manyyears,
+// but it is still evolving. Here are the items on which I intend to work in the
+// future. No promises, no time table!
+
+// * Speed up dispatch in presence of virtual inheritance.
+// * Intrusive mode, &agrave; la YOMM11, for faster dispatch.
+// * Static linking of dispatch data.
+// * *Minimal* perfect hash tables as an option.
+// * Multi-threaded hash search.
+// * Make error handler a `std::function`.
+// * Get closer to Stroustrup et al's papers (version 2.0):
+//   * use covariant return types for disambiguation
+//   * move support for `shared_ptr` and `unique_ptr` to an optional header
+// * Go header-only.
+// *
+// If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
+// would appreciate it if you take the time to send me a description of your use
+// case(s), and links to the project(s), if they are publicly available.
 // >md
