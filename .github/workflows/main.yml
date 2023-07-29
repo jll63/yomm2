@@ -34,10 +34,9 @@ jobs:
           sudo apt install libboost-all-dev
       - name: Configure
         run: |
-          echo "#define YOMM2_BENCHMARK_HIERARCHIES 10" > tests/benchmarks_parameters.hpp
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: VERBOSE=1 cmake --build cmake.bld
       - name: Unit Tests
@@ -49,11 +48,6 @@ jobs:
           pwd
           cd cmake.bld/examples
           find . -type f -executable -exec {} \;
-      - name: Benchmarks
-        if: ${{ matrix.config == 'Release' }}
-        run: |
-          cd cmake.bld/tests
-          ../../dev/run-benchmarks-here
   ubuntu-mix-debug-release:
     runs-on: ubuntu-latest
     strategy:
@@ -69,10 +63,9 @@ jobs:
           sudo apt install libboost-all-dev
       - name: Configure
         run: |
-          echo "#define YOMM2_BENCHMARK_HIERARCHIES 10" > tests/benchmarks_parameters.hpp
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: VERBOSE=1 cmake --build cmake.bld
       - name: Unit Tests
@@ -130,10 +123,9 @@ jobs:
         config: [Debug, Release, ReleaseDebug, DebugRelease]
     steps:
       - uses: actions/checkout@v3
-      - uses: ilammy/msvc-dev-cmd@v1.4.1
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
-          echo "#define YOMM2_BENCHMARK_HIERARCHIES 10" > tests/benchmarks_parameters.hpp
           mkdir cmake.bld
           cd cmake.bld
           cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
@@ -147,20 +139,11 @@ jobs:
           $env:YOMM2_TRACE = 1
           ctest --rerun-failed --output-on-failure .
           $global:LASTEXITCODE = 0
-      # - name: Examples
-      #   run: |
-      #     cd cmake.bld/examples
-      #     find . -type f -executable -exec {} \;
-      # - name: Benchmarks
-      #   if: ${{ matrix.config == 'Release' }}
-      #   run: |
-      #     cd cmake.bld/tests
-      #     benchmarks
   windows-shared:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: ilammy/msvc-dev-cmd@v1.4.1
+      - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
           mkdir cmake.bld
@@ -176,15 +159,6 @@ jobs:
           $env:YOMM2_TRACE = 1
           ctest --rerun-failed --output-on-failure .
           $global:LASTEXITCODE = 0
-      # - name: Examples
-      #   run: |
-      #     cd cmake.bld/examples
-      #     find . -type f -executable -exec {} \;
-      # - name: Benchmarks
-      #   if: ${{ matrix.config == 'Release' }}
-      #   run: |
-      #     cd cmake.bld/tests
-      #     benchmarks
   mac:
     runs-on: macOS-latest
     strategy:
@@ -195,10 +169,9 @@ jobs:
       - uses: actions/checkout@v3
       - name: Configure
         run: |
-          echo "#define YOMM2_BENCHMARK_HIERARCHIES 10" > tests/benchmarks_parameters.hpp
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
           cd cmake.bld
@@ -213,14 +186,3 @@ jobs:
         run: |
           cd cmake.bld/examples
           find . -type f -perm +0111 -exec {} \;
-          # ./accept_no_visitors
-          # ./adventure
-          # ./asteroids
-          # ./matrix
-          # ./next
-          # ./synopsis
-      - name: Benchmarks
-        if: ${{ matrix.config == 'Release' }}
-        run: |
-          cd cmake.bld/tests
-          ../../dev/run-benchmarks-here
