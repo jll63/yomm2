@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(reference_virtual_ptr) {
 ```
 
 
-A call to `kick` compiles to three instructions and two independent memory reads:
+A call to `kick` compiles to three instructions and two memory reads:
 
 ```asm
 	mov	rax, qword ptr [rip + method<kick, ...>::fn+96]

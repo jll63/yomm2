@@ -289,7 +289,7 @@ void call_meet(virtual_ptr<Animal> a, virtual_ptr<Animal> b, std::ostream& os) {
 
 #ifdef YOMM2_MD
 
-A call to `kick` compiles to three instructions and two independent memory reads:
+A call to `kick` compiles to three instructions and two memory reads:
 
 ```asm
 	mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
