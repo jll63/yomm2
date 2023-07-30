@@ -285,7 +285,7 @@ to link to yomm2.
 
 The Reference is [here](reference/README.md). Since version 1.3.0, some of
 the internals are documented, which make it possible to use the library
-without using the macros - see [the API tutorial](tutorials/api.md).
+without using macros - see [the API tutorial](tutorials/api.md).
 
 YOMM2 has *experimental* support for writing templatized methods and
 definitions - see [the templates tutorial](tutorials/templates_tutorial.md).
