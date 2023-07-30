@@ -197,8 +197,8 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // ## Trimming verbosity
 
 // The "synopsis" example is quite verbose. Many of the names used in it are
-// pure noise. They are use to define static objects, for the sole purpose of
-// executing their constructor. They are never referenced explicitly. In a
+// pure noise. They define static objects, for the sole purpose of executing
+// their constructor. They are never referenced explicitly afterwards. In a
 // language like Python, we would simply call functions at file scope; C++ does
 // not allow that, or only by ruse and abuse.
 
