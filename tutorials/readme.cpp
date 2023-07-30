@@ -191,6 +191,10 @@ int main() {
 // unnoticeable. See the implementation notes for benchmarks and assembly
 // listings.
 
+// ->`virtual_ptr`, a fat pointer class, can be used to make method dispatch
+// even faster - three instructions and two memory reads - without sacrificing
+// orthogonality.
+
 // ## Building and Installing
 
 // Make sure that you have the following dependencies:
