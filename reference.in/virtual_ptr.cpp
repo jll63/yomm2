@@ -439,11 +439,18 @@ BOOST_AUTO_TEST_CASE(reference_virtual_ptr_final_incorrect) {
 
 # Virtual shared pointers
 
-The `virtual_ptr<std::shared_ptr<Class>>` combines the creation of an object
-(using `std::make_shared`) and the caching of the method table pointer. Since
-the exact type of the object being created is known, there is no need to consult
-the hash table. For this reason, `virtual_shared_ptr` is safe to use on
-non-polymorphic types.
+The `virtual_ptr<std::shared_ptr<Class>>` specialisation combines the fast
+method dispatch of `virtual_ptr` with the lifetime management of
+`std::shared_ptr`. Instead of using an ordinary pointer to store the reference
+to the object, it uses a `std::shared_ptr`.
+
+`virtual_shared_ptr<Class>` is an alias for
+`virtual_ptr<std::shared_ptr<Class>>`.
+
+`make_virtual_shared<Class>` calls `std::make_shared<Class>`, and returns a
+`virtual_shared_ptr<Class>`. Since the exact type of the object is known, there
+is no need to consult the hash table. For this reason, `virtual_shared_ptr` is
+safe to use for non-polymorphic types.
 
 ## Example
 
