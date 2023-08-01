@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: VERBOSE=1 cmake --build cmake.bld
       - name: Unit Tests
@@ -65,7 +65,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: VERBOSE=1 cmake --build cmake.bld
       - name: Unit Tests
@@ -104,7 +104,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+          cmake .. -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: VERBOSE=1 cmake --build cmake.bld
       - name: Unit Tests
@@ -128,7 +128,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: |
           cd cmake.bld
@@ -148,7 +148,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
+          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: |
           cd cmake.bld
@@ -171,7 +171,7 @@ jobs:
         run: |
           mkdir cmake.bld
           cd cmake.bld
-          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: |
           cd cmake.bld

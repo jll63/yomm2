@@ -256,20 +256,20 @@ struct population : abstract_population {
     template<typename>
     struct leaf0 : intermediate<0> {
         leaf0() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf0>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf0>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf0>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf0>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf0, default_policy>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf0, default_policy>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf0, default_policy>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf0, default_policy>;
         }
     };
 
     template<typename>
     struct leaf1 : intermediate<1> {
         leaf1() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf1>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf1>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf1>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf1>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf1, default_policy>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf1, default_policy>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf1, default_policy>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf1, default_policy>;
         }
     };
 

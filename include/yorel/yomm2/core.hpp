@@ -29,8 +29,34 @@
     #define yOMM2_API
 #endif
 
+// ====================
+// Forward declarations
+
+// To make 'detail' compile.
+
 namespace yorel {
 namespace yomm2 {
+
+template<typename T>
+struct virtual_;
+
+template<class Class, class Policy, bool IsSmartPtr>
+class virtual_ptr;
+
+template<typename Key, typename Signature, class Policy>
+struct method;
+
+template<typename Class, typename... Rest>
+struct class_declaration;
+
+namespace policy {
+
+struct abstract_policy;
+struct basic_policy;
+
+} // namespace policy
+
+using default_policy = policy::basic_policy;
 
 struct resolution_error {
     enum status_type { no_definition = 1, ambiguous } status;
@@ -76,177 +102,24 @@ using method_call_error_handler = void (*)(
 
 // end deprecated
 
-namespace detail {
+using error_type = std::variant<
+    resolution_error, unknown_class_error, hash_search_error,
+    method_table_error>;
 
-#ifdef NDEBUG
-constexpr bool debug = false;
-#else
-constexpr bool debug = true;
-#endif
+using error_handler_type = void (*)(const error_type& error);
+error_handler_type set_error_handler(error_handler_type handler);
 
-union word {
-    void* pf;
-    const word* pw;
-    size_t i;
-    const void* ti;
-};
+struct method_call_error;
 
-using ti_ptr = const std::type_info*;
+using method_call_error_handler = void (*)(
+    const method_call_error& error, size_t arity,
+    const std::type_info* const tis[]);
 
-template<typename Iterator>
-struct range {
-    Iterator first, last;
-    Iterator begin() const {
-        return first;
-    }
-    Iterator end() const {
-        return last;
-    }
-};
+inline method_call_error_handler yOMM2_API
+set_method_call_error_handler(method_call_error_handler handler);
 
-template<typename Iterator>
-range(Iterator b, Iterator e) -> range<Iterator>;
-
-struct tip {
-    const ti_ptr ptr;
-};
-
-inline std::ostream& operator<<(std::ostream& os, tip t) {
-    return os << t.ptr->name() << "(" << t.ptr << ")";
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const range<const ti_ptr*>& tips) {
-    os << "(";
-    const char* sep = "";
-    for (auto t : tips) {
-        os << sep << tip{t};
-        sep = ", ";
-    }
-
-    return os << ")";
-}
-
-inline void default_method_call_error_handler(
-    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
-    if constexpr (bool(debug)) {
-        const char* explanation[] = {
-            "no applicable definition", "ambiguous call"};
-        std::cerr << explanation[error.code - resolution_error::no_definition]
-                  << " for " << error.method_name << "(";
-        auto comma = "";
-        for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
-            std::cerr << comma << ti->name();
-            comma = ", ";
-        }
-        std::cerr << ")\n" << std::flush;
-    }
-    abort();
-}
-
-inline method_call_error_handler method_call_error_handler_p =
-    default_method_call_error_handler;
-
-inline void default_error_handler(const error_type& error_v) {
-    if (auto error = std::get_if<resolution_error>(&error_v)) {
-        method_call_error old_error;
-        old_error.code = error->status;
-        old_error.method_name = error->method->name();
-        method_call_error_handler_p(
-            std::move(old_error), error->arity, error->tis);
-        abort();
-    }
-
-    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            std::cerr << "unknown class " << error->ti->name() << "\n";
-        }
-        abort();
-    }
-
-    if (auto error = std::get_if<method_table_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            std::cerr << "invalid method table for " << error->ti->name()
-                      << "\n";
-        }
-        abort();
-    }
-
-    if (auto error = std::get_if<hash_search_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            std::cerr << "could not find hash factors after " << error->attempts
-                      << " in " << error->duration.count() << "s using "
-                      << error->buckets << " buckets\n";
-        }
-        abort();
-    }
-}
-
-inline error_handler_type error_handler = detail::default_error_handler;
-
-struct hash_function {
-    std::uintptr_t mult;
-    std::size_t shift;
-    std::vector<detail::ti_ptr> control;
-
-    auto unchecked_hash(ti_ptr tip) const {
-        return static_cast<std::size_t>(
-            (mult * reinterpret_cast<std::uintptr_t>(tip)) >> shift);
-    }
-
-    auto operator()(ti_ptr tip) const {
-        auto index = unchecked_hash(tip);
-        const void* test = &control;
-
-        if constexpr (debug) {
-            auto control_tip = control[index];
-
-            if (control_tip != tip) {
-                error_handler(
-                    unknown_class_error{unknown_class_error::call, tip});
-            }
-        }
-
-        return index;
-    }
-};
-
-template<class Class, class Policy>
-struct virtual_ptr_traits;
-
-} // namespace detail
-
-template<typename T>
-struct virtual_;
-
-template<typename... Types>
-struct types;
-
-struct catalog;
-
-struct context {
-    std::vector<detail::word> gv;
-    std::vector<detail::word*> mptrs;
-    std::vector<detail::word**> indirect_mptrs;
-    detail::hash_function hash;
-};
-
-namespace policy {
-
-struct abstract_policy;
-struct basic_policy;
-
-} // namespace policy
-
-using default_policy = policy::basic_policy;
-
-template<typename Class, typename... Rest>
-struct class_declaration;
-
-template<
-    class Class, class Policy = default_policy,
-    bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
-class virtual_ptr;
+template<class Policy>
+yOMM2_API void update();
 
 } // namespace yomm2
 } // namespace yorel
@@ -256,18 +129,12 @@ class virtual_ptr;
 namespace yorel {
 namespace yomm2 {
 
-inline method_call_error_handler yOMM2_API
-set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = detail::method_call_error_handler_p;
-    detail::method_call_error_handler_p = handler;
-    return prev;
-}
-
-template<typename T>
-struct virtual_;
-
-template<typename... Types>
-struct types;
+struct context {
+    std::vector<detail::word> gv;
+    std::vector<detail::word*> mptrs;
+    std::vector<detail::word**> indirect_mptrs;
+    detail::hash_function hash;
+};
 
 struct catalog {
     catalog& add(detail::class_info& cls) {
@@ -279,52 +146,6 @@ struct catalog {
     detail::static_chain<detail::method_info> methods;
 };
 
-namespace policy {
-
-struct abstract_policy {
-    static constexpr bool use_indirect_method_pointers = false;
-#ifdef NDEBUG
-    static constexpr bool enable_runtime_checks = false;
-#else
-    static constexpr bool enable_runtime_checks = true;
-#endif
-    ;
-};
-
-template<class Policy>
-struct with_scope : virtual abstract_policy {
-    static struct context context;
-    static struct catalog catalog;
-};
-
-template<class Policy>
-catalog with_scope<Policy>::catalog;
-template<class Policy>
-context with_scope<Policy>::context;
-
-template<class Policy>
-struct with_method_tables {
-    template<typename>
-    static detail::mptr_type method_table;
-
-    template<typename>
-    static detail::mptr_type* indirect_method_table;
-};
-
-template<typename>
-static detail::mptr_type method_table;
-
-template<typename>
-static detail::mptr_type* indirect_method_table;
-
-struct yOMM2_API basic_policy : virtual abstract_policy {
-    using method_info_type = detail::method_info;
-    static struct context context;
-    static struct catalog catalog;
-};
-
-} // namespace policy
-
 template<typename Key, typename Signature, class Policy = default_policy>
 struct method;
 
@@ -332,7 +153,7 @@ template<typename Key, typename R, typename... A, class Policy>
 struct method<Key, R(A...), Policy> : Policy::method_info_type {
     using self_type = method;
     using policy_type = Policy;
-    using declared_argument_types = types<A...>;
+    using declared_argument_types = detail::types<A...>;
     using call_argument_types = boost::mp11::mp_transform<
         detail::remove_virtual, declared_argument_types>;
     using virtual_argument_types =
@@ -357,176 +178,39 @@ struct method<Key, R(A...), Policy> : Policy::method_info_type {
     static method fn;
     static function_pointer_type fake_definition;
 
-    explicit method(std::string_view name = typeid(method).name()) {
-        this->name = name;
-        this->slots_strides_p = slots_strides;
-        using virtual_type_ids = detail::type_id_list<boost::mp11::mp_transform<
-            detail::polymorphic_type, virtual_argument_types>>;
-        this->vp_begin = virtual_type_ids::begin;
-        this->vp_end = virtual_type_ids::end;
-        this->not_implemented = (void*)not_implemented_handler;
-        this->ambiguous = (void*)ambiguous_handler;
-        this->hash_factors_placement = &typeid(Policy);
-        Policy::catalog.methods.push_front(*this);
-    }
+    explicit method(std::string_view name = typeid(method).name());
 
     method(const method&) = delete;
     method(method&&) = delete;
 
-    ~method() {
-        Policy::catalog.methods.remove(*this);
-    }
+    ~method();
+
+    template<typename ArgType>
+    const detail::word* get_mptr(detail::resolver_type<ArgType> arg) const;
 
     template<typename ArgType, typename... MoreArgTypes>
     void* resolve_uni(
         detail::resolver_type<ArgType> arg,
-        detail::resolver_type<MoreArgTypes>... more_args) const {
-
-        using namespace detail;
-
-        if constexpr (is_virtual<ArgType>::value) {
-            const word* mptr = get_mptr<method, ArgType>(arg);
-            call_trace << " slot = " << this->slots_strides[0];
-            return mptr[this->slots_strides[0]].pf;
-        } else {
-            return resolve_uni<MoreArgTypes...>(more_args...);
-        }
-    }
+        detail::resolver_type<MoreArgTypes>... more_args) const;
 
     template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
     void* resolve_multi_first(
         detail::resolver_type<ArgType> arg,
-        detail::resolver_type<MoreArgTypes>... more_args) const {
-        using namespace detail;
-
-        if constexpr (is_virtual<ArgType>::value) {
-            const word* mptr;
-
-            if constexpr (is_virtual_ptr<ArgType>) {
-                mptr = arg.method_table();
-            } else {
-                mptr = get_mptr<method, ArgType>(arg);
-            }
-
-            auto slot = slots_strides[0];
-
-            if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-                call_trace << " slot = " << slot;
-            }
-
-            // The first virtual parameter is special.  Since its stride is
-            // 1, there is no need to store it. Also, the method table
-            // contains a pointer into the multi-dimensional dispatch table,
-            // already resolved to the appropriate group.
-            auto dispatch = mptr[slot].pw;
-
-            if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-                call_trace << " dispatch = " << dispatch << "\n    ";
-            }
-
-            return resolve_multi_next<1, MoreArgTypes...>(
-                dispatch, more_args...);
-        } else {
-            return resolve_multi_first<MoreArgTypes...>(more_args...);
-        }
-    }
+        detail::resolver_type<MoreArgTypes>... more_args) const;
 
     template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
     void* resolve_multi_next(
         const detail::word* dispatch, detail::resolver_type<ArgType> arg,
-        detail::resolver_type<MoreArgTypes>... more_args) const {
-
-        using namespace detail;
-
-        if constexpr (is_virtual<ArgType>::value) {
-            const word* mptr;
-
-            if constexpr (is_virtual_ptr<ArgType>) {
-                mptr = arg.method_table();
-            } else {
-                mptr = get_mptr<method, ArgType>(arg);
-            }
-
-            auto slot = this->slots_strides[2 * VirtualArg - 1];
-
-            if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-                call_trace << " slot = " << slot;
-            }
-
-            auto stride = this->slots_strides[2 * VirtualArg];
-
-            if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-                call_trace << " stride = " << stride;
-            }
-
-            dispatch = dispatch + mptr[slot].i * stride;
-
-            if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-                call_trace << " dispatch = " << dispatch << "\n    ";
-            }
-        }
-
-        if constexpr (VirtualArg + 1 == arity) {
-            return dispatch->pf;
-        } else {
-            return resolve_multi_next<VirtualArg + 1, MoreArgTypes...>(
-                dispatch, more_args...);
-        }
-    }
+        detail::resolver_type<MoreArgTypes>... more_args) const;
 
     template<typename... ArgType>
-    auto resolve(detail::resolver_type<ArgType>... args) const {
-        using namespace detail;
+    function_pointer_type resolve(detail::resolver_type<ArgType>... args) const;
 
-        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
-            call_trace << "call " << this->name << "\n";
-        }
-
-        void* pf;
-
-        if constexpr (arity == 1) {
-            pf = resolve_uni<ArgType...>(args...);
-        } else {
-            pf = resolve_multi_first<0, ArgType...>(args...);
-        }
-
-        call_trace << " pf = " << pf << "\n";
-
-        return reinterpret_cast<function_pointer_type>(pf);
-    }
-
-    return_type operator()(detail::remove_virtual<A>... args) const {
-        using namespace detail;
-        return resolve<A...>(argument_traits<A>::rarg(args)...)(
-            std::forward<remove_virtual<A>>(args)...);
-    }
+    return_type operator()(detail::remove_virtual<A>... args) const;
 
     static return_type
-    not_implemented_handler(detail::remove_virtual<A>... args) {
-        resolution_error error;
-        error.status = resolution_error::no_definition;
-        error.method = &typeid(method);
-        error.arity = arity;
-        detail::ti_ptr tis[sizeof...(args)];
-        error.tis = tis;
-        auto ti_iter = tis;
-        (..., (*ti_iter++ = detail::get_tip<A>(args)));
-        detail::error_handler(error_type(std::move(error)));
-        abort(); // in case user handler "forgets" to abort
-    }
-
-    static return_type ambiguous_handler(detail::remove_virtual<A>... args) {
-        resolution_error error;
-        error.status = resolution_error::ambiguous;
-        error.method = &typeid(method);
-        error.arity = arity;
-        detail::ti_ptr tis[sizeof...(args)];
-        error.tis = tis;
-        auto ti_iter = tis;
-        (..., (*ti_iter++ = detail::get_tip<A>(args)));
-        detail::error_handler(error_type(std::move(error)));
-        abort(); // in case user handler "forgets" to abort
-    }
+    not_implemented_handler(detail::remove_virtual<A>... args);
+    static return_type ambiguous_handler(detail::remove_virtual<A>... args);
 
     template<typename Container>
     using next = detail::next_aux<method, Container>;
@@ -631,13 +315,13 @@ struct class_declaration : class_declaration<
 > {};
 
 template<typename Class, typename... Bases, typename Policy>
-struct class_declaration<types<Class, Bases...>, Policy> : detail::class_info {
+struct class_declaration<detail::types<Class, Bases...>, Policy> : detail::class_info {
     // Add a class to a catalog.
     // There is a possibility that the same class is registered with
     // different bases. This will be caught by augment_classes.
 
     using class_type = Class;
-    using bases_type = types<Bases...>;
+    using bases_type = detail::types<Bases...>;
 
     class_declaration() {
         using namespace detail;
@@ -657,8 +341,8 @@ struct class_declaration<types<Class, Bases...>, Policy> : detail::class_info {
 };
 
 template<typename Class, typename... Bases>
-struct class_declaration<types<Class, Bases...>> : class_declaration<
-    types<Class, Bases...>, default_policy
+struct class_declaration<detail::types<Class, Bases...>> : class_declaration<
+    detail::types<Class, Bases...>, default_policy
 > {};
 
 // clang-format on
@@ -666,8 +350,59 @@ struct class_declaration<types<Class, Bases...>> : class_declaration<
 template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
 
+namespace policy {
+
+struct abstract_policy {
+    static constexpr bool use_indirect_method_pointers = false;
+#ifdef NDEBUG
+    static constexpr bool enable_runtime_checks = false;
+#else
+    static constexpr bool enable_runtime_checks = true;
+#endif
+    ;
+};
+
+template<class Policy>
+struct with_scope : virtual abstract_policy {
+    static struct context context;
+    static struct catalog catalog;
+};
+
+template<class Policy>
+catalog with_scope<Policy>::catalog;
+template<class Policy>
+context with_scope<Policy>::context;
+
+template<class Policy>
+struct with_method_tables {
+    template<typename>
+    static detail::mptr_type method_table;
+
+    template<typename>
+    static detail::mptr_type* indirect_method_table;
+};
+
+template<typename>
+static detail::mptr_type method_table;
+
+template<typename>
+static detail::mptr_type* indirect_method_table;
+
+struct yOMM2_API basic_policy : virtual abstract_policy {
+    using method_info_type = detail::method_info;
+    static struct context context;
+    static struct catalog catalog;
+};
+
+} // namespace policy
+
 // =============================================================================
 // virtual_ptr
+
+template<
+    class Class, class Policy = default_policy,
+    bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
+class virtual_ptr;
 
 template<class Class, class Policy, typename Box>
 class virtual_ptr_aux {
@@ -720,7 +455,7 @@ class virtual_ptr_aux {
                 &typeid(typename virtual_traits<Other&>::polymorphic_type);
 
             if (key != final_key) {
-                error_handler(method_table_error{key});
+                detail::error_handler(method_table_error{key});
             }
         }
 
@@ -728,43 +463,7 @@ class virtual_ptr_aux {
     }
 
     template<class Other>
-    static auto dynamic_method_table(Other& obj) {
-        using namespace detail;
-
-        mptr_type mptr;
-
-        auto key = virtual_traits<Other&>::key(obj);
-        auto final_key =
-            &typeid(typename virtual_traits<Other&>::polymorphic_type);
-
-        if (key == final_key) {
-            if constexpr (Policy::use_indirect_method_pointers) {
-                mptr = detail::indirect_method_table<
-                    typename detail::virtual_traits<Other&>::polymorphic_type,
-                    Policy>;
-            } else {
-                mptr = detail::method_table<
-                    typename detail::virtual_traits<Other&>::polymorphic_type,
-                    Policy>;
-            }
-        } else {
-            auto index = Policy::context.hash(key);
-
-            if constexpr (Policy::use_indirect_method_pointers) {
-                mptr = Policy::context.indirect_mptrs[index];
-            } else {
-                mptr = Policy::context.mptrs[index];
-            }
-        }
-
-        if constexpr (Policy::use_indirect_method_pointers) {
-            check_method_pointer<Policy>(*mptr, final_key);
-        } else {
-            check_method_pointer<Policy>(mptr, final_key);
-        }
-
-        return mptr;
-    }
+    static auto dynamic_method_table(Other& obj);
 
     auto& box() const noexcept {
         return obj;
@@ -895,6 +594,270 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
     return prev;
 }
 
+inline method_call_error_handler yOMM2_API
+set_method_call_error_handler(method_call_error_handler handler) {
+    auto prev = detail::method_call_error_handler_p;
+    detail::method_call_error_handler_p = handler;
+    return prev;
+}
+
+// =============================================================================
+// definitions
+
+template<typename Key, typename R, typename... A, class Policy>
+method<Key, R(A...), Policy>::method(std::string_view name) {
+    this->name = name;
+    this->slots_strides_p = slots_strides;
+    using virtual_type_ids = detail::type_id_list<boost::mp11::mp_transform<
+        detail::polymorphic_type, virtual_argument_types>>;
+    this->vp_begin = virtual_type_ids::begin;
+    this->vp_end = virtual_type_ids::end;
+    this->not_implemented = (void*)not_implemented_handler;
+    this->ambiguous = (void*)ambiguous_handler;
+    this->hash_factors_placement = &typeid(Policy);
+    Policy::catalog.methods.push_front(*this);
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+method<Key, R(A...), Policy>::~method() {
+    Policy::catalog.methods.remove(*this);
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+typename method<Key, R(A...), Policy>::return_type inline method<
+    Key, R(A...), Policy>::operator()(detail::remove_virtual<A>... args) const {
+    using namespace detail;
+    return resolve<A...>(argument_traits<A>::rarg(args)...)(
+        std::forward<remove_virtual<A>>(args)...);
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+template<typename... ArgType>
+inline typename method<Key, R(A...), Policy>::function_pointer_type
+method<Key, R(A...), Policy>::resolve(
+    detail::resolver_type<ArgType>... args) const {
+    using namespace detail;
+
+    if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+        call_trace << "call " << this->name << "\n";
+    }
+
+    void* pf;
+
+    if constexpr (arity == 1) {
+        pf = resolve_uni<ArgType...>(args...);
+    } else {
+        pf = resolve_multi_first<0, ArgType...>(args...);
+    }
+
+    call_trace << " pf = " << pf << "\n";
+
+    return reinterpret_cast<function_pointer_type>(pf);
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+template<typename ArgType>
+inline const detail::word* method<Key, R(A...), Policy>::get_mptr(
+    detail::resolver_type<ArgType> arg) const {
+    using namespace detail;
+
+    const word* mptr;
+
+    if constexpr (has_mptr<resolver_type<ArgType>>) {
+        mptr = arg.yomm2_mptr();
+        check_method_pointer<Policy>(mptr, virtual_traits<ArgType>::key(arg));
+    } else if constexpr (is_virtual_ptr<ArgType>) {
+        mptr = arg.method_table();
+        // No need to check the method pointer: this was done when the
+        // virtual_ptr was created.
+    } else {
+        auto key = virtual_traits<ArgType>::key(arg);
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << "  key = " << key;
+        }
+
+        mptr = Policy::context.mptrs[Policy::context.hash(key)];
+    }
+
+    if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+        call_trace << " mptr = " << mptr;
+    }
+
+    return mptr;
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+template<typename ArgType, typename... MoreArgTypes>
+inline void* method<Key, R(A...), Policy>::resolve_uni(
+    detail::resolver_type<ArgType> arg,
+    detail::resolver_type<MoreArgTypes>... more_args) const {
+
+    using namespace detail;
+
+    if constexpr (is_virtual<ArgType>::value) {
+        const word* mptr = get_mptr<ArgType>(arg);
+        call_trace << " slot = " << this->slots_strides[0];
+        return mptr[this->slots_strides[0]].pf;
+    } else {
+        return resolve_uni<MoreArgTypes...>(more_args...);
+    }
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+inline void* method<Key, R(A...), Policy>::resolve_multi_first(
+    detail::resolver_type<ArgType> arg,
+    detail::resolver_type<MoreArgTypes>... more_args) const {
+    using namespace detail;
+
+    if constexpr (is_virtual<ArgType>::value) {
+        const word* mptr;
+
+        if constexpr (is_virtual_ptr<ArgType>) {
+            mptr = arg.method_table();
+        } else {
+            mptr = get_mptr<ArgType>(arg);
+        }
+
+        auto slot = slots_strides[0];
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << " slot = " << slot;
+        }
+
+        // The first virtual parameter is special.  Since its stride is
+        // 1, there is no need to store it. Also, the method table
+        // contains a pointer into the multi-dimensional dispatch table,
+        // already resolved to the appropriate group.
+        auto dispatch = mptr[slot].pw;
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << " dispatch = " << dispatch << "\n    ";
+        }
+
+        return resolve_multi_next<1, MoreArgTypes...>(dispatch, more_args...);
+    } else {
+        return resolve_multi_first<MoreArgTypes...>(more_args...);
+    }
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+inline void* method<Key, R(A...), Policy>::resolve_multi_next(
+    const detail::word* dispatch, detail::resolver_type<ArgType> arg,
+    detail::resolver_type<MoreArgTypes>... more_args) const {
+
+    using namespace detail;
+
+    if constexpr (is_virtual<ArgType>::value) {
+        const word* mptr;
+
+        if constexpr (is_virtual_ptr<ArgType>) {
+            mptr = arg.method_table();
+        } else {
+            mptr = get_mptr<ArgType>(arg);
+        }
+
+        auto slot = this->slots_strides[2 * VirtualArg - 1];
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << " slot = " << slot;
+        }
+
+        auto stride = this->slots_strides[2 * VirtualArg];
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << " stride = " << stride;
+        }
+
+        dispatch = dispatch + mptr[slot].i * stride;
+
+        if constexpr (bool(trace_enabled & TRACE_CALLS)) {
+            call_trace << " dispatch = " << dispatch << "\n    ";
+        }
+    }
+
+    if constexpr (VirtualArg + 1 == arity) {
+        return dispatch->pf;
+    } else {
+        return resolve_multi_next<VirtualArg + 1, MoreArgTypes...>(
+            dispatch, more_args...);
+    }
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+typename method<Key, R(A...), Policy>::return_type
+method<Key, R(A...), Policy>::not_implemented_handler(
+    detail::remove_virtual<A>... args) {
+    resolution_error error;
+    error.status = resolution_error::no_definition;
+    error.method = &typeid(method);
+    error.arity = arity;
+    detail::ti_ptr tis[sizeof...(args)];
+    error.tis = tis;
+    auto ti_iter = tis;
+    (..., (*ti_iter++ = detail::get_tip<A>(args)));
+    detail::error_handler(error_type(std::move(error)));
+    abort(); // in case user handler "forgets" to abort
+}
+
+template<typename Key, typename R, typename... A, class Policy>
+typename method<Key, R(A...), Policy>::return_type
+method<Key, R(A...), Policy>::ambiguous_handler(
+    detail::remove_virtual<A>... args) {
+    resolution_error error;
+    error.status = resolution_error::ambiguous;
+    error.method = &typeid(method);
+    error.arity = arity;
+    detail::ti_ptr tis[sizeof...(args)];
+    error.tis = tis;
+    auto ti_iter = tis;
+    (..., (*ti_iter++ = detail::get_tip<A>(args)));
+    detail::error_handler(error_type(std::move(error)));
+    abort(); // in case user handler "forgets" to abort
+}
+
+template<class Class, class Policy, typename Box>
+template<class Other>
+inline auto
+virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
+    using namespace detail;
+
+    mptr_type mptr;
+
+    auto key = virtual_traits<Other&>::key(obj);
+    auto final_key = &typeid(typename virtual_traits<Other&>::polymorphic_type);
+
+    if (key == final_key) {
+        if constexpr (Policy::use_indirect_method_pointers) {
+            mptr = detail::indirect_method_table<
+                typename detail::virtual_traits<Other&>::polymorphic_type,
+                Policy>;
+        } else {
+            mptr = detail::method_table<
+                typename detail::virtual_traits<Other&>::polymorphic_type,
+                Policy>;
+        }
+    } else {
+        auto index = Policy::context.hash(key);
+
+        if constexpr (Policy::use_indirect_method_pointers) {
+            mptr = Policy::context.indirect_mptrs[index];
+        } else {
+            mptr = Policy::context.mptrs[index];
+        }
+    }
+
+    if constexpr (Policy::use_indirect_method_pointers) {
+        check_method_pointer<Policy>(*mptr, final_key);
+    } else {
+        check_method_pointer<Policy>(mptr, final_key);
+    }
+
+    return mptr;
+}
+
 template<class Policy>
 yOMM2_API void update();
 
@@ -909,6 +872,78 @@ yOMM2_API inline void update() {
 [[deprecated("use update() instead")]] yOMM2_API inline void update_methods() {
     update();
 }
+
+namespace detail {
+
+inline void default_method_call_error_handler(
+    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
+    if constexpr (bool(debug)) {
+        const char* explanation[] = {
+            "no applicable definition", "ambiguous call"};
+        std::cerr << explanation[error.code - resolution_error::no_definition]
+                  << " for " << error.method_name << "(";
+        auto comma = "";
+        for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
+            std::cerr << comma << ti->name();
+            comma = ", ";
+        }
+        std::cerr << ")\n" << std::flush;
+    }
+    abort();
+}
+
+inline void default_error_handler(const error_type& error_v) {
+    if (auto error = std::get_if<resolution_error>(&error_v)) {
+        method_call_error old_error;
+        old_error.code = error->status;
+        old_error.method_name = error->method->name();
+        method_call_error_handler_p(
+            std::move(old_error), error->arity, error->tis);
+        abort();
+    }
+
+    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "unknown class " << error->ti->name() << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<method_table_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "invalid method table for " << error->ti->name()
+                      << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<hash_search_error>(&error_v)) {
+        if constexpr (bool(debug)) {
+            std::cerr << "could not find hash factors after " << error->attempts
+                      << " in " << error->duration.count() << "s using "
+                      << error->buckets << " buckets\n";
+        }
+        abort();
+    }
+}
+
+inline auto hash_function::operator()(ti_ptr tip) const {
+    auto index = unchecked_hash(tip);
+    const void* test = &control;
+
+    if constexpr (debug) {
+        auto control_tip = control[index];
+
+        if (control_tip != tip) {
+            error_handler(
+                unknown_class_error{unknown_class_error::call, tip});
+        }
+    }
+
+    return index;
+}
+
+} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

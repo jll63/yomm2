@@ -14,6 +14,8 @@
 
 namespace yorel { namespace yomm2 {
 
+using detail::types;
+
 struct not_defined {};
 
 template<template<typename...> typename Template>
@@ -46,7 +48,7 @@ struct apply_product_impl;
 template<template<typename...> typename... Templates, typename... TypeLists>
 struct apply_product_impl<templates<Templates...>, TypeLists...> {
     using type = mp11::mp_product<
-        mp11::mp_invoke_q, 
+        mp11::mp_invoke_q,
         types<boost::mp11::mp_quote<Templates>...>,
         TypeLists...
     >;
