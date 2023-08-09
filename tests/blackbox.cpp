@@ -10,6 +10,8 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
+#include "test_policy.hpp"
+
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
@@ -310,14 +312,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
 
 namespace update_error_handling {
 
-struct test_policy : default_policy {
-    static struct catalog catalog;
-    static struct context context;
-};
-
-catalog test_policy::catalog;
-context test_policy::context;
-
+using test_policy = test_policy_<__COUNTER__>;
 struct base {
     virtual ~base() {
     }

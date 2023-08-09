@@ -458,7 +458,7 @@ declare_method(double, pay, (virtual_<Employee&>));
 struct YoMm2_S_pay;
 yomm2::method<
     YoMm2_S_pay, double(virtual_<const Employee&>),
-    yomm2::policy::default_policy>
+    yomm2::default_policy>
 pay_yOMM2_selector_(
     yomm2::detail::remove_virtual<virtual_<const Employee&>> a0);
 ```
@@ -475,7 +475,7 @@ inline double
 pay(yomm2::detail::remove_virtual<virtual_<const Employee&>> a0) {
     return yomm2::method<
         YoMm2_S_pay, double(virtual_<const Employee&>),
-        yomm2::policy::default_policy>::
+        yomm2::default_policy>::
         fn(std::forward<
             yomm2::detail::remove_virtual<virtual_<const Employee&>>>(
             a0));

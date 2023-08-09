@@ -13,15 +13,6 @@ constexpr bool debug = false;
 constexpr bool debug = true;
 #endif
 
-union word {
-    void* pf;
-    const word* pw;
-    size_t i;
-    const void* ti;
-};
-
-using ti_ptr = const std::type_info*;
-
 template<typename... Types>
 struct types;
 
@@ -59,14 +50,6 @@ operator<<(std::ostream& os, const range<const ti_ptr*>& tips) {
     return os << ")";
 }
 
-using mptr_type = detail::word*;
-
-template<typename, typename>
-mptr_type method_table;
-
-template<typename, typename>
-mptr_type* indirect_method_table;
-
 inline void default_error_handler(const error_type& error_v);
 inline error_handler_type error_handler = detail::default_error_handler;
 
@@ -96,32 +79,6 @@ extern yOMM2_API unsigned trace_flags;
 inline std::ostream* logs;
 inline unsigned trace_flags;
 #endif
-
-#if defined(YOMM2_ENABLE_TRACE)
-constexpr unsigned trace_enabled = YOMM2_ENABLE_TRACE;
-#elif !defined(NDEBUG)
-constexpr unsigned trace_enabled = TRACE_RUNTIME;
-#else
-constexpr unsigned trace_enabled = 0;
-#endif
-
-template<unsigned Flags>
-struct trace_type {
-    trace_type& operator++();
-    int indent{0};
-};
-
-inline trace_type<TRACE_CALLS> call_trace;
-
-template<typename T, unsigned Flags>
-inline trace_type<Flags>& operator<<(trace_type<Flags>& trace, T&& value) {
-    if constexpr (bool(trace_enabled & Flags)) {
-        if (trace_flags & Flags) {
-            *logs << value;
-        }
-    }
-    return trace;
-}
 
 inline word make_word(size_t i) {
     word w;
@@ -245,7 +202,7 @@ inline std::size_t hash(std::uintptr_t mult, std::size_t shift, const void* p) {
 
 struct class_info : static_chain<class_info>::static_link {
     detail::ti_ptr ti;
-    word** intrusive_mptr;
+    word** method_table;
     const detail::ti_ptr *first_base, *last_base;
     const char* name() const {
         return ti->name();
@@ -879,24 +836,28 @@ std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
 
 template<class Policy>
-inline auto check_method_pointer(const word* mptr, ti_ptr key) {
-    if constexpr (Policy::enable_runtime_checks) {
+inline auto check_intrusive_method_pointer(const word* mptr, ti_ptr key) {
+    // Intrusive mode only.
+
+    if constexpr (Policy::runtime_checks) {
         auto& ctx = Policy::context;
         auto p = reinterpret_cast<const char*>(mptr);
 
-        if (p == 0 && ctx.gv.empty()) {
+        if (ctx.gv.empty()) {
             // no declared methods
             return mptr;
         }
 
         if (p < reinterpret_cast<const char*>(ctx.gv.data()) ||
             p >= reinterpret_cast<const char*>(ctx.gv.data() + ctx.gv.size())) {
+            // probably some random value
             error_handler(method_table_error{key});
         }
 
         auto index = ctx.hash(key);
 
         if (index >= ctx.mptrs.size() || mptr != ctx.mptrs[index]) {
+            // probably a missing derived<> in a derived class
             error_handler(method_table_error{key});
         }
     }

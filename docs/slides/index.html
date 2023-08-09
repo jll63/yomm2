@@ -508,7 +508,7 @@ define_method(double, pay, (Manager&amp; manager)) {
 <div class="sourceCode" id="cb23"><pre class="sourceCode c++"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true"></a><span class="kw">struct</span> YoMm2_S_pay;</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true"></a>yomm2::method&lt;</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true"></a>    YoMm2_S_pay, <span class="dt">double</span>(<span class="va">virtual_</span>&lt;<span class="at">const</span> Employee&amp;&gt;),</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true"></a>    yomm2::policy::default_policy&gt;</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true"></a>    yomm2::default_policy&gt;</span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true"></a><span class="va">pay_yOMM2_selector_</span>(</span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true"></a>    yomm2::detail::remove_virtual&lt;<span class="va">virtual_</span>&lt;<span class="at">const</span> Employee&amp;&gt;&gt; a0);</span></code></pre></div>
 </section>
@@ -519,7 +519,7 @@ define_method(double, pay, (Manager&amp; manager)) {
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true"></a>pay(yomm2::detail::remove_virtual&lt;<span class="va">virtual_</span>&lt;<span class="at">const</span> Employee&amp;&gt;&gt; a0) {</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true"></a>    <span class="cf">return</span> yomm2::method&lt;</span>
 <span id="cb25-4"><a href="#cb25-4" aria-hidden="true"></a>        YoMm2_S_pay, <span class="dt">double</span>(<span class="va">virtual_</span>&lt;<span class="at">const</span> Employee&amp;&gt;),</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true"></a>        yomm2::policy::default_policy&gt;::</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true"></a>        yomm2::default_policy&gt;::</span>
 <span id="cb25-6"><a href="#cb25-6" aria-hidden="true"></a>        fn(<span class="bu">std::</span>forward&lt;</span>
 <span id="cb25-7"><a href="#cb25-7" aria-hidden="true"></a>            yomm2::detail::remove_virtual&lt;<span class="va">virtual_</span>&lt;<span class="at">const</span> Employee&amp;&gt;&gt;&gt;(</span>
 <span id="cb25-8"><a href="#cb25-8" aria-hidden="true"></a>            a0));</span>

@@ -4,6 +4,8 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
+#include "test_policy.hpp"
+
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 
@@ -70,18 +72,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
     return os;
 }
 
-template<typename Key>
-struct test_policy_ : policy::basic_policy {
-    static struct catalog catalog;
-    static struct context context;
-};
-
-template<typename Key>
-catalog test_policy_<Key>::catalog;
-
-template<typename Key>
-context test_policy_<Key>::context;
-
 template<typename T>
 auto get_class(const runtime_data& rt) {
     return rt.class_map.at(typeid(T));
@@ -100,21 +90,20 @@ struct Cow : Herbivore {};
 struct Wolf : Carnivore {};
 struct Human : Carnivore, Herbivore {};
 
-struct whole_hierarchy {};
-use_classes<
-    test_policy_<whole_hierarchy>, Animal, Herbivore, Carnivore, Cow, Wolf,
-    Human>
+using whole_hierarchy = test_policy_<__COUNTER__>;
+using incremental = test_policy_<__COUNTER__>;
+
+use_classes<whole_hierarchy, Animal, Herbivore, Carnivore, Cow, Wolf, Human>
     YOMM2_GENSYM;
 
-struct incremental {};
-use_classes<test_policy_<incremental>, Animal, Herbivore, Cow> YOMM2_GENSYM;
-use_classes<test_policy_<incremental>, Animal, Carnivore, Wolf> YOMM2_GENSYM;
-use_classes<test_policy_<incremental>, Herbivore, Carnivore, Human>
-    YOMM2_GENSYM;
+use_classes<incremental, Animal, Herbivore, Cow> YOMM2_GENSYM;
+use_classes<incremental, Animal, Carnivore, Wolf> YOMM2_GENSYM;
+use_classes<incremental, Herbivore, Carnivore, Human> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(
-    test_use_classes, Key, std::tuple<whole_hierarchy>) {
-    runtime<test_policy_<Key>> rt;
+using policies = std::tuple<whole_hierarchy, incremental>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_use_classes, Key, policies) {
+    runtime<Key> rt;
     rt.update();
 
     auto animal = get_class<Animal>(rt);
@@ -161,7 +150,7 @@ struct Metro : Public {};
 struct Taxi : Expense {};
 struct Jet : Expense {};
 
-using test_policy = test_policy_<Role>;
+using test_policy = test_policy_<__COUNTER__>;
 // any type from this namespace would work.
 
 use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
@@ -402,8 +391,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         BOOST_TEST(runtime<test_policy>::is_base(
             &*approve_Role_Expense, &*approve_Founder_Expense));
-        BOOST_TEST(
-            !runtime<test_policy>::is_base(&*approve_Role_Expense, &*approve_Role_Expense));
+        BOOST_TEST(!runtime<test_policy>::is_base(
+            &*approve_Role_Expense, &*approve_Role_Expense));
     }
 
     rt.build_dispatch_tables();
@@ -503,7 +492,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(
             test_policy::context.mptrs.size() == rt.metrics.hash_table_size);
         BOOST_TEST_REQUIRE(
-            test_policy::context.hash.control.size() == rt.metrics.hash_table_size);
+            test_policy::context.hash.control.size() ==
+            rt.metrics.hash_table_size);
 
         auto gv_iter = test_policy::context.gv.data();
         // no slots nor fun* for 1-method
@@ -688,8 +678,7 @@ struct D : B {};
 
 struct E : D {};
 
-struct key;
-using test_policy = test_policy_<key>;
+using test_policy = test_policy_<__COUNTER__>;
 
 use_classes<test_policy, A, B, AB, C, D, E> YOMM2_GENSYM;
 
@@ -743,6 +732,7 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     BOOST_REQUIRE_EQUAL(sstr(e->covariant_classes), sstr(e));
 }
 
+struct key;
 method<key, void(virtual_<A&>), test_policy> m_a("m_a");
 method<key, void(virtual_<B&>), test_policy> m_b("m_b");
 method<key, void(virtual_<A&>, virtual_<B&>), test_policy> m_ab("m_ab");

@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
 
     set_error_handler(prev_handler);
 
-    if constexpr (default_policy::enable_runtime_checks) {
+    if constexpr (default_policy::runtime_checks) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }

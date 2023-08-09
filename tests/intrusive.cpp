@@ -16,9 +16,9 @@
 
 using namespace yorel::yomm2;
 
-using direct_policy = test_policy<__COUNTER__>;
+using direct_policy = test_policy_<__COUNTER__>;
 
-struct indirect_policy : test_policy<__COUNTER__> {
+struct indirect_policy : test_policy_<__COUNTER__> {
     static constexpr bool use_indirect_method_pointers = true;
 };
 
@@ -87,15 +87,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
         Character character;
         BOOST_TEST((
-            character.yomm2_mptr() == detail::method_table<Character, Policy>));
-        BOOST_TEST((bear.yomm2_mptr() == detail::method_table<Bear, Policy>));
+            character.yomm2_mptr() == Policy::template method_table<Character>));
+        BOOST_TEST((bear.yomm2_mptr() == Policy::template method_table<Bear>));
     }
 
     // BOOST_TEST(kick::fn(bear) == "growl");
     // BOOST_TEST(fight::fn(warrior, axe, bear) == "kill bear");
 }
 
-#ifndef NDEBUG
 namespace bad_intrusive_mptr {
 
 struct Animal : root<Animal> {
@@ -105,11 +104,11 @@ struct Animal : root<Animal> {
 
 struct Dog : Animal {};
 
-using policy = test_policy<__COUNTER__>;
+using test_policy = test_policy_<__COUNTER__, policy::debug_policy>;
 
-register_classes(policy, Animal, Dog);
+register_classes(test_policy, Animal, Dog);
 
-declare_method(std::string, kick, (virtual_<Animal&>), policy);
+declare_method(std::string, kick, (virtual_<Animal&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
     auto prev_handler = set_error_handler([](const error_type& ev) {
@@ -120,7 +119,7 @@ BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
         }
     });
 
-    update<policy>();
+    update<test_policy>();
 
     try {
         Dog snoopy;
@@ -137,4 +136,3 @@ BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
     set_error_handler(prev_handler);
 }
 } // namespace bad_intrusive_mptr
-#endif

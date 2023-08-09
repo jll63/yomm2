@@ -7,16 +7,16 @@ namespace yorel {
 namespace yomm2 {
 
 template<int Key, class BasePolicy = yorel::yomm2::default_policy>
-struct test_policy : BasePolicy {
+struct test_policy_ : BasePolicy {
     static yorel::yomm2::catalog catalog;
     static yorel::yomm2::context context;
 };
 
 template<int Key, class BasePolicy>
-yorel::yomm2::catalog test_policy<Key, BasePolicy>::catalog;
+yorel::yomm2::catalog test_policy_<Key, BasePolicy>::catalog;
 
 template<int Key, class BasePolicy>
-yorel::yomm2::context test_policy<Key, BasePolicy>::context;
+yorel::yomm2::context test_policy_<Key, BasePolicy>::context;
 
 } // namespace yomm2
 } // namespace yorel
