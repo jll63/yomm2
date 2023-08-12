@@ -8,154 +8,134 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
+    container:
+      ghcr.io/jll63/yomm2-gha:latest
     strategy:
       matrix:
-        compiler: [g++-10, g++-11, clang++-11, clang++-12]
+        compiler: [clang++-15, clang++-16, g++-12, g++-13]
         standard: [17, 20]
         config: [Debug, Release]
     steps:
       - uses: actions/checkout@v3
-      - name: Install g++-11
-        if: ${{ matrix.compiler == 'g++-11' }}
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install g++-11
-      - name: Install clang-11
-        if: ${{ matrix.compiler == 'clang++-11' }}
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install clang-11
-      - name: Install Boost
-        if: ${{ matrix.standard == 17 }}
-        run: |
-          sudo apt update
-          sudo apt install libboost-all-dev
       - name: Configure
         run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
       - name: Build
-        run: VERBOSE=1 cmake --build cmake.bld
+        run: VERBOSE=1 cmake --build build -j 8
       - name: Unit Tests
         run: |
-          cd cmake.bld
-          ctest --rerun-failed --output-on-failure .
+          cd build
+          YOMM2_TRACE=1 ctest --rerun-failed --output-on-failure .
       - name: Examples
         run: |
-          pwd
-          cd cmake.bld/examples
-          find . -type f -executable -exec {} \;
-  ubuntu-mix-debug-release:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        compiler: [g++-10, clang++-12]
-        standard: [17]
-        config: [ReleaseDebug, DebugRelease]
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Boost
-        run: |
-          sudo apt update
-          sudo apt install libboost-all-dev
-      - name: Configure
-        run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
-      - name: Build
-        run: VERBOSE=1 cmake --build cmake.bld
-      - name: Unit Tests
-        run: |
-          cd cmake.bld
-          ctest --rerun-failed --output-on-failure .
-      - name: Examples
-        run: |
-          cd cmake.bld/examples
-          find . -type f -executable -exec {} \;
+          cd build/examples
+          YOMM2_TRACE=1 find . -type f -executable -exec {} \;
   ubuntu-shared:
     runs-on: ubuntu-latest
+    container:
+      ghcr.io/jll63/yomm2-gha:latest
     strategy:
       matrix:
-        compiler: [g++-10, g++-11, clang++-11, clang++-12]
-        standard: [17]
+        compiler: [clang++-16, g++-13]
+        check_abi_compatibility: [OFF, ON]
     steps:
       - uses: actions/checkout@v3
-      - name: Install g++-11
-        if: ${{ matrix.compiler == 'g++-11' }}
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install g++-11
-      - name: Install clang-11
-        if: ${{ matrix.compiler == 'clang++-11' }}
-        run: |
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt update
-          sudo apt install clang-11
-      - name: Install Boost
-        run: |
-          sudo apt update
-          sudo apt install libboost-all-dev
       - name: Configure
         run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
       - name: Build
-        run: VERBOSE=1 cmake --build cmake.bld
+        run: VERBOSE=1 cmake --build build
       - name: Unit Tests
         run: |
-          cd cmake.bld
+          cd build
           ctest --rerun-failed --output-on-failure .
       - name: Examples
         run: |
           pwd
-          cd cmake.bld/examples
+          cd build/examples
+          find . -type f -executable -exec {} \;
+  ubuntu-cmake:
+    runs-on: ubuntu-latest
+    container:
+      ghcr.io/jll63/yomm2-gha:latest
+    strategy:
+      matrix:
+        compiler: [clang++-16, g++-13]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Add git, remove Boost and Google Benchmarks
+        run: |
+          apt-get update
+          apt-get install -y git
+          apt-get remove -y libbenchmark-dev libboost-all-dev
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+      - name: Build
+        run: VERBOSE=1 cmake --build build
+      - name: Unit Tests
+        run: |
+          cd build
+          ctest --rerun-failed --output-on-failure .
+      - name: Examples
+        run: |
+          pwd
+          cd build/examples
           find . -type f -executable -exec {} \;
   windows:
     runs-on: windows-latest
     strategy:
       matrix:
-        config: [Debug, Release, ReleaseDebug, DebugRelease]
+        config: [Debug, Release]
+        standard: [17, 20]
     steps:
       - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          vsversion: 2022
       - name: Configure
         run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
+          mkdir build
+          cd build
+          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
-          cd cmake.bld
+          cd build
           nmake
       - name: Unit Tests
         run: |
-          cd cmake.bld
+          cd build
           $env:YOMM2_TRACE = 1
           ctest --rerun-failed --output-on-failure .
           $global:LASTEXITCODE = 0
   windows-shared:
+    strategy:
+      matrix:
+        check_abi_compatibility: [OFF, ON]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          vsversion: 2022
       - name: Configure
         run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
+          mkdir build
+          cd build
+          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
-          cd cmake.bld
+          cd build
           nmake
       - name: Unit Tests
         run: |
-          cd cmake.bld
+          cd build
           $env:YOMM2_TRACE = 1
           ctest --rerun-failed --output-on-failure .
           $global:LASTEXITCODE = 0
@@ -169,20 +149,18 @@ jobs:
       - uses: actions/checkout@v3
       - name: Configure
         run: |
-          mkdir cmake.bld
-          cd cmake.bld
-          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 YOMM2_ENABLE_BENCHMARKS=1
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
       - name: Build
         run: |
-          cd cmake.bld
-          ld --help
-          export VERBOSE=1
+          cd build
           make
       - name: Unit Tests
         run: |
-          cd cmake.bld
+          cd build
           ctest --rerun-failed --output-on-failure .
       - name: Examples
         run: |
-          cd cmake.bld/examples
+          cd build/examples
           find . -type f -perm +0111 -exec {} \;
