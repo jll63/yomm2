@@ -10,7 +10,7 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
-#include "test_policy.hpp"
+#include "test_helpers.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
@@ -369,43 +369,3 @@ BOOST_AUTO_TEST_CASE(across_namespaces) {
 }
 
 } // namespace across_namespaces
-
-namespace refref {
-
-struct Animal {
-    virtual ~Animal() {
-    }
-    bool moved{false};
-};
-
-struct Dog : Animal {};
-
-struct Cat : virtual Animal {};
-
-YOMM2_CLASS(Animal);
-YOMM2_CLASS(Dog, Animal);
-YOMM2_CLASS(Cat, Animal);
-
-YOMM2_DECLARE(void, test, (virtual_<Animal&&>));
-
-YOMM2_DEFINE(void, test, (Dog && dog)) {
-    dog.moved = true;
-}
-
-YOMM2_DEFINE(void, test, (Cat && cat)) {
-    cat.moved = true;
-}
-
-BOOST_AUTO_TEST_CASE(moving) {
-    update();
-
-    Dog dog;
-    test(std::move(dog));
-    BOOST_TEST(dog.moved);
-
-    Cat cat;
-    test(std::move(cat));
-    BOOST_TEST(cat.moved);
-}
-
-} // namespace refref

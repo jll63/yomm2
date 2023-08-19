@@ -19,23 +19,21 @@ list(APPEND BOOST_SUBMODULES
     "libs/type_traits"
     "libs/throw_exception"
 )
-if(@YOMM2_ENABLE_TESTS@)
-    list(APPEND BOOST_SUBMODULES
-        "libs/algorithm"
-        "libs/bind"
-        "libs/exception"
-        "libs/function"
-        "libs/io"
-        "libs/iterator"
-        "libs/mpl"
-        "libs/numeric/conversion"
-        "libs/range"
-        "libs/smart_ptr"
-        "libs/test"
-        "libs/type_index"
-        "libs/utility"
-    )
-endif()
+  list(APPEND BOOST_SUBMODULES
+      "libs/algorithm"
+      "libs/bind"
+      "libs/exception"
+      "libs/function"
+      "libs/io"
+      "libs/iterator"
+      "libs/mpl"
+      "libs/numeric/conversion"
+      "libs/range"
+      "libs/smart_ptr"
+      "libs/test"
+      "libs/type_index"
+      "libs/utility"
+  )
 
 ExternalProject_Add(${PROJECT_NAME}
     GIT_REPOSITORY      https://github.com/boostorg/boost.git

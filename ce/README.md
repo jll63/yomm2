@@ -11,4 +11,4 @@ virtual function based approaches.
 | double dispatch       | vs  | multi-method call via virtual_ptr     | https://godbolt.org/z/PT9P7q6M6 |
 
 YOMM2 can also [add polymorphic operations to non-polymorphic
-classes](https://godbolt.org/z/Tsofsejb7).
+classes](https://godbolt.org/z/YTeWcs9bo).

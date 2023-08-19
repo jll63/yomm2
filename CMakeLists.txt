@@ -35,7 +35,7 @@ endif()
 
 add_subdirectory(src)
 
-option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
+option(YOMM2_ENABLE_TESTS "Set to ON to build tests" ON)
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
   "Set to ON to build benchmarks" OFF

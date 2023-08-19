@@ -64,12 +64,12 @@ struct derived<Class> {
 template<class Class, class Base1, class... Bases>
 struct derived<Class, Base1, Bases...> {
     derived() {
-        if constexpr (Class::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
-            yomm2_mptr(&Class::YoMm2_S_mptr_policy_::template method_table<
+        if constexpr (Base1::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
+            yomm2_mptr(&Base1::YoMm2_S_mptr_policy_::template method_table<
                 Class>);
         } else {
             static_assert(detail::has_mptr<Base1>);
-            yomm2_mptr(Class::YoMm2_S_mptr_policy_::template method_table<
+            yomm2_mptr(Base1::YoMm2_S_mptr_policy_::template method_table<
                 Class>);
         }
     }

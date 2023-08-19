@@ -3,6 +3,8 @@
 
 #include "yorel/yomm2/detail/chain.hpp"
 
+#include <iomanip> // for operator<<, setw
+
 namespace yorel {
 namespace yomm2 {
 namespace detail {
@@ -29,26 +31,6 @@ struct range {
 
 template<typename Iterator>
 range(Iterator b, Iterator e) -> range<Iterator>;
-
-struct tip {
-    const ti_ptr ptr;
-};
-
-inline std::ostream& operator<<(std::ostream& os, tip t) {
-    return os << t.ptr->name() << "(" << t.ptr << ")";
-}
-
-inline std::ostream&
-operator<<(std::ostream& os, const range<const ti_ptr*>& tips) {
-    os << "(";
-    const char* sep = "";
-    for (auto t : tips) {
-        os << sep << tip{t};
-        sep = ", ";
-    }
-
-    return os << ")";
-}
 
 inline void default_error_handler(const error_type& error_v);
 inline error_handler_type error_handler = detail::default_error_handler;
@@ -155,6 +137,18 @@ using type_next_t = decltype(type_next(std::declval<Container>()));
 
 template<typename Container, typename Next>
 constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
+
+// ----------
+// has_trace
+
+template<typename Container>
+auto type_trace(Container t) -> decltype(t.trace);
+
+auto type_trace(...) -> void;
+
+template<typename Container>
+constexpr bool has_trace =
+    !std::is_same_v<decltype(type_trace(std::declval<Container>())), void>;
 
 // --------------
 // intrusive mode
@@ -570,26 +564,10 @@ struct argument_traits {
         return &typeid(arg);
     }
 
-#if defined(_MSC_VER) && (_MSC_VER / 100) <= 19
-
-    template<typename U>
-    static U& cast(U& obj) {
-        return obj;
+    template<typename>
+    static T cast(T obj) {
+        return std::forward<T>(obj);
     }
-
-    template<typename U>
-    static U&& cast(U&& obj) {
-        return obj;
-    }
-
-#else
-
-    template<typename U>
-    static decltype(auto) cast(U&& obj) {
-        return std::forward<U>(obj);
-    }
-
-#endif
 };
 
 template<typename T>
@@ -863,6 +841,64 @@ inline auto check_intrusive_method_pointer(const word* mptr, ti_ptr key) {
     }
 
     return mptr;
+}
+
+// -----------------------------------------------------------------------------
+// lightweight ostream
+
+struct stdostream {
+    FILE* stream{stderr};
+
+    void on(FILE* stream = stderr) {
+        this->stream = stream;
+    }
+
+    void off() {
+        this->stream = nullptr;
+    }
+};
+
+inline stdostream cerr;
+
+inline stdostream& operator<<(stdostream& os, const char* str) {
+    if (os.stream) {
+        fputs(str, os.stream);
+    }
+
+    return os;
+}
+
+inline stdostream& operator<<(stdostream& os, const std::string_view& view) {
+    if (os.stream) {
+        fwrite(view.data(), sizeof(*view.data()), view.length(), os.stream);
+    }
+
+    return os;
+}
+
+template<typename T>
+inline stdostream& operator<<(stdostream& os, T* value) {
+    if (os.stream) {
+        std::array<char, 20> str;
+        auto end = std::to_chars(
+                       str.data(), str.data() + str.size(),
+                       reinterpret_cast<uintptr_t>(value), 16)
+                       .ptr;
+        os << std::string_view(str.data(), end - str.data());
+    }
+
+    return os;
+}
+
+inline stdostream& operator<<(stdostream& os, size_t value) {
+    if (os.stream) {
+        std::array<char, 20> str;
+        auto end =
+            std::to_chars(str.data(), str.data() + str.size(), value).ptr;
+        os << std::string_view(str.data(), end - str.data());
+    }
+
+    return os;
 }
 
 } // namespace detail

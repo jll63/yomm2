@@ -13,7 +13,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
-#include "test_policy.hpp"
+#include "test_helpers.hpp"
 
 using std::cout;
 using namespace yorel::yomm2;
@@ -39,14 +39,30 @@ void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
 using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_value) {
+BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
     yorel::yomm2::update();
 
     {
         boost::test_tools::output_test_stream os;
         Dog dog;
-        auto vptr = virtual_ptr<Animal>(dog);
+        virtual_ptr<Animal> vptr(dog);
         kick::fn(vptr, os);
+    }
+
+    {
+        // Using  deduction guide.
+        boost::test_tools::output_test_stream os;
+        Animal&& animal = Dog();
+        auto vptr = virtual_ptr(animal);
+        kick::fn(vptr, os);
+        BOOST_CHECK(os.is_equal("bark"));
+    }
+
+    {
+        // Using conversion ctor.
+        boost::test_tools::output_test_stream os;
+        Animal&& animal = Dog();
+        kick::fn(animal, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 }
@@ -92,28 +108,6 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
 
 namespace YOMM2_GENSYM {
 
-void kick_dog(const virtual_ptr<Dog>&, std::ostream& os) {
-    os << "bark";
-}
-
-using kick = method<void, void(const virtual_ptr<Animal>&, std::ostream&)>;
-static kick::add_function<kick_dog> YOMM2_GENSYM;
-
-BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_reference) {
-    yorel::yomm2::update();
-
-    {
-        boost::test_tools::output_test_stream os;
-        Dog dog;
-        auto vptr = virtual_ptr<Animal>(dog);
-        kick::fn(vptr, os);
-        BOOST_CHECK(os.is_equal("bark"));
-    }
-}
-}
-
-namespace YOMM2_GENSYM {
-
 void kick_dog(virtual_shared_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
@@ -133,14 +127,14 @@ BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
 }
 } // namespace YOMM2_GENSYM
 
-
 namespace YOMM2_GENSYM {
 
 void kick_dog(const virtual_shared_ptr<Dog>&, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)>;
+using kick =
+    method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)>;
 static kick::add_function<kick_dog> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
@@ -154,7 +148,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
     }
 }
 } // namespace YOMM2_GENSYM
-} // namespace using_polymorphic_types
+} // namespace YOMM2_GENSYM
 
 namespace YOMM2_GENSYM {
 

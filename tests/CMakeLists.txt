@@ -63,3 +63,7 @@ add_test(NAME test_virtual_ptr COMMAND test_virtual_ptr)
 add_executable(test_virtual_ptr_all test_virtual_ptr_all.cpp)
 target_link_libraries(test_virtual_ptr_all YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME test_virtual_ptr_all COMMAND test_virtual_ptr_all)
+
+add_executable(test_move test_move.cpp)
+target_link_libraries(test_move YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_move COMMAND test_move)

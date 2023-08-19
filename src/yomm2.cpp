@@ -20,22 +20,16 @@ namespace yorel {
 namespace yomm2 {
 
 namespace policy {
-yOMM2_API context shared_library::context;
-yOMM2_API catalog shared_library::catalog;
-yOMM2_API std::ostream* runtime_trace_mixin::runtime_trace;
-yOMM2_API std::ostream* call_trace_mixin::call_trace;
+yOMM2_API context abstract_shared::context;
+yOMM2_API catalog abstract_shared::catalog;
+yOMM2_API detail::stdostream abstract_shared::trace;
 } // namespace policy
 
-template void update<default_policy>();
+template void update<policy::abstract_shared>();
 
 yOMM2_API void update() {
-    update<default_policy>();
+    update<policy::abstract_shared>();
 }
-
-namespace detail {
-yOMM2_API std::ostream* logs;
-yOMM2_API unsigned trace_flags;
-} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

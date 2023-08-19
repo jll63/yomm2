@@ -4,7 +4,7 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
-#include "test_policy.hpp"
+#include "test_helpers.hpp"
 
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
@@ -271,13 +271,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST(jet->direct_derived.size() == 0);
 
     BOOST_TEST(
-        sstr(role->covariant_classes) ==
+        sstr(role->compatible_classes) ==
         sstr(role, employee, founder, manager));
-    BOOST_TEST(sstr(founder->covariant_classes) == sstr(founder));
+    BOOST_TEST(sstr(founder->compatible_classes) == sstr(founder));
     BOOST_TEST(
-        sstr(expense->covariant_classes) ==
+        sstr(expense->compatible_classes) ==
         sstr(expense, public_, taxi, jet, bus, metro));
-    BOOST_TEST(sstr(public_->covariant_classes) == sstr(public_, bus, metro));
+    BOOST_TEST(sstr(public_->compatible_classes) == sstr(public_, bus, metro));
 
     rt.augment_methods();
 
@@ -699,37 +699,37 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     // A
     BOOST_REQUIRE_EQUAL(sstr(a->direct_bases), empty);
     BOOST_REQUIRE_EQUAL(sstr(a->direct_derived), sstr(ab));
-    BOOST_REQUIRE_EQUAL(sstr(a->covariant_classes), sstr(a, ab, c));
+    BOOST_REQUIRE_EQUAL(sstr(a->compatible_classes), sstr(a, ab, c));
 
     // -----------------------------------------------------------------------
     // B
     BOOST_REQUIRE_EQUAL(sstr(b->direct_bases), empty);
     BOOST_REQUIRE_EQUAL(sstr(b->direct_derived), sstr(ab, d));
-    BOOST_REQUIRE_EQUAL(sstr(b->covariant_classes), sstr(b, ab, c, d, e));
+    BOOST_REQUIRE_EQUAL(sstr(b->compatible_classes), sstr(b, ab, c, d, e));
 
     // -----------------------------------------------------------------------
     // AB
     BOOST_REQUIRE_EQUAL(sstr(ab->direct_bases), sstr(a, b));
     BOOST_REQUIRE_EQUAL(sstr(ab->direct_derived), sstr(c));
-    BOOST_REQUIRE_EQUAL(sstr(ab->covariant_classes), sstr(ab, c));
+    BOOST_REQUIRE_EQUAL(sstr(ab->compatible_classes), sstr(ab, c));
 
     // -----------------------------------------------------------------------
     // C
     BOOST_REQUIRE_EQUAL(sstr(c->direct_bases), sstr(ab));
     BOOST_REQUIRE_EQUAL(sstr(c->direct_derived), empty);
-    BOOST_REQUIRE_EQUAL(sstr(c->covariant_classes), sstr(c));
+    BOOST_REQUIRE_EQUAL(sstr(c->compatible_classes), sstr(c));
 
     // -----------------------------------------------------------------------
     // D
     BOOST_REQUIRE_EQUAL(sstr(d->direct_bases), sstr(b));
     BOOST_REQUIRE_EQUAL(sstr(d->direct_derived), sstr(e));
-    BOOST_REQUIRE_EQUAL(sstr(d->covariant_classes), sstr(d, e));
+    BOOST_REQUIRE_EQUAL(sstr(d->compatible_classes), sstr(d, e));
 
     // -----------------------------------------------------------------------
     // E
     BOOST_REQUIRE_EQUAL(sstr(e->direct_bases), sstr(d));
     BOOST_REQUIRE_EQUAL(sstr(e->direct_derived), empty);
-    BOOST_REQUIRE_EQUAL(sstr(e->covariant_classes), sstr(e));
+    BOOST_REQUIRE_EQUAL(sstr(e->compatible_classes), sstr(e));
 }
 
 struct key;

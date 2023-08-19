@@ -1,20 +1,14 @@
 #ifndef YOREL_YOMM2_CORE_INCLUDED
 #define YOREL_YOMM2_CORE_INCLUDED
 
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <stdio.h>
-#include <iostream>
 #include <memory>
 #include <string_view>
 #include <variant>
 #include <vector>
-
-#if defined(YOMM2_ENABLE_TRACE) && (YOMM2_ENABLE_TRACE & 2)
-    #include <iostream>
-#else
-    #include <iosfwd>
-#endif
 
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
@@ -65,77 +59,25 @@ struct abstract_policy {
     static constexpr bool runtime_checks = false;
 };
 
-struct yOMM2_API runtime_checks_mixin : virtual abstract_policy {
-    static constexpr bool runtime_checks = true;
-};
-
-struct yOMM2_API runtime_trace_mixin : virtual abstract_policy {
-    static std::ostream* runtime_trace;
-};
-
-struct yOMM2_API call_trace_mixin : virtual abstract_policy {
-    static std::ostream* call_trace;
-};
-
-#if !defined(YOMM2_SHARED)
-inline std::ostream* runtime_trace::os;
-inline std::ostream* call_trace::os;
-#endif
-
-template<class Policy>
-struct scope_mixin : virtual abstract_policy {
-    static struct context context;
-    static struct catalog catalog;
-};
-
-template<class Policy>
-struct method_tables_mixin : virtual abstract_policy {
-    template<class Class>
-    static detail::mptr_type method_table;
-    template<class Class>
-    static detail::mptr_type* indirect_method_table;
-};
-
-template<class Policy>
-template<class Class>
-detail::mptr_type method_tables_mixin<Policy>::method_table;
-
-template<class Policy>
-template<class Class>
-detail::mptr_type* method_tables_mixin<Policy>::indirect_method_table =
-    &method_tables_mixin<Policy>::method_table<Class>;
-
-struct basic_policy : scope_mixin<basic_policy>,
-                      method_tables_mixin<basic_policy> {};
-
-struct debug_policy : basic_policy, runtime_checks_mixin {};
-using release_policy = basic_policy;
-
-// clang-format on
-
-struct yOMM2_API shared_library : runtime_trace_mixin {
-    static constexpr bool enable_runtime_checks = true;
-    static struct context context;
-    static struct catalog catalog;
-    template<class Class>
-    static detail::mptr_type method_table;
-    template<class Class>
-    static detail::mptr_type* indirect_method_table;
-};
-
-template<class Class>
-detail::mptr_type shared_library::method_table;
-
-template<class Class>
-detail::mptr_type* shared_library::indirect_method_table =
-    &shared_library::method_table<Class>;
+struct debug;
+struct release;
+struct debug_shared;
+struct release_shared;
 
 } // namespace policy
 
 #if defined(YOMM2_SHARED)
-using default_policy = policy::shared_library;
+    #ifdef NDEBUG
+using default_policy = policy::release_shared;
+    #else
+using default_policy = policy::debug_shared;
+    #endif
 #else
-using default_policy = policy::basic_policy;
+    #ifdef NDEBUG
+using default_policy = policy::release;
+    #else
+using default_policy = policy::debug;
+    #endif
 #endif
 
 // -----------------------------------------------------------------------------
@@ -284,9 +226,6 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     template<typename ArgType>
     const detail::word* get_mptr(detail::resolver_type<ArgType> arg) const;
 
-    static constexpr bool trace =
-        std::is_base_of_v<policy::call_trace_mixin, Policy>;
-
     template<typename ArgType, typename... MoreArgTypes>
     void* resolve_uni(
         detail::resolver_type<ArgType> arg,
@@ -405,23 +344,17 @@ template<typename Container>
 typename method<Key, R(A...), Policy>::next_type
     method<Key, R(A...), Policy>::use_next<Container>::next;
 
-// clang-format off
-
 // -----------------------------------------------------------------------------
 // class_declaration
 
 template<typename Class, typename... Rest>
 struct class_declaration : class_declaration<
-    detail::remove_policy<Class, Rest...>,
-    detail::get_policy<Class, Rest...>
-> {};
+                               detail::remove_policy<Class, Rest...>,
+                               detail::get_policy<Class, Rest...>> {};
 
 template<typename Class, typename... Bases, typename Policy>
-struct class_declaration<detail::types<Class, Bases...>, Policy> : detail::class_info {
-    // Add a class to a catalog.
-    // There is a possibility that the same class is registered with
-    // different bases. This will be caught by augment_classes.
-
+struct class_declaration<detail::types<Class, Bases...>, Policy>
+    : detail::class_info {
     class_declaration() {
         using namespace detail;
 
@@ -439,11 +372,8 @@ struct class_declaration<detail::types<Class, Bases...>, Policy> : detail::class
 };
 
 template<typename Class, typename... Bases>
-struct class_declaration<detail::types<Class, Bases...>> : class_declaration<
-    detail::types<Class, Bases...>, default_policy
-> {};
-
-// clang-format on
+struct class_declaration<detail::types<Class, Bases...>>
+    : class_declaration<detail::types<Class, Bases...>, default_policy> {};
 
 template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
@@ -485,7 +415,7 @@ class virtual_ptr_aux {
     }
 
     template<class Other>
-    static auto final(Other& obj) {
+    static auto final(Other&& obj) {
         using namespace detail;
 
         mptr_type mptr;
@@ -539,8 +469,6 @@ class virtual_ptr<Class, Policy, false>
     using base = virtual_ptr_aux<Class, Policy, Class&>;
 
   public:
-    // using virtual_ptr_aux<Class, Policy>::virtual_ptr_aux;
-
     template<class Other>
     virtual_ptr(Other& obj) : base(obj, this->dynamic_method_table(obj)) {
     }
@@ -630,12 +558,17 @@ class virtual_ptr<Class, Policy, true>
     }
 };
 
+template<class Class>
+virtual_ptr(Class&) -> virtual_ptr<
+    Class, default_policy,
+    detail::virtual_ptr_traits<Class, default_policy>::is_smart_ptr>;
+
 template<class Class, class Policy = default_policy>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
 
 template<class Class, class Policy = default_policy>
 inline auto make_virtual_shared() {
-    return virtual_shared_ptr<Class, Policy>(std::make_shared<Class>());
+    return virtual_shared_ptr<Class, Policy>::final(std::make_shared<Class>());
 }
 
 // -----------------------------------------------------------------------------
@@ -675,24 +608,12 @@ method<Key, R(A...), Policy>::resolve(
     detail::resolver_type<ArgType>... args) const {
     using namespace detail;
 
-    if constexpr (trace) {
-        if (Policy::call_trace) {
-            *Policy::call_trace << "call " << this->name << "\n";
-        }
-    }
-
     void* pf;
 
     if constexpr (arity == 1) {
         pf = resolve_uni<ArgType...>(args...);
     } else {
         pf = resolve_multi_first<0, ArgType...>(args...);
-    }
-
-    if constexpr (trace) {
-        if (Policy::call_trace) {
-            *Policy::call_trace << " pf = " << pf << "\n";
-        }
     }
 
     return reinterpret_cast<function_pointer_type>(pf);
@@ -716,20 +637,7 @@ inline const detail::word* method<Key, R(A...), Policy>::get_mptr(
         // virtual_ptr was created.
     } else {
         auto key = virtual_traits<ArgType>::key(arg);
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << "  key = " << key;
-            }
-        }
-
         mptr = Policy::context.mptrs[Policy::context.hash(key)];
-    }
-
-    if constexpr (trace) {
-        if (Policy::call_trace) {
-            *Policy::call_trace << " mptr = " << mptr;
-        }
     }
 
     return mptr;
@@ -745,13 +653,6 @@ inline void* method<Key, R(A...), Policy>::resolve_uni(
 
     if constexpr (is_virtual<ArgType>::value) {
         const word* mptr = get_mptr<ArgType>(arg);
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " slot = " << this->slots_strides[0];
-            }
-        }
-
         return mptr[this->slots_strides[0]].pf;
     } else {
         return resolve_uni<MoreArgTypes...>(more_args...);
@@ -776,24 +677,11 @@ inline void* method<Key, R(A...), Policy>::resolve_multi_first(
 
         auto slot = slots_strides[0];
 
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " slot = " << slot;
-            }
-        }
-
         // The first virtual parameter is special.  Since its stride is
         // 1, there is no need to store it. Also, the method table
         // contains a pointer into the multi-dimensional dispatch table,
         // already resolved to the appropriate group.
         auto dispatch = mptr[slot].pw;
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " dispatch = " << dispatch << "\n    ";
-            }
-        }
-
         return resolve_multi_next<1, MoreArgTypes...>(dispatch, more_args...);
     } else {
         return resolve_multi_first<MoreArgTypes...>(more_args...);
@@ -818,28 +706,8 @@ inline void* method<Key, R(A...), Policy>::resolve_multi_next(
         }
 
         auto slot = this->slots_strides[2 * VirtualArg - 1];
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " slot = " << slot;
-            }
-        }
-
         auto stride = this->slots_strides[2 * VirtualArg];
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " stride = " << stride;
-            }
-        }
-
         dispatch = dispatch + mptr[slot].i * stride;
-
-        if constexpr (trace) {
-            if (Policy::call_trace) {
-                *Policy::call_trace << " dispatch = " << dispatch << "\n    ";
-            }
-        }
     }
 
     if constexpr (VirtualArg + 1 == arity) {
@@ -888,6 +756,11 @@ inline auto
 virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
     using namespace detail;
 
+    static_assert(
+        std::is_polymorphic_v<
+            typename virtual_traits<Other&>::polymorphic_type>,
+        "use 'final' if intended");
+
     mptr_type mptr;
 
     auto dynamic_key = virtual_traits<Other&>::key(obj);
@@ -916,6 +789,76 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
 }
 
 namespace policy {
+
+struct yOMM2_API runtime_checks_mixin : virtual abstract_policy {
+    static constexpr bool runtime_checks = true;
+};
+
+template<typename Stream>
+struct runtime_trace_mixin : virtual abstract_policy {
+    static Stream trace;
+};
+
+template<typename Stream>
+inline Stream runtime_trace_mixin<Stream>::trace;
+
+template<class Policy>
+struct scope_mixin : virtual abstract_policy {
+    static struct context context;
+    static struct catalog catalog;
+};
+
+template<class Policy>
+struct method_tables_mixin : virtual abstract_policy {
+    template<class Class>
+    static detail::mptr_type method_table;
+    template<class Class>
+    static detail::mptr_type* indirect_method_table;
+};
+
+template<class Policy>
+template<class Class>
+detail::mptr_type method_tables_mixin<Policy>::method_table;
+
+template<class Policy>
+template<class Class>
+detail::mptr_type* method_tables_mixin<Policy>::indirect_method_table =
+    &method_tables_mixin<Policy>::method_table<Class>;
+
+struct basic_policy : scope_mixin<basic_policy>,
+                      method_tables_mixin<basic_policy> {};
+
+struct debug : basic_policy,
+               runtime_checks_mixin,
+               runtime_trace_mixin<detail::stdostream> {};
+struct release : basic_policy {};
+
+struct yOMM2_API abstract_shared : abstract_policy {
+    static constexpr bool enable_runtime_checks = true;
+    static constexpr bool use_indirect_method_pointers = false;
+    static detail::stdostream trace;
+    static struct context context;
+    static struct catalog catalog;
+    template<class Class>
+    static detail::mptr_type method_table;
+    template<class Class>
+    static detail::mptr_type* indirect_method_table;
+};
+
+struct debug_shared : abstract_shared {
+    static constexpr bool runtime_checks = true;
+};
+
+struct release_shared : abstract_shared {
+    static constexpr bool runtime_checks = false;
+};
+
+template<class Class>
+detail::mptr_type abstract_shared::method_table;
+
+template<class Class>
+detail::mptr_type* abstract_shared::indirect_method_table =
+    &abstract_shared::method_table<Class>;
 
 template<class Policy>
 catalog scope_mixin<Policy>::catalog;
@@ -960,14 +903,15 @@ inline void default_method_call_error_handler(
     if constexpr (bool(debug)) {
         const char* explanation[] = {
             "no applicable definition", "ambiguous call"};
-        std::cerr << explanation[error.code - resolution_error::no_definition]
-                  << " for " << error.method_name << "(";
+        detail::cerr
+            << explanation[error.code - resolution_error::no_definition]
+            << " for " << error.method_name << "(";
         auto comma = "";
         for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
-            std::cerr << comma << ti->name();
+            detail::cerr << comma << ti->name();
             comma = ", ";
         }
-        std::cerr << ")\n" << std::flush;
+        detail::cerr << ")\n";
     }
     abort();
 }
@@ -984,24 +928,24 @@ inline void default_error_handler(const error_type& error_v) {
 
     if (auto error = std::get_if<unknown_class_error>(&error_v)) {
         if constexpr (bool(debug)) {
-            std::cerr << "unknown class " << error->ti->name() << "\n";
+            detail::cerr << "unknown class " << error->ti->name() << "\n";
         }
         abort();
     }
 
     if (auto error = std::get_if<method_table_error>(&error_v)) {
         if constexpr (bool(debug)) {
-            std::cerr << "invalid method table for " << error->ti->name()
-                      << "\n";
+            detail::cerr << "invalid method table for " << error->ti->name()
+                         << "\n";
         }
         abort();
     }
 
     if (auto error = std::get_if<hash_search_error>(&error_v)) {
         if constexpr (bool(debug)) {
-            std::cerr << "could not find hash factors after " << error->attempts
-                      << " in " << error->duration.count() << "s using "
-                      << error->buckets << " buckets\n";
+            detail::cerr << "could not find hash factors after "
+                         << error->attempts << " in " << error->duration.count()
+                         << "s using " << error->buckets << " buckets\n";
         }
         abort();
     }

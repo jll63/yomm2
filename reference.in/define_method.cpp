@@ -29,13 +29,13 @@ Add a definition to a method.
 Locate a method with the same name, with a signature compatible with
 `method-parameter-list`, and add the definition to the method's list of
 definitions. The method must exist and must be unique. `return-type` must be
-covariant with the method's return type. `return-type` may be `auto`.
+compatible with the method's return type. `return-type` may be `auto`.
 
 The types of the arguments must _not_ be decorated with `virtual_`.
 
 Inside the block, a function pointer named `next` points to the next most
 specific definition, if one exists, and it is unique. Otherwise, `next` points
-to an error handler, which writes a message to `std::cerr`, and terminates the
+to an error handler, which writes a message to `stderr`, and terminates the
 program via `abort`. The handler can be customized. See
 ->set_method_call_error_handler.
 

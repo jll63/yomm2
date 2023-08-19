@@ -30,8 +30,8 @@ collection of method definitions.
 
 A *method definition* is a function attached to a single method. The type of the
 parameters corresponding to the virtual parameters in the method must be
-covariant with the method's parameter type. The other parameters must have the
-same type as in the method. The return type of the definition must be covariant
+compatible with the method's parameter type. The other parameters must have the
+same type as in the method. The return type of the definition must be compatible
 with the return type of the method.
 
 A *virtual parameter* is a parameter that is taken into account when the method

@@ -6,8 +6,7 @@ struct Animal {
     const char* name;
     Animal(const char* name) : name(name) {
     }
-    virtual ~Animal() {
-    }
+    virtual ~Animal() {}
 };
 
 struct Dog : Animal {
