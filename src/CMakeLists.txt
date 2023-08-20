@@ -4,6 +4,9 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
+option(
+  YOMM2_CHECK_ABI_COMPATIBILITY
+  "Build shared library and examples in different modes" OFF)
 
 if(YOMM2_SHARED)
   message(STATUS "Building a shared library")
@@ -20,7 +23,17 @@ if(YOMM2_SHARED)
     PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
   )
   target_link_libraries(yomm2 PUBLIC Boost::headers)
+  if (${YOMM2_CHECK_ABI_COMPATIBILITY})
+    message(STATUS "type: ${CMAKE_BUILD_TYPE} FLAGS: ${CMAKE_CXX_FLAGS_RELEASE}")
+    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+      set_target_properties(yomm2 PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}" )
+      #set_property(TARGET yomm2 PROPERTY COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+    endif()
+  endif()
 else()
+  if (${YOMM2_CHECK_ABI_COMPATIBILITY})
+    message(FATAL_ERROR "YOMM2_CHECK_ABI_COMPATIBILITY does not make sense for headers only mode." )
+  endif()
   message(STATUS "Building a headers only library")
   add_library(yomm2 INTERFACE)
   target_include_directories(
@@ -31,7 +44,6 @@ else()
   )
   target_link_libraries(yomm2 INTERFACE Boost::headers)
 endif()
-
 
 install(TARGETS yomm2
   EXPORT YOMM2Targets

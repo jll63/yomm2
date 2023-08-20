@@ -75,13 +75,6 @@ if(${YOMM2_ENABLE_DOC})
   add_subdirectory(tutorials)
 endif()
 
-option(YOMM2_ENABLE_TRACE "Enable trace (compile time)" OFF)
-
-if(NOT "${YOMM2_ENABLE_TRACE}" EQUAL "")
-  message(STATUS "Compiling with YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE}")
-  add_compile_definitions(YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE})
-endif()
-
 
 ## Install instruction
 # Create version file for cmake package
