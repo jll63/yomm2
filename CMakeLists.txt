@@ -50,6 +50,7 @@ if(${YOMM2_ENABLE_TESTS})
   include(CTest)
   enable_testing()
   add_subdirectory(tests)
+  add_subdirectory(ce)
 endif()
 
 option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)

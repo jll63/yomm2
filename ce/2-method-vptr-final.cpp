@@ -60,7 +60,8 @@ int main() {
     Dog hector{"Hector"}, snoopy{"Snoopy"};
     Cat felix{"Felix"}, sylvester{"Sylvester"};
     std::vector<virtual_ptr<Animal>> animals = {
-        hector, felix, sylvester, snoopy};
+        virtual_ptr<Dog>::final(hector), virtual_ptr<Cat>::final(felix),
+        virtual_ptr<Cat>::final(sylvester), virtual_ptr<Dog>::final(snoopy)};
 
     meet_animals(animals, std::cout);
 }
