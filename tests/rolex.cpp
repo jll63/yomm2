@@ -1,12 +1,4 @@
-// clang++ -std=c++17 -I ~/dev/yomm2/include -O3 -DNDEBUG -save-temps -o rolex rolex.cpp ~/dev/yomm2/src/yomm2.cpp && ./rolex
-// clang++ -std=c++17 -I ~/dev/yomm2/include -E rolex.cpp | clang-format | perl -pe 's/::yorel::yomm2::(detail::)?//'
-
-// clang++ -std=c++17 -I ~/dev/yomm2/include -o rolex rolex.cpp ~/dev/yomm2/src/yomm2.cpp && YOMM2_TRACE=1 ./rolex
-
-
 #include <yorel/yomm2/keywords.hpp>
-
-using yorel::yomm2::virtual_;
 
 struct Role {
     virtual ~Role() {}
