@@ -174,6 +174,7 @@ struct context {
     std::vector<detail::word*> mptrs;
     std::vector<detail::word**> indirect_mptrs;
     detail::hash_function hash;
+    std::vector<detail::ti_ptr> control;
 };
 
 struct catalog {
@@ -637,7 +638,16 @@ inline const detail::word* method<Key, R(A...), Policy>::get_mptr(
         // virtual_ptr was created.
     } else {
         auto key = virtual_traits<ArgType>::key(arg);
-        mptr = Policy::context.mptrs[Policy::context.hash(key)];
+        auto index = Policy::context.hash(key);
+
+        if constexpr (Policy::runtime_checks) {
+            auto control_key = Policy::context.control[index];
+            if (control_key != key) {
+                error_handler(unknown_class_error{unknown_class_error::call, key});
+            }
+        }
+
+        mptr = Policy::context.mptrs[index];
     }
 
     return mptr;
@@ -949,21 +959,6 @@ inline void default_error_handler(const error_type& error_v) {
         }
         abort();
     }
-}
-
-inline auto hash_function::operator()(ti_ptr tip) const {
-    auto index = unchecked_hash(tip);
-    const void* test = &control;
-
-    if constexpr (debug) {
-        auto control_tip = control[index];
-
-        if (control_tip != tip) {
-            error_handler(unknown_class_error{unknown_class_error::call, tip});
-        }
-    }
-
-    return index;
 }
 
 } // namespace detail

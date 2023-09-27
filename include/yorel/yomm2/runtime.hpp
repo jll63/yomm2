@@ -989,7 +989,7 @@ void runtime<Policy>::find_hash_function(
             hash.mult = uniform_dist(rnd) | 1;
 
             for (auto key : keys) {
-                auto h = hash.unchecked_hash(key);
+                auto h = hash(key);
 
                 if (buckets[h]++) {
                     found = false;
@@ -1051,8 +1051,8 @@ void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
 template<class Policy>
 void runtime<Policy>::install_gv() {
     Policy::context.mptrs.resize(metrics.hash_table_size);
-    void* test = &Policy::context.hash.control;
-    Policy::context.hash.control.resize(metrics.hash_table_size);
+    void* test = &Policy::context.control;
+    Policy::context.control.resize(metrics.hash_table_size);
     Policy::context.indirect_mptrs.resize(metrics.hash_table_size);
 
     for (size_t pass = 0; pass != 2; ++pass) {
@@ -1127,9 +1127,9 @@ void runtime<Policy>::install_gv() {
 
             if (pass) {
                 for (auto ti : cls.ti_ptrs) {
-                    auto index = Policy::context.hash.unchecked_hash(ti);
+                    auto index = Policy::context.hash(ti);
                     Policy::context.mptrs[index] = *cls.method_table;
-                    Policy::context.hash.control[index] = ti;
+                    Policy::context.control[index] = ti;
                 }
             }
         }

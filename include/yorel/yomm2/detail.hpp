@@ -172,14 +172,11 @@ constexpr bool has_mptr = !std::is_same_v<
 struct hash_function {
     std::uintptr_t mult;
     std::size_t shift;
-    std::vector<detail::ti_ptr> control;
 
-    auto unchecked_hash(ti_ptr tip) const {
+    auto operator()(ti_ptr tip) const {
         return static_cast<std::size_t>(
             (mult * reinterpret_cast<std::uintptr_t>(tip)) >> shift);
     }
-
-    auto operator()(ti_ptr tip) const;
 };
 
 template<class Class, class Policy>

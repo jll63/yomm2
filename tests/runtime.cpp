@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(
             test_policy::context.mptrs.size() == rt.metrics.hash_table_size);
         BOOST_TEST_REQUIRE(
-            test_policy::context.hash.control.size() ==
+            test_policy::context.control.size() ==
             rt.metrics.hash_table_size);
 
         auto gv_iter = test_policy::context.gv.data();
