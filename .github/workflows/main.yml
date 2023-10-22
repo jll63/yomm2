@@ -67,6 +67,8 @@ jobs:
         compiler: [clang++-16, g++-13]
     steps:
       - uses: actions/checkout@v3
+      - name: Branch name
+        run: echo running on branch ${GITHUB_REF##*/}
       - name: Add git, remove Boost and Google Benchmarks
         run: |
           apt-get update
