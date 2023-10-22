@@ -30,8 +30,8 @@ collection of method definitions.
 
 A *method definition* is a function attached to a single method. The type of the
 parameters corresponding to the virtual parameters in the method must be
-covariant with the method's parameter type. The other parameters must have the
-same type as in the method. The return type of the definition must be covariant
+compatible with the method's parameter type. The other parameters must have the
+same type as in the method. The return type of the definition must be compatible
 with the return type of the method.
 
 A *virtual parameter* is a parameter that is taken into account when the method
@@ -159,10 +159,10 @@ This was the recommended header before version 1.3.0. Includes
 | [define_method](define_method.md)                  | macro             | adds a definition to a method                                            |
 | [define_method_inline](define_method_inline.md)           | macro             | adds an definition to a method in a container, and make it inline        |
 | [derived](intrusive_modes.md)                        | class template    | helper for intrusive modes                                               |
-| [error_handler_type](set_error_handler.md)             | type              | handler function                                                         |
-| [error_type](set_error_handler.md)                     | variant           | object passed to error handler                                           |
+| [error_handler_type](None)             | type              | handler function                                                         |
+| [error_type](None)                     | variant           | object passed to error handler                                           |
 | [friend_method](friend_method.md)                  | macro             | makes a method in a container, or the entire container, a friend         |
-| [hash_search_error](set_error_handler.md)              | class             | failure to find a hash function for registered classes                   |
+| [hash_search_error](None)              | class             | failure to find a hash function for registered classes                   |
 | [make_virtual_shared](virtual_ptr.md)            | function template | creates an object and return a `virtual_shared_ptr`                      |
 | [method](method.md)                         | class template    | implements a method                                                      |
 | [method_call_error](method_call_error.md)              | class             | information about a failed method call                                   |
@@ -171,11 +171,11 @@ This was the recommended header before version 1.3.0. Includes
 | [method_definition](method_definition.md)              | macro             | retrieves a definition from a container                                  |
 | [register_class](register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
 | [register_classes](use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
-| [resolution_error](set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
+| [resolution_error](None)               | class             | method call does not resolve to exactly one definition                   |
 | [root](intrusive_modes.md)                           | class template    | helper for intrusive modes                                               |
 | [set_error_handler](set_error_handler.md)              | function          | sets the function called for all errors                                  |
 | [set_method_call_error_handler](method_call_error.md)  | function          | sets function to call when a method call fails                           |
-| [unknown_class_error](set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |
+| [unknown_class_error](None)            | class             | class used in method declaration, definition, or call was not registered |
 | [update](update.md)                         | function          | sets up dispatch tables                                                  |
 | [update_methods](update_methods.md)                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
 | [use_classes](use_classes.md)                    | class template    | registers classes and their inheritance relationships                    |

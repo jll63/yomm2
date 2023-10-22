@@ -123,6 +123,7 @@ class Dog : public Animal, public Property,
 {
 public:
     using yomm2::derived<Dog, Animal, Property>::yomm2_mptr;
+    using Animal::YoMm2_S_mptr_policy_;
 };
 
 struct Pitbull : Dog, yomm2::derived<Pitbull> {};

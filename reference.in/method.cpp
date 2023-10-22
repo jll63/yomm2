@@ -86,9 +86,9 @@ Register `Function` as a definition of the `method`. If specified, `next` is
 set to a pointer to the next most specialised definition, or to an error
 handler if the next definition does not excist, or is ambiguous.
 
-The parameters of `Function` must be covariant with the corresponding
+The parameters of `Function` must be compatible with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return
-type of `Function` must be covariant with the return type of the method.
+type of `Function` must be compatible with the return type of the method.
 
 ### add_function
 ```c++
@@ -105,9 +105,9 @@ Register `Function` as a definition of the `method`. If specified, `next` is
 set to a pointer to the next most specialised definition, or to an error
 handler if the next definition does not excist, or is ambiguous.
 
-The parameters of `Function` must be covariant with the corresponding
+The parameters of `Function` must be compatible with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return
-type of `Function` must be covariant with the return type of the method.
+type of `Function` must be compatible with the return type of the method.
 
 ### add_definition
 ```c++
@@ -125,9 +125,9 @@ Register static member function `Container::fn` as a definition of the
 pointer to the next most specialised definition, or to an error handler if
 the next definition does not exist, or is ambiguous.
 
-The parameters of `Container::fn` must be covariant with the corresponding
+The parameters of `Container::fn` must be compatible with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return
-type of `Function` must be covariant with the return type of the method.
+type of `Function` must be compatible with the return type of the method.
 
 ### use_next
 ```c++

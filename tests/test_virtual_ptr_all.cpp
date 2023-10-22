@@ -7,7 +7,7 @@
 #include <yorel/yomm2/runtime.hpp>
 #include <yorel/yomm2/templates.hpp>
 
-#include "test_policy.hpp"
+#include "test_helpers.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
@@ -50,12 +50,12 @@ auto fight_bear(VirtualWarriorPtr, VirtualAxePtr, VirtualBearPtr) {
 }
 
 template<int Key>
-struct indirect_test_policy : test_policy<Key> {
+struct indirect_test_policy : test_policy_<Key> {
     static constexpr bool use_indirect_method_pointers = true;
 };
 
 template<int Key>
-using policy_types = types<test_policy<Key>, indirect_test_policy<Key>>;
+using policy_types = types<test_policy_<Key>, indirect_test_policy<Key>>;
 
 namespace YOMM2_GENSYM {
 
@@ -78,15 +78,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     Player player;
     auto virtual_player = vptr_player::final(player);
     BOOST_TEST(&*virtual_player == &player);
-    BOOST_TEST((virtual_player.method_table() == method_table<Player, Policy>));
+    BOOST_TEST((virtual_player.method_table() == Policy::template method_table<Player>));
 
     Bear bear;
     BOOST_TEST((&*vptr_cat::final(bear)) == &bear);
     BOOST_TEST(
-        (vptr_cat::final(bear).method_table() == method_table<Bear, Policy>));
+        (vptr_cat::final(bear).method_table() == Policy::template method_table<Bear>));
 
     BOOST_TEST(
-        (vptr_player(bear).method_table() == method_table<Bear, Policy>));
+        (vptr_player(bear).method_table() == Policy::template method_table<Bear>));
 
     vptr_cat virtual_cat_ptr(bear);
     vptr_player virtual_player_ptr = virtual_cat_ptr;
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     update<Policy>();
 
     BOOST_TEST(
-        (virtual_cat_ptr.method_table() == method_table<Bear, Policy>) ==
+        (virtual_cat_ptr.method_table() == Policy::template method_table<Bear>) ==
         Policy::use_indirect_method_pointers);
 }
 } // namespace test_virtual_ptr

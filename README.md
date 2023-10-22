@@ -324,7 +324,7 @@ in the future. No promises, no time table.
 * Multi-threaded hash search.
 * Make error handler a `std::function`.
 * Get closer to Stroustrup et al's papers (version 2.0):
-  * use covariant return types for disambiguation
+  * use compatible return types for disambiguation
   * move support for `shared_ptr` and `unique_ptr` to an optional header
 
 If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I

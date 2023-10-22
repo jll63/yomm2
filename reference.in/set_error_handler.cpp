@@ -1,27 +1,32 @@
 #ifdef YOMM2_MD
-<sub>/ ->home / ->reference </sub>
+<sub> /->home /
+           ->reference</ sub>
 
-entry: yorel::yomm2::error_type
-entry: yorel::yomm2::error_handler_type
-entry: yorel::yomm2::set_error_handler
-entry: yorel::yomm2::hash_search_error
-entry: yorel::yomm2::resolution_error
-entry: yorel::yomm2::unknown_class_error
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
+               entry : yorel::yomm2::error_type entry
+    : yorel::yomm2::error_handler_type entry
+    : yorel::yomm2::set_error_handler entry
+    : yorel::yomm2::hash_search_error entry
+    : yorel::yomm2::resolution_error entry
+    : yorel::yomm2::unknown_class_error headers : yorel /
+    yomm2 / core.hpp,
+    yorel / yomm2 / keywords.hpp,
+    yorel /
+        yomm2.hpp
 
----
-```
-struct resolution_error {
+        -- -
+``` struct resolution_error {
     enum status_type { no_definition = 1, ambiguous } status;
     /*unspecified*/
 };
 
-struct unknown_class_error { /*unspecified*/ };
+struct unknown_class_error { /*unspecified*/
+};
 
-struct hash_search_error { /*unspecified*/ };
+struct hash_search_error { /*unspecified*/
+};
 
-using error_type = std::variant<
-    resolution_error, unknown_class_error, hash_search_error>;
+using error_type =
+    std::variant<resolution_error, unknown_class_error, hash_search_error>;
 
 using error_handler_type = void (*)(const error_type& error);
 
@@ -33,7 +38,7 @@ All errors are reported via an indirect call to a handler, passing it a
 a user-defined function with `set_error_handler`. The library calls `abort()`
 immediately after calling the handler, but the handler can prevent program
 termination by throwing an exception. The default handler writes an error
-message to `std::cerr` in debug mode.
+message to `stderr` in debug mode.
 
 The handler can determine the exact type of the error by examining the
 variant:
@@ -60,8 +65,8 @@ variant:
 
 #ifdef YOMM2_CODE
 
-#include <stdexcept>
-#include <yorel/yomm2/keywords.hpp>
+    #include <stdexcept>
+    #include <yorel/yomm2/keywords.hpp>
 
 struct Animal {
     virtual ~Animal() {

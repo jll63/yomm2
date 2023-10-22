@@ -10,10 +10,13 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
+#include "test_helpers.hpp"
+
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
 using namespace yorel::yomm2;
+using yorel::yomm2::detail::types;
 
 namespace states {
 
@@ -309,14 +312,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
 
 namespace update_error_handling {
 
-struct test_policy : default_policy {
-    static struct catalog catalog;
-    static struct context context;
-};
-
-catalog test_policy::catalog;
-context test_policy::context;
-
+using test_policy = test_policy_<__COUNTER__>;
 struct base {
     virtual ~base() {
     }
@@ -373,43 +369,3 @@ BOOST_AUTO_TEST_CASE(across_namespaces) {
 }
 
 } // namespace across_namespaces
-
-namespace refref {
-
-struct Animal {
-    virtual ~Animal() {
-    }
-    bool moved{false};
-};
-
-struct Dog : Animal {};
-
-struct Cat : virtual Animal {};
-
-YOMM2_CLASS(Animal);
-YOMM2_CLASS(Dog, Animal);
-YOMM2_CLASS(Cat, Animal);
-
-YOMM2_DECLARE(void, test, (virtual_<Animal&&>));
-
-YOMM2_DEFINE(void, test, (Dog && dog)) {
-    dog.moved = true;
-}
-
-YOMM2_DEFINE(void, test, (Cat && cat)) {
-    cat.moved = true;
-}
-
-BOOST_AUTO_TEST_CASE(moving) {
-    update();
-
-    Dog dog;
-    test(std::move(dog));
-    BOOST_TEST(dog.moved);
-
-    Cat cat;
-    test(std::move(cat));
-    BOOST_TEST(cat.moved);
-}
-
-} // namespace refref

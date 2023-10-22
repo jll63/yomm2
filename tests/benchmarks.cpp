@@ -29,7 +29,6 @@ int main() {}
 using namespace yorel::yomm2;
 using yorel::yomm2::detail::dump_type;
 using yorel::yomm2::detail::mptr_type;
-using yorel::yomm2::detail::method_table;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)
@@ -256,20 +255,20 @@ struct population : abstract_population {
     template<typename>
     struct leaf0 : intermediate<0> {
         leaf0() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf0>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf0>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf0>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf0>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::method_table<leaf0>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::method_table<leaf0>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::method_table<leaf0>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::method_table<leaf0>;
         }
     };
 
     template<typename>
     struct leaf1 : intermediate<1> {
         leaf1() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = method_table<leaf1>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = method_table<leaf1>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &method_table<leaf1>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &method_table<leaf1>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::method_table<leaf1>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::method_table<leaf1>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::method_table<leaf1>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::method_table<leaf1>;
         }
     };
 

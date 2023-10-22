@@ -4,6 +4,8 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
+#include "test_helpers.hpp"
+
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 
@@ -70,18 +72,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
     return os;
 }
 
-template<typename Key>
-struct test_policy_ : policy::basic_policy {
-    static struct catalog catalog;
-    static struct context context;
-};
-
-template<typename Key>
-catalog test_policy_<Key>::catalog;
-
-template<typename Key>
-context test_policy_<Key>::context;
-
 template<typename T>
 auto get_class(const runtime_data& rt) {
     return rt.class_map.at(typeid(T));
@@ -100,21 +90,20 @@ struct Cow : Herbivore {};
 struct Wolf : Carnivore {};
 struct Human : Carnivore, Herbivore {};
 
-struct whole_hierarchy {};
-use_classes<
-    test_policy_<whole_hierarchy>, Animal, Herbivore, Carnivore, Cow, Wolf,
-    Human>
+using whole_hierarchy = test_policy_<__COUNTER__>;
+using incremental = test_policy_<__COUNTER__>;
+
+use_classes<whole_hierarchy, Animal, Herbivore, Carnivore, Cow, Wolf, Human>
     YOMM2_GENSYM;
 
-struct incremental {};
-use_classes<test_policy_<incremental>, Animal, Herbivore, Cow> YOMM2_GENSYM;
-use_classes<test_policy_<incremental>, Animal, Carnivore, Wolf> YOMM2_GENSYM;
-use_classes<test_policy_<incremental>, Herbivore, Carnivore, Human>
-    YOMM2_GENSYM;
+use_classes<incremental, Animal, Herbivore, Cow> YOMM2_GENSYM;
+use_classes<incremental, Animal, Carnivore, Wolf> YOMM2_GENSYM;
+use_classes<incremental, Herbivore, Carnivore, Human> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE_TEMPLATE(
-    test_use_classes, Key, std::tuple<whole_hierarchy>) {
-    runtime<test_policy_<Key>> rt;
+using policies = std::tuple<whole_hierarchy, incremental>;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(test_use_classes, Key, policies) {
+    runtime<Key> rt;
     rt.update();
 
     auto animal = get_class<Animal>(rt);
@@ -161,7 +150,7 @@ struct Metro : Public {};
 struct Taxi : Expense {};
 struct Jet : Expense {};
 
-using test_policy = test_policy_<Role>;
+using test_policy = test_policy_<__COUNTER__>;
 // any type from this namespace would work.
 
 use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
@@ -282,13 +271,13 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST(jet->direct_derived.size() == 0);
 
     BOOST_TEST(
-        sstr(role->covariant_classes) ==
+        sstr(role->compatible_classes) ==
         sstr(role, employee, founder, manager));
-    BOOST_TEST(sstr(founder->covariant_classes) == sstr(founder));
+    BOOST_TEST(sstr(founder->compatible_classes) == sstr(founder));
     BOOST_TEST(
-        sstr(expense->covariant_classes) ==
+        sstr(expense->compatible_classes) ==
         sstr(expense, public_, taxi, jet, bus, metro));
-    BOOST_TEST(sstr(public_->covariant_classes) == sstr(public_, bus, metro));
+    BOOST_TEST(sstr(public_->compatible_classes) == sstr(public_, bus, metro));
 
     rt.augment_methods();
 
@@ -402,8 +391,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         BOOST_TEST(runtime<test_policy>::is_base(
             &*approve_Role_Expense, &*approve_Founder_Expense));
-        BOOST_TEST(
-            !runtime<test_policy>::is_base(&*approve_Role_Expense, &*approve_Role_Expense));
+        BOOST_TEST(!runtime<test_policy>::is_base(
+            &*approve_Role_Expense, &*approve_Role_Expense));
     }
 
     rt.build_dispatch_tables();
@@ -503,7 +492,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(
             test_policy::context.mptrs.size() == rt.metrics.hash_table_size);
         BOOST_TEST_REQUIRE(
-            test_policy::context.hash.control.size() == rt.metrics.hash_table_size);
+            test_policy::context.control.size() ==
+            rt.metrics.hash_table_size);
 
         auto gv_iter = test_policy::context.gv.data();
         // no slots nor fun* for 1-method
@@ -688,8 +678,7 @@ struct D : B {};
 
 struct E : D {};
 
-struct key;
-using test_policy = test_policy_<key>;
+using test_policy = test_policy_<__COUNTER__>;
 
 use_classes<test_policy, A, B, AB, C, D, E> YOMM2_GENSYM;
 
@@ -710,39 +699,40 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     // A
     BOOST_REQUIRE_EQUAL(sstr(a->direct_bases), empty);
     BOOST_REQUIRE_EQUAL(sstr(a->direct_derived), sstr(ab));
-    BOOST_REQUIRE_EQUAL(sstr(a->covariant_classes), sstr(a, ab, c));
+    BOOST_REQUIRE_EQUAL(sstr(a->compatible_classes), sstr(a, ab, c));
 
     // -----------------------------------------------------------------------
     // B
     BOOST_REQUIRE_EQUAL(sstr(b->direct_bases), empty);
     BOOST_REQUIRE_EQUAL(sstr(b->direct_derived), sstr(ab, d));
-    BOOST_REQUIRE_EQUAL(sstr(b->covariant_classes), sstr(b, ab, c, d, e));
+    BOOST_REQUIRE_EQUAL(sstr(b->compatible_classes), sstr(b, ab, c, d, e));
 
     // -----------------------------------------------------------------------
     // AB
     BOOST_REQUIRE_EQUAL(sstr(ab->direct_bases), sstr(a, b));
     BOOST_REQUIRE_EQUAL(sstr(ab->direct_derived), sstr(c));
-    BOOST_REQUIRE_EQUAL(sstr(ab->covariant_classes), sstr(ab, c));
+    BOOST_REQUIRE_EQUAL(sstr(ab->compatible_classes), sstr(ab, c));
 
     // -----------------------------------------------------------------------
     // C
     BOOST_REQUIRE_EQUAL(sstr(c->direct_bases), sstr(ab));
     BOOST_REQUIRE_EQUAL(sstr(c->direct_derived), empty);
-    BOOST_REQUIRE_EQUAL(sstr(c->covariant_classes), sstr(c));
+    BOOST_REQUIRE_EQUAL(sstr(c->compatible_classes), sstr(c));
 
     // -----------------------------------------------------------------------
     // D
     BOOST_REQUIRE_EQUAL(sstr(d->direct_bases), sstr(b));
     BOOST_REQUIRE_EQUAL(sstr(d->direct_derived), sstr(e));
-    BOOST_REQUIRE_EQUAL(sstr(d->covariant_classes), sstr(d, e));
+    BOOST_REQUIRE_EQUAL(sstr(d->compatible_classes), sstr(d, e));
 
     // -----------------------------------------------------------------------
     // E
     BOOST_REQUIRE_EQUAL(sstr(e->direct_bases), sstr(d));
     BOOST_REQUIRE_EQUAL(sstr(e->direct_derived), empty);
-    BOOST_REQUIRE_EQUAL(sstr(e->covariant_classes), sstr(e));
+    BOOST_REQUIRE_EQUAL(sstr(e->compatible_classes), sstr(e));
 }
 
+struct key;
 method<key, void(virtual_<A&>), test_policy> m_a("m_a");
 method<key, void(virtual_<B&>), test_policy> m_b("m_b");
 method<key, void(virtual_<A&>, virtual_<B&>), test_policy> m_ab("m_ab");

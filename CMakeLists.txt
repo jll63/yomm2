@@ -35,7 +35,7 @@ endif()
 
 add_subdirectory(src)
 
-option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
+option(YOMM2_ENABLE_TESTS "Set to ON to build tests" ON)
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
   "Set to ON to build benchmarks" OFF
@@ -73,13 +73,6 @@ if(${YOMM2_ENABLE_DOC})
   add_custom_target(README ALL DEPENDS "${readme_md}")
   add_subdirectory(reference.in)
   add_subdirectory(tutorials)
-endif()
-
-option(YOMM2_ENABLE_TRACE "Enable trace (compile time)" OFF)
-
-if(NOT "${YOMM2_ENABLE_TRACE}" EQUAL "")
-  message(STATUS "Compiling with YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE}")
-  add_compile_definitions(YOMM2_ENABLE_TRACE=${YOMM2_ENABLE_TRACE})
 endif()
 
 

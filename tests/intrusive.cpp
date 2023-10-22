@@ -8,7 +8,7 @@
 #include <yorel/yomm2/intrusive.hpp>
 #include <yorel/yomm2/templates.hpp>
 
-#include "test_policy.hpp"
+#include "test_helpers.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
@@ -16,9 +16,9 @@
 
 using namespace yorel::yomm2;
 
-using direct_policy = test_policy<__COUNTER__>;
+using direct_policy = test_policy_<__COUNTER__>;
 
-struct indirect_policy : test_policy<__COUNTER__> {
+struct indirect_policy : test_policy_<__COUNTER__> {
     static constexpr bool use_indirect_method_pointers = true;
 };
 
@@ -70,9 +70,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         std::string(
             virtual_<Character&>, virtual_<Device&>, virtual_<Creature&>),
         Policy>;
-    static
-        typename fight::template add_function<fight_bear<Warrior, Axe, Bear>>
-            YOMM2_GENSYM;
+    static typename fight::template add_function<fight_bear<Warrior, Axe, Bear>>
+        YOMM2_GENSYM;
 
     update<Policy>();
 
@@ -86,16 +85,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         static_assert(detail::has_mptr<const Character&>);
 
         Character character;
-        BOOST_TEST((
-            character.yomm2_mptr() == detail::method_table<Character, Policy>));
-        BOOST_TEST((bear.yomm2_mptr() == detail::method_table<Bear, Policy>));
+        BOOST_TEST(
+            (character.yomm2_mptr() ==
+             Policy::template method_table<Character>));
+        BOOST_TEST((bear.yomm2_mptr() == Policy::template method_table<Bear>));
     }
 
     // BOOST_TEST(kick::fn(bear) == "growl");
     // BOOST_TEST(fight::fn(warrior, axe, bear) == "kill bear");
 }
 
-#ifndef NDEBUG
 namespace bad_intrusive_mptr {
 
 struct Animal : root<Animal> {
@@ -105,11 +104,11 @@ struct Animal : root<Animal> {
 
 struct Dog : Animal {};
 
-using policy = test_policy<__COUNTER__>;
+using test_policy = test_policy_<__COUNTER__, default_policy>;
 
-register_classes(policy, Animal, Dog);
+register_classes(test_policy, Animal, Dog);
 
-declare_method(std::string, kick, (virtual_<Animal&>), policy);
+declare_method(std::string, kick, (virtual_<Animal&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
     auto prev_handler = set_error_handler([](const error_type& ev) {
@@ -118,23 +117,32 @@ BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
                 std::is_same_v<decltype(error), const method_table_error*>);
             throw *error;
         }
+        throw std::runtime_error("other error");
     });
 
-    update<policy>();
+    update<test_policy>();
 
     try {
         Dog snoopy;
         kick(snoopy);
     } catch (const method_table_error& error) {
+        set_error_handler(prev_handler);
+#ifdef NDEBUG
+        BOOST_FAIL("should not have thrown a method_table_error");
+#else
         BOOST_TEST(error.ti->name() == typeid(Dog).name());
+#endif
         return;
     } catch (...) {
+        set_error_handler(prev_handler);
+#ifdef NDEBUG
+        return;
+#else
         BOOST_FAIL("wrong exception");
+#endif
     }
 
-    BOOST_FAIL("did not throw");
-
     set_error_handler(prev_handler);
+    BOOST_FAIL("did not throw");
 }
 } // namespace bad_intrusive_mptr
-#endif
