@@ -1,32 +1,27 @@
 
-<sub> /[home](/README.md) /
-           [reference](/reference/README.md)</ sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
-               entry : yorel::yomm2::error_type entry
-    : yorel::yomm2::error_handler_type entry
-    : yorel::yomm2::set_error_handler entry
-    : yorel::yomm2::hash_search_error entry
-    : yorel::yomm2::resolution_error entry
-    : yorel::yomm2::unknown_class_error headers : yorel /
-    yomm2 / core.hpp,
-    yorel / yomm2 / keywords.hpp,
-    yorel /
-        yomm2.hpp
+**yorel::yomm2::error_type**<br>
+**yorel::yomm2::error_handler_type**<br>
+**yorel::yomm2::set_error_handler**<br>
+**yorel::yomm2::hash_search_error**<br>
+**yorel::yomm2::resolution_error**<br>
+**yorel::yomm2::unknown_class_error**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
 
-        -- -
-``` struct resolution_error {
+---
+```
+struct resolution_error {
     enum status_type { no_definition = 1, ambiguous } status;
     /*unspecified*/
 };
 
-struct unknown_class_error { /*unspecified*/
-};
+struct unknown_class_error { /*unspecified*/ };
 
-struct hash_search_error { /*unspecified*/
-};
+struct hash_search_error { /*unspecified*/ };
 
-using error_type =
-    std::variant<resolution_error, unknown_class_error, hash_search_error>;
+using error_type = std::variant<
+    resolution_error, unknown_class_error, hash_search_error>;
 
 using error_handler_type = void (*)(const error_type& error);
 
@@ -58,7 +53,7 @@ variant:
 
 ```c++
 #include <stdexcept>
-    #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/keywords.hpp>
 
 struct Animal {
     virtual ~Animal() {
@@ -78,12 +73,7 @@ error_handler_type next_error_handler;
 void no_definition_handler(const error_type& ev) {
     if (auto error = std::get_if<resolution_error>(&ev)) {
         if (error->status == resolution_error::no_definition) {
-            if (error->tis[0] == &typeid(Dog)) {
-                throw std::runtime_error("not defined");
-            } else {
-                throw std::runtime_error(
-                    std::string("wrong typeid: ") + error->tis[0]->name());
-            }
+            throw std::runtime_error("not defined");
         }
     }
 
