@@ -19,7 +19,7 @@ using std::cout;
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
-auto debug_handler = &global_policy::error;
+auto debug_handler = &default_policy::error;
 
 namespace YOMM2_GENSYM {
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         return;
     }
 
-    if constexpr (global_policy::runtime_checks) {
+    if constexpr (default_policy::runtime_checks) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }

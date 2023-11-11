@@ -38,15 +38,15 @@ yOMM2_API void update() {
 }
 
 yOMM2_API error_handler_type set_error_handler(error_handler_type handler) {
-    auto prev = global_policy::error;
-    global_policy::error = handler;
+    auto prev = default_policy::error;
+    default_policy::error = handler;
     return prev;
 }
 
 yOMM2_API method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = global_policy::call_error;
-    global_policy::call_error = handler;
+    auto prev = default_policy::call_error;
+    default_policy::call_error = handler;
     return prev;
 }
 

@@ -20,7 +20,7 @@
 #include <yorel/yomm2/symbols.hpp>
 
 #ifndef YOMM2_DEFAULT_POLICY
-    #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::global_policy
+    #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
 #define yOMM2_PLIST(N, I, A)                                                   \
@@ -217,10 +217,11 @@
 
 #define YOMM2_CLASS(...)                                                       \
     static ::yorel::yomm2::class_declaration<                                  \
-        ::yorel::yomm2::detail::types<__VA_ARGS__>>                            \
+        YOMM2_DEFAULT_POLICY, __VA_ARGS__>                                     \
         YOMM2_GENSYM;
 
 #define YOMM2_CLASSES(...)                                                     \
-    static ::yorel::yomm2::use_classes<__VA_ARGS__> YOMM2_GENSYM;
+    static ::yorel::yomm2::use_classes<YOMM2_DEFAULT_POLICY, __VA_ARGS__>      \
+        YOMM2_GENSYM;
 
 #endif

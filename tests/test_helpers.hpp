@@ -6,9 +6,9 @@
 template<int Key>
 struct test_policy_ :
 #ifdef NDEBUG
-yorel::yomm2::policy::static_release<test_policy_<Key>>
+yorel::yomm2::policy::basic_static_release<test_policy_<Key>>
 #else
-yorel::yomm2::policy::static_debug<test_policy_<Key>>
+yorel::yomm2::policy::basic_static_debug<test_policy_<Key>>
 #endif
 {};
 

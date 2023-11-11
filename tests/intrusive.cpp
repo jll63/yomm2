@@ -98,6 +98,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 namespace bad_intrusive_mptr {
 
 using test_policy = test_policy_<__COUNTER__>;
+#undef YOMM2_DEFAULT_POLICY
+#define YOMM2_DEFAULT_POLICY test_policy
 
 struct Animal : root<Animal, test_policy> {
     virtual ~Animal() {
@@ -106,9 +108,9 @@ struct Animal : root<Animal, test_policy> {
 
 struct Dog : Animal {};
 
-register_classes(test_policy, Animal, Dog);
+register_classes(Animal, Dog);
 
-declare_method(std::string, kick, (virtual_<Animal&>), test_policy);
+declare_method(std::string, kick, (virtual_<Animal&>));
 
 BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
     auto prev_handler =

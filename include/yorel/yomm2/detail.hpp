@@ -12,6 +12,22 @@ namespace detail {
 template<typename... Types>
 struct types;
 
+template<typename...>
+struct type_id_list;
+
+template<typename... T>
+struct type_id_list<types<T...>> {
+    static constexpr const std::type_info* value[] = {&typeid(T)...};
+    static constexpr auto begin = value;
+    static constexpr auto end = value + sizeof...(T);
+};
+
+template<>
+struct type_id_list<types<>> {
+    static constexpr const std::type_info** begin = nullptr;
+    static constexpr auto end = begin;
+};
+
 template<typename Iterator>
 struct range {
     Iterator first, last;
@@ -187,6 +203,28 @@ struct class_info : static_chain<class_info>::static_link {
     bool is_abstract{false};
 };
 
+template<class...>
+struct class_declaration_aux;
+
+template<class Policy, class Class, typename... Bases>
+struct class_declaration_aux<Policy, detail::types<Class, Bases...>>
+    : detail::class_info {
+    class_declaration_aux() {
+        using namespace detail;
+
+        ti = &typeid(Class);
+        first_base = type_id_list<types<Bases...>>::begin;
+        last_base = type_id_list<types<Bases...>>::end;
+        Policy::catalog.classes.push_front(*this);
+        is_abstract = std::is_abstract_v<Class>;
+        method_table = &Policy::template method_table<Class>;
+    }
+
+    ~class_declaration_aux() {
+        Policy::catalog.classes.remove(*this);
+    }
+};
+
 // -----------
 // method info
 
@@ -222,7 +260,13 @@ inline definition_info::~definition_info() {
 }
 
 template<typename T>
-constexpr bool is_policy_v = std::is_base_of_v<policy::abstract_policy, T>;
+struct is_policy_aux : std::is_base_of<policy::abstract_policy, T> {};
+
+template<typename... T>
+struct is_policy_aux<types<T...>> : std::false_type {};
+
+template<typename T>
+constexpr bool is_policy = is_policy_aux<T>::value;
 
 template<bool, typename... Classes>
 struct split_policy_aux;
@@ -235,14 +279,13 @@ struct split_policy_aux<true, Policy, Classes...> {
 
 template<typename... Classes>
 struct split_policy_aux<false, Classes...> {
-    using policy = global_policy;
+    using policy = default_policy;
     using classes = types<Classes...>;
 };
 
 template<typename ClassOrPolicy, typename... Classes>
 struct split_policy
-    : split_policy_aux<is_policy_v<ClassOrPolicy>, ClassOrPolicy, Classes...> {
-};
+    : split_policy_aux<is_policy<ClassOrPolicy>, ClassOrPolicy, Classes...> {};
 
 template<typename... Classes>
 using get_policy = typename split_policy<Classes...>::policy;
@@ -706,22 +749,6 @@ using spec_polymorphic_types = mp11::mp_rename<
         void>,
     types>;
 
-template<typename...>
-struct type_id_list;
-
-template<typename... T>
-struct type_id_list<types<T...>> {
-    static constexpr const std::type_info* value[] = {&typeid(T)...};
-    static constexpr auto begin = value;
-    static constexpr auto end = value + sizeof...(T);
-};
-
-template<>
-struct type_id_list<types<>> {
-    static constexpr const std::type_info** begin = nullptr;
-    static constexpr auto end = begin;
-};
-
 template<typename ArgType, typename T>
 inline auto get_tip(const T& arg) {
     if constexpr (is_virtual<ArgType>::value) {
@@ -778,20 +805,24 @@ using inheritance_map = types<mp11::mp_push_front<
     mp11::mp_filter_q<mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
     Cs>...>;
 
-template<typename... Classes>
-struct use_classes_aux {
+template<class Policy, class... Classes>
+struct use_classes_aux;
+
+template<class Policy, class... Classes>
+struct use_classes_aux<Policy, types<Classes...>> {
     using type = mp11::mp_apply<
         std::tuple,
         mp11::mp_transform_q<
-            mp11::mp_bind_back<class_declaration, get_policy<Classes...>>,
-            mp11::mp_apply<inheritance_map, remove_policy<Classes...>>>>;
+            mp11::mp_bind_front<class_declaration_aux, Policy>,
+            mp11::mp_apply<inheritance_map, types<Classes...>>>>;
 };
 
-template<typename... Classes, typename... ClassLists>
-struct use_classes_aux<types<Classes...>, ClassLists...>
-    : mp11::mp_apply<
-          use_classes_aux, mp11::mp_append<types<Classes...>, ClassLists...>> {
-};
+template<class Policy, class... Classes, class... MoreClassLists>
+struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
+    : use_classes_aux<
+          Policy, mp11::mp_append<types<Classes...>, MoreClassLists...>>
+
+{};
 
 std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();

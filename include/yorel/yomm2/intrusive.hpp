@@ -19,7 +19,7 @@ using intrusive_mptr_type = std::conditional_t<
 
 }
 
-template<class Class, class Policy = global_policy>
+template<class Class, class Policy = default_policy>
 struct root {
     using YoMm2_S_mptr_policy_ = Policy;
     detail::intrusive_mptr_type<Policy> YoMm2_S_mptr_;

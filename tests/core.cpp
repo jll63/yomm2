@@ -19,6 +19,18 @@ using namespace boost::mp11;
 
 namespace YOMM2_GENSYM {
 
+struct Animal {};
+struct my_policy : policy::abstract_policy {};
+
+static_assert(std::is_same_v<get_policy<Animal>, default_policy>);
+static_assert(std::is_same_v<remove_policy<Animal>, types<Animal>>);
+static_assert(std::is_same_v<get_policy<my_policy, Animal>, my_policy>);
+static_assert(std::is_same_v<remove_policy<my_policy, Animal>, types<Animal>>);
+
+}
+
+namespace YOMM2_GENSYM {
+
 struct base {
     virtual ~base() {}
 };

@@ -102,10 +102,7 @@ struct abstract_policy {
     static constexpr bool use_indirect_method_pointers = false;
 };
 
-struct global;
-template<class Policy>
 struct static_debug;
-template<class Policy>
 struct static_release;
 struct shared_debug;
 struct shared_release;
@@ -114,15 +111,15 @@ struct shared_release;
 
 #if defined(YOMM2_SHARED)
     #ifdef NDEBUG
-using global_policy = policy::shared_release;
+using default_policy = policy::shared_release;
     #else
-using global_policy = policy::shared_debug;
+using default_policy = policy::shared_debug;
     #endif
 #else
     #ifdef NDEBUG
-using global_policy = policy::static_release<policy::global>;
+using default_policy = policy::static_release;
     #else
-using global_policy = policy::static_debug<policy::global>;
+using default_policy = policy::static_debug;
     #endif
 #endif
 
@@ -171,7 +168,7 @@ struct catalog {
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy = global_policy>
+template<typename Key, typename Signature, class Policy = default_policy>
 struct method;
 
 template<typename Key, typename R, typename... A, class Policy>
@@ -334,42 +331,29 @@ typename method<Key, R(A...), Policy>::next_type
 // -----------------------------------------------------------------------------
 // class_declaration
 
-template<typename Class, typename... Rest>
-struct class_declaration : class_declaration<
-                               detail::remove_policy<Class, Rest...>,
-                               detail::get_policy<Class, Rest...>> {};
+template<typename First, class... Rest>
+struct class_declaration : detail::class_declaration_aux<
+                               detail::get_policy<First, Rest...>,
+                               detail::remove_policy<First, Rest...>> {};
 
-template<typename Class, typename... Bases, typename Policy>
-struct class_declaration<detail::types<Class, Bases...>, Policy>
-    : detail::class_info {
-    class_declaration() {
-        using namespace detail;
+template<class... First>
+struct class_declaration<detail::types<First...>>
+    : detail::class_declaration_aux<default_policy, detail::types<First...>> {};
 
-        ti = &typeid(Class);
-        first_base = type_id_list<types<Bases...>>::begin;
-        last_base = type_id_list<types<Bases...>>::end;
-        Policy::catalog.classes.push_front(*this);
-        is_abstract = std::is_abstract_v<Class>;
-        method_table = &Policy::template method_table<Class>;
-    }
+template<class Policy, class... First>
+struct class_declaration<Policy, detail::types<First...>>
+    : detail::class_declaration_aux<Policy, detail::types<First...>> {};
 
-    ~class_declaration() {
-        Policy::catalog.classes.remove(*this);
-    }
-};
-
-template<typename Class, typename... Bases>
-struct class_declaration<detail::types<Class, Bases...>>
-    : class_declaration<detail::types<Class, Bases...>, global_policy> {};
-
-template<typename... T>
-using use_classes = typename detail::use_classes_aux<T...>::type;
+template<typename First, class... Rest>
+using use_classes = typename detail::use_classes_aux<
+    detail::get_policy<First, Rest...>,
+    detail::remove_policy<First, Rest...>>::type;
 
 // -----------------------------------------------------------------------------
 // virtual_ptr
 
 template<
-    class Class, class Policy = global_policy,
+    class Class, class Policy = default_policy,
     bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
 class virtual_ptr;
 
@@ -547,13 +531,13 @@ class virtual_ptr<Class, Policy, true>
 
 template<class Class>
 virtual_ptr(Class&) -> virtual_ptr<
-    Class, global_policy,
-    detail::virtual_ptr_traits<Class, global_policy>::is_smart_ptr>;
+    Class, default_policy,
+    detail::virtual_ptr_traits<Class, default_policy>::is_smart_ptr>;
 
-template<class Class, class Policy = global_policy>
+template<class Class, class Policy = default_policy>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
 
-template<class Class, class Policy = global_policy>
+template<class Class, class Policy = default_policy>
 inline auto make_virtual_shared() {
     return virtual_shared_ptr<Class, Policy>::final(std::make_shared<Class>());
 }
@@ -792,27 +776,27 @@ namespace policy {
 
 namespace mixin {
 
-template<class Policy, typename Stream = detail::stdostream>
+template<class Key, typename Stream = detail::stdostream>
 struct runtime_trace {
     static Stream trace;
 };
 
-template<class Policy, typename Stream>
-Stream runtime_trace<Policy, Stream>::trace;
+template<class Key, typename Stream>
+Stream runtime_trace<Key, Stream>::trace;
 
-template<class Policy>
+template<class Key>
 struct scope : abstract_policy {
     static struct context context;
     static struct catalog catalog;
 };
 
-template<class Policy>
-catalog scope<Policy>::catalog;
+template<class Key>
+catalog scope<Key>::catalog;
 
-template<class Policy>
-context scope<Policy>::context;
+template<class Key>
+context scope<Key>::context;
 
-template<class Policy>
+template<class Key>
 struct yOMM2_API method_tables : abstract_policy {
     template<class Class>
     static detail::mptr_type method_table;
@@ -820,43 +804,47 @@ struct yOMM2_API method_tables : abstract_policy {
     static detail::mptr_type* indirect_method_table;
 };
 
-template<class Policy>
+template<class Key>
 template<class Class>
-detail::mptr_type method_tables<Policy>::method_table;
+detail::mptr_type method_tables<Key>::method_table;
 
-template<class Policy>
+template<class Key>
 template<class Class>
-detail::mptr_type* method_tables<Policy>::indirect_method_table =
-    &method_tables<Policy>::method_table<Class>;
+detail::mptr_type* method_tables<Key>::indirect_method_table =
+    &method_tables<Key>::method_table<Class>;
 
 } // namespace mixin
 
-template<class Policy>
-struct basic_static_policy : mixin::scope<Policy>,
-                             detail::error_handlers<Policy>,
-                             mixin::method_tables<Policy> {
+template<class Key>
+struct basic_static_policy : mixin::scope<Key>,
+                             detail::error_handlers<Key>,
+                             mixin::method_tables<Key> {
     static error_handler_type error;
     static method_call_error_handler call_error;
 };
 
-template<class Policy>
-error_handler_type basic_static_policy<Policy>::error =
-    detail::error_handlers<Policy>::backward_compatible_error_handler;
+template<class Key>
+error_handler_type basic_static_policy<Key>::error =
+    detail::error_handlers<Key>::backward_compatible_error_handler;
 
-template<class Policy>
-method_call_error_handler basic_static_policy<Policy>::call_error =
-    detail::error_handlers<Policy>::default_call_error_handler;
+template<class Key>
+method_call_error_handler basic_static_policy<Key>::call_error =
+    detail::error_handlers<Key>::default_call_error_handler;
 
-template<class Policy>
-struct static_debug : basic_static_policy<static_debug<Policy>>,
-               mixin::runtime_trace<static_debug<Policy>> {
+template<class Key>
+struct basic_static_debug : basic_static_policy<Key>,
+                            mixin::runtime_trace<Key> {
     static constexpr bool runtime_checks = true;
 };
 
-template<class Policy>
-struct static_release : basic_static_policy<static_release<Policy>> {
+struct static_debug : basic_static_debug<static_debug> {};
+
+template<class Key>
+struct basic_static_release : basic_static_policy<Key> {
     static constexpr bool runtime_checks = false;
 };
+
+struct static_release : basic_static_release<static_release> {};
 
 struct yOMM2_API abstract_shared : mixin::method_tables<abstract_shared> {
     static struct context context;
@@ -890,19 +878,19 @@ set_method_call_error_handler(method_call_error_handler handler);
 #else
 
 inline void update() {
-    update<global_policy>();
+    update<default_policy>();
 }
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
-    auto prev = global_policy::error;
-    global_policy::error = handler;
+    auto prev = default_policy::error;
+    default_policy::error = handler;
     return prev;
 }
 
 inline method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = global_policy::call_error;
-    global_policy::call_error = handler;
+    auto prev = default_policy::call_error;
+    default_policy::call_error = handler;
     return prev;
 }
 #endif
