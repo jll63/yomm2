@@ -3,17 +3,14 @@
 
 #include <yorel/yomm2/core.hpp>
 
-template<int Key, class BasePolicy = yorel::yomm2::default_policy>
-struct test_policy_ : BasePolicy {
-    static yorel::yomm2::catalog catalog;
-    static yorel::yomm2::context context;
-};
-
-template<int Key, class BasePolicy>
-yorel::yomm2::catalog test_policy_<Key, BasePolicy>::catalog;
-
-template<int Key, class BasePolicy>
-yorel::yomm2::context test_policy_<Key, BasePolicy>::context;
+template<int Key>
+struct test_policy_ :
+#ifdef NDEBUG
+yorel::yomm2::policy::static_release<test_policy_<Key>>
+#else
+yorel::yomm2::policy::static_debug<test_policy_<Key>>
+#endif
+{};
 
 struct yomm2_update {
     yomm2_update() {

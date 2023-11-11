@@ -19,6 +19,8 @@ using std::cout;
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
+auto debug_handler = &global_policy::error;
+
 namespace YOMM2_GENSYM {
 
 struct Animal {
@@ -84,6 +86,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         Animal& animal = snoopy;
         virtual_ptr<Animal>::final(animal);
     } catch (const method_table_error& error) {
+        set_error_handler(prev_handler);
         BOOST_TEST(error.ti->name() == typeid(Dog).name());
         threw = true;
     } catch (...) {
@@ -92,9 +95,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         return;
     }
 
-    set_error_handler(prev_handler);
-
-    if constexpr (default_policy::runtime_checks) {
+    if constexpr (global_policy::runtime_checks) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }

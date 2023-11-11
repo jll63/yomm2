@@ -72,14 +72,14 @@ struct orthogonal_base {
 
 template<typename>
 struct direct_intrusive_base {
-    using policy = default_policy;
+    using policy = global_policy;
     virtual ~direct_intrusive_base() {}
     void set_mptr(mptr_type mptr) { this->mptr = mptr; }
     auto yomm2_mptr() const { return mptr; };
     mptr_type mptr;
 };
 
-struct indirect_policy : default_policy {
+struct indirect_policy : global_policy {
     static constexpr bool use_indirect_method_pointers = true;
 };
 
@@ -108,19 +108,19 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct basic_policy : virtual_by_reference {
-    using policy_type = policy::basic_policy;
+    using policy_type = global_policy;
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "basic_policy"; };
 };
 
 struct direct_intrusive_dispatch : virtual_by_reference {
-    using policy_type = default_policy;
+    using policy_type = global_policy;
     template<typename Inheritance> using base_type = direct_intrusive_base<Inheritance>;
     static std::string name() { return "direct_intrusive"; };
 };
 
 struct indirect_intrusive_dispatch : virtual_by_reference {
-    using policy_type = default_policy;
+    using policy_type = global_policy;
     template<typename Inheritance> using base_type = indirect_intrusive_base<Inheritance>;
     static std::string name() { return "indirect_intrusive"; };
 };
@@ -130,7 +130,7 @@ struct direct_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.vptr_draw();
     }
-    using policy_type = default_policy;
+    using policy_type = global_policy;
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "direct_virtual_ptr"; };
 };
@@ -255,20 +255,20 @@ struct population : abstract_population {
     template<typename>
     struct leaf0 : intermediate<0> {
         leaf0() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::method_table<leaf0>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::method_table<leaf0>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::method_table<leaf0>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::method_table<leaf0>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = global_policy::method_table<leaf0>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = global_policy::method_table<leaf0>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &global_policy::method_table<leaf0>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &global_policy::method_table<leaf0>;
         }
     };
 
     template<typename>
     struct leaf1 : intermediate<1> {
         leaf1() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::method_table<leaf1>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::method_table<leaf1>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::method_table<leaf1>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::method_table<leaf1>;
+            this->direct_intrusive_base<ordinary_inheritance>::mptr = global_policy::method_table<leaf1>;
+            this->direct_intrusive_base<virtual_inheritance>::mptr = global_policy::method_table<leaf1>;
+            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &global_policy::method_table<leaf1>;
+            this->indirect_intrusive_base<virtual_inheritance>::mptr = &global_policy::method_table<leaf1>;
         }
     };
 

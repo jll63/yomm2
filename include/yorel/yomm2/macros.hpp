@@ -20,7 +20,7 @@
 #include <yorel/yomm2/symbols.hpp>
 
 #ifndef YOMM2_DEFAULT_POLICY
-    #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
+    #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::global_policy
 #endif
 
 #define yOMM2_PLIST(N, I, A)                                                   \

@@ -9,12 +9,6 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-#ifdef NDEBUG
-constexpr bool debug = false;
-#else
-constexpr bool debug = true;
-#endif
-
 template<typename... Types>
 struct types;
 
@@ -31,14 +25,6 @@ struct range {
 
 template<typename Iterator>
 range(Iterator b, Iterator e) -> range<Iterator>;
-
-inline void default_error_handler(const error_type& error_v);
-inline error_handler_type error_handler = detail::default_error_handler;
-
-inline void default_method_call_error_handler(
-    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]);
-inline method_call_error_handler method_call_error_handler_p =
-    default_method_call_error_handler;
 
 struct yomm2_end_of_dump {};
 
@@ -249,7 +235,7 @@ struct split_policy_aux<true, Policy, Classes...> {
 
 template<typename... Classes>
 struct split_policy_aux<false, Classes...> {
-    using policy = default_policy;
+    using policy = global_policy;
     using classes = types<Classes...>;
 };
 
@@ -826,14 +812,14 @@ inline auto check_intrusive_method_pointer(const word* mptr, ti_ptr key) {
         if (p < reinterpret_cast<const char*>(ctx.gv.data()) ||
             p >= reinterpret_cast<const char*>(ctx.gv.data() + ctx.gv.size())) {
             // probably some random value
-            error_handler(method_table_error{key});
+            Policy::error(method_table_error{key});
         }
 
         auto index = ctx.hash(key);
 
         if (index >= ctx.mptrs.size() || mptr != ctx.mptrs[index]) {
             // probably a missing derived<> in a derived class
-            error_handler(method_table_error{key});
+            Policy::error(method_table_error{key});
         }
     }
 
@@ -896,6 +882,99 @@ inline stdostream& operator<<(stdostream& os, size_t value) {
     }
 
     return os;
+}
+
+template<class Policy>
+struct error_handlers {
+    static error_handler_type set_error_handler(error_handler_type handler) {
+        auto prev = Policy::error;
+        Policy::error = handler;
+        return prev;
+    }
+
+    static void default_error_handler(const error_type& error_v);
+
+    static void backward_compatible_error_handler(const error_type& error_v) {
+        using namespace detail;
+
+        if (auto err = std::get_if<resolution_error>(&error_v)) {
+            method_call_error old_error;
+            old_error.code = err->status;
+            old_error.method_name = err->method->name();
+            Policy::call_error(std::move(old_error), err->arity, err->tis);
+            abort();
+        }
+
+        default_error_handler(error_v);
+    }
+
+    static void default_call_error_handler(
+        const method_call_error& error, size_t arity,
+        const detail::ti_ptr ti_ptrs[]) {
+        using namespace detail;
+        if constexpr (has_trace<Policy>) {
+            const char* explanation[] = {
+                "no applicable definition", "ambiguous call"};
+            Policy::trace
+                << explanation[error.code - resolution_error::no_definition]
+                << " for " << error.method_name << "(";
+            auto comma = "";
+            for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
+                Policy::trace << comma << ti->name();
+                comma = ", ";
+            }
+            Policy::trace << ")\n";
+        }
+
+        abort();
+    }
+};
+
+template<class Policy>
+void error_handlers<Policy>::default_error_handler(const error_type& error_v) {
+    using namespace detail;
+
+    if (auto error = std::get_if<resolution_error>(&error_v)) {
+        if constexpr (has_trace<Policy>) {
+            const char* explanation[] = {
+                "no applicable definition", "ambiguous call"};
+            Policy::trace
+                << explanation[error->status - resolution_error::no_definition]
+                << " for " << error->method->name() << "(";
+            auto comma = "";
+            for (auto ti : range{error->tis, error->tis + error->arity}) {
+                Policy::trace << comma << ti->name();
+                comma = ", ";
+            }
+            Policy::trace << ")\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
+        if constexpr (detail::has_trace<Policy>) {
+            Policy::trace << "unknown class " << error->ti->name() << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<method_table_error>(&error_v)) {
+        if constexpr (detail::has_trace<Policy>) {
+            Policy::trace << "invalid method table for " << error->ti->name()
+                          << "\n";
+        }
+        abort();
+    }
+
+    if (auto error = std::get_if<hash_search_error>(&error_v)) {
+        if constexpr (detail::has_trace<Policy>) {
+            Policy::trace << "could not find hash factors after "
+                          << error->attempts << " in "
+                          << error->duration.count() << "s using "
+                          << error->buckets << " buckets\n";
+        }
+        abort();
+    }
 }
 
 } // namespace detail

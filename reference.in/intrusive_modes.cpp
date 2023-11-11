@@ -15,7 +15,7 @@ headers: yorel/yomm2/core.hpp
 
 ---
 ```c++
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = global_policy>
 struct root {
     unspecified_type unspecified_name;
     root();

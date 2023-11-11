@@ -167,12 +167,15 @@ struct runtime : runtime_data {
     };
 
     struct trace_type {
+        bool on = false;
         size_t indentation_level{0};
 
         trace_type& operator++() {
             if constexpr (trace_enabled) {
-                for (int i = 0; i < indentation_level; ++i) {
-                    Policy::trace << "  ";
+                if (on) {
+                    for (int i = 0; i < indentation_level; ++i) {
+                        Policy::trace << "  ";
+                    }
                 }
             }
 
@@ -181,23 +184,25 @@ struct runtime : runtime_data {
 
         trace_type& operator<<(const rflush& rf) {
             if constexpr (trace_enabled) {
-                auto pad = rf.width;
-                auto remain = rf.value;
+                if (on) {
+                    auto pad = rf.width;
+                    auto remain = rf.value;
 
-                do {
-                    remain /= 10;
-                    --pad;
+                    do {
+                        remain /= 10;
+                        --pad;
 
-                    if (pad < 0) {
-                        return *this;
+                        if (pad < 0) {
+                            return *this;
+                        }
+                    } while (remain);
+
+                    while (pad--) {
+                        *this << " ";
                     }
-                } while (remain);
 
-                while (pad--) {
-                    *this << " ";
+                    *this << rf.value;
                 }
-
-                *this << rf.value;
             }
 
             return *this;
@@ -205,43 +210,32 @@ struct runtime : runtime_data {
 
         trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
             if constexpr (trace_enabled) {
-                auto i = bits.size();
-                while (i != 0) {
-                    --i;
-                    Policy::trace << bits[i];
+                if (on) {
+                    auto i = bits.size();
+                    while (i != 0) {
+                        --i;
+                        Policy::trace << bits[i];
+                    }
                 }
             }
-
             return *this;
         }
-
-        // trace_type& operator<<(const char* str) {
-        //     if constexpr (trace_enabled) {
-        //         Policy::trace << str;
-        //     }
-
-        //     return *this;
-        // }
-
-        // trace_type& operator<<(const std::string_view& view) {
-        //     if constexpr (trace_enabled) {
-        //         Policy::trace << view;
-        //     }
-
-        //     return *this;
-        // }
 
         template<typename T>
         trace_type& operator<<(const T& value) {
             if constexpr (trace_enabled) {
-                Policy::trace << value;
+                if (on) {
+                    Policy::trace << value;
+                }
             }
             return *this;
         }
 
         trace_type& operator<<(ti_ptr tip) {
             if constexpr (trace_enabled) {
-                return *this << tip->name() << "(" << (void*)tip << ")";
+                if (on) {
+                    *this << tip->name() << "(" << (void*)tip << ")";
+                }
             }
 
             return *this;
@@ -249,14 +243,16 @@ struct runtime : runtime_data {
 
         trace_type& operator<<(range<const ti_ptr*> tips) {
             if constexpr (trace_enabled) {
-                *this << "(";
-                const char* sep = "";
-                for (auto t : tips) {
-                    *this << sep << t;
-                    sep = ", ";
-                }
+                if (on) {
+                    *this << "(";
+                    const char* sep = "";
+                    for (auto t : tips) {
+                        *this << sep << t;
+                        sep = ", ";
+                    }
 
-                *this << ")";
+                    *this << ")";
+                }
             }
 
             return *this;
@@ -265,15 +261,19 @@ struct runtime : runtime_data {
         template<template<typename...> typename Container, typename... T>
         trace_type& operator<<(Container<rt_class*, T...>& classes) {
             if constexpr (trace_enabled) {
-                *this << "(";
-                const char* sep = "";
-                for (auto cls : classes) {
-                    *this << sep << cls->name();
-                    sep = ", ";
-                }
+                if (on) {
+                    *this << "(";
+                    const char* sep = "";
+                    for (auto cls : classes) {
+                        *this << sep << cls->name();
+                        sep = ", ";
+                    }
 
-                return *this << ")";
+                    *this << ")";
+                }
             }
+
+            return *this;
         }
     };
 
@@ -309,14 +309,8 @@ void runtime<Policy>::update() {
 template<class Policy>
 runtime<Policy>::runtime() {
     if constexpr (trace_enabled) {
-        int enable = 0;
-
         if (auto env_trace = getenv("YOMM2_TRACE")) {
-            enable = std::atoi(env_trace);
-        }
-
-        if (!enable) {
-            Policy::trace.off();
+            trace.on = std::atoi(env_trace) != 0;
         }
     }
 }
@@ -374,7 +368,7 @@ void runtime<Policy>::augment_classes() {
             if (!rtb) {
                 unknown_class_error error;
                 error.ti = *base_iter;
-                error_handler(error_type(error));
+                Policy::error(error_type(error));
                 abort();
             }
 
@@ -510,7 +504,7 @@ void runtime<Policy>::augment_methods() {
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
                 error.ti = ti;
-                error_handler(error_type(error));
+                Policy::error(error_type(error));
                 abort();
             }
             rt_arg param = {&*meth_iter, param_index++};
@@ -537,7 +531,7 @@ void runtime<Policy>::augment_methods() {
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
                     error.ti = ti;
-                    error_handler(error_type(error));
+                    Policy::error(error_type(error));
                     abort();
                 }
                 spec_iter->vp.push_back(rt_class);
@@ -1017,17 +1011,9 @@ void runtime<Policy>::find_hash_function(
     error.attempts = total_attempts;
     error.duration = std::chrono::steady_clock::now() - start_time;
     error.buckets = 1 << M;
-    error_handler(error_type(error));
+    Policy::error(error_type(error));
     abort();
 }
-
-} // namespace detail
-} // namespace yomm2
-} // namespace yorel
-
-namespace yorel {
-namespace yomm2 {
-namespace detail {
 
 inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
@@ -1129,6 +1115,7 @@ void runtime<Policy>::install_gv() {
                 for (auto ti : cls.ti_ptrs) {
                     auto index = Policy::context.hash(ti);
                     Policy::context.mptrs[index] = *cls.method_table;
+                    Policy::context.indirect_mptrs[index] = cls.method_table;
                     Policy::context.control[index] = ti;
                 }
             }

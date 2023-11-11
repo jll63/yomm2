@@ -4,6 +4,7 @@
 #include <array>
 #include <charconv>
 #include <chrono>
+#include <functional>
 #include <stdio.h>
 #include <memory>
 #include <string_view>
@@ -15,7 +16,7 @@
 
 #if defined(YOMM2_SHARED)
     #if !defined(yOMM2_API)
-        #if defined(_WIN32)
+        #if defined(_MSC_VER)
             #define yOMM2_API __declspec(dllimport)
         #else
             #define yOMM2_API
@@ -46,41 +47,6 @@ using ti_ptr = const std::type_info*;
 } // namespace detail
 
 // -----------------------------------------------------------------------------
-// Policies
-
-struct context;
-struct catalog;
-
-namespace policy {
-
-struct abstract_policy {
-    static constexpr bool use_indirect_method_pointers = false;
-    static constexpr bool enable_runtime_checks = false;
-    static constexpr bool runtime_checks = false;
-};
-
-struct debug;
-struct release;
-struct debug_shared;
-struct release_shared;
-
-} // namespace policy
-
-#if defined(YOMM2_SHARED)
-    #ifdef NDEBUG
-using default_policy = policy::release_shared;
-    #else
-using default_policy = policy::debug_shared;
-    #endif
-#else
-    #ifdef NDEBUG
-using default_policy = policy::release;
-    #else
-using default_policy = policy::debug;
-    #endif
-#endif
-
-// -----------------------------------------------------------------------------
 // Error handling
 
 struct resolution_error {
@@ -109,8 +75,7 @@ using error_type = std::variant<
     resolution_error, unknown_class_error, hash_search_error,
     method_table_error>;
 
-using error_handler_type = void (*)(const error_type& error);
-error_handler_type set_error_handler(error_handler_type handler);
+using error_handler_type = std::function<void(const error_type& error)>;
 
 // deprecated
 
@@ -125,23 +90,41 @@ using method_call_error_handler = void (*)(
     const method_call_error& error, size_t arity,
     const std::type_info* const tis[]);
 
-// end deprecated
+// -----------------------------------------------------------------------------
+// Policies
 
-using error_type = std::variant<
-    resolution_error, unknown_class_error, hash_search_error,
-    method_table_error>;
+struct context;
+struct catalog;
 
-using error_handler_type = void (*)(const error_type& error);
-error_handler_type set_error_handler(error_handler_type handler);
+namespace policy {
 
-struct method_call_error;
+struct abstract_policy {
+    static constexpr bool use_indirect_method_pointers = false;
+};
 
-using method_call_error_handler = void (*)(
-    const method_call_error& error, size_t arity,
-    const std::type_info* const tis[]);
+struct global;
+template<class Policy>
+struct static_debug;
+template<class Policy>
+struct static_release;
+struct shared_debug;
+struct shared_release;
 
-inline method_call_error_handler yOMM2_API
-set_method_call_error_handler(method_call_error_handler handler);
+} // namespace policy
+
+#if defined(YOMM2_SHARED)
+    #ifdef NDEBUG
+using global_policy = policy::shared_release;
+    #else
+using global_policy = policy::shared_debug;
+    #endif
+#else
+    #ifdef NDEBUG
+using global_policy = policy::static_release<policy::global>;
+    #else
+using global_policy = policy::static_debug<policy::global>;
+    #endif
+#endif
 
 // -----------------------------------------------------------------------------
 // Forward declarations needed by "detail.hpp"
@@ -160,6 +143,9 @@ struct class_declaration;
 
 } // namespace yomm2
 } // namespace yorel
+
+// -----------------------------------------------------------------------------
+// details
 
 #include "detail.hpp"
 
@@ -185,7 +171,7 @@ struct catalog {
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy = default_policy>
+template<typename Key, typename Signature, class Policy = global_policy>
 struct method;
 
 template<typename Key, typename R, typename... A, class Policy>
@@ -374,7 +360,7 @@ struct class_declaration<detail::types<Class, Bases...>, Policy>
 
 template<typename Class, typename... Bases>
 struct class_declaration<detail::types<Class, Bases...>>
-    : class_declaration<detail::types<Class, Bases...>, default_policy> {};
+    : class_declaration<detail::types<Class, Bases...>, global_policy> {};
 
 template<typename... T>
 using use_classes = typename detail::use_classes_aux<T...>::type;
@@ -383,7 +369,7 @@ using use_classes = typename detail::use_classes_aux<T...>::type;
 // virtual_ptr
 
 template<
-    class Class, class Policy = default_policy,
+    class Class, class Policy = global_policy,
     bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
 class virtual_ptr;
 
@@ -436,7 +422,7 @@ class virtual_ptr_aux {
                 &typeid(typename virtual_traits<Other&>::polymorphic_type);
 
             if (key != final_key) {
-                detail::error_handler(method_table_error{key});
+                Policy::error(method_table_error{key});
             }
         }
 
@@ -561,13 +547,13 @@ class virtual_ptr<Class, Policy, true>
 
 template<class Class>
 virtual_ptr(Class&) -> virtual_ptr<
-    Class, default_policy,
-    detail::virtual_ptr_traits<Class, default_policy>::is_smart_ptr>;
+    Class, global_policy,
+    detail::virtual_ptr_traits<Class, global_policy>::is_smart_ptr>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = global_policy>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = global_policy>
 inline auto make_virtual_shared() {
     return virtual_shared_ptr<Class, Policy>::final(std::make_shared<Class>());
 }
@@ -643,7 +629,8 @@ inline const detail::word* method<Key, R(A...), Policy>::get_mptr(
         if constexpr (Policy::runtime_checks) {
             auto control_key = Policy::context.control[index];
             if (control_key != key) {
-                error_handler(unknown_class_error{unknown_class_error::call, key});
+                Policy::error(
+                    unknown_class_error{unknown_class_error::call, key});
             }
         }
 
@@ -740,7 +727,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
     error.tis = tis;
     auto ti_iter = tis;
     (..., (*ti_iter++ = detail::get_tip<A>(args)));
-    detail::error_handler(error_type(std::move(error)));
+    Policy::error(error_type(std::move(error)));
     abort(); // in case user handler "forgets" to abort
 }
 
@@ -756,7 +743,7 @@ method<Key, R(A...), Policy>::ambiguous_handler(
     error.tis = tis;
     auto ti_iter = tis;
     (..., (*ti_iter++ = detail::get_tip<A>(args)));
-    detail::error_handler(error_type(std::move(error)));
+    Policy::error(error_type(std::move(error)));
     abort(); // in case user handler "forgets" to abort
 }
 
@@ -798,28 +785,35 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
     return mptr;
 }
 
+// -----------------------------------------------------------------------------
+// policy
+
 namespace policy {
 
-struct yOMM2_API runtime_checks_mixin : virtual abstract_policy {
-    static constexpr bool runtime_checks = true;
-};
+namespace mixin {
 
-template<typename Stream>
-struct runtime_trace_mixin : virtual abstract_policy {
+template<class Policy, typename Stream = detail::stdostream>
+struct runtime_trace {
     static Stream trace;
 };
 
-template<typename Stream>
-inline Stream runtime_trace_mixin<Stream>::trace;
+template<class Policy, typename Stream>
+Stream runtime_trace<Policy, Stream>::trace;
 
 template<class Policy>
-struct scope_mixin : virtual abstract_policy {
+struct scope : abstract_policy {
     static struct context context;
     static struct catalog catalog;
 };
 
 template<class Policy>
-struct method_tables_mixin : virtual abstract_policy {
+catalog scope<Policy>::catalog;
+
+template<class Policy>
+context scope<Policy>::context;
+
+template<class Policy>
+struct yOMM2_API method_tables : abstract_policy {
     template<class Class>
     static detail::mptr_type method_table;
     template<class Class>
@@ -828,140 +822,94 @@ struct method_tables_mixin : virtual abstract_policy {
 
 template<class Policy>
 template<class Class>
-detail::mptr_type method_tables_mixin<Policy>::method_table;
+detail::mptr_type method_tables<Policy>::method_table;
 
 template<class Policy>
 template<class Class>
-detail::mptr_type* method_tables_mixin<Policy>::indirect_method_table =
-    &method_tables_mixin<Policy>::method_table<Class>;
+detail::mptr_type* method_tables<Policy>::indirect_method_table =
+    &method_tables<Policy>::method_table<Class>;
 
-struct basic_policy : scope_mixin<basic_policy>,
-                      method_tables_mixin<basic_policy> {};
+} // namespace mixin
 
-struct debug : basic_policy,
-               runtime_checks_mixin,
-               runtime_trace_mixin<detail::stdostream> {};
-struct release : basic_policy {};
-
-struct yOMM2_API abstract_shared : abstract_policy {
-    static constexpr bool enable_runtime_checks = true;
-    static constexpr bool use_indirect_method_pointers = false;
-    static detail::stdostream trace;
-    static struct context context;
-    static struct catalog catalog;
-    template<class Class>
-    static detail::mptr_type method_table;
-    template<class Class>
-    static detail::mptr_type* indirect_method_table;
+template<class Policy>
+struct basic_static_policy : mixin::scope<Policy>,
+                             detail::error_handlers<Policy>,
+                             mixin::method_tables<Policy> {
+    static error_handler_type error;
+    static method_call_error_handler call_error;
 };
 
-struct debug_shared : abstract_shared {
+template<class Policy>
+error_handler_type basic_static_policy<Policy>::error =
+    detail::error_handlers<Policy>::backward_compatible_error_handler;
+
+template<class Policy>
+method_call_error_handler basic_static_policy<Policy>::call_error =
+    detail::error_handlers<Policy>::default_call_error_handler;
+
+template<class Policy>
+struct static_debug : basic_static_policy<static_debug<Policy>>,
+               mixin::runtime_trace<static_debug<Policy>> {
     static constexpr bool runtime_checks = true;
 };
 
-struct release_shared : abstract_shared {
+template<class Policy>
+struct static_release : basic_static_policy<static_release<Policy>> {
     static constexpr bool runtime_checks = false;
 };
 
-template<class Class>
-detail::mptr_type abstract_shared::method_table;
+struct yOMM2_API abstract_shared : mixin::method_tables<abstract_shared> {
+    static struct context context;
+    static struct catalog catalog;
+    static error_handler_type error;
+    static method_call_error_handler call_error;
+    static detail::stdostream trace;
+    static constexpr bool use_indirect_method_pointers = false;
+};
 
-template<class Class>
-detail::mptr_type* abstract_shared::indirect_method_table =
-    &abstract_shared::method_table<Class>;
+struct yOMM2_API shared_debug : abstract_shared {
+    static constexpr bool runtime_checks = true;
+};
 
-template<class Policy>
-catalog scope_mixin<Policy>::catalog;
-
-template<class Policy>
-context scope_mixin<Policy>::context;
+struct yOMM2_API shared_release : abstract_shared {
+    static constexpr bool runtime_checks = false;
+};
 
 } // namespace policy
-
-inline error_handler_type set_error_handler(error_handler_type handler) {
-    auto prev = detail::error_handler;
-    detail::error_handler = handler;
-    return prev;
-}
-
-inline method_call_error_handler yOMM2_API
-set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = detail::method_call_error_handler_p;
-    detail::method_call_error_handler_p = handler;
-    return prev;
-}
 
 template<class Policy>
 void update();
 
 #ifdef YOMM2_SHARED
+
 yOMM2_API void update();
+yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
+yOMM2_API method_call_error_handler
+set_method_call_error_handler(method_call_error_handler handler);
+
 #else
+
 inline void update() {
-    update<default_policy>();
+    update<global_policy>();
+}
+
+inline error_handler_type set_error_handler(error_handler_type handler) {
+    auto prev = global_policy::error;
+    global_policy::error = handler;
+    return prev;
+}
+
+inline method_call_error_handler
+set_method_call_error_handler(method_call_error_handler handler) {
+    auto prev = global_policy::call_error;
+    global_policy::call_error = handler;
+    return prev;
 }
 #endif
 
 [[deprecated("use update() instead")]] yOMM2_API inline void update_methods() {
     update();
 }
-
-namespace detail {
-
-inline void default_method_call_error_handler(
-    const method_call_error& error, size_t arity, const ti_ptr ti_ptrs[]) {
-    if constexpr (bool(debug)) {
-        const char* explanation[] = {
-            "no applicable definition", "ambiguous call"};
-        detail::cerr
-            << explanation[error.code - resolution_error::no_definition]
-            << " for " << error.method_name << "(";
-        auto comma = "";
-        for (auto ti : range{ti_ptrs, ti_ptrs + arity}) {
-            detail::cerr << comma << ti->name();
-            comma = ", ";
-        }
-        detail::cerr << ")\n";
-    }
-    abort();
-}
-
-inline void default_error_handler(const error_type& error_v) {
-    if (auto error = std::get_if<resolution_error>(&error_v)) {
-        method_call_error old_error;
-        old_error.code = error->status;
-        old_error.method_name = error->method->name();
-        method_call_error_handler_p(
-            std::move(old_error), error->arity, error->tis);
-        abort();
-    }
-
-    if (auto error = std::get_if<unknown_class_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            detail::cerr << "unknown class " << error->ti->name() << "\n";
-        }
-        abort();
-    }
-
-    if (auto error = std::get_if<method_table_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            detail::cerr << "invalid method table for " << error->ti->name()
-                         << "\n";
-        }
-        abort();
-    }
-
-    if (auto error = std::get_if<hash_search_error>(&error_v)) {
-        if constexpr (bool(debug)) {
-            detail::cerr << "could not find hash factors after "
-                         << error->attempts << " in " << error->duration.count()
-                         << "s using " << error->buckets << " buckets\n";
-        }
-        abort();
-    }
-}
-
-} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

@@ -97,28 +97,29 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
 namespace bad_intrusive_mptr {
 
-struct Animal : root<Animal> {
+using test_policy = test_policy_<__COUNTER__>;
+
+struct Animal : root<Animal, test_policy> {
     virtual ~Animal() {
     }
 };
 
 struct Dog : Animal {};
 
-using test_policy = test_policy_<__COUNTER__, default_policy>;
-
 register_classes(test_policy, Animal, Dog);
 
 declare_method(std::string, kick, (virtual_<Animal&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
-    auto prev_handler = set_error_handler([](const error_type& ev) {
-        if (auto error = std::get_if<method_table_error>(&ev)) {
-            static_assert(
-                std::is_same_v<decltype(error), const method_table_error*>);
-            throw *error;
-        }
-        throw std::runtime_error("other error");
-    });
+    auto prev_handler =
+        test_policy::set_error_handler([](const error_type& ev) {
+            if (auto error = std::get_if<method_table_error>(&ev)) {
+                static_assert(
+                    std::is_same_v<decltype(error), const method_table_error*>);
+                throw *error;
+            }
+            throw std::runtime_error("other error");
+        });
 
     update<test_policy>();
 

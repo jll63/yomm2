@@ -234,6 +234,7 @@ void deprecated_test_handler(
 
 BOOST_AUTO_TEST_CASE(deprecated_error_handling) {
     update();
+
     set_method_call_error_handler(deprecated_test_handler);
 
     try {
@@ -274,7 +275,7 @@ void test_handler(const error_type& error_v) {
 BOOST_AUTO_TEST_CASE(call_error_handling) {
     update();
 
-    set_error_handler(test_handler);
+    auto prev_handler = set_error_handler(test_handler);
 
     try {
         times(dense_matrix(), dense_matrix());
@@ -306,6 +307,8 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
         BOOST_FAIL("unexpected exception");
     }
 #endif
+
+    set_error_handler(prev_handler);
 }
 
 } // namespace errors
@@ -313,6 +316,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
 namespace update_error_handling {
 
 using test_policy = test_policy_<__COUNTER__>;
+
 struct base {
     virtual ~base() {
     }
@@ -323,12 +327,16 @@ struct derived : base {};
 class_declaration<types<derived, base>, test_policy> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
+    auto prev_handler = test_policy::set_error_handler(errors::test_handler);
+
     try {
         update<test_policy>();
     } catch (const unknown_class_error& error) {
+        test_policy::set_error_handler(prev_handler);
         BOOST_TEST(error.ti == &typeid(base));
         return;
     } catch (...) {
+        test_policy::set_error_handler(prev_handler);
         BOOST_FAIL("unexpected exception");
     }
     BOOST_FAIL("did not throw");

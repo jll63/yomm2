@@ -4,7 +4,7 @@
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #if defined(YOMM2_SHARED)
-    #if defined(_WIN32)
+    #if defined(_MSC_VER)
         #define yOMM2_API __declspec(dllexport)
     #else
         #define yOMM2_API __attribute__((__visibility__("default")))
@@ -20,15 +20,34 @@ namespace yorel {
 namespace yomm2 {
 
 namespace policy {
+
 yOMM2_API context abstract_shared::context;
 yOMM2_API catalog abstract_shared::catalog;
+yOMM2_API error_handler_type abstract_shared::error =
+    detail::error_handlers<abstract_shared>::backward_compatible_error_handler;
+yOMM2_API method_call_error_handler abstract_shared::call_error =
+    detail::error_handlers<abstract_shared>::default_call_error_handler;
 yOMM2_API detail::stdostream abstract_shared::trace;
+
 } // namespace policy
 
 template void update<policy::abstract_shared>();
 
 yOMM2_API void update() {
     update<policy::abstract_shared>();
+}
+
+yOMM2_API error_handler_type set_error_handler(error_handler_type handler) {
+    auto prev = global_policy::error;
+    global_policy::error = handler;
+    return prev;
+}
+
+yOMM2_API method_call_error_handler
+set_method_call_error_handler(method_call_error_handler handler) {
+    auto prev = global_policy::call_error;
+    global_policy::call_error = handler;
+    return prev;
 }
 
 } // namespace yomm2

@@ -137,6 +137,7 @@ jobs:
         run: |
           cd build
           $env:YOMM2_TRACE = 1
+          $env:PATH += ";" + (Get-Item .).FullName + "/src"
           ctest --rerun-failed --output-on-failure .
           $global:LASTEXITCODE = 0
   mac:

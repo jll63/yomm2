@@ -113,7 +113,9 @@ int main() {
     shared_ptr<const matrix> b = make_shared<diagonal_matrix>();
     double s = 1;
 
+    #ifndef _MSC_VER
     #pragma clang diagnostic ignored "-Wpotentially-evaluated-expression"
+    #endif
 
     check(typeid(*times(a, a)) == typeid(dense_matrix));
     check(typeid(*times(a, b)) == typeid(dense_matrix));
