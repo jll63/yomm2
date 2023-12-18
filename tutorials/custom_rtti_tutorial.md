@@ -5,7 +5,7 @@
 ## RTTI, policies and facets
 
 YOMM2 uses Run-Time Type Information for three purposes:
-1. Identify classes in the [`use_classes`](use_classes.md)and [`register_classes`](use_classes.md)constructs,
+1. Identify classes in the `use_classes` and `register_classes` constructs,
    using the typeid(_type_) operator.
 2. Determine the dynamic type of an object, and find the appropriate, using
    the typeid(_expression_) operator.
@@ -31,7 +31,7 @@ static member functions:
     Returns a `type_id` (a typedef for `std::uintptr_t`) for type `T`.
     `use_classes` calls `static_type` at static construction time, and stores,
     for each registered class, the `type_id` of the class, and its bases.
-    [`update`](update.md) uses that information to piece together a complete description of
+    `update` uses that information to piece together a complete description of
     the inheritance relationships for the classes registered within a policy.
     Note that `T` is not restricted to the class of the virtual parameters! It
     is called for each method parameter - for example, `T` can be `int`.
