@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     using namespace detail;
 
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
-    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
+    using kick = method<Policy, void, std::string(virtual_ptr<Player, Policy>)>;
     static typename kick::template add_function<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
@@ -78,15 +78,19 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     Player player;
     auto virtual_player = vptr_player::final(player);
     BOOST_TEST(&*virtual_player == &player);
-    BOOST_TEST((virtual_player.method_table() == Policy::template method_table<Player>));
+    BOOST_TEST(
+        (virtual_player._method_table() ==
+         Policy::template method_table<Player>));
 
     Bear bear;
     BOOST_TEST((&*vptr_cat::final(bear)) == &bear);
     BOOST_TEST(
-        (vptr_cat::final(bear).method_table() == Policy::template method_table<Bear>));
+        (vptr_cat::final(bear)._method_table() ==
+         Policy::template method_table<Bear>));
 
     BOOST_TEST(
-        (vptr_player(bear).method_table() == Policy::template method_table<Bear>));
+        (vptr_player(bear)._method_table() ==
+         Policy::template method_table<Bear>));
 
     vptr_cat virtual_cat_ptr(bear);
     vptr_player virtual_player_ptr = virtual_cat_ptr;
@@ -107,10 +111,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     update<Policy>();
 
     BOOST_TEST(
-        (virtual_cat_ptr.method_table() == Policy::template method_table<Bear>) ==
+        (virtual_cat_ptr._method_table() ==
+         Policy::template method_table<Bear>) ==
         Policy::use_indirect_method_pointers);
 }
-} // namespace test_virtual_ptr
+} // namespace YOMM2_GENSYM
 
 namespace test_virtual_ptr_dispatch {
 
@@ -119,17 +124,16 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
 
-    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
+    using kick = method<Policy, void, std::string(virtual_ptr<Player, Policy>)>;
     static typename kick::template add_function<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        void,
+        Policy, void,
         std::string(
             virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
-            virtual_ptr<Player, Policy>),
-        Policy>;
+            virtual_ptr<Player, Policy>)>;
     static typename fight::template add_function<fight_bear<
         virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
         virtual_ptr<Player, Policy>>>
@@ -168,19 +172,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
 
     using kick =
-        method<void, std::string(virtual_shared_ptr<Player, Policy>), Policy>;
+        method<Policy, void, std::string(virtual_shared_ptr<Player, Policy>)>;
 
     static typename kick::template add_function<
         kick_bear<virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        void,
+        Policy, void,
         std::string(
             virtual_shared_ptr<Player, Policy>,
             virtual_shared_ptr<Object, Policy>,
-            virtual_shared_ptr<Player, Policy>),
-        Policy>;
+            virtual_shared_ptr<Player, Policy>)>;
 
     static typename fight::template add_function<fight_bear<
         virtual_shared_ptr<Player, Policy>, virtual_shared_ptr<Object, Policy>,

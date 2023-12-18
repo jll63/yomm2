@@ -81,4 +81,10 @@ BOOST_AUTO_TEST_CASE(test_move_virtual_arg) {
 
 register_classes(Base, Derived);
 
+struct yomm2_update {
+    yomm2_update() {
+        yorel::yomm2::update();
+    }
+};
+
 BOOST_TEST_GLOBAL_FIXTURE(yomm2_update);

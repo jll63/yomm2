@@ -13,7 +13,7 @@ using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
 std::ostream& operator<<(std::ostream& os, const rt_class* cls) {
-    return os << cls->name();
+    return os << reinterpret_cast<const std::type_info*>(cls)->name();
 }
 
 std::string empty = "{}";
@@ -72,8 +72,8 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
     return os;
 }
 
-template<typename T>
-auto get_class(const runtime_data& rt) {
+template<typename T, typename Runtime>
+auto get_class(const Runtime& rt) {
     return rt.class_map.at(typeid(T));
 }
 
@@ -158,11 +158,12 @@ use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
 
 use_classes<test_policy, Expense, Public, Bus, Metro, Taxi, Jet> YOMM2_GENSYM;
 
-YOMM2_DECLARE(double, pay, (virtual_<const Employee&>), test_policy);
+#undef YOMM2_DEFAULT_POLICY
+#define YOMM2_DEFAULT_POLICY test_policy
+YOMM2_DECLARE(double, pay, (virtual_<const Employee&>));
 
 YOMM2_DECLARE(
-    bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double),
-    test_policy);
+    bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double));
 
 YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;
@@ -479,8 +480,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST_REQUIRE(pay_Manager->info->next != nullptr);
     BOOST_TEST(*pay_Manager->info->next == pay_Employee->info->pf);
 
-    rt.find_hash_function(rt.classes, test_policy::context.hash, rt.metrics);
-    rt.install_gv();
+    const auto buckets = rt.find_hash_function(rt.classes, rt.metrics);
+    rt.install_gv(buckets);
 
     {
         // pay
@@ -489,11 +490,10 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             +12        // approve: 3 slots and 12 cells for dispatch table
                 + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
                        // Expenses
-        BOOST_TEST_REQUIRE(
-            test_policy::context.mptrs.size() == rt.metrics.hash_table_size);
-        BOOST_TEST_REQUIRE(
-            test_policy::context.control.size() ==
-            rt.metrics.hash_table_size);
+        BOOST_TEST_REQUIRE(test_policy::context.mptrs.size() == buckets);
+#ifndef NDEBUG
+        BOOST_TEST_REQUIRE(test_policy::control.size() == buckets);
+#endif
 
         auto gv_iter = test_policy::context.gv.data();
         // no slots nor fun* for 1-method
@@ -733,11 +733,11 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
 }
 
 struct key;
-method<key, void(virtual_<A&>), test_policy> m_a("m_a");
-method<key, void(virtual_<B&>), test_policy> m_b("m_b");
-method<key, void(virtual_<A&>, virtual_<B&>), test_policy> m_ab("m_ab");
-method<key, void(virtual_<C&>), test_policy> m_c("m_c");
-method<key, void(virtual_<D&>), test_policy> m_d("m_d");
+auto& m_a = method<test_policy, key, void(virtual_<A&>)>::fn;
+auto& m_b = method<test_policy, key, void(virtual_<B&>)>::fn;
+auto& m_ab = method<test_policy, key, void(virtual_<A&>, virtual_<B&>)>::fn;
+auto& m_c = method<test_policy, key, void(virtual_<C&>)>::fn;
+auto& m_d = method<test_policy, key, void(virtual_<D&>)>::fn;
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime<test_policy> rt;

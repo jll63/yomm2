@@ -24,7 +24,7 @@ endif()
 
 if(MSVC)
   add_compile_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
-  add_compile_options(/EHsc)
+  add_compile_options(/EHsc /FAs)
 endif()
 
 option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
@@ -62,19 +62,20 @@ endif()
 option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
 option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 
+set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
+set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
+
 if(${YOMM2_ENABLE_DOC})
   message(STATUS "Documentation generation enabled")
-  set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
-  set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
-  add_custom_command(
-      OUTPUT "${readme_md}"
-      COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
-      DEPENDS "${readme_cpp}")
   add_custom_target(README ALL DEPENDS "${readme_md}")
-  add_subdirectory(reference.in)
-  add_subdirectory(tutorials)
+  add_custom_command(
+    OUTPUT "${readme_md}"
+    COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
+    DEPENDS "${readme_cpp}")
 endif()
 
+add_subdirectory(reference.in)
+add_subdirectory(tutorials)
 
 ## Install instruction
 # Create version file for cmake package

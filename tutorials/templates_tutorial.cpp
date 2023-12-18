@@ -263,15 +263,15 @@ using comparison = method<
 // >
 
 // code<
-inline vector operator+(vector& a, const vector& b) {
+inline vector operator+(const vector& a, const vector& b) {
     return addition::fn(*a.get(), *b.get());
 }
 
-inline vector operator-(vector& a, const vector& b) {
+inline vector operator-(const vector& a, const vector& b) {
     return subtraction::fn(*a.get(), *b.get());
 }
 
-inline bool operator==(vector& a, const vector& b) {
+inline bool operator==(const vector& a, const vector& b) {
     return comparison::fn(*a.get(), *b.get());
 }
 // >

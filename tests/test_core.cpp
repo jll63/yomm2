@@ -19,18 +19,6 @@ using namespace boost::mp11;
 
 namespace YOMM2_GENSYM {
 
-struct Animal {};
-struct my_policy : policy::abstract_policy {};
-
-static_assert(std::is_same_v<get_policy<Animal>, default_policy>);
-static_assert(std::is_same_v<remove_policy<Animal>, types<Animal>>);
-static_assert(std::is_same_v<get_policy<my_policy, Animal>, my_policy>);
-static_assert(std::is_same_v<remove_policy<my_policy, Animal>, types<Animal>>);
-
-}
-
-namespace YOMM2_GENSYM {
-
 struct base {
     virtual ~base() {}
 };
@@ -59,7 +47,7 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        polymorphic_type<a&>,
+        polymorphic_type<default_policy, a&>,
         a
     >);
 
@@ -74,8 +62,8 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform<
-            polymorphic_type,
+        mp_transform_q<
+            mp_bind_front<polymorphic_type, default_policy>,
             mp_transform<
                 remove_virtual,
                 types< virtual_<a&>, virtual_<c&> >
@@ -86,8 +74,8 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform<
-            polymorphic_type,
+        mp_transform_q<
+            mp_bind_front<polymorphic_type, default_policy>,
             mp_transform<
                 remove_virtual,
                 mp_filter<
@@ -113,26 +101,32 @@ static_assert(
 static_assert(
     std::is_same_v<
         spec_polymorphic_types<
-            types<virtual_<a&>, b, virtual_<c&>>, types<d&, e, f&>>,
+            default_policy,
+            types<virtual_<a&>, b, virtual_<c&>>,
+            types<d&, e, f&>>,
         types<d, f>>);
 
-static_assert(std::is_same_v<polymorphic_type<std::shared_ptr<a>>, a>);
+static_assert(
+    std::is_same_v<
+        polymorphic_type<default_policy, std::shared_ptr<a>>,
+    a>);
 
 static_assert(
     std::is_same_v<
         spec_polymorphic_types<
+            default_policy,
             types<
                 virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>,
             types<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
         types<d, f>>);
 
 BOOST_AUTO_TEST_CASE(test_type_id_list) {
-    ti_ptr expected[] = {&typeid(a), &typeid(b)};
-    auto iter = type_id_list<types<a&, b&>>::begin;
-    auto last = type_id_list<types<a&, b&>>::end;
+    type_id expected[] = {type_id(&typeid(a)), type_id(&typeid(b))};
+    auto iter = type_id_list<default_policy, types<a&, b&>>::begin;
+    auto last = type_id_list<default_policy, types<a&, b&>>::end;
     BOOST_TEST_REQUIRE(last - iter == 2);
-    BOOST_TEST_REQUIRE(*iter++ == &typeid(a));
-    BOOST_TEST_REQUIRE(*iter++ == &typeid(b));
+    BOOST_TEST_REQUIRE(*iter++ == type_id(&typeid(a)));
+    BOOST_TEST_REQUIRE(*iter++ == type_id(&typeid(b)));
 }
 
 } // namespace YOMM2_GENSYM
@@ -175,41 +169,46 @@ BOOST_AUTO_TEST_CASE(casts) {
     const Carnivore& carnivore = dog;
 
     BOOST_TEST(
-        &virtual_traits<const Animal&>::cast<const Mammal&>(animal).m
+        (&virtual_traits<default_policy, const Animal&>::cast<const Mammal&>(animal).m)
         == &dog.m);
     BOOST_TEST(
-        &virtual_traits<const Animal&>::cast<const Carnivore&>(animal).c
+        (&virtual_traits<default_policy, const Animal&>::cast<const Carnivore&>(animal).c)
         == &dog.c);
     BOOST_TEST(
-        &virtual_traits<const Animal&>::cast<const Mammal&>(animal).m
+        (&virtual_traits<default_policy, const Animal&>::cast<const Mammal&>(animal).m)
         == &dog.m);
     BOOST_TEST(
-        &virtual_traits<const Animal&>::cast<const Dog&>(animal).d == &dog.d);
+        (&virtual_traits<default_policy, const Animal&>::cast<const Dog&>(animal).d)
+        == &dog.d);
     BOOST_TEST(
-        &virtual_traits<const Mammal&>::cast<const Dog&>(mammal).d == &dog.d);
+        (&virtual_traits<default_policy, const Mammal&>::cast<const Dog&>(mammal).d)
+        == &dog.d);
     BOOST_TEST(
-        &virtual_traits<const Carnivore&>::cast<const Dog&>(carnivore).c
+        (&virtual_traits<default_policy, const Carnivore&>::cast<const Dog&>(carnivore).c)
         == &dog.c);
 
     using voidp = const void*;
-    using virtual_animal_t = polymorphic_type<const Animal&>;
+    using virtual_animal_t = polymorphic_type<default_policy, const Animal&>;
     static_assert(std::is_same_v<virtual_animal_t, Animal>, "animal");
-    using virtual_mammal_t = polymorphic_type<const Mammal&>;
+    using virtual_mammal_t = polymorphic_type<default_policy, const Mammal&>;
     static_assert(std::is_same_v<virtual_mammal_t, Mammal>, "mammal");
 
-    const void* base_address;
+    voidp base_address;
 
     base_address = wrapper<
+        default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
         types<const Mammal&>>::fn(animal);
     BOOST_TEST(base_address == &mammal);
 
     base_address = wrapper<
+        default_policy,
         voidp(virtual_<const Animal&>), carnivore_this,
         types<const Carnivore&>>::fn(animal);
     BOOST_TEST(base_address == &carnivore);
 
     base_address = wrapper<
+        default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
         types<const Dog&>>::fn(animal);
     BOOST_TEST(base_address == &dog);
@@ -238,3 +237,47 @@ static_assert(
 >);
 
 } // namespace test_use_classes
+
+namespace facets {
+
+using namespace policy;
+
+struct key1;
+struct key2;
+struct alt_rtti {};
+
+static_assert(std::is_same_v<
+    copy_facet<key2, generic_domain<key1>>::type,
+    generic_domain<key2>
+>);
+
+// yorel::yomm2::policy::generic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
+// yorel::yomm2::policy::generic_policy<yorel::yomm2::policy::generic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
+
+struct policy1 : generic_policy<policy1, generic_domain<policy1>, std_rtti> {};
+struct policy2 : policy1::copy<policy2> {};
+struct policy3 : policy1::copy<policy3>::replace<std_rtti, alt_rtti> {};
+
+static_assert(std::is_same_v<
+    policy2::facets,
+    types<generic_domain<policy2>, std_rtti>
+>);
+
+static_assert(std::is_same_v<
+    policy3::facets,
+    types<generic_domain<policy3>, alt_rtti>
+>);
+
+// static_assert(std::is_same_v<
+//     generic_policy<generic_domain<key1>, std_rtti>::replace<std_rtti, alt_rtti>,
+//     generic_policy<generic_domain<key1>, alt_rtti>
+// >);
+
+}
+
+void f(char, int) {}
+
+static_assert(std::is_same_v<
+    parameter_type_list_t<decltype(f)>,
+    types<char, int>
+>);

@@ -8,17 +8,19 @@ file(GLOB cpps "*.cpp")
 set(code_deps "${CMAKE_SOURCE_DIR}/dev/code2md;${CMAKE_SOURCE_DIR}/dev/md2md;${CMAKE_SOURCE_DIR}/dev/mdgen.py")
 set(entries "")
 
-add_compile_options(-save-temps)
-
 foreach(cpp ${cpps})
     cmake_path(REMOVE_EXTENSION cpp LAST_ONLY OUTPUT_VARIABLE md)
-    set(md "${md}.md")
-    string(REPLACE "reference.in" "reference" md_out "${md}")
-    add_custom_command(
-        OUTPUT "${md_out}"
-        COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md_out}"
-        DEPENDS "${cpp};${code_deps}")
-    list(APPEND entries "${md_out}")
+
+    if(${YOMM2_ENABLE_DOC})
+        set(md "${md}.md")
+        string(REPLACE "reference.in" "reference" md_out "${md}")
+        add_custom_command(
+            OUTPUT "${md_out}"
+            COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md_out}"
+            DEPENDS "${cpp};${code_deps}")
+        list(APPEND entries "${md_out}")
+    endif()
+
     cmake_path(GET cpp STEM exe)
     set(exe "ref_${exe}")
     add_executable("${exe}" "${cpp}")
@@ -27,15 +29,17 @@ foreach(cpp ${cpps})
     add_test(NAME "${exe}" COMMAND "${exe}")
 endforeach()
 
-file(GLOB mds "*.md")
+if(${YOMM2_ENABLE_DOC})
+    file(GLOB mds "*.md")
 
-foreach(md ${mds})
-    string(REPLACE "reference.in" "reference" md_out "${md}")
-    add_custom_command(
-        OUTPUT "${md_out}"
-        COMMAND ${CMAKE_SOURCE_DIR}/dev/md2md "${md}" "${md_out}"
-        DEPENDS "${md};${code_deps}")
-    list(APPEND entries "${md_out}")
-endforeach()
+    foreach(md ${mds})
+        string(REPLACE "reference.in" "reference" md_out "${md}")
+        add_custom_command(
+            OUTPUT "${md_out}"
+            COMMAND ${CMAKE_SOURCE_DIR}/dev/md2md "${md}" "${md_out}"
+            DEPENDS "${md};${code_deps}")
+        list(APPEND entries "${md_out}")
+    endforeach()
 
-add_custom_target(reference ALL DEPENDS "${entries}")
+    add_custom_target(reference ALL DEPENDS "${entries}")
+endif()

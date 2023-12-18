@@ -186,6 +186,10 @@ class static_chain {
         return std::distance(begin(), end());
     }
 
+    bool empty() const {
+        return !first;
+    }
+
   protected:
     T* first;
     T* removed_prev;

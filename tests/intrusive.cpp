@@ -62,14 +62,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     struct YOMM2_SYMBOL(kick);
     using kick =
-        method<YOMM2_SYMBOL(kick), std::string(virtual_<Creature&>), Policy>;
+        method<Policy, YOMM2_SYMBOL(kick), std::string(virtual_<Creature&>)>;
     static typename kick::template add_function<kick_bear<Bear>> YOMM2_GENSYM;
 
     using fight = method<
-        void,
+        Policy, void,
         std::string(
-            virtual_<Character&>, virtual_<Device&>, virtual_<Creature&>),
-        Policy>;
+            virtual_<Character&>, virtual_<Device&>, virtual_<Creature&>)>;
     static typename fight::template add_function<fight_bear<Warrior, Axe, Bear>>
         YOMM2_GENSYM;
 
@@ -113,15 +112,15 @@ register_classes(Animal, Dog);
 declare_method(std::string, kick, (virtual_<Animal&>));
 
 BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
-    auto prev_handler =
-        test_policy::set_error_handler([](const error_type& ev) {
-            if (auto error = std::get_if<method_table_error>(&ev)) {
-                static_assert(
-                    std::is_same_v<decltype(error), const method_table_error*>);
-                throw *error;
-            }
-            throw std::runtime_error("other error");
-        });
+    auto prev_handler = test_policy::error;
+    test_policy::error = [](const error_type& ev) {
+        if (auto error = std::get_if<method_table_error>(&ev)) {
+            static_assert(
+                std::is_same_v<decltype(error), const method_table_error*>);
+            throw *error;
+        }
+        throw std::runtime_error("other error");
+    };
 
     update<test_policy>();
 
@@ -133,7 +132,7 @@ BOOST_AUTO_TEST_CASE(test_bad_intrusive_mptr) {
 #ifdef NDEBUG
         BOOST_FAIL("should not have thrown a method_table_error");
 #else
-        BOOST_TEST(error.ti->name() == typeid(Dog).name());
+        BOOST_TEST(error.ti == type_id(&typeid(Dog)));
 #endif
         return;
     } catch (...) {

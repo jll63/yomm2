@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         virtual_ptr<Animal>::final(animal);
     } catch (const method_table_error& error) {
         set_error_handler(prev_handler);
-        BOOST_TEST(error.ti->name() == typeid(Dog).name());
+        BOOST_TEST(error.ti == reinterpret_cast<type_id>(&typeid(Dog)));
         threw = true;
     } catch (...) {
         set_error_handler(prev_handler);

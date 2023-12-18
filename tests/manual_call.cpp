@@ -50,8 +50,8 @@ auto call_kick(Dog& obj) {
 
 auto call_kick_manual(Dog& obj) {
     const auto hash_table = default_policy::context.mptrs.data();
-    const auto mult = default_policy::context.hash.mult;
-    const auto shift = default_policy::context.hash.shift;
+    const auto mult = default_policy::mult;
+    const auto shift = default_policy::shift;
     const auto index = kick::fn.slots_strides[0];
     const auto vptr = *(void***) &obj; // typeid 1
 	// movq	    context+24(%rip), %r8
@@ -60,7 +60,7 @@ auto call_kick_manual(Dog& obj) {
 	// movslq	method<kick_, char const* (virtual_<Dog&>)>::fn+96(%rip), %rsi
     // movq	    (%rdi), %rax
 
-    const auto h1 = mult * std::uintptr_t(vptr[-1]) /* typeid 2*/;
+    const auto h1 = mult * type_id(vptr[-1]) /* typeid 2*/;
 	// imulq	-8(%rax), %rdx
 
     const auto h2 = h1 >> shift;
