@@ -283,7 +283,7 @@ struct runtime {
         trace_type& operator<<(type_name manip) {
             if constexpr (trace_enabled) {
                 if (on) {
-                    *this << manip.type;
+                    Policy::type_name(manip.type, *this);
                 }
             }
 
@@ -597,8 +597,8 @@ void runtime<Policy>::augment_methods() {
         // reverse the reversed order from 'chain'
 
         for (auto& definition_info : meth_info.specs) {
-            ++trace << definition_info.name << " (" << definition_info.pf
-                    << ")\n";
+            ++trace << type_name(definition_info.type) << " ("
+                    << definition_info.pf << ")\n";
             spec_iter->info = &definition_info;
             spec_iter->vp.reserve(meth_info.arity());
             size_t param_index = 0;
@@ -813,7 +813,7 @@ void runtime<Policy>::build_dispatch_tables() {
                         if (spec.vp[dim]->compatible_classes.find(
                                 compatible_classes) !=
                             spec.vp[dim]->compatible_classes.end()) {
-                            ++trace << spec.info->name << "\n";
+                            ++trace << type_name(spec.info->type) << "\n";
                             mask[spec_index] = 1;
                         }
                         ++spec_index;
@@ -907,7 +907,7 @@ void runtime<Policy>::build_dispatch_tables() {
 
             for (auto& spec : m.specs) {
                 indent YOMM2_GENSYM(trace);
-                ++trace << spec.info->name << ":\n";
+                ++trace << type_name(spec.info->type) << ":\n";
                 std::vector<const rt_spec*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
@@ -921,7 +921,7 @@ void runtime<Policy>::build_dispatch_tables() {
 
                     for (auto& candidate : candidates) {
                         indent YOMM2_GENSYM(trace);
-                        ++trace << candidate->info->name << "\n";
+                        ++trace << type_name(candidate->info->type) << "\n";
                     }
                 }
 
@@ -931,7 +931,7 @@ void runtime<Policy>::build_dispatch_tables() {
                 if (nexts.size() == 1) {
                     const definition_info* next_info = nexts.front()->info;
                     next = next_info->pf;
-                    ++trace << "-> " << next_info->name << "\n";
+                    ++trace << "-> " << type_name(next_info->type) << "\n";
                 } else if (nexts.empty()) {
                     ++trace << "-> none\n";
                     next = m.info->not_implemented;
@@ -984,7 +984,7 @@ void runtime<Policy>::build_dispatch_table(
                 indent YOMM2_GENSYM(trace);
 
                 for (auto& app : applicable) {
-                    ++trace << app->info->name << "\n";
+                    ++trace << type_name(app->info->type) << "\n";
                 }
             }
 
@@ -1008,7 +1008,7 @@ void runtime<Policy>::build_dispatch_table(
                 }
             } else {
                 m.dispatch_table.push_back(specs[0]->info->pf);
-                ++trace << "-> " << specs[0]->info->name
+                ++trace << "-> " << type_name(specs[0]->info->type)
                         << " pf = " << specs[0]->info->pf << "\n";
             }
         } else {
@@ -1175,8 +1175,8 @@ void runtime<Policy>::optimize() {
             for (auto cls : m.vp[0]->compatible_classes) {
                 auto pf = m.dispatch_table[(*cls->method_table)[slot].i];
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " mtbl[" << slot
-                            << "] = " << pf << " (function)"
+                    ++trace << *cls << " mtbl[" << slot << "] = " << pf
+                            << " (function)"
                             << "\n";
                 }
                 (*cls->method_table)[slot].pf = pf;

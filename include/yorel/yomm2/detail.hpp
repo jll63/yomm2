@@ -205,15 +205,6 @@ const char* default_method_name() {
 #endif
 }
 
-template<typename T>
-const char* default_definition_name() {
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-    return typeid(T).name();
-#else
-    return "definition";
-#endif
-}
-
 // -------------
 // hash function
 
@@ -271,7 +262,7 @@ struct method_info;
 struct definition_info : static_chain<definition_info>::static_link {
     ~definition_info();
     method_info* method;
-    std::string_view name;
+    type_id type; // of the function, for trace
     void** next;
     type_id *vp_begin, *vp_end;
     void* pf;
@@ -373,14 +364,9 @@ using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
 template<class Policy, typename T>
 struct virtual_traits<Policy, T&> {
     using polymorphic_type = std::remove_cv_t<T>;
-    using resolve_arg_type = const T&;
 
-    static resolve_arg_type rarg(resolve_arg_type arg) {
+    static const T& rarg(const T& arg) {
         return arg;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(arg);
     }
 
     template<typename D>
@@ -392,14 +378,9 @@ struct virtual_traits<Policy, T&> {
 template<class Policy, typename T>
 struct virtual_traits<Policy, T&&> {
     using polymorphic_type = std::remove_cv_t<T>;
-    using resolve_arg_type = const T&;
 
-    static resolve_arg_type rarg(resolve_arg_type arg) {
+    static const T& rarg(const T& arg) {
         return arg;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(arg);
     }
 
     template<typename D>
@@ -411,14 +392,9 @@ struct virtual_traits<Policy, T&&> {
 template<class Policy, typename T>
 struct virtual_traits<Policy, T*> {
     using polymorphic_type = std::remove_cv_t<T>;
-    using resolve_arg_type = const T*;
 
-    static resolve_arg_type rarg(resolve_arg_type arg) {
-        return arg;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
+    static const T& rarg(const T* arg) {
+        return *arg;
     }
 
     template<typename D>
@@ -430,14 +406,10 @@ struct virtual_traits<Policy, T*> {
 template<class Policy, class Class, bool IsSmartPtr>
 struct virtual_traits<Policy, virtual_ptr<Class, Policy, IsSmartPtr>> {
     using polymorphic_type = Class;
-    using resolve_arg_type = const virtual_ptr<Class, Policy, IsSmartPtr>&;
 
-    static resolve_arg_type rarg(resolve_arg_type ptr) {
+    static const virtual_ptr<Class, Policy, IsSmartPtr>&
+    rarg(const virtual_ptr<Class, Policy, IsSmartPtr>& ptr) {
         return ptr;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
     }
 
     template<typename Derived>
@@ -455,14 +427,10 @@ struct virtual_traits<Policy, virtual_ptr<Class, Policy, IsSmartPtr>> {
 template<class Policy, class Class, bool IsSmartPtr>
 struct virtual_traits<Policy, const virtual_ptr<Class, Policy, IsSmartPtr>&> {
     using polymorphic_type = Class;
-    using resolve_arg_type = const virtual_ptr<Class, Policy, IsSmartPtr>&;
 
-    static resolve_arg_type rarg(resolve_arg_type ptr) {
+    static const virtual_ptr<Class, Policy, IsSmartPtr>&
+    rarg(const virtual_ptr<Class, Policy, IsSmartPtr>& ptr) {
         return ptr;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
     }
 
     template<typename Derived>
@@ -480,16 +448,11 @@ struct virtual_traits<Policy, const virtual_ptr<Class, Policy, IsSmartPtr>&> {
 template<class Policy, class Class>
 struct virtual_traits<
     Policy, virtual_ptr<std::shared_ptr<Class>, Policy, true>> {
-    using resolve_arg_type =
-        const virtual_ptr<std::shared_ptr<Class>, Policy, true>&;
     using polymorphic_type = Class;
 
-    static auto rarg(resolve_arg_type ptr) {
+    static const virtual_ptr<std::shared_ptr<Class>, Policy, true>&
+    rarg(const virtual_ptr<std::shared_ptr<Class>, Policy, true>& ptr) {
         return ptr;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
     }
 
     template<typename Derived>
@@ -502,16 +465,11 @@ struct virtual_traits<
 template<class Policy, class Class>
 struct virtual_traits<
     Policy, const virtual_ptr<std::shared_ptr<Class>, Policy, true>&> {
-    using resolve_arg_type =
-        const virtual_ptr<std::shared_ptr<Class>, Policy, true>&;
     using polymorphic_type = Class;
 
-    static auto rarg(resolve_arg_type ptr) {
-        return ptr;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
+    static const virtual_ptr<std::shared_ptr<Class>, Policy, true>&
+    rarg(const virtual_ptr<std::shared_ptr<Class>, Policy, true>& arg) {
+        return arg;
     }
 
     template<typename Derived>
@@ -582,43 +540,10 @@ struct virtual_ptr_traits<const std::shared_ptr<Class>&, Policy> {
     }
 };
 
-template<class Policy, typename T, bool IsVirtual>
-struct resolver_type_impl {
-    using type = const T&;
-};
-
-template<class Policy, typename T>
-struct resolver_type_impl<Policy, T*, false> {
-    using type = const T*;
-};
-
-template<class Policy, typename T>
-struct resolver_type_impl<Policy, T&, false> {
-    using type = const T&;
-};
-
-template<class Policy, typename T>
-struct resolver_type_impl<Policy, T&&, false> {
-    using type = const T&;
-};
-
-template<class Policy, typename T>
-struct resolver_type_impl<Policy, T, true> {
-    using type = typename virtual_traits<Policy, T>::resolve_arg_type;
-};
-
-template<class Policy, typename T>
-using resolver_type =
-    typename resolver_type_impl<Policy, T, is_virtual<T>::value>::type;
-
 template<class Policy, typename T>
 struct argument_traits {
     static const T& rarg(const T& arg) {
         return arg;
-    }
-
-    static auto dynamic_type(const T& arg) {
-        return Policy::dynamic_type(arg);
     }
 
     template<typename>
@@ -660,15 +585,10 @@ struct shared_ptr_traits<const std::shared_ptr<T>&> {
 template<class Policy, typename T>
 struct virtual_traits<Policy, std::shared_ptr<T>> {
     using polymorphic_type = std::remove_cv_t<T>;
-    using resolve_arg_type = const std::shared_ptr<T>&;
     static_assert(std::is_polymorphic_v<polymorphic_type>);
 
-    static resolve_arg_type rarg(resolve_arg_type arg) {
-        return arg;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
+    static const T& rarg(const std::shared_ptr<T>& arg) {
+        return *arg;
     }
 
     template<class DERIVED>
@@ -698,14 +618,9 @@ struct virtual_traits<Policy, std::shared_ptr<T>> {
 template<class Policy, typename T>
 struct virtual_traits<Policy, const std::shared_ptr<T>&> {
     using polymorphic_type = std::remove_cv_t<T>;
-    using resolve_arg_type = const std::shared_ptr<T>&;
 
-    static resolve_arg_type rarg(resolve_arg_type arg) {
-        return arg;
-    }
-
-    static auto dynamic_type(resolve_arg_type arg) {
-        return Policy::dynamic_type(*arg);
+    static const T& rarg(const std::shared_ptr<T>& arg) {
+        return *arg;
     }
 
     template<class DERIVED>
@@ -736,9 +651,6 @@ struct virtual_traits<Policy, const std::shared_ptr<T>&> {
 template<class Policy, typename T>
 struct virtual_traits<Policy, std::shared_ptr<T>&>
     : virtual_traits<Policy, const std::shared_ptr<T>&> {};
-
-template<typename Method, typename ArgType>
-inline auto get_mptr(resolver_type<typename Method::policy_type, ArgType> arg);
 
 template<class Policy>
 inline auto check_method_pointer(const word* mptr, type_id dynamic_type);
@@ -788,7 +700,7 @@ using spec_polymorphic_types = mp11::mp_rename<
 template<class Policy, typename ArgType, typename T>
 inline uintptr_t get_tip(const T& arg) {
     if constexpr (is_virtual<ArgType>::value) {
-        return virtual_traits<Policy, ArgType>::dynamic_type(arg);
+        return Policy::dynamic_type(virtual_traits<Policy, ArgType>::rarg(arg));
     } else {
         return Policy::dynamic_type(arg);
     }

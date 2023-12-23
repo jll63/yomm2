@@ -594,22 +594,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             const auto& pay_method =
                 decltype(yOMM2_SELECTOR(pay)(Employee()))::fn;
             BOOST_TEST(pay_method.arity == 1);
-            BOOST_TEST(
-                pay_method.resolve<virtual_<const Employee&>>(employee) ==
-                pay_Employee->info->pf);
+            BOOST_TEST(pay_method.resolve(employee) == pay_Employee->info->pf);
             BOOST_TEST(&typeid(manager) == &typeid(Manager));
-            BOOST_TEST(
-                pay_method.resolve<virtual_<const Employee&>>(manager) ==
-                pay_Manager->info->pf);
+            BOOST_TEST(pay_method.resolve(manager) == pay_Manager->info->pf);
 
             using approve_method =
                 decltype(yOMM2_SELECTOR(approve)(Role(), Expense(), 0.));
             BOOST_TEST(approve_method::fn.arity == 2);
 
             BOOST_TEST(
-                (approve_method::fn.resolve<
-                    virtual_<const Role&>, virtual_<const Expense&>, double>(
-                    role, expense, 0.)) == approve_Role_Expense->info->pf);
+                (approve_method::fn.resolve(role, expense, 0.)) ==
+                approve_Role_Expense->info->pf);
 
             {
                 std::vector<const Role*> Roles = {
@@ -636,9 +631,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                             ? approve_Employee_public
                             : approve_Role_Expense;
                         BOOST_TEST(
-                            (approve_method::fn.resolve<
-                                virtual_<const Role&>, virtual_<const Expense&>,
-                                double>(*r, *e, 0.)) == expected->info->pf);
+                            (approve_method::fn.resolve(*r, *e, 0.)) ==
+                            expected->info->pf);
                         ++j;
                     }
                     ++i;

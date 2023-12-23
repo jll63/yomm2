@@ -137,11 +137,7 @@
     struct _yOMM2_spec {                                                       \
         static NS::_yOMM2_method::return_type yOMM2_body ARGS;                 \
     };                                                                         \
-    _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(         \
-        &next,                                                                 \
-        yOMM2_NAME(                                                            \
-            ::yorel::yomm2::detail::default_definition_name<_yOMM2_spec>(),    \
-            #ARGS));                                                           \
+    _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(&next);  \
     }                                                                          \
     }                                                                          \
     NS::_yOMM2_method::return_type NS::_yOMM2_spec::yOMM2_body ARGS
@@ -193,9 +189,7 @@
     namespace {                                                                \
     namespace NS {                                                             \
     INLINE _yOMM2_method::add_function<CONTAINER<RETURN_T ARGS>::fn>           \
-        YOMM2_GENSYM(                                                          \
-            &CONTAINER<RETURN_T ARGS>::next,                                   \
-            yOMM2_NAME(typeid(CONTAINER<RETURN_T ARGS>).name(), #ARGS));       \
+        YOMM2_GENSYM(&CONTAINER<RETURN_T ARGS>::next);                         \
     }                                                                          \
     }                                                                          \
     INLINE NS::_yOMM2_method::return_type CONTAINER<RETURN_T ARGS>::fn ARGS

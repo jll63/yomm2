@@ -44,6 +44,7 @@ namespace yorel {
 namespace yomm2 {
 
 using type_id = std::uintptr_t;
+constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
 namespace detail {
 
@@ -134,12 +135,14 @@ struct std_rtti : rtti {
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
     template<typename T>
     static type_id static_type() {
-        return reinterpret_cast<type_id>(&typeid(T));
+        auto tip = &typeid(T);
+        return reinterpret_cast<type_id>(tip);
     }
 
     template<typename T>
-    static type_id dynamic_type(T& obj) {
-        return reinterpret_cast<type_id>(&typeid(obj));
+    static type_id dynamic_type(const T& obj) {
+        auto tip = &typeid(obj);
+        return reinterpret_cast<type_id>(tip);
     }
 
     template<typename Stream>
@@ -272,28 +275,27 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
     ~method();
 
     template<typename ArgType>
-    const detail::word*
-    get_mptr(detail::resolver_type<Policy, ArgType> arg) const;
+    const detail::word* get_mptr(const ArgType& arg) const;
 
-    template<typename ArgType, typename... MoreArgTypes>
-    void* resolve_uni(
-        detail::resolver_type<Policy, ArgType> arg,
-        detail::resolver_type<Policy, MoreArgTypes>... more_args) const;
+    template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
+    void*
+    resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
 
-    template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+    template<
+        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        typename... MoreArgTypes>
     void* resolve_multi_first(
-        detail::resolver_type<Policy, ArgType> arg,
-        detail::resolver_type<Policy, MoreArgTypes>... more_args) const;
+        const ArgType& arg, const MoreArgTypes&... more_args) const;
 
-    template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+    template<
+        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        typename... MoreArgTypes>
     void* resolve_multi_next(
-        const detail::word* dispatch,
-        detail::resolver_type<Policy, ArgType> arg,
-        detail::resolver_type<Policy, MoreArgTypes>... more_args) const;
+        const detail::word* dispatch, const ArgType& arg,
+        const MoreArgTypes&... more_args) const;
 
     template<typename... ArgType>
-    function_pointer_type
-    resolve(detail::resolver_type<Policy, ArgType>... args) const;
+    function_pointer_type resolve(const ArgType&... args) const;
 
     return_type operator()(detail::remove_virtual<A>... args) const;
 
@@ -306,8 +308,7 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
 
     template<auto Function>
     struct add_function {
-        explicit add_function(
-            next_type* next = nullptr, std::string_view name = "definition") {
+        explicit add_function(next_type* next = nullptr) {
 
             static detail::definition_info info;
 
@@ -317,7 +318,7 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
             }
 
             info.method = &fn;
-            info.name = name;
+            info.type = Policy::template static_type<decltype(Function)>();
             info.next = reinterpret_cast<void**>(next);
             using parameter_types =
                 detail::parameter_type_list_t<decltype(Function)>;
@@ -336,36 +337,22 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
     template<auto... Function>
     struct add_functions : std::tuple<add_function<Function>...> {};
 
-    template<typename Container, bool has_next, bool has_name>
+    template<typename Container, bool has_next>
     struct add_definition_;
 
     template<typename Container>
-    struct add_definition_<Container, false, false> {
-        add_function<Container::fn> override_{
-            nullptr, detail::default_definition_name<Container>()};
+    struct add_definition_<Container, false> {
+        add_function<Container::fn> override_{nullptr};
     };
 
     template<typename Container>
-    struct add_definition_<Container, true, false> {
-        add_function<Container::fn> add{
-            &Container::next, detail::default_definition_name<Container>()};
-    };
-
-    template<typename Container>
-    struct add_definition_<Container, false, true> {
-        add_function<Container::fn> add{nullptr, Container::name};
-    };
-
-    template<typename Container>
-    struct add_definition_<Container, true, true> {
-        add_function<Container::fn> add{&Container::next, Container::name};
+    struct add_definition_<Container, true> {
+        add_function<Container::fn> add{&Container::next};
     };
 
     template<typename Container>
     struct add_definition
-        : add_definition_<
-              Container, detail::has_next_v<Container, next_type>,
-              detail::has_name_v<Container>> {
+        : add_definition_<Container, detail::has_next_v<Container, next_type>> {
         using type = add_definition; // make it a meta-function
     };
 
@@ -458,24 +445,23 @@ class virtual_ptr_aux {
     static auto final(Other&& obj) {
         using namespace detail;
 
+        using other_virtual_traits = detail::virtual_traits<Policy, Other&>;
+        using polymorphic_type =
+            typename other_virtual_traits::polymorphic_type;
+
         mptr_type mptr;
 
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::template indirect_method_table<
-                typename detail::virtual_traits<
-                    Policy, Other&>::polymorphic_type>;
+            mptr = Policy::template indirect_method_table<polymorphic_type>;
         } else {
-            mptr =
-                Policy::template method_table<typename detail::virtual_traits<
-                    Policy, Other&>::polymorphic_type>;
+            mptr = Policy::template method_table<polymorphic_type>;
         }
 
         if constexpr (Policy::runtime_checks) {
             // check that dynamic type == static type
             auto dynamic_type =
-                virtual_traits<Policy, Other&>::dynamic_type(obj);
-            auto static_type = Policy::template static_type<
-                typename virtual_traits<Policy, Other&>::polymorphic_type>();
+                Policy::dynamic_type(other_virtual_traits::rarg(obj));
+            auto static_type = Policy::template static_type<polymorphic_type>();
 
             if (dynamic_type != static_type) {
                 Policy::error(method_table_error{dynamic_type});
@@ -673,6 +659,22 @@ using replace_facet = boost::mp11::mp_apply<
                 boost::mp11::mp_quote_trait<std::is_base_of>, Base>,
             Facet>,
         NewPolicy>>;
+
+struct vptr {};
+
+template<class Policy>
+struct external_vptr : vptr {
+    template<class Class>
+    static auto vptr(const Class& arg) {
+        auto index = Policy::dynamic_type(arg);
+
+        if constexpr (has_facet<Policy, projection>) {
+            index = Policy::project_type_id(index);
+        }
+
+        return Policy::context.mptrs[index];
+    }
+};
 
 struct output {};
 
@@ -880,7 +882,7 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
-          Policy, generic_domain<Policy>, std_rtti,
+          Policy, generic_domain<Policy>, external_vptr<Policy>, std_rtti,
           generic_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
@@ -959,23 +961,22 @@ template<class Policy, typename Key, typename R, typename... A>
 typename method<Policy, Key, R(A...)>::return_type inline method<
     Policy, Key, R(A...)>::operator()(detail::remove_virtual<A>... args) const {
     using namespace detail;
-    return resolve<A...>(argument_traits<Policy, A>::rarg(args)...)(
+    return resolve(argument_traits<Policy, A>::rarg(args)...)(
         std::forward<remove_virtual<A>>(args)...);
 }
 
 template<class Policy, typename Key, typename R, typename... A>
 template<typename... ArgType>
 inline typename method<Policy, Key, R(A...)>::function_pointer_type
-method<Policy, Key, R(A...)>::resolve(
-    detail::resolver_type<Policy, ArgType>... args) const {
+method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
     using namespace detail;
 
     void* pf;
 
     if constexpr (arity == 1) {
-        pf = resolve_uni<ArgType...>(args...);
+        pf = resolve_uni<types<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, ArgType...>(args...);
+        pf = resolve_multi_first<0, types<A...>, ArgType...>(args...);
     }
 
     return reinterpret_cast<function_pointer_type>(pf);
@@ -983,58 +984,53 @@ method<Policy, Key, R(A...)>::resolve(
 
 template<class Policy, typename Key, typename R, typename... A>
 template<typename ArgType>
-inline const detail::word* method<Policy, Key, R(A...)>::get_mptr(
-    detail::resolver_type<Policy, ArgType> arg) const {
+inline const detail::word*
+method<Policy, Key, R(A...)>::get_mptr(const ArgType& arg) const {
     using namespace detail;
 
     const word* mptr;
 
-    if constexpr (has_mptr<resolver_type<Policy, ArgType>>) {
+    if constexpr (has_mptr<ArgType>) {
         mptr = arg.yomm2_mptr();
-        check_intrusive_method_pointer<Policy>(
-            mptr, virtual_traits<Policy, ArgType>::dynamic_type(arg));
+        check_intrusive_method_pointer<Policy>(mptr, Policy::dynamic_type(arg));
     } else if constexpr (is_virtual_ptr<ArgType>) {
         mptr = arg._method_table();
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.
     } else {
-        auto index = virtual_traits<Policy, ArgType>::dynamic_type(arg);
-        using namespace policy;
-
-        if constexpr (has_facet<Policy, projection>) {
-            index = Policy::project_type_id(index);
-        }
-
-        mptr = Policy::context.mptrs[index];
+        mptr = Policy::vptr(arg);
     }
 
     return mptr;
 }
 
 template<class Policy, typename Key, typename R, typename... A>
-template<typename ArgType, typename... MoreArgTypes>
+template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
 inline void* method<Policy, Key, R(A...)>::resolve_uni(
-    detail::resolver_type<Policy, ArgType> arg,
-    detail::resolver_type<Policy, MoreArgTypes>... more_args) const {
+    const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
+    using namespace boost::mp11;
 
-    if constexpr (is_virtual<ArgType>::value) {
+    if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
         const word* mptr = get_mptr<ArgType>(arg);
         return mptr[this->slots_strides[0]].pf;
     } else {
-        return resolve_uni<MoreArgTypes...>(more_args...);
+        return resolve_uni<mp_rest<MethodArgList>>(more_args...);
     }
 }
 
 template<class Policy, typename Key, typename R, typename... A>
-template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+template<
+    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    typename... MoreArgTypes>
 inline void* method<Policy, Key, R(A...)>::resolve_multi_first(
-    detail::resolver_type<Policy, ArgType> arg,
-    detail::resolver_type<Policy, MoreArgTypes>... more_args) const {
-    using namespace detail;
+    const ArgType& arg, const MoreArgTypes&... more_args) const {
 
-    if constexpr (is_virtual<ArgType>::value) {
+    using namespace detail;
+    using namespace boost::mp11;
+
+    if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
         const word* mptr;
 
         if constexpr (is_virtual_ptr<ArgType>) {
@@ -1050,21 +1046,26 @@ inline void* method<Policy, Key, R(A...)>::resolve_multi_first(
         // contains a pointer into the multi-dimensional dispatch table,
         // already resolved to the appropriate group.
         auto dispatch = mptr[slot].pw;
-        return resolve_multi_next<1, MoreArgTypes...>(dispatch, more_args...);
+        return resolve_multi_next<1, mp_rest<MethodArgList>, MoreArgTypes...>(
+            dispatch, more_args...);
     } else {
-        return resolve_multi_first<MoreArgTypes...>(more_args...);
+        return resolve_multi_first<mp_rest<MethodArgList>, MoreArgTypes...>(
+            more_args...);
     }
 }
 
 template<class Policy, typename Key, typename R, typename... A>
-template<size_t VirtualArg, typename ArgType, typename... MoreArgTypes>
+template<
+    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    typename... MoreArgTypes>
 inline void* method<Policy, Key, R(A...)>::resolve_multi_next(
-    const detail::word* dispatch, detail::resolver_type<Policy, ArgType> arg,
-    detail::resolver_type<Policy, MoreArgTypes>... more_args) const {
+    const detail::word* dispatch, const ArgType& arg,
+    const MoreArgTypes&... more_args) const {
 
     using namespace detail;
+    using namespace boost::mp11;
 
-    if constexpr (is_virtual<ArgType>::value) {
+    if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
         const word* mptr;
 
         if constexpr (is_virtual_ptr<ArgType>) {
@@ -1081,7 +1082,8 @@ inline void* method<Policy, Key, R(A...)>::resolve_multi_next(
     if constexpr (VirtualArg + 1 == arity) {
         return dispatch->pf;
     } else {
-        return resolve_multi_next<VirtualArg + 1, MoreArgTypes...>(
+        return resolve_multi_next<
+            VirtualArg + 1, mp_rest<MethodArgList>, MoreArgTypes...>(
             dispatch, more_args...);
     }
 }
@@ -1131,7 +1133,8 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
 
     mptr_type mptr;
 
-    auto dynamic_id = virtual_traits<Policy, Other&>::dynamic_type(obj);
+    auto dynamic_id =
+        Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(obj));
     auto static_id = Policy::template static_type<
         typename virtual_traits<Policy, Other&>::polymorphic_type>();
 
