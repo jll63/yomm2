@@ -916,14 +916,16 @@ extern template class __declspec(dllimport) generic_domain<debug_shared>;
 extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
 extern template class __declspec(dllimport) fast_projection<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
-    debug_shared, generic_domain<debug_shared>, std_rtti,
-    checked_fast_projection<debug_shared>, generic_output<debug_shared>,
+    debug_shared, generic_domain<debug_shared>, external_vptr<debug_shared>,
+    std_rtti, checked_fast_projection<debug_shared>,
+    generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
-          debug_shared, generic_domain<debug_shared>, std_rtti,
+          debug_shared, generic_domain<debug_shared>,
+          external_vptr<debug_shared>, std_rtti,
           checked_fast_projection<debug_shared>, generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
