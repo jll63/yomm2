@@ -28,7 +28,7 @@ int main() {}
 
 using namespace yorel::yomm2;
 using yorel::yomm2::detail::dump_type;
-using yorel::yomm2::detail::mptr_type;
+using yorel::yomm2::std::uintptr_t*;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)
@@ -74,9 +74,9 @@ template<typename>
 struct direct_intrusive_base {
     using policy = default_policy;
     virtual ~direct_intrusive_base() {}
-    void set_mptr(mptr_type mptr) { this->mptr = mptr; }
-    auto yomm2_mptr() const { return mptr; };
-    mptr_type mptr;
+    void set_mptr(std::uintptr_t* mptr) { this->mptr = mptr; }
+    auto yomm2_vptr() const { return mptr; };
+    std::uintptr_t* mptr;
 };
 
 struct indirect_policy : default_policy {
@@ -87,9 +87,9 @@ template<typename>
 struct indirect_intrusive_base {
     using policy = indirect_policy;
     virtual ~indirect_intrusive_base() {}
-    void set_mptr(mptr_type* mptr) { this->mptr = mptr; }
-    auto yomm2_mptr() const { return *mptr; };
-    mptr_type* mptr;
+    void set_mptr(std::uintptr_t** mptr) { this->mptr = mptr; }
+    auto yomm2_vptr() const { return *mptr; };
+    std::uintptr_t** mptr;
 };
 
 struct virtual_by_reference {

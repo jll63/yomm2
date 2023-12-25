@@ -38,19 +38,13 @@
 #undef max
 
 // -----------------------------------------------------------------------------
-// A few details...
+// type_id
 
 namespace yorel {
 namespace yomm2 {
 
 using type_id = std::uintptr_t;
 constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
-
-namespace detail {
-
-using mptr_type = std::uintptr_t*;
-
-} // namespace detail
 
 // -----------------------------------------------------------------------------
 // Error handling
@@ -417,15 +411,15 @@ class virtual_ptr_aux {
   protected:
     static constexpr bool is_indirect = Policy::use_indirect_method_pointers;
 
-    using mptr_type =
-        std::conditional_t<is_indirect, detail::mptr_type*, detail::mptr_type>;
+    using vptr_type =
+        std::conditional_t<is_indirect, std::uintptr_t**, std::uintptr_t*>;
     using box_type = Box;
 
     Box obj;
-    mptr_type mptr;
+    vptr_type mptr;
 
   public:
-    virtual_ptr_aux(Class& obj, mptr_type mptr) : obj(obj), mptr(mptr) {
+    virtual_ptr_aux(Class& obj, vptr_type mptr) : obj(obj), mptr(mptr) {
     }
 
     template<class Other>
@@ -436,7 +430,7 @@ class virtual_ptr_aux {
         using polymorphic_type =
             typename other_virtual_traits::polymorphic_type;
 
-        mptr_type mptr;
+        vptr_type mptr;
 
         if constexpr (Policy::use_indirect_method_pointers) {
             mptr = Policy::template indirect_method_table<polymorphic_type>;
@@ -490,7 +484,7 @@ class virtual_ptr<Class, Policy, false>
     }
 
     template<typename Other>
-    virtual_ptr(Other&& obj, typename base::mptr_type mptr) : base(obj, mptr) {
+    virtual_ptr(Other&& obj, typename base::vptr_type mptr) : base(obj, mptr) {
     }
 
     template<class Other>
@@ -528,7 +522,7 @@ class virtual_ptr<Class, Policy, true>
     }
 
     template<typename OtherBox>
-    virtual_ptr(OtherBox&& obj, typename base::mptr_type mptr)
+    virtual_ptr(OtherBox&& obj, typename base::vptr_type mptr)
         : base(obj, mptr) {
     }
 
@@ -692,14 +686,14 @@ template<class Key>
 struct yOMM2_API_gcc yOMM2_API_msc method_tables {
     // Why is yOMM2_API_msc needed here???
     template<class Class>
-    static detail::mptr_type method_table;
+    static std::uintptr_t* method_table;
     template<class Class>
     static std::uintptr_t** indirect_method_table;
 };
 
 template<class Key>
 template<class Class>
-detail::mptr_type method_tables<Key>::method_table;
+std::uintptr_t* method_tables<Key>::method_table;
 
 template<class Key>
 template<class Class>
@@ -1000,7 +994,7 @@ method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
     const std::uintptr_t* mptr;
 
     if constexpr (has_mptr<ArgType>) {
-        mptr = arg.yomm2_mptr();
+        mptr = arg.yomm2_vptr();
         check_intrusive_method_pointer<Policy>(mptr, Policy::dynamic_type(arg));
     } else if constexpr (is_virtual_ptr<ArgType>) {
         mptr = arg._method_table();
@@ -1140,7 +1134,7 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
             typename virtual_traits<Policy, Other&>::polymorphic_type>,
         "use 'final' if intended");
 
-    mptr_type mptr;
+    vptr_type mptr;
 
     auto dynamic_id =
         Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(obj));

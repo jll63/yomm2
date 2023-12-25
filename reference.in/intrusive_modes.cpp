@@ -19,8 +19,8 @@ template<class Class, class Policy = default_policy>
 struct root {
     unspecified_type unspecified_name;
     root();
-    unspecified_type yomm2_mptr() const;
-    void yomm2_mptr(unspecified_type mptr);
+    unspecified_type yomm2_vptr() const;
+    void yomm2_vptr(unspecified_type mptr);
 };
 
 template<class Class, class... Bases>
@@ -116,7 +116,7 @@ A call to `meet` compiles to:
 
 ```
 
-`root` plants two functions, both called `yomm2_mptr`, and a pointer, with an
+`root` plants two functions, both called `yomm2_vptr`, and a pointer, with an
 obfuscated name, in the target class. All classes derived from a YOMM2
 `root<Class>` class must derive from `derived<Class>`. Both templates define a
 default constructor that sets the method table pointer.
@@ -166,7 +166,7 @@ class Dog : public Animal, public Property,
     public yomm2::derived<Dog, Animal, Property>
 {
 public:
-    using yomm2::derived<Dog, Animal, Property>::yomm2_mptr;
+    using yomm2::derived<Dog, Animal, Property>::yomm2_vptr;
     using YoMm2_S_mptr_policy_ = Animal::YoMm2_S_mptr_policy_;
 };
 

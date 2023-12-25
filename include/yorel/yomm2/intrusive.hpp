@@ -11,10 +11,10 @@ namespace yomm2 {
 namespace detail {
 
 template<typename Policy>
-using intrusive_mptr_type = std::conditional_t<
+using intrusive_vptr_type = std::conditional_t<
     Policy::use_indirect_method_pointers,
-    detail::mptr_type*,
-    detail::mptr_type
+    std::uintptr_t**,
+    std::uintptr_t*
 >;
 
 }
@@ -22,7 +22,7 @@ using intrusive_mptr_type = std::conditional_t<
 template<class Class, class Policy = default_policy>
 struct root {
     using YoMm2_S_mptr_policy_ = Policy;
-    detail::intrusive_mptr_type<Policy> YoMm2_S_mptr_;
+    detail::intrusive_vptr_type<Policy> YoMm2_S_mptr_;
 
     root() {
         if constexpr (Policy::use_indirect_method_pointers) {
@@ -32,7 +32,7 @@ struct root {
         }
     }
 
-    auto yomm2_mptr() const {
+    auto yomm2_vptr() const {
         if constexpr (Policy::use_indirect_method_pointers) {
             return *YoMm2_S_mptr_;
         } else {
@@ -40,7 +40,7 @@ struct root {
         }
     };
 
-    void yomm2_mptr(detail::intrusive_mptr_type<Policy> mptr) {
+    void yomm2_vptr(detail::intrusive_vptr_type<Policy> mptr) {
         YoMm2_S_mptr_ = mptr;
     };
 };
@@ -52,10 +52,10 @@ template<class Class>
 struct derived<Class> {
     derived() {
         if constexpr (Class::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
-            static_cast<Class*>(this)->yomm2_mptr(
+            static_cast<Class*>(this)->yomm2_vptr(
                 &Class::YoMm2_S_mptr_policy_::template method_table<Class>);
         } else {
-            static_cast<Class*>(this)->yomm2_mptr(
+            static_cast<Class*>(this)->yomm2_vptr(
                 Class::YoMm2_S_mptr_policy_::template method_table<Class>);
         }
     }
@@ -65,23 +65,23 @@ template<class Class, class Base1, class... Bases>
 struct derived<Class, Base1, Bases...> {
     derived() {
         if constexpr (Base1::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
-            yomm2_mptr(&Base1::YoMm2_S_mptr_policy_::template method_table<
+            yomm2_vptr(&Base1::YoMm2_S_mptr_policy_::template method_table<
                 Class>);
         } else {
             static_assert(detail::has_mptr<Base1>);
-            yomm2_mptr(Base1::YoMm2_S_mptr_policy_::template method_table<
+            yomm2_vptr(Base1::YoMm2_S_mptr_policy_::template method_table<
                 Class>);
         }
     }
 
-    auto yomm2_mptr() const {
-        return static_cast<const Class*>(this)->Base1::yomm2_mptr();
+    auto yomm2_vptr() const {
+        return static_cast<const Class*>(this)->Base1::yomm2_vptr();
     };
 
-    void yomm2_mptr(detail::intrusive_mptr_type<typename Base1::YoMm2_S_mptr_policy_> mptr) {
+    void yomm2_vptr(detail::intrusive_vptr_type<typename Base1::YoMm2_S_mptr_policy_> mptr) {
         auto this_ = static_cast<Class*>(this);
-        static_cast<Base1*>(this_)->yomm2_mptr(mptr);
-        (static_cast<Bases*>(this_)->yomm2_mptr(mptr), ...);
+        static_cast<Base1*>(this_)->yomm2_vptr(mptr);
+        (static_cast<Bases*>(this_)->yomm2_vptr(mptr), ...);
     }
 };
 

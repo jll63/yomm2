@@ -174,7 +174,7 @@ constexpr bool has_trace =
 void type_mptr(...);
 
 template<typename Object>
-auto type_mptr(Object* obj) -> decltype(obj->yomm2_mptr());
+auto type_mptr(Object* obj) -> decltype(obj->yomm2_vptr());
 
 template<typename Object>
 using type_mptr_t = decltype(type_mptr(std::declval<Object*>()));
