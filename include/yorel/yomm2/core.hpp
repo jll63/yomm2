@@ -654,12 +654,11 @@ using replace_facet = boost::mp11::mp_apply<
             Facet>,
         NewPolicy>>;
 
-struct vptr {};
+struct external_vptr {};
 
 template<class Policy>
-struct yOMM2_API_gcc external_vptr : vptr {
+struct yOMM2_API_gcc generic_external_vptr : external_vptr {
     static std::vector<detail::word*> mptrs;
-    static std::vector<detail::word**> indirect_mptrs;
 
     template<class Class>
     static auto vptr(const Class& arg) {
@@ -674,10 +673,17 @@ struct yOMM2_API_gcc external_vptr : vptr {
 };
 
 template<class Policy>
-std::vector<detail::word*> external_vptr<Policy>::mptrs;
+std::vector<detail::word*> generic_external_vptr<Policy>::mptrs;
+
+struct indirect_vptr {};
 
 template<class Policy>
-std::vector<detail::word**> external_vptr<Policy>::indirect_mptrs;
+struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
+    static std::vector<detail::word**> indirect_mptrs;
+};
+
+template<class Policy>
+std::vector<detail::word**> generic_indirect_vptr<Policy>::indirect_mptrs;
 
 struct output {};
 
@@ -885,8 +891,9 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
-          Policy, generic_domain<Policy>, external_vptr<Policy>, std_rtti,
-          generic_error_handler<Policy>, Facets...> {};
+          Policy, generic_domain<Policy>, generic_external_vptr<Policy>,
+          generic_indirect_vptr<Policy>, std_rtti, generic_error_handler<Policy>,
+          Facets...> {};
 
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
@@ -916,12 +923,13 @@ struct debug_shared;
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) generic_domain<debug_shared>;
-extern template class __declspec(dllimport) external_vptr<debug_shared>;
+extern template class __declspec(dllimport) generic_external_vptr<debug_shared>;
+extern template class __declspec(dllimport) generic_indirect_vptr<debug_shared>;
 extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
 extern template class __declspec(dllimport) fast_projection<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
-    debug_shared, generic_domain<debug_shared>, external_vptr<debug_shared>,
-    std_rtti, checked_fast_projection<debug_shared>,
+    debug_shared, generic_domain<debug_shared>, generic_external_vptr<debug_shared>,
+    generic_indirect_vptr<debug_shared>, std_rtti, checked_fast_projection<debug_shared>,
     generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
@@ -929,7 +937,7 @@ extern template class __declspec(dllimport) generic_policy<
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
           debug_shared, generic_domain<debug_shared>,
-          external_vptr<debug_shared>, std_rtti,
+          generic_external_vptr<debug_shared>, generic_indirect_vptr<debug_shared>, std_rtti,
           checked_fast_projection<debug_shared>, generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 

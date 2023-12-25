@@ -1069,8 +1069,15 @@ void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
 
 template<class Policy>
 void runtime<Policy>::install_gv(size_t type_ids) {
-    Policy::mptrs.resize(type_ids);
-    Policy::indirect_mptrs.resize(type_ids);
+    using namespace policy;
+
+    if constexpr (has_facet<Policy, external_vptr>) {
+        Policy::mptrs.resize(type_ids);
+    }
+
+    if constexpr (has_facet<Policy, indirect_vptr>) {
+        Policy::indirect_mptrs.resize(type_ids);
+    }
 
     for (size_t pass = 0; pass != 2; ++pass) {
         Policy::dispatch_data.resize(0);
@@ -1103,10 +1110,10 @@ void runtime<Policy>::install_gv(size_t type_ids) {
 
             if constexpr (trace_enabled) {
                 if (pass) {
-                    ++trace
-                        << rflush(4, Policy::dispatch_data.size()) << " "
-                        << Policy::dispatch_data.data() + Policy::dispatch_data.size()
-                        << " dispatch table for " << m.info->name << "\n";
+                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+                            << Policy::dispatch_data.data() +
+                            Policy::dispatch_data.size()
+                            << " dispatch table for " << m.info->name << "\n";
                 }
             }
 
@@ -1143,15 +1150,19 @@ void runtime<Policy>::install_gv(size_t type_ids) {
 
             if (pass) {
                 for (auto type : cls.ti_ptrs) {
-                    using namespace policy;
                     auto index = type;
 
                     if constexpr (has_facet<Policy, projection>) {
                         index = Policy::project_type_id(index);
                     }
 
-                    Policy::mptrs[index] = *cls.method_table;
-                    Policy::indirect_mptrs[index] = cls.method_table;
+                    if constexpr (has_facet<Policy, external_vptr>) {
+                        Policy::mptrs[index] = *cls.method_table;
+                    }
+
+                    if constexpr (has_facet<Policy, indirect_vptr>) {
+                        Policy::indirect_mptrs[index] = cls.method_table;
+                    }
                 }
             }
         }
