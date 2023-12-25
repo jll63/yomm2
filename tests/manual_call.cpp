@@ -66,10 +66,10 @@ auto call_kick_manual(Dog& obj) {
     const auto h2 = h1 >> shift;
 	// shrq	    %cl, %rdx
 
-    const auto method_table = hash_table[h2];
+    const auto static_vptr = hash_table[h2];
 	// movq	    (%r8,%rdx,8), %rax
 
-    auto fptr = method_table[index];
+    auto fptr = static_vptr[index];
     return ((const char*(*)(Dog&)) fptr)(obj);
 	// jmpq	    *(%rax,%rsi,8)                  # TAILCALL
 }

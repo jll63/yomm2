@@ -80,17 +80,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     BOOST_TEST(&*virtual_player == &player);
     BOOST_TEST(
         (virtual_player._vptr() ==
-         Policy::template method_table<Player>));
+         Policy::template static_vptr<Player>));
 
     Bear bear;
     BOOST_TEST((&*vptr_cat::final(bear)) == &bear);
     BOOST_TEST(
         (vptr_cat::final(bear)._vptr() ==
-         Policy::template method_table<Bear>));
+         Policy::template static_vptr<Bear>));
 
     BOOST_TEST(
         (vptr_player(bear)._vptr() ==
-         Policy::template method_table<Bear>));
+         Policy::template static_vptr<Bear>));
 
     vptr_cat virtual_cat_ptr(bear);
     vptr_player virtual_player_ptr = virtual_cat_ptr;
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     BOOST_TEST(
         (virtual_cat_ptr._vptr() ==
-         Policy::template method_table<Bear>) ==
+         Policy::template static_vptr<Bear>) ==
         Policy::use_indirect_method_pointers);
 }
 } // namespace YOMM2_GENSYM

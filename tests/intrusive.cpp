@@ -86,8 +86,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         Character character;
         BOOST_TEST(
             (character.yomm2_vptr() ==
-             Policy::template method_table<Character>));
-        BOOST_TEST((bear.yomm2_vptr() == Policy::template method_table<Bear>));
+             Policy::template static_vptr<Character>));
+        BOOST_TEST((bear.yomm2_vptr() == Policy::template static_vptr<Bear>));
     }
 
     // BOOST_TEST(kick::fn(bear) == "growl");

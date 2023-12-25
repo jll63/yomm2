@@ -433,9 +433,9 @@ class virtual_ptr_aux {
         vptr_type mptr;
 
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = &Policy::template method_table<polymorphic_type>;
+            mptr = &Policy::template static_vptr<polymorphic_type>;
         } else {
-            mptr = Policy::template method_table<polymorphic_type>;
+            mptr = Policy::template static_vptr<polymorphic_type>;
         }
 
         if constexpr (Policy::runtime_checks) {
@@ -686,12 +686,12 @@ template<class Key>
 struct yOMM2_API_gcc yOMM2_API_msc method_tables {
     // Why is yOMM2_API_msc needed here???
     template<class Class>
-    static std::uintptr_t* method_table;
+    static std::uintptr_t* static_vptr;
 };
 
 template<class Key>
 template<class Class>
-std::uintptr_t* method_tables<Key>::method_table;
+std::uintptr_t* method_tables<Key>::static_vptr;
 
 struct domain {};
 
@@ -1137,11 +1137,11 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
     if (dynamic_id == static_id) {
         if constexpr (Policy::use_indirect_method_pointers) {
             mptr =
-                &Policy::template method_table<typename detail::virtual_traits<
+                &Policy::template static_vptr<typename detail::virtual_traits<
                     Policy, Other&>::polymorphic_type>;
         } else {
             mptr =
-                Policy::template method_table<typename detail::virtual_traits<
+                Policy::template static_vptr<typename detail::virtual_traits<
                     Policy, Other&>::polymorphic_type>;
         }
     } else {

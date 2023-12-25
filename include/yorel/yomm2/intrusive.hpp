@@ -26,9 +26,9 @@ struct root {
 
     root() {
         if constexpr (Policy::use_indirect_method_pointers) {
-            YoMm2_S_mptr_ = &Policy::template method_table<Class>;
+            YoMm2_S_mptr_ = &Policy::template static_vptr<Class>;
         } else {
-            YoMm2_S_mptr_ = Policy::template method_table<Class>;
+            YoMm2_S_mptr_ = Policy::template static_vptr<Class>;
         }
     }
 
@@ -53,10 +53,10 @@ struct derived<Class> {
     derived() {
         if constexpr (Class::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
             static_cast<Class*>(this)->yomm2_vptr(
-                &Class::YoMm2_S_mptr_policy_::template method_table<Class>);
+                &Class::YoMm2_S_mptr_policy_::template static_vptr<Class>);
         } else {
             static_cast<Class*>(this)->yomm2_vptr(
-                Class::YoMm2_S_mptr_policy_::template method_table<Class>);
+                Class::YoMm2_S_mptr_policy_::template static_vptr<Class>);
         }
     }
 };
@@ -65,11 +65,11 @@ template<class Class, class Base1, class... Bases>
 struct derived<Class, Base1, Bases...> {
     derived() {
         if constexpr (Base1::YoMm2_S_mptr_policy_::use_indirect_method_pointers) {
-            yomm2_vptr(&Base1::YoMm2_S_mptr_policy_::template method_table<
+            yomm2_vptr(&Base1::YoMm2_S_mptr_policy_::template static_vptr<
                 Class>);
         } else {
             static_assert(detail::has_mptr<Base1>);
-            yomm2_vptr(Base1::YoMm2_S_mptr_policy_::template method_table<
+            yomm2_vptr(Base1::YoMm2_S_mptr_policy_::template static_vptr<
                 Class>);
         }
     }

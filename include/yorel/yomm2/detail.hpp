@@ -217,7 +217,7 @@ inline std::size_t hash(type_id mult, std::size_t shift, type_id value) {
 
 struct class_info : static_chain<class_info>::static_link {
     type_id ti;
-    std::uintptr_t** method_table;
+    std::uintptr_t** static_vptr;
     type_id *first_base, *last_base;
     bool is_abstract{false};
 };
@@ -234,7 +234,7 @@ struct class_declaration_aux<Policy, detail::types<Class, Bases...>>
         this->last_base = type_id_list<Policy, types<Bases...>>::end;
         Policy::catalog.classes.push_front(*this);
         this->is_abstract = std::is_abstract_v<Class>;
-        this->method_table = &Policy::template method_table<Class>;
+        this->static_vptr = &Policy::template static_vptr<Class>;
     }
 
     ~class_declaration_aux() {

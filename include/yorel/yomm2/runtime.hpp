@@ -58,7 +58,7 @@ struct rt_class {
     size_t mark{0};   // temporary mark to detect cycles
     size_t weight{0}; // number of proper direct or indirect bases
     std::vector<size_t> mtbl;
-    std::uintptr_t** method_table;
+    std::uintptr_t** static_vptr;
 };
 
 struct rt_spec {
@@ -421,7 +421,7 @@ void runtime<Policy>::augment_classes() {
             if (rtc == nullptr) {
                 rtc = &classes.emplace_back();
                 rtc->is_abstract = cr.is_abstract;
-                rtc->method_table = cr.method_table;
+                rtc->static_vptr = cr.static_vptr;
             }
 
             // In the unlikely case that a class does have more than one
@@ -1120,16 +1120,16 @@ void runtime<Policy>::install_gv(size_t type_ids) {
         for (auto& cls : classes) {
             if (cls.first_used_slot == -1) {
                 // corner case: no methods for this class
-                *cls.method_table =
+                *cls.static_vptr =
                     Policy::dispatch_data.data() + Policy::dispatch_data.size();
             } else {
-                *cls.method_table = Policy::dispatch_data.data() +
+                *cls.static_vptr = Policy::dispatch_data.data() +
                     Policy::dispatch_data.size() - cls.first_used_slot;
             }
             if constexpr (trace_enabled) {
                 if (pass) {
                     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                            << *cls.method_table << " mtbl for " << cls << "\n";
+                            << *cls.static_vptr << " mtbl for " << cls << "\n";
                 }
             }
 
@@ -1148,11 +1148,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                     }
 
                     if constexpr (has_facet<Policy, external_vptr>) {
-                        Policy::vptrs[index] = *cls.method_table;
+                        Policy::vptrs[index] = *cls.static_vptr;
                     }
 
                     if constexpr (has_facet<Policy, indirect_vptr>) {
-                        Policy::indirect_vptrs[index] = cls.method_table;
+                        Policy::indirect_vptrs[index] = cls.static_vptr;
                     }
                 }
             }
@@ -1175,25 +1175,25 @@ void runtime<Policy>::optimize() {
 
         if (m.arity() == 1) {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pf = m.dispatch_table[(*cls->method_table)[slot]];
+                auto pf = m.dispatch_table[(*cls->static_vptr)[slot]];
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " mtbl[" << slot << "] = " << pf
                             << " (function)"
                             << "\n";
                 }
-                (*cls->method_table)[slot] =
+                (*cls->static_vptr)[slot] =
                     reinterpret_cast<std::uintptr_t>(pf);
             }
         } else {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pw = m.gv_dispatch_table + (*cls->method_table)[slot];
+                auto pw = m.gv_dispatch_table + (*cls->static_vptr)[slot];
 
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " vtbl[" << slot << "] = gv+"
                             << (pw - Policy::dispatch_data.data()) << "\n";
                 }
 
-                (*cls->method_table)[slot] =
+                (*cls->static_vptr)[slot] =
                     reinterpret_cast<std::uintptr_t>(pw);
             }
         }
