@@ -269,7 +269,7 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
     ~method();
 
     template<typename ArgType>
-    const detail::word* get_mptr(const ArgType& arg) const;
+    const detail::word* vptr(const ArgType& arg) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     void*
@@ -658,7 +658,7 @@ struct external_vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc generic_external_vptr : external_vptr {
-    static std::vector<detail::word*> mptrs;
+    static std::vector<detail::word*> vptrs;
 
     template<class Class>
     static auto vptr(const Class& arg) {
@@ -668,22 +668,22 @@ struct yOMM2_API_gcc generic_external_vptr : external_vptr {
             index = Policy::project_type_id(index);
         }
 
-        return mptrs[index];
+        return vptrs[index];
     }
 };
 
 template<class Policy>
-std::vector<detail::word*> generic_external_vptr<Policy>::mptrs;
+std::vector<detail::word*> generic_external_vptr<Policy>::vptrs;
 
 struct indirect_vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
-    static std::vector<detail::word**> indirect_mptrs;
+    static std::vector<detail::word**> indirect_vptrs;
 };
 
 template<class Policy>
-std::vector<detail::word**> generic_indirect_vptr<Policy>::indirect_mptrs;
+std::vector<detail::word**> generic_indirect_vptr<Policy>::indirect_vptrs;
 
 struct output {};
 
@@ -999,7 +999,7 @@ method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
 template<class Policy, typename Key, typename R, typename... A>
 template<typename ArgType>
 inline const detail::word*
-method<Policy, Key, R(A...)>::get_mptr(const ArgType& arg) const {
+method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
     using namespace detail;
 
     const word* mptr;
@@ -1027,7 +1027,7 @@ inline void* method<Policy, Key, R(A...)>::resolve_uni(
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const word* mptr = get_mptr<ArgType>(arg);
+        const word* mptr = vptr<ArgType>(arg);
         return mptr[this->slots_strides[0]].pf;
     } else {
         return resolve_uni<mp_rest<MethodArgList>>(more_args...);
@@ -1050,7 +1050,7 @@ inline void* method<Policy, Key, R(A...)>::resolve_multi_first(
         if constexpr (is_virtual_ptr<ArgType>) {
             mptr = arg._method_table();
         } else {
-            mptr = get_mptr<ArgType>(arg);
+            mptr = vptr<ArgType>(arg);
         }
 
         auto slot = slots_strides[0];
@@ -1085,7 +1085,7 @@ inline void* method<Policy, Key, R(A...)>::resolve_multi_next(
         if constexpr (is_virtual_ptr<ArgType>) {
             mptr = arg._method_table();
         } else {
-            mptr = get_mptr<ArgType>(arg);
+            mptr = vptr<ArgType>(arg);
         }
 
         auto slot = this->slots_strides[2 * VirtualArg - 1];
@@ -1171,9 +1171,9 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
         }
 
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::indirect_mptrs[index];
+            mptr = Policy::indirect_vptrs[index];
         } else {
-            mptr = Policy::mptrs[index];
+            mptr = Policy::vptrs[index];
         }
     }
 

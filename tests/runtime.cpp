@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             +12        // approve: 3 slots and 12 cells for dispatch table
                 + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
                        // Expenses
-        BOOST_TEST_REQUIRE(test_policy::mptrs.size() == buckets);
+        BOOST_TEST_REQUIRE(test_policy::vptrs.size() == buckets);
 #ifndef NDEBUG
         BOOST_TEST_REQUIRE(test_policy::control.size() == buckets);
 #endif

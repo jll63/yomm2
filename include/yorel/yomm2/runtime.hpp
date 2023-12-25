@@ -1072,11 +1072,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
     using namespace policy;
 
     if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::mptrs.resize(type_ids);
+        Policy::vptrs.resize(type_ids);
     }
 
     if constexpr (has_facet<Policy, indirect_vptr>) {
-        Policy::indirect_mptrs.resize(type_ids);
+        Policy::indirect_vptrs.resize(type_ids);
     }
 
     for (size_t pass = 0; pass != 2; ++pass) {
@@ -1157,11 +1157,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                     }
 
                     if constexpr (has_facet<Policy, external_vptr>) {
-                        Policy::mptrs[index] = *cls.method_table;
+                        Policy::vptrs[index] = *cls.method_table;
                     }
 
                     if constexpr (has_facet<Policy, indirect_vptr>) {
-                        Policy::indirect_mptrs[index] = cls.method_table;
+                        Policy::indirect_vptrs[index] = cls.method_table;
                     }
                 }
             }
