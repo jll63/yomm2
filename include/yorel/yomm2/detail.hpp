@@ -88,18 +88,6 @@ inline std::ostream* logs;
 inline unsigned trace_flags;
 #endif
 
-inline word make_word(size_t i) {
-    word w;
-    w.i = i;
-    return w;
-}
-
-inline word make_word(void* pf) {
-    word w;
-    w.pf = pf;
-    return w;
-}
-
 template<typename>
 struct parameter_type_list;
 
@@ -229,7 +217,7 @@ inline std::size_t hash(type_id mult, std::size_t shift, type_id value) {
 
 struct class_info : static_chain<class_info>::static_link {
     type_id ti;
-    word** method_table;
+    std::uintptr_t** method_table;
     type_id *first_base, *last_base;
     bool is_abstract{false};
 };
@@ -652,8 +640,6 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, std::shared_ptr<T>&>
     : virtual_traits<Policy, const std::shared_ptr<T>&> {};
 
-template<class Policy>
-inline auto check_method_pointer(const word* mptr, type_id dynamic_type);
 template<typename MethodArgList>
 using polymorphic_types = mp11::mp_transform<
     remove_virtual, mp11::mp_filter<detail::is_virtual, MethodArgList>>;
@@ -782,8 +768,8 @@ std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
 
 template<class Policy>
-inline auto
-check_intrusive_method_pointer(const word* mptr, type_id dynamic_type) {
+inline auto check_intrusive_method_pointer(
+    const std::uintptr_t* mptr, type_id dynamic_type) {
     // Intrusive mode only.
 
     if constexpr (Policy::runtime_checks) {

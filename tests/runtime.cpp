@@ -400,8 +400,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
-        BOOST_TEST(pay_method.dispatch_table[0] == pay_Employee->info->pf);
-        BOOST_TEST(pay_method.dispatch_table[1] == pay_Manager->info->pf);
+        BOOST_TEST(
+            pay_method.dispatch_table[0] ==
+            reinterpret_cast<std::uintptr_t>(pay_Employee->info->pf));
+        BOOST_TEST(
+            pay_method.dispatch_table[1] ==
+            reinterpret_cast<std::uintptr_t>(pay_Manager->info->pf));
     }
 
     {
@@ -412,18 +416,47 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(approve_method.strides[0] == 4);
 
         auto dp_iter = approve_method.dispatch_table.begin();
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Manager_Taxi->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Employee_public->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Employee_public->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Manager_Taxi->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
     }
 
     {
@@ -503,8 +536,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         auto approve_dispatch_table = gv_iter;
         BOOST_TEST(std::equal(
             approve_method.dispatch_table.begin(),
-            approve_method.dispatch_table.end(), gv_iter,
-            [](const void* pf, word w) { return w.pf == pf; }));
+            approve_method.dispatch_table.end(), gv_iter));
         gv_iter += approve_method.dispatch_table.size();
 
         // auto opt_iter = gv_iter;

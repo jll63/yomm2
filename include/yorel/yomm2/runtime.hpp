@@ -58,7 +58,7 @@ struct rt_class {
     size_t mark{0};   // temporary mark to detect cycles
     size_t weight{0}; // number of proper direct or indirect bases
     std::vector<size_t> mtbl;
-    detail::word** method_table;
+    std::uintptr_t** method_table;
 };
 
 struct rt_spec {
@@ -92,8 +92,8 @@ struct rt_method {
     std::vector<rt_spec> specs;
     std::vector<size_t> slots;
     std::vector<size_t> strides;
-    std::vector<void*> dispatch_table;
-    const detail::word* gv_dispatch_table{nullptr};
+    std::vector<std::uintptr_t> dispatch_table;
+    const std::uintptr_t* gv_dispatch_table{nullptr};
     auto arity() const {
         return vp.size();
     }
@@ -993,7 +993,8 @@ void runtime<Policy>::build_dispatch_table(
             if (specs.size() > 1) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "ambiguous\n";
-                m.dispatch_table.push_back(m.info->ambiguous);
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(m.info->ambiguous));
                 ++m.stats.ambiguous;
                 if (concrete) {
                     ++m.stats.concrete_ambiguous;
@@ -1001,13 +1002,15 @@ void runtime<Policy>::build_dispatch_table(
             } else if (specs.empty()) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "not implemented\n";
-                m.dispatch_table.push_back(m.info->not_implemented);
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(m.info->not_implemented));
                 ++m.stats.not_implemented;
                 if (concrete) {
                     ++m.stats.concrete_not_implemented;
                 }
             } else {
-                m.dispatch_table.push_back(specs[0]->info->pf);
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(specs[0]->info->pf));
                 ++trace << "-> " << type_name(specs[0]->info->type)
                         << " pf = " << specs[0]->info->pf << "\n";
             }
@@ -1055,16 +1058,6 @@ inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     concrete_not_implemented += other.concrete_not_implemented;
     ambiguous += other.ambiguous;
     concrete_ambiguous += other.concrete_ambiguous;
-}
-
-template<class Policy>
-void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
-    words.reserve(words.size() + ints.size());
-    for (auto i : ints) {
-        word w;
-        w.i = i;
-        words.push_back(w);
-    }
 }
 
 template<class Policy>
@@ -1119,10 +1112,9 @@ void runtime<Policy>::install_gv(size_t type_ids) {
 
             m.gv_dispatch_table =
                 Policy::dispatch_data.data() + Policy::dispatch_data.size();
-            std::transform(
+            std::copy(
                 m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(Policy::dispatch_data),
-                [](void* pf) { return make_word(pf); });
+                std::back_inserter(Policy::dispatch_data));
         }
 
         for (auto& cls : classes) {
@@ -1142,10 +1134,9 @@ void runtime<Policy>::install_gv(size_t type_ids) {
             }
 
             if (cls.first_used_slot != -1) {
-                std::transform(
+                std::copy(
                     cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
-                    std::back_inserter(Policy::dispatch_data),
-                    [](size_t i) { return make_word(i); });
+                    std::back_inserter(Policy::dispatch_data));
             }
 
             if (pass) {
@@ -1184,24 +1175,26 @@ void runtime<Policy>::optimize() {
 
         if (m.arity() == 1) {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pf = m.dispatch_table[(*cls->method_table)[slot].i];
+                auto pf = m.dispatch_table[(*cls->method_table)[slot]];
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " mtbl[" << slot << "] = " << pf
                             << " (function)"
                             << "\n";
                 }
-                (*cls->method_table)[slot].pf = pf;
+                (*cls->method_table)[slot] =
+                    reinterpret_cast<std::uintptr_t>(pf);
             }
         } else {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pw = m.gv_dispatch_table + (*cls->method_table)[slot].i;
+                auto pw = m.gv_dispatch_table + (*cls->method_table)[slot];
 
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " mtbl[" << slot << "] = gv+"
+                    ++trace << *cls << " vtbl[" << slot << "] = gv+"
                             << (pw - Policy::dispatch_data.data()) << "\n";
                 }
 
-                (*cls->method_table)[slot].pw = pw;
+                (*cls->method_table)[slot] =
+                    reinterpret_cast<std::uintptr_t>(pw);
             }
         }
     }

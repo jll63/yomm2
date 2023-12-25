@@ -69,7 +69,7 @@ auto call_kick_manual(Dog& obj) {
     const auto method_table = hash_table[h2];
 	// movq	    (%r8,%rdx,8), %rax
 
-    const auto fptr = method_table[index].pw;
+    auto fptr = method_table[index];
     return ((const char*(*)(Dog&)) fptr)(obj);
 	// jmpq	    *(%rax,%rsi,8)                  # TAILCALL
 }

@@ -48,14 +48,7 @@ constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
 namespace detail {
 
-union word {
-    void* pf;
-    const word* pw;
-    size_t i;
-    type_id ti;
-};
-
-using mptr_type = detail::word*;
+using mptr_type = std::uintptr_t*;
 
 } // namespace detail
 
@@ -269,23 +262,23 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
     ~method();
 
     template<typename ArgType>
-    const detail::word* vptr(const ArgType& arg) const;
+    const std::uintptr_t* vptr(const ArgType& arg) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-    void*
+    std::uintptr_t
     resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
         size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
-    void* resolve_multi_first(
+    std::uintptr_t resolve_multi_first(
         const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
         size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
-    void* resolve_multi_next(
-        const detail::word* dispatch, const ArgType& arg,
+    std::uintptr_t resolve_multi_next(
+        const std::uintptr_t* dispatch, const ArgType& arg,
         const MoreArgTypes&... more_args) const;
 
     template<typename... ArgType>
@@ -658,7 +651,7 @@ struct external_vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc generic_external_vptr : external_vptr {
-    static std::vector<detail::word*> vptrs;
+    static std::vector<std::uintptr_t*> vptrs;
 
     template<class Class>
     static auto vptr(const Class& arg) {
@@ -673,17 +666,17 @@ struct yOMM2_API_gcc generic_external_vptr : external_vptr {
 };
 
 template<class Policy>
-std::vector<detail::word*> generic_external_vptr<Policy>::vptrs;
+std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
 
 struct indirect_vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
-    static std::vector<detail::word**> indirect_vptrs;
+    static std::vector<std::uintptr_t**> indirect_vptrs;
 };
 
 template<class Policy>
-std::vector<detail::word**> generic_indirect_vptr<Policy>::indirect_vptrs;
+std::vector<std::uintptr_t**> generic_indirect_vptr<Policy>::indirect_vptrs;
 
 struct output {};
 
@@ -701,7 +694,7 @@ struct yOMM2_API_gcc yOMM2_API_msc method_tables {
     template<class Class>
     static detail::mptr_type method_table;
     template<class Class>
-    static detail::mptr_type* indirect_method_table;
+    static std::uintptr_t** indirect_method_table;
 };
 
 template<class Key>
@@ -710,7 +703,7 @@ detail::mptr_type method_tables<Key>::method_table;
 
 template<class Key>
 template<class Class>
-detail::mptr_type* method_tables<Key>::indirect_method_table =
+std::uintptr_t** method_tables<Key>::indirect_method_table =
     &method_tables<Key>::method_table<Class>;
 
 struct domain {};
@@ -718,14 +711,14 @@ struct domain {};
 template<class Key>
 struct yOMM2_API_gcc generic_domain : domain, method_tables<Key> {
     static struct catalog catalog;
-    static std::vector<detail::word> dispatch_data;
+    static std::vector<std::uintptr_t> dispatch_data;
 };
 
 template<class Key>
 catalog generic_domain<Key>::catalog;
 
 template<class Key>
-std::vector<detail::word> generic_domain<Key>::dispatch_data;
+std::vector<std::uintptr_t> generic_domain<Key>::dispatch_data;
 
 template<class Policy>
 struct yOMM2_API_gcc fast_projection : projection {
@@ -892,8 +885,8 @@ template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
           Policy, generic_domain<Policy>, generic_external_vptr<Policy>,
-          generic_indirect_vptr<Policy>, std_rtti, generic_error_handler<Policy>,
-          Facets...> {};
+          generic_indirect_vptr<Policy>, std_rtti,
+          generic_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
@@ -928,8 +921,9 @@ extern template class __declspec(dllimport) generic_indirect_vptr<debug_shared>;
 extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
 extern template class __declspec(dllimport) fast_projection<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
-    debug_shared, generic_domain<debug_shared>, generic_external_vptr<debug_shared>,
-    generic_indirect_vptr<debug_shared>, std_rtti, checked_fast_projection<debug_shared>,
+    debug_shared, generic_domain<debug_shared>,
+    generic_external_vptr<debug_shared>, generic_indirect_vptr<debug_shared>,
+    std_rtti, checked_fast_projection<debug_shared>,
     generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
@@ -937,7 +931,8 @@ extern template class __declspec(dllimport) generic_policy<
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
           debug_shared, generic_domain<debug_shared>,
-          generic_external_vptr<debug_shared>, generic_indirect_vptr<debug_shared>, std_rtti,
+          generic_external_vptr<debug_shared>,
+          generic_indirect_vptr<debug_shared>, std_rtti,
           checked_fast_projection<debug_shared>, generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
@@ -985,7 +980,7 @@ inline typename method<Policy, Key, R(A...)>::function_pointer_type
 method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
     using namespace detail;
 
-    void* pf;
+    std::uintptr_t pf;
 
     if constexpr (arity == 1) {
         pf = resolve_uni<types<A...>, ArgType...>(args...);
@@ -998,11 +993,11 @@ method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
 
 template<class Policy, typename Key, typename R, typename... A>
 template<typename ArgType>
-inline const detail::word*
+inline const std::uintptr_t*
 method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
     using namespace detail;
 
-    const word* mptr;
+    const std::uintptr_t* mptr;
 
     if constexpr (has_mptr<ArgType>) {
         mptr = arg.yomm2_mptr();
@@ -1020,15 +1015,15 @@ method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
 
 template<class Policy, typename Key, typename R, typename... A>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-inline void* method<Policy, Key, R(A...)>::resolve_uni(
+inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const word* mptr = vptr<ArgType>(arg);
-        return mptr[this->slots_strides[0]].pf;
+        auto vtable = vptr<ArgType>(arg);
+        return vtable[this->slots_strides[0]];
     } else {
         return resolve_uni<mp_rest<MethodArgList>>(more_args...);
     }
@@ -1038,19 +1033,19 @@ template<class Policy, typename Key, typename R, typename... A>
 template<
     size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline void* method<Policy, Key, R(A...)>::resolve_multi_first(
+inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const word* mptr;
+        const std::uintptr_t* vtable;
 
         if constexpr (is_virtual_ptr<ArgType>) {
-            mptr = arg._method_table();
+            vtable = arg._method_table();
         } else {
-            mptr = vptr<ArgType>(arg);
+            vtable = vptr<ArgType>(arg);
         }
 
         auto slot = slots_strides[0];
@@ -1059,7 +1054,7 @@ inline void* method<Policy, Key, R(A...)>::resolve_multi_first(
         // 1, there is no need to store it. Also, the method table
         // contains a pointer into the multi-dimensional dispatch table,
         // already resolved to the appropriate group.
-        auto dispatch = mptr[slot].pw;
+        auto dispatch = reinterpret_cast<const std::uintptr_t*>(vtable[slot]);
         return resolve_multi_next<1, mp_rest<MethodArgList>, MoreArgTypes...>(
             dispatch, more_args...);
     } else {
@@ -1072,29 +1067,29 @@ template<class Policy, typename Key, typename R, typename... A>
 template<
     size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline void* method<Policy, Key, R(A...)>::resolve_multi_next(
-    const detail::word* dispatch, const ArgType& arg,
+inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_next(
+    const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const {
 
     using namespace detail;
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const word* mptr;
+        const std::uintptr_t* vtable;
 
         if constexpr (is_virtual_ptr<ArgType>) {
-            mptr = arg._method_table();
+            vtable = arg._method_table();
         } else {
-            mptr = vptr<ArgType>(arg);
+            vtable = vptr<ArgType>(arg);
         }
 
         auto slot = this->slots_strides[2 * VirtualArg - 1];
         auto stride = this->slots_strides[2 * VirtualArg];
-        dispatch = dispatch + mptr[slot].i * stride;
+        dispatch = dispatch + vtable[slot] * stride;
     }
 
     if constexpr (VirtualArg + 1 == arity) {
-        return dispatch->pf;
+        return *dispatch;
     } else {
         return resolve_multi_next<
             VirtualArg + 1, mp_rest<MethodArgList>, MoreArgTypes...>(
