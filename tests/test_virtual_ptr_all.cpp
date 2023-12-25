@@ -102,10 +102,10 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     upcast::fn(virtual_cat_ptr);
 
-    auto data = Policy::context.gv.data();
+    auto data = Policy::dispatch_data.data();
 
-    while (data == Policy::context.gv.data()) {
-        Policy::context.gv.resize(2 * Policy::context.gv.size());
+    while (data == Policy::dispatch_data.data()) {
+        Policy::dispatch_data.resize(2 * Policy::dispatch_data.size());
     }
 
     update<Policy>();

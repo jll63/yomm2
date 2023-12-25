@@ -1073,12 +1073,12 @@ void runtime<Policy>::install_gv(size_t type_ids) {
     Policy::indirect_mptrs.resize(type_ids);
 
     for (size_t pass = 0; pass != 2; ++pass) {
-        Policy::context.gv.resize(0);
+        Policy::dispatch_data.resize(0);
 
         if constexpr (trace_enabled) {
             if (pass) {
                 ++trace << "Initializing dispatch tables at "
-                        << Policy::context.gv.data() << "\n";
+                        << Policy::dispatch_data.data() << "\n";
             }
         }
 
@@ -1104,17 +1104,17 @@ void runtime<Policy>::install_gv(size_t type_ids) {
             if constexpr (trace_enabled) {
                 if (pass) {
                     ++trace
-                        << rflush(4, Policy::context.gv.size()) << " "
-                        << Policy::context.gv.data() + Policy::context.gv.size()
+                        << rflush(4, Policy::dispatch_data.size()) << " "
+                        << Policy::dispatch_data.data() + Policy::dispatch_data.size()
                         << " dispatch table for " << m.info->name << "\n";
                 }
             }
 
             m.gv_dispatch_table =
-                Policy::context.gv.data() + Policy::context.gv.size();
+                Policy::dispatch_data.data() + Policy::dispatch_data.size();
             std::transform(
                 m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(Policy::context.gv),
+                std::back_inserter(Policy::dispatch_data),
                 [](void* pf) { return make_word(pf); });
         }
 
@@ -1122,14 +1122,14 @@ void runtime<Policy>::install_gv(size_t type_ids) {
             if (cls.first_used_slot == -1) {
                 // corner case: no methods for this class
                 *cls.method_table =
-                    Policy::context.gv.data() + Policy::context.gv.size();
+                    Policy::dispatch_data.data() + Policy::dispatch_data.size();
             } else {
-                *cls.method_table = Policy::context.gv.data() +
-                    Policy::context.gv.size() - cls.first_used_slot;
+                *cls.method_table = Policy::dispatch_data.data() +
+                    Policy::dispatch_data.size() - cls.first_used_slot;
             }
             if constexpr (trace_enabled) {
                 if (pass) {
-                    ++trace << rflush(4, Policy::context.gv.size()) << " "
+                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
                             << *cls.method_table << " mtbl for " << cls << "\n";
                 }
             }
@@ -1137,7 +1137,7 @@ void runtime<Policy>::install_gv(size_t type_ids) {
             if (cls.first_used_slot != -1) {
                 std::transform(
                     cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
-                    std::back_inserter(Policy::context.gv),
+                    std::back_inserter(Policy::dispatch_data),
                     [](size_t i) { return make_word(i); });
             }
 
@@ -1157,8 +1157,8 @@ void runtime<Policy>::install_gv(size_t type_ids) {
         }
     }
 
-    ++trace << rflush(4, Policy::context.gv.size()) << " "
-            << Policy::context.gv.data() + Policy::context.gv.size()
+    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+            << Policy::dispatch_data.data() + Policy::dispatch_data.size()
             << " end\n";
 }
 
@@ -1187,7 +1187,7 @@ void runtime<Policy>::optimize() {
 
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " mtbl[" << slot << "] = gv+"
-                            << (pw - Policy::context.gv.data()) << "\n";
+                            << (pw - Policy::dispatch_data.data()) << "\n";
                 }
 
                 (*cls->method_table)[slot].pw = pw;

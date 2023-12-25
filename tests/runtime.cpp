@@ -486,7 +486,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     {
         // pay
         BOOST_TEST_REQUIRE(
-            test_policy::context.gv.size() ==
+            test_policy::dispatch_data.size() ==
             +12        // approve: 3 slots and 12 cells for dispatch table
                 + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
                        // Expenses
@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(test_policy::control.size() == buckets);
 #endif
 
-        auto gv_iter = test_policy::context.gv.data();
+        auto gv_iter = test_policy::dispatch_data.data();
         // no slots nor fun* for 1-method
 
         // approve

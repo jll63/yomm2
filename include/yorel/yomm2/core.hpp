@@ -218,10 +218,6 @@ namespace yomm2 {
 // -----------------------------------------------------------------------------
 // Scope
 
-struct context {
-    std::vector<detail::word> gv;
-};
-
 struct catalog {
     detail::static_chain<detail::class_info> classes;
     detail::static_chain<detail::method_info> methods;
@@ -715,15 +711,15 @@ struct domain {};
 
 template<class Key>
 struct yOMM2_API_gcc generic_domain : domain, method_tables<Key> {
-    static struct context context;
     static struct catalog catalog;
+    static std::vector<detail::word> dispatch_data;
 };
 
 template<class Key>
 catalog generic_domain<Key>::catalog;
 
 template<class Key>
-context generic_domain<Key>::context;
+std::vector<detail::word> generic_domain<Key>::dispatch_data;
 
 template<class Policy>
 struct yOMM2_API_gcc fast_projection : projection {

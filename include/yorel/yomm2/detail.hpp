@@ -787,16 +787,16 @@ check_intrusive_method_pointer(const word* mptr, type_id dynamic_type) {
     // Intrusive mode only.
 
     if constexpr (Policy::runtime_checks) {
-        auto& ctx = Policy::context;
+        auto& dd = Policy::dispatch_data;
         auto p = reinterpret_cast<const char*>(mptr);
 
-        if (ctx.gv.empty()) {
+        if (dd.empty()) {
             // no declared methods
             return mptr;
         }
 
-        if (p < reinterpret_cast<const char*>(ctx.gv.data()) ||
-            p >= reinterpret_cast<const char*>(ctx.gv.data() + ctx.gv.size())) {
+        if (p < reinterpret_cast<const char*>(dd.data()) ||
+            p >= reinterpret_cast<const char*>(dd.data() + dd.size())) {
             // probably some random value
             Policy::error(method_table_error{dynamic_type});
         }
