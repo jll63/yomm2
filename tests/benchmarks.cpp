@@ -28,7 +28,6 @@ int main() {}
 
 using namespace yorel::yomm2;
 using yorel::yomm2::detail::dump_type;
-using yorel::yomm2::std::uintptr_t*;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)
@@ -74,9 +73,9 @@ template<typename>
 struct direct_intrusive_base {
     using policy = default_policy;
     virtual ~direct_intrusive_base() {}
-    void set_mptr(std::uintptr_t* mptr) { this->mptr = mptr; }
-    auto yomm2_vptr() const { return mptr; };
-    std::uintptr_t* mptr;
+    void set_mptr(std::uintptr_t* vptr) { this->vptr = vptr; }
+    auto yomm2_vptr() const { return vptr; };
+    std::uintptr_t* vptr;
 };
 
 struct indirect_policy : default_policy {
@@ -87,9 +86,9 @@ template<typename>
 struct indirect_intrusive_base {
     using policy = indirect_policy;
     virtual ~indirect_intrusive_base() {}
-    void set_mptr(std::uintptr_t** mptr) { this->mptr = mptr; }
-    auto yomm2_vptr() const { return *mptr; };
-    std::uintptr_t** mptr;
+    void set_mptr(std::uintptr_t** vptr) { this->vptr = vptr; }
+    auto yomm2_vptr() const { return *vptr; };
+    std::uintptr_t** vptr;
 };
 
 struct virtual_by_reference {
@@ -255,20 +254,20 @@ struct population : abstract_population {
     template<typename>
     struct leaf0 : intermediate<0> {
         leaf0() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::static_vptr<leaf0>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::static_vptr<leaf0>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::static_vptr<leaf0>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::static_vptr<leaf0>;
+            this->direct_intrusive_base<ordinary_inheritance>::vptr = default_policy::static_vptr<leaf0>;
+            this->direct_intrusive_base<virtual_inheritance>::vptr = default_policy::static_vptr<leaf0>;
+            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &default_policy::static_vptr<leaf0>;
+            this->indirect_intrusive_base<virtual_inheritance>::vptr = &default_policy::static_vptr<leaf0>;
         }
     };
 
     template<typename>
     struct leaf1 : intermediate<1> {
         leaf1() {
-            this->direct_intrusive_base<ordinary_inheritance>::mptr = default_policy::static_vptr<leaf1>;
-            this->direct_intrusive_base<virtual_inheritance>::mptr = default_policy::static_vptr<leaf1>;
-            this->indirect_intrusive_base<ordinary_inheritance>::mptr = &default_policy::static_vptr<leaf1>;
-            this->indirect_intrusive_base<virtual_inheritance>::mptr = &default_policy::static_vptr<leaf1>;
+            this->direct_intrusive_base<ordinary_inheritance>::vptr = default_policy::static_vptr<leaf1>;
+            this->direct_intrusive_base<virtual_inheritance>::vptr = default_policy::static_vptr<leaf1>;
+            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &default_policy::static_vptr<leaf1>;
+            this->indirect_intrusive_base<virtual_inheritance>::vptr = &default_policy::static_vptr<leaf1>;
         }
     };
 
@@ -317,7 +316,7 @@ struct population : abstract_population {
     struct vptr_methods {
         using Base = orthogonal_base<Inheritance>;
         using Policy = typename Dispatch::policy_type;
-        template<class Class> using vptr = virtual_ptr<Class, Policy>;
+        template<class Class> using vptr = virtual_ptr<Policy, Class>;
         using varg_type = vptr<Base>;
 
         using method1 = method<Policy, population, void(vptr<Base>)>;
@@ -415,7 +414,7 @@ struct population : abstract_population {
     std::uniform_int_distribution<std::size_t> dist{0, OBJECTS() - 1};
     std::vector<base*> objects;
     std::vector<virtual_ptr<base>> vptrs;
-    std::vector<virtual_ptr<base, indirect_policy>> ivptrs;
+    std::vector<virtual_ptr<indirect_policy, base>> ivptrs;
 
     static population instance;
 

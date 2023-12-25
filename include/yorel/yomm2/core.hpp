@@ -46,6 +46,9 @@ namespace yomm2 {
 using type_id = std::uintptr_t;
 constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
+template<class Policy, class Class>
+struct virtual_ptr_;
+
 // -----------------------------------------------------------------------------
 // Error handling
 
@@ -104,6 +107,10 @@ constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
 
 struct facet {};
 struct error_handler {};
+
+struct runtime_checks {};
+
+struct indirect_vptr {};
 
 struct rtti {
     static type_id type_index(type_id type) {
@@ -181,9 +188,6 @@ using default_static_policy = policy::debug_static;
 
 template<typename T>
 struct virtual_;
-
-template<class Class, class Policy, bool IsSmartPtr>
-class virtual_ptr;
 
 template<class Policy, typename Key, typename Signature>
 struct method;
@@ -388,57 +392,142 @@ using use_classes = typename detail::use_classes_aux<
 // -----------------------------------------------------------------------------
 // virtual_ptr
 
-template<
-    class Class, class Policy = default_policy,
-    bool IsSmartPtr = detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr>
-class virtual_ptr;
-
-template<class Class, class Policy, typename Box>
-class virtual_ptr_aux {
-    template<class, class, typename>
-    friend class virtual_ptr_aux;
-
-    template<class, class, bool>
-    friend class virtual_ptr;
-
+template<class Policy, class Class>
+class virtual_ptr_ {
     template<class, class>
+    friend class virtual_ptr_;
+
+    template<class, typename>
+    friend struct detail::virtual_traits;
+    template<class, typename>
     friend struct detail::virtual_ptr_traits;
 
-    friend struct detail::virtual_traits<Policy, virtual_ptr<Class, Policy>>;
-    friend struct detail::virtual_traits<
-        Policy, const virtual_ptr<Class, Policy>&>;
-
   protected:
-    static constexpr bool is_indirect = Policy::use_indirect_method_pointers;
+    constexpr static bool IsSmartPtr =
+        detail::virtual_ptr_traits<Policy, Class>::is_smart_ptr;
+    using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
+    static constexpr bool is_indirect =
+        Policy::template has_facet<policy::indirect_vptr>;
 
     using vptr_type =
         std::conditional_t<is_indirect, std::uintptr_t**, std::uintptr_t*>;
-    using box_type = Box;
 
     Box obj;
-    vptr_type mptr;
+    vptr_type vptr;
+
+    template<typename Other>
+    void box(Other&& value) {
+        if constexpr (IsSmartPtr) {
+            if constexpr (std::is_rvalue_reference_v<Other>) {
+                obj = std::move(value);
+            } else {
+                obj = value;
+            }
+        } else {
+            static_assert(std::is_lvalue_reference_v<Other>);
+            obj = &value;
+        }
+    }
+
+    auto& unbox() const {
+        if constexpr (IsSmartPtr) {
+            return obj;
+        } else {
+            return *obj;
+        }
+    }
 
   public:
-    virtual_ptr_aux(Class& obj, vptr_type mptr) : obj(obj), mptr(mptr) {
+    using element_type = Class;
+    using box_type = Box;
+
+    template<class Other>
+    virtual_ptr_(Other&& other) {
+        box(other);
+
+        using namespace policy;
+        using namespace detail;
+
+        static_assert(
+            std::is_polymorphic_v<polymorphic_type<
+                Policy, const std::remove_reference_t<Other>&>>,
+            "use 'final' if intended");
+
+        auto dynamic_id =
+            Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(other));
+        auto static_id = Policy::template static_type<
+            typename virtual_traits<Policy, Other&>::polymorphic_type>();
+
+        if (dynamic_id == static_id) {
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = &Policy::template static_vptr<
+                    typename detail::virtual_traits<
+                        Policy, Other&>::polymorphic_type>;
+            } else {
+                vptr = Policy::template static_vptr<
+                    typename detail::virtual_traits<
+                        Policy, Other&>::polymorphic_type>;
+            }
+        } else {
+            auto index = dynamic_id;
+
+            if constexpr (has_facet<Policy, projection>) {
+                index = Policy::project_type_id(index);
+            }
+
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = Policy::indirect_vptrs[index];
+            } else {
+                vptr = Policy::vptrs[index];
+            }
+        }
+    }
+
+    template<class Other>
+    virtual_ptr_(virtual_ptr_<Policy, Other>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    virtual_ptr_(const virtual_ptr_<Policy, Other>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    virtual_ptr_(virtual_ptr_<Policy, Other>&& other)
+        : obj(std::move(other.obj)), vptr(other.vptr) {
+    }
+
+    auto get() const noexcept {
+        return obj;
+    }
+
+    auto operator->() const noexcept {
+        return get();
+    }
+
+    decltype(auto) operator*() const noexcept {
+        return *get();
     }
 
     template<class Other>
     static auto final(Other&& obj) {
         using namespace detail;
+        using namespace policy;
 
-        using other_virtual_traits = detail::virtual_traits<Policy, Other&>;
+        using other_virtual_traits = virtual_traits<Policy, Other>;
         using polymorphic_type =
             typename other_virtual_traits::polymorphic_type;
 
-        vptr_type mptr;
+        vptr_type vptr;
 
-        if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = &Policy::template static_vptr<polymorphic_type>;
+        if constexpr (has_facet<Policy, indirect_vptr>) {
+            vptr = &Policy::template static_vptr<polymorphic_type>;
         } else {
-            mptr = Policy::template static_vptr<polymorphic_type>;
+            vptr = Policy::template static_vptr<polymorphic_type>;
         }
 
-        if constexpr (Policy::runtime_checks) {
+        if constexpr (has_facet<Policy, runtime_checks>) {
             // check that dynamic type == static type
             auto dynamic_type =
                 Policy::dynamic_type(other_virtual_traits::rarg(obj));
@@ -449,136 +538,59 @@ class virtual_ptr_aux {
             }
         }
 
-        return virtual_ptr<Class, Policy>(obj, mptr);
+        virtual_ptr_ result;
+        result.box(obj);
+        result.vptr = vptr;
+
+        return result;
     }
 
-    template<class Other>
-    static auto dynamic_method_table(Other& obj);
+    template<typename Other>
+    auto cast() const {
+        std::remove_cv_t<std::remove_reference_t<Other>> result;
+        result.vptr = vptr;
 
-    auto& box() const noexcept {
-        return obj;
+        if constexpr (IsSmartPtr) {
+            result.obj = detail::virtual_ptr_traits<
+                Policy, Class>::template cast<Other>(obj);
+        } else {
+            result.obj =
+                &detail::optimal_cast<Policy, typename Other::element_type&>(
+                    *obj);
+        }
+
+        return result;
     }
 
     // consider as private, public for tests only
     auto _vptr() const noexcept {
         if constexpr (is_indirect) {
-            return *mptr;
+            return *vptr;
         } else {
-            return mptr;
+            return vptr;
         }
     }
 
   protected:
-    virtual_ptr_aux() = default;
-};
-
-template<class Class, class Policy>
-class virtual_ptr<Class, Policy, false>
-    : public virtual_ptr_aux<Class, Policy, Class&> {
-
-    using base = virtual_ptr_aux<Class, Policy, Class&>;
-
-  public:
-    template<class Other>
-    virtual_ptr(Other& obj) : base(obj, this->dynamic_method_table(obj)) {
-    }
-
-    template<typename Other>
-    virtual_ptr(Other&& obj, typename base::vptr_type mptr) : base(obj, mptr) {
-    }
-
-    template<class Other>
-    virtual_ptr(virtual_ptr<Other, Policy>& other)
-        : base(other.obj, other.mptr) {
-    }
-
-    template<class Other>
-    virtual_ptr(const virtual_ptr<Other, Policy>& other)
-        : base(other.obj, other.mptr) {
-    }
-
-    auto get() const noexcept {
-        return &this->obj;
-    }
-
-    auto operator->() const noexcept {
-        return get();
-    }
-
-    auto& operator*() const noexcept {
-        return *get();
-    }
-};
-
-template<class Class, class Policy>
-class virtual_ptr<Class, Policy, true>
-    : public virtual_ptr_aux<Class, Policy, Class> {
-
-    using base = virtual_ptr_aux<Class, Policy, Class>;
-
-  public:
-    template<typename OtherBox>
-    virtual_ptr(OtherBox& obj) : base(obj, this->dynamic_method_table(obj)) {
-    }
-
-    template<typename OtherBox>
-    virtual_ptr(OtherBox&& obj, typename base::vptr_type mptr)
-        : base(obj, mptr) {
-    }
-
-    template<typename OtherBox>
-    virtual_ptr(OtherBox&& other) {
-        this->obj = std::move(other);
-        this->mptr = this->dynamic_method_table(this->obj);
-    }
-
-    template<typename OtherBox>
-    virtual_ptr(virtual_ptr<OtherBox, Policy>& other) {
-        this->obj = other.obj;
-        this->mptr = other.mptr;
-    }
-
-    template<typename OtherBox>
-    virtual_ptr(const virtual_ptr<OtherBox, Policy>& other) {
-        this->obj = other.obj;
-        this->mptr = other.mptr;
-    }
-
-    template<typename OtherBox>
-    virtual_ptr(virtual_ptr<OtherBox, Policy>&& other) {
-        this->obj = std::move(other.obj);
-        this->mptr = other.mptr;
-    }
-
-    auto get() const noexcept {
-        return this->obj.get();
-    }
-
-    auto operator->() const noexcept {
-        return get();
-    }
-
-    auto& operator*() const noexcept {
-        return *get();
-    }
-    template<typename OtherPtr>
-    auto cast() const {
-        return detail::virtual_ptr_traits<Class, Policy>::template cast<
-            OtherPtr>(*this);
-    }
+    virtual_ptr_() = default;
 };
 
 template<class Class>
-virtual_ptr(Class&) -> virtual_ptr<
-    Class, default_policy,
-    detail::virtual_ptr_traits<Class, default_policy>::is_smart_ptr>;
+virtual_ptr_(Class&) -> virtual_ptr_<default_policy, Class>;
 
-template<class Class, class Policy = default_policy>
-using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
+template<class... Class>
+using virtual_ptr = virtual_ptr_<
+    detail::virtual_ptr_policy<Class...>, detail::virtual_ptr_class<Class...>>;
 
-template<class Class, class Policy = default_policy>
+template<class... Ts>
+using virtual_shared_ptr = virtual_ptr<
+    detail::virtual_ptr_policy<Ts...>,
+    std::shared_ptr<detail::virtual_ptr_class<Ts...>>>;
+
+template<class... Ts>
 inline auto make_virtual_shared() {
-    return virtual_shared_ptr<Class, Policy>::final(std::make_shared<Class>());
+    return virtual_shared_ptr<Ts...>::final(
+        std::make_shared<detail::virtual_ptr_class<Ts...>>());
 }
 
 // -----------------------------------------------------------------------------
@@ -593,9 +605,10 @@ struct copy_facet {
 
 template<class Policy, class... Facets>
 struct generic_policy : abstract_policy, Facets... {
-    static constexpr bool runtime_checks = false;
-    static constexpr bool use_indirect_method_pointers = false;
     using facets = detail::types<Facets...>;
+
+    template<class Facet>
+    constexpr static bool has_facet = policy::has_facet<Policy, Facet>;
 
     template<class NewPolicy>
     using copy = generic_policy<
@@ -661,8 +674,6 @@ struct yOMM2_API_gcc generic_external_vptr : external_vptr {
 
 template<class Policy>
 std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
-
-struct indirect_vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
@@ -739,7 +750,8 @@ template<class Policy>
 std::size_t fast_projection<Policy>::shift;
 
 template<class Policy>
-struct yOMM2_API_gcc checked_fast_projection : fast_projection<Policy> {
+struct yOMM2_API_gcc checked_fast_projection : fast_projection<Policy>,
+                                               virtual runtime_checks {
     static std::vector<type_id> control;
 
     static type_id project_type_id(type_id type) {
@@ -879,21 +891,15 @@ template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
     : generic_static_policy<
           Policy, checked_fast_projection<Policy>, generic_output<Policy>,
-          Facets...> {
-    static constexpr bool runtime_checks = true;
-};
+          Facets...> {};
 
 struct yOMM2_API_gcc debug_static
     : generic_debug_static<debug_static>::replace<
-          error_handler, backward_compatible_error_handler<debug_static>> {
-    static constexpr bool runtime_checks = true;
-};
+          error_handler, backward_compatible_error_handler<debug_static>> {};
 
 template<class Policy, class... Facets>
 struct generic_release_static
-    : generic_static_policy<Policy, fast_projection<Policy>, Facets...> {
-    static constexpr bool runtime_checks = false;
-};
+    : generic_static_policy<Policy, fast_projection<Policy>, Facets...> {};
 
 struct release_static
     : generic_release_static<release_static>::replace<
@@ -984,20 +990,20 @@ inline const std::uintptr_t*
 method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
     using namespace detail;
 
-    const std::uintptr_t* mptr;
+    const std::uintptr_t* vptr;
 
     if constexpr (has_mptr<ArgType>) {
-        mptr = arg.yomm2_vptr();
-        check_intrusive_method_pointer<Policy>(mptr, Policy::dynamic_type(arg));
+        vptr = arg.yomm2_vptr();
+        check_intrusive_method_pointer<Policy>(vptr, Policy::dynamic_type(arg));
     } else if constexpr (is_virtual_ptr<ArgType>) {
-        mptr = arg._vptr();
+        vptr = arg._vptr();
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.
     } else {
-        mptr = Policy::vptr(arg);
+        vptr = Policy::vptr(arg);
     }
 
-    return mptr;
+    return vptr;
 }
 
 template<class Policy, typename Key, typename R, typename... A>
@@ -1114,52 +1120,6 @@ method<Policy, Key, R(A...)>::ambiguous_handler(
     (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
     Policy::error(error_type(std::move(error)));
     abort(); // in case user handler "forgets" to abort
-}
-
-template<class Class, class Policy, typename Box>
-template<class Other>
-inline auto
-virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
-    using namespace detail;
-
-    static_assert(
-        std::is_polymorphic_v<
-            typename virtual_traits<Policy, Other&>::polymorphic_type>,
-        "use 'final' if intended");
-
-    vptr_type mptr;
-
-    auto dynamic_id =
-        Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(obj));
-    auto static_id = Policy::template static_type<
-        typename virtual_traits<Policy, Other&>::polymorphic_type>();
-
-    if (dynamic_id == static_id) {
-        if constexpr (Policy::use_indirect_method_pointers) {
-            mptr =
-                &Policy::template static_vptr<typename detail::virtual_traits<
-                    Policy, Other&>::polymorphic_type>;
-        } else {
-            mptr =
-                Policy::template static_vptr<typename detail::virtual_traits<
-                    Policy, Other&>::polymorphic_type>;
-        }
-    } else {
-        using namespace policy;
-        auto index = dynamic_id;
-
-        if constexpr (has_facet<Policy, projection>) {
-            index = Policy::project_type_id(index);
-        }
-
-        if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::indirect_vptrs[index];
-        } else {
-            mptr = Policy::vptrs[index];
-        }
-    }
-
-    return mptr;
 }
 
 template<class Policy>

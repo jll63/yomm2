@@ -592,23 +592,23 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // // Plane
         // BOOST_TEST(opt_iter++->i == 0); // approve/1
 
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Role)) == role->mptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Role)) == role->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Employee)) == employee->mptr);
+        //     vptr(test_policy::context, &typeid(Employee)) == employee->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Manager)) == manager->mptr);
+        //     vptr(test_policy::context, &typeid(Manager)) == manager->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Founder)) == founder->mptr);
+        //     vptr(test_policy::context, &typeid(Founder)) == founder->vptr);
 
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Expense)) == expense->mptr);
+        //     vptr(test_policy::context, &typeid(Expense)) == expense->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Public)) == public_->mptr);
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Bus)) == bus->mptr);
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Metro)) ==
-        // metro->mptr); BOOST_TEST(mptr(test_policy::context, &typeid(Taxi)) ==
-        // taxi->mptr); BOOST_TEST(mptr(test_policy::context, &typeid(Jet)) ==
-        // jet->mptr);
+        //     vptr(test_policy::context, &typeid(Public)) == public_->vptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Bus)) == bus->vptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Metro)) ==
+        // metro->vptr); BOOST_TEST(vptr(test_policy::context, &typeid(Taxi)) ==
+        // taxi->vptr); BOOST_TEST(vptr(test_policy::context, &typeid(Jet)) ==
+        // jet->vptr);
 
         {
             const Role& role = Role();

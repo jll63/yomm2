@@ -20,7 +20,7 @@ struct root {
     unspecified_type unspecified_name;
     root();
     unspecified_type yomm2_vptr() const;
-    void yomm2_vptr(unspecified_type mptr);
+    void yomm2_vptr(unspecified_type vptr);
 };
 
 template<class Class, class... Bases>

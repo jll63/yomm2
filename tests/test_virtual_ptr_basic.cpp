@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         // Using  deduction guide.
         boost::test_tools::output_test_stream os;
         Animal&& animal = Dog();
-        auto vptr = virtual_ptr(animal);
+        auto vptr = virtual_ptr_(animal); // GLOP
         kick::fn(vptr, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         return;
     }
 
-    if constexpr (default_policy::runtime_checks) {
+    if constexpr (default_policy::has_facet<policy::runtime_checks>) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }

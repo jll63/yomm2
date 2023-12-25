@@ -78,7 +78,7 @@ struct std_rtti : rtti {
     }
 
     template<typename T>
-    static type_id dynamic_type(T& obj) {
+    static type_id dynamic_type(const T& obj) {
         return reinterpret_cast<type_id>(&typeid(obj));
     }
 
@@ -373,6 +373,7 @@ This time we re-define `YOMM2_DEFAULT_POLICY`:
 
 ```c++
 #pragma push_macro("YOMM2_DEFAULT_POLICY")
+#undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY custom_policy
 
 register_classes(Animal, Dog, Cat);
