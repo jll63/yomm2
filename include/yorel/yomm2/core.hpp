@@ -433,7 +433,7 @@ class virtual_ptr_aux {
         vptr_type mptr;
 
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::template indirect_method_table<polymorphic_type>;
+            mptr = &Policy::template method_table<polymorphic_type>;
         } else {
             mptr = Policy::template method_table<polymorphic_type>;
         }
@@ -460,7 +460,7 @@ class virtual_ptr_aux {
     }
 
     // consider as private, public for tests only
-    auto _method_table() const noexcept {
+    auto _vptr() const noexcept {
         if constexpr (is_indirect) {
             return *mptr;
         } else {
@@ -687,18 +687,11 @@ struct yOMM2_API_gcc yOMM2_API_msc method_tables {
     // Why is yOMM2_API_msc needed here???
     template<class Class>
     static std::uintptr_t* method_table;
-    template<class Class>
-    static std::uintptr_t** indirect_method_table;
 };
 
 template<class Key>
 template<class Class>
 std::uintptr_t* method_tables<Key>::method_table;
-
-template<class Key>
-template<class Class>
-std::uintptr_t** method_tables<Key>::indirect_method_table =
-    &method_tables<Key>::method_table<Class>;
 
 struct domain {};
 
@@ -997,7 +990,7 @@ method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
         mptr = arg.yomm2_vptr();
         check_intrusive_method_pointer<Policy>(mptr, Policy::dynamic_type(arg));
     } else if constexpr (is_virtual_ptr<ArgType>) {
-        mptr = arg._method_table();
+        mptr = arg._vptr();
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.
     } else {
@@ -1016,8 +1009,8 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_uni(
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        auto vtable = vptr<ArgType>(arg);
-        return vtable[this->slots_strides[0]];
+        auto vtbl = vptr<ArgType>(arg);
+        return vtbl[this->slots_strides[0]];
     } else {
         return resolve_uni<mp_rest<MethodArgList>>(more_args...);
     }
@@ -1034,12 +1027,12 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_first(
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const std::uintptr_t* vtable;
+        const std::uintptr_t* vtbl;
 
         if constexpr (is_virtual_ptr<ArgType>) {
-            vtable = arg._method_table();
+            vtbl = arg._vptr();
         } else {
-            vtable = vptr<ArgType>(arg);
+            vtbl = vptr<ArgType>(arg);
         }
 
         auto slot = slots_strides[0];
@@ -1048,7 +1041,7 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_first(
         // 1, there is no need to store it. Also, the method table
         // contains a pointer into the multi-dimensional dispatch table,
         // already resolved to the appropriate group.
-        auto dispatch = reinterpret_cast<const std::uintptr_t*>(vtable[slot]);
+        auto dispatch = reinterpret_cast<const std::uintptr_t*>(vtbl[slot]);
         return resolve_multi_next<1, mp_rest<MethodArgList>, MoreArgTypes...>(
             dispatch, more_args...);
     } else {
@@ -1069,17 +1062,17 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_next(
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        const std::uintptr_t* vtable;
+        const std::uintptr_t* vtbl;
 
         if constexpr (is_virtual_ptr<ArgType>) {
-            vtable = arg._method_table();
+            vtbl = arg._vptr();
         } else {
-            vtable = vptr<ArgType>(arg);
+            vtbl = vptr<ArgType>(arg);
         }
 
         auto slot = this->slots_strides[2 * VirtualArg - 1];
         auto stride = this->slots_strides[2 * VirtualArg];
-        dispatch = dispatch + vtable[slot] * stride;
+        dispatch = dispatch + vtbl[slot] * stride;
     }
 
     if constexpr (VirtualArg + 1 == arity) {
@@ -1143,8 +1136,8 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
 
     if (dynamic_id == static_id) {
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::template indirect_method_table<
-                typename detail::virtual_traits<
+            mptr =
+                &Policy::template method_table<typename detail::virtual_traits<
                     Policy, Other&>::polymorphic_type>;
         } else {
             mptr =
