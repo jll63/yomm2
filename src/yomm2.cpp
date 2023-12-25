@@ -23,6 +23,7 @@ namespace yomm2 {
 namespace policy {
 
 template class yOMM2_API_msc generic_domain<debug_shared>;
+template class yOMM2_API_msc external_vptr<debug_shared>;
 template class yOMM2_API_msc generic_error_handler<debug_shared>;
 template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
 template class yOMM2_API_msc fast_projection<debug_shared>;

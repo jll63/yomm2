@@ -429,6 +429,7 @@ This time we re-define `YOMM2_DEFAULT_POLICY`:
 #ifdef YOMM2_CODE
 
 #pragma push_macro("YOMM2_DEFAULT_POLICY")
+#undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY custom_policy
 
 register_classes(Animal, Dog, Cat);

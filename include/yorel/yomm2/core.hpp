@@ -920,6 +920,7 @@ struct debug_shared;
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) generic_domain<debug_shared>;
+extern template class __declspec(dllimport) external_vptr<debug_shared>;
 extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
 extern template class __declspec(dllimport) fast_projection<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
