@@ -1069,8 +1069,8 @@ void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
 
 template<class Policy>
 void runtime<Policy>::install_gv(size_t type_ids) {
-    Policy::context.mptrs.resize(type_ids);
-    Policy::context.indirect_mptrs.resize(type_ids);
+    Policy::mptrs.resize(type_ids);
+    Policy::indirect_mptrs.resize(type_ids);
 
     for (size_t pass = 0; pass != 2; ++pass) {
         Policy::context.gv.resize(0);
@@ -1150,8 +1150,8 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                         index = Policy::project_type_id(index);
                     }
 
-                    Policy::context.mptrs[index] = *cls.method_table;
-                    Policy::context.indirect_mptrs[index] = cls.method_table;
+                    Policy::mptrs[index] = *cls.method_table;
+                    Policy::indirect_mptrs[index] = cls.method_table;
                 }
             }
         }

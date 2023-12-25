@@ -49,7 +49,7 @@ auto call_kick(Dog& obj) {
 }
 
 auto call_kick_manual(Dog& obj) {
-    const auto hash_table = default_policy::context.mptrs.data();
+    const auto hash_table = default_policy::mptrs.data();
     const auto mult = default_policy::mult;
     const auto shift = default_policy::shift;
     const auto index = kick::fn.slots_strides[0];

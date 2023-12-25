@@ -808,7 +808,7 @@ check_intrusive_method_pointer(const word* mptr, type_id dynamic_type) {
             index = Policy::project_type_id(index);
         }
 
-        if (index >= ctx.mptrs.size() || mptr != ctx.mptrs[index]) {
+        if (index >= Policy::mptrs.size() || mptr != Policy::mptrs[index]) {
             // probably a missing derived<> in a derived class
             Policy::error(method_table_error{dynamic_type});
         }

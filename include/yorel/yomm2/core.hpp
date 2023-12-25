@@ -220,8 +220,6 @@ namespace yomm2 {
 
 struct context {
     std::vector<detail::word> gv;
-    std::vector<detail::word*> mptrs;
-    std::vector<detail::word**> indirect_mptrs;
 };
 
 struct catalog {
@@ -663,7 +661,10 @@ using replace_facet = boost::mp11::mp_apply<
 struct vptr {};
 
 template<class Policy>
-struct external_vptr : vptr {
+struct yOMM2_API_gcc external_vptr : vptr {
+    static std::vector<detail::word*> mptrs;
+    static std::vector<detail::word**> indirect_mptrs;
+
     template<class Class>
     static auto vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
@@ -672,9 +673,15 @@ struct external_vptr : vptr {
             index = Policy::project_type_id(index);
         }
 
-        return Policy::context.mptrs[index];
+        return mptrs[index];
     }
 };
+
+template<class Policy>
+std::vector<detail::word*> external_vptr<Policy>::mptrs;
+
+template<class Policy>
+std::vector<detail::word**> external_vptr<Policy>::indirect_mptrs;
 
 struct output {};
 
@@ -1159,9 +1166,9 @@ virtual_ptr_aux<Class, Policy, Box>::dynamic_method_table(Other& obj) {
         }
 
         if constexpr (Policy::use_indirect_method_pointers) {
-            mptr = Policy::context.indirect_mptrs[index];
+            mptr = Policy::indirect_mptrs[index];
         } else {
-            mptr = Policy::context.mptrs[index];
+            mptr = Policy::mptrs[index];
         }
     }
 
