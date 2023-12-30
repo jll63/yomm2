@@ -351,17 +351,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == approve_method.slots);
     }
 
-    BOOST_TEST_REQUIRE(role->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(employee->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(manager->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(founder->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(role->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(employee->vtbl.size() == 2);
+    BOOST_TEST_REQUIRE(manager->vtbl.size() == 2);
+    BOOST_TEST_REQUIRE(founder->vtbl.size() == 1);
 
-    BOOST_TEST_REQUIRE(expense->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(public_->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(bus->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(metro->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(taxi->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(jet->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(expense->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(public_->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(bus->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(metro->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(taxi->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(jet->vtbl.size() == 1);
 
     auto pay_method_iter = pay_method.specs.begin();
     auto pay_Employee = pay_method_iter++;
@@ -461,52 +461,52 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == role->mtbl);
+        BOOST_TEST(expected == role->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1, 0};
-        BOOST_TEST(expected == employee->mtbl);
+        BOOST_TEST(expected == employee->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {2, 1};
-        BOOST_TEST(expected == manager->mtbl);
+        BOOST_TEST(expected == manager->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {3};
-        BOOST_TEST(expected == founder->mtbl);
+        BOOST_TEST(expected == founder->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == expense->mtbl);
+        BOOST_TEST(expected == expense->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == public_->mtbl);
+        BOOST_TEST(expected == public_->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == bus->mtbl);
+        BOOST_TEST(expected == bus->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == metro->mtbl);
+        BOOST_TEST(expected == metro->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {2};
-        BOOST_TEST(expected == taxi->mtbl);
+        BOOST_TEST(expected == taxi->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == jet->mtbl);
+        BOOST_TEST(expected == jet->vtbl);
     }
 
     BOOST_TEST_REQUIRE(pay_Employee->info->next != nullptr);
@@ -521,7 +521,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(
             test_policy::dispatch_data.size() ==
             +12        // approve: 3 slots and 12 cells for dispatch table
-                + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
+                + 12); // 3 vtbl of 2 cells for Roles + 6 vtbl of 1 cells for
                        // Expenses
         BOOST_TEST_REQUIRE(test_policy::vptrs.size() == buckets);
 #ifndef NDEBUG

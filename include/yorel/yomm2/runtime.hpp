@@ -54,7 +54,7 @@ struct rt_class {
     int layer{0};
     size_t mark{0};   // temporary mark to detect cycles
     size_t weight{0}; // number of proper direct or indirect bases
-    std::vector<size_t> mtbl;
+    std::vector<size_t> vtbl;
     std::uintptr_t** static_vptr;
 };
 
@@ -734,7 +734,7 @@ void runtime<Policy>::allocate_slots() {
     }
 
     for (auto& c : classes) {
-        c.mtbl.resize(c.next_slot);
+        c.vtbl.resize(c.next_slot);
     }
 }
 
@@ -860,7 +860,7 @@ void runtime<Policy>::build_dispatch_tables() {
             size_t group_num = 0;
             for (auto& [mask, group] : groups[dim]) {
                 for (auto cls : group.classes) {
-                    cls->mtbl[m.slots[dim]] = group_num;
+                    cls->vtbl[m.slots[dim]] = group_num;
                 }
                 if constexpr (trace_enabled) {
                     ++trace << "group " << dim << "/" << group_num << " mask "
@@ -1140,13 +1140,13 @@ void runtime<Policy>::install_gv(size_t type_ids) {
             if constexpr (trace_enabled) {
                 if (pass) {
                     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                            << *cls.static_vptr << " mtbl for " << cls << "\n";
+                            << *cls.static_vptr << " vtbl for " << cls << "\n";
                 }
             }
 
             if (cls.first_used_slot != -1) {
                 std::copy(
-                    cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
+                    cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end(),
                     std::back_inserter(Policy::dispatch_data));
             }
 
@@ -1188,7 +1188,7 @@ void runtime<Policy>::optimize() {
             for (auto cls : m.vp[0]->compatible_classes) {
                 auto pf = m.dispatch_table[(*cls->static_vptr)[slot]];
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " mtbl[" << slot << "] = " << pf
+                    ++trace << *cls << " vtbl[" << slot << "] = " << pf
                             << " (function)"
                             << "\n";
                 }
