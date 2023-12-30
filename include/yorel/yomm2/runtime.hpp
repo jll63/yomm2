@@ -445,7 +445,12 @@ void runtime<Policy>::augment_classes() {
             if (!rtb) {
                 unknown_class_error error;
                 error.ti = *base_iter;
-                Policy::error(error_type(error));
+
+                if constexpr (Policy::template has_facet<
+                                  policy::error_handler>) {
+                    Policy::error(error_type(error));
+                }
+
                 abort();
             }
 
@@ -554,6 +559,8 @@ void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
 
 template<class Policy>
 void runtime<Policy>::augment_methods() {
+    using namespace policy;
+
     methods.resize(Policy::catalog.methods.size());
 
     ++trace << "Methods:\n";
@@ -581,7 +588,11 @@ void runtime<Policy>::augment_methods() {
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
                 error.ti = ti;
-                Policy::error(error_type(error));
+
+                if constexpr (has_facet<Policy, error_handler>) {
+                    Policy::error(error_type(error));
+                }
+
                 abort();
             }
             rt_arg param = {&*meth_iter, param_index++};
@@ -608,7 +619,11 @@ void runtime<Policy>::augment_methods() {
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
                     error.ti = ti;
-                    Policy::error(error_type(error));
+
+                    if constexpr (has_facet<Policy, error_handler>) {
+                        Policy::error(error_type(error));
+                    }
+
                     abort();
                 }
                 spec_iter->vp.push_back(rt_class);
