@@ -3,8 +3,6 @@
 
 #include "yorel/yomm2/detail/chain.hpp"
 
-#include <iomanip> // for operator<<, setw
-
 namespace yorel {
 namespace yomm2 {
 namespace detail {

@@ -3,13 +3,15 @@
 
 #include <array>
 #include <charconv>
-#include <chrono>
+#include <cstdint>
 #include <functional>
-#include <stdio.h>
+#include <limits>
 #include <memory>
+#include <stdio.h>
 #include <string_view>
-#include <typeinfo>
 #include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
 #include <variant>
 #include <vector>
 
@@ -66,7 +68,6 @@ struct unknown_class_error {
 
 struct hash_search_error {
     size_t attempts;
-    std::chrono::duration<double> duration;
     size_t buckets;
 };
 
@@ -696,7 +697,7 @@ struct yOMM2_API_gcc generic_compact_external_vptr : external_vptr {
 
     template<class Class>
     static auto vptr(const Class& arg) {
-        return vptrs[Policy::dynamic_type(arg)];
+        return vptrs.find(Policy::dynamic_type(arg))->second;
     }
 };
 
@@ -855,8 +856,7 @@ struct yOMM2_API_gcc generic_error_handler : virtual error_handler {
                 Policy::stream << "\n";
             } else if (auto error = std::get_if<hash_search_error>(&error_v)) {
                 Policy::stream << "could not find hash factors after "
-                               << error->attempts << " in "
-                               << error->duration.count() << "s using "
+                               << error->attempts << "s using "
                                << error->buckets << " buckets\n";
             }
         }

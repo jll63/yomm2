@@ -8,13 +8,10 @@
 
 #include <algorithm> // for max, transform, copy
 #include <cassert>   // for assert
-#include <chrono>    // for operator-, duration
 #include <cstdint>   // for uintptr_t
 #include <cstdio>
 #include <cstdlib> // for abort, getenv
 #include <deque>
-#include <iomanip>       // for operator<<, setw
-#include <iterator>      // for back_insert_iterator
 #include <list>          // for list, _List_iterator
 #include <map>           // for map
 #include <memory>        // for allocator_traits<...
@@ -103,7 +100,6 @@ struct rt_method {
 struct metrics_t : dispatch_stats_t {
     size_t method_table_size, dispatch_table_size;
     size_t hash_search_attempts;
-    std::chrono::duration<double> hash_search_time;
 };
 
 inline std::ostream* log_on(std::ostream* os) {
