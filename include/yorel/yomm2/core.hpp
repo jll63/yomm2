@@ -604,8 +604,15 @@ struct copy_facet {
     using type = Facet;
 };
 
+template<
+    typename NewPolicy, typename OldPolicy,
+    template<typename...> class GenericFacet, typename... Args>
+struct copy_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
+    using type = GenericFacet<NewPolicy, Args...>;
+};
+
 template<class Policy, class... Facets>
-struct generic_policy : abstract_policy, Facets... {
+struct generic_policy : virtual abstract_policy, virtual Facets... {
     using facets = detail::types<Facets...>;
 
     template<class Facet>
@@ -637,13 +644,6 @@ struct generic_policy : abstract_policy, Facets... {
             Policy>>;
 };
 
-template<
-    typename NewPolicy, typename OldPolicy,
-    template<typename...> class GenericFacet, typename... Args>
-struct copy_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
-    using type = GenericFacet<NewPolicy, Args...>;
-};
-
 template<class Policy, class Base, class Facet, class NewPolicy>
 using replace_facet = boost::mp11::mp_apply<
     generic_policy,
@@ -658,7 +658,7 @@ using replace_facet = boost::mp11::mp_apply<
 struct external_vptr {};
 
 template<class Policy>
-struct yOMM2_API_gcc generic_external_vptr : virtual external_vptr {
+struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
     static std::vector<std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
@@ -682,10 +682,10 @@ struct yOMM2_API_gcc generic_external_vptr : virtual external_vptr {
 };
 
 template<class Policy>
-std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
+std::vector<std::uintptr_t*> external_vptr_vector<Policy>::vptrs;
 
 template<class Policy>
-struct yOMM2_API_gcc generic_compact_external_vptr : virtual external_vptr {
+struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
     static std::unordered_map<type_id, std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
@@ -703,7 +703,7 @@ struct yOMM2_API_gcc generic_compact_external_vptr : virtual external_vptr {
 
 template<class Policy>
 std::unordered_map<type_id, std::uintptr_t*>
-    generic_compact_external_vptr<Policy>::vptrs;
+    external_vptr_map<Policy>::vptrs;
 
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : virtual indirect_vptr {
@@ -922,7 +922,7 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
-          Policy, generic_domain<Policy>, generic_external_vptr<Policy>,
+          Policy, generic_domain<Policy>, external_vptr_vector<Policy>,
           std_rtti, vectored_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
@@ -947,13 +947,13 @@ struct debug_shared;
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) generic_domain<debug_shared>;
-extern template class __declspec(dllimport) generic_external_vptr<debug_shared>;
+extern template class __declspec(dllimport) external_vptr_vector<debug_shared>;
 extern template class __declspec(dllimport)
     vectored_error_handler<debug_shared>;
 extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
     debug_shared, generic_domain<debug_shared>,
-    generic_external_vptr<debug_shared>, std_rtti,
+    external_vptr_vector<debug_shared>, std_rtti,
     checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
@@ -961,7 +961,7 @@ extern template class __declspec(dllimport) generic_policy<
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
           debug_shared, generic_domain<debug_shared>,
-          generic_external_vptr<debug_shared>, std_rtti,
+          external_vptr_vector<debug_shared>, std_rtti,
           checked_simple_perfect_hash<debug_shared>,
           generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
