@@ -407,14 +407,14 @@ struct virtual_ptr_traits<Policy, std::shared_ptr<Class>> {
 
     template<typename OtherPtrRef>
     static decltype(auto)
-    cast(const virtual_ptr_<Policy, std::shared_ptr<Class>>& ptr) {
+    cast(const std::shared_ptr<Class>& ptr) {
         using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
         using OtherClass = typename OtherPtr::box_type::element_type;
 
         if constexpr (requires_dynamic_cast<Class&, OtherClass&>) {
-            return std::dynamic_pointer_cast<OtherClass>(ptr.obj);
+            return std::dynamic_pointer_cast<OtherClass>(ptr);
         } else {
-            return std::static_pointer_cast<OtherClass>(ptr.obj);
+            return std::static_pointer_cast<OtherClass>(ptr);
         }
     }
 };
@@ -693,42 +693,6 @@ using use_classes_macro = typename std::conditional_t<
 
 std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
-
-template<class Policy>
-inline auto check_intrusive_method_pointer(
-    const std::uintptr_t* vptr, type_id dynamic_type) {
-    // Intrusive mode only.
-
-    if constexpr (Policy::template has_facet<policy::runtime_checks>) {
-        auto& dd = Policy::dispatch_data;
-        auto p = reinterpret_cast<const char*>(vptr);
-
-        if (dd.empty()) {
-            // no declared methods
-            return vptr;
-        }
-
-        if (p < reinterpret_cast<const char*>(dd.data()) ||
-            p >= reinterpret_cast<const char*>(dd.data() + dd.size())) {
-            // probably some random value
-            Policy::error(method_table_error{dynamic_type});
-        }
-
-        using namespace policy;
-        auto index = dynamic_type;
-
-        if constexpr (has_facet<Policy, projection>) {
-            index = Policy::project_type_id(index);
-        }
-
-        if (index >= Policy::vptrs.size() || vptr != Policy::vptrs[index]) {
-            // probably a missing derived<> in a derived class
-            Policy::error(method_table_error{dynamic_type});
-        }
-    }
-
-    return vptr;
-}
 
 // -----------------------------------------------------------------------------
 // lightweight ostream

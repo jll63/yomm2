@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/bin/env python3
 
 import argparse
 from typing import Iterable
@@ -123,7 +123,7 @@ for other_tags in product(*other_axes.values()):
                 "{:5.2f}".format(
                     1
                     if ref.base is None
-                    else (result.mean / result.base.mean) / (ref.mean / ref.base.mean)
+                    else result.mean / ref.mean
                 )
             )
         table.extend(row)

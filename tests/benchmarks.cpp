@@ -21,7 +21,6 @@ int main() {}
 #include <benchmark/benchmark.h>
 
 #include <yorel/yomm2/keywords.hpp>
-#include <yorel/yomm2/intrusive.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "benchmarks_parameters.hpp"
@@ -73,20 +72,14 @@ template<typename>
 struct direct_intrusive_base {
     using policy = default_policy;
     virtual ~direct_intrusive_base() {}
-    void set_mptr(std::uintptr_t* vptr) { this->vptr = vptr; }
     auto yomm2_vptr() const { return vptr; };
     std::uintptr_t* vptr;
 };
 
-struct indirect_policy : default_policy {
-    static constexpr bool use_indirect_method_pointers = true;
-};
-
 template<typename>
 struct indirect_intrusive_base {
-    using policy = indirect_policy;
+    using policy = default_policy;
     virtual ~indirect_intrusive_base() {}
-    void set_mptr(std::uintptr_t** vptr) { this->vptr = vptr; }
     auto yomm2_vptr() const { return *vptr; };
     std::uintptr_t** vptr;
 };
@@ -107,19 +100,24 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct basic_policy : virtual_by_reference {
-    using policy_type = default_policy;
+    struct policy : default_static_policy::copy<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "basic_policy"; };
 };
 
 struct direct_intrusive_dispatch : virtual_by_reference {
-    using policy_type = default_policy;
+    struct policy : default_static_policy::copy<policy>::remove<yomm2::policy::external_vptr> {
+        template<class Class>
+        static auto vptr(const Class& arg) {
+            return arg.yomm2_vptr();
+        }
+    };
     template<typename Inheritance> using base_type = direct_intrusive_base<Inheritance>;
     static std::string name() { return "direct_intrusive"; };
 };
 
 struct indirect_intrusive_dispatch : virtual_by_reference {
-    using policy_type = default_policy;
+    struct policy : default_static_policy::copy<policy> {};
     template<typename Inheritance> using base_type = indirect_intrusive_base<Inheritance>;
     static std::string name() { return "indirect_intrusive"; };
 };
@@ -129,7 +127,7 @@ struct direct_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.vptr_draw();
     }
-    using policy_type = default_policy;
+    struct policy : default_static_policy::copy<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "direct_virtual_ptr"; };
 };
@@ -139,7 +137,7 @@ struct indirect_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.ivptr_draw();
     }
-    using policy_type = indirect_policy;
+    struct policy : default_static_policy::copy<policy>, yomm2::policy::generic_indirect_vptr<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "indirect_virtual_ptr"; };
 };
@@ -254,20 +252,20 @@ struct population : abstract_population {
     template<typename>
     struct leaf0 : intermediate<0> {
         leaf0() {
-            this->direct_intrusive_base<ordinary_inheritance>::vptr = default_policy::static_vptr<leaf0>;
-            this->direct_intrusive_base<virtual_inheritance>::vptr = default_policy::static_vptr<leaf0>;
-            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &default_policy::static_vptr<leaf0>;
-            this->indirect_intrusive_base<virtual_inheritance>::vptr = &default_policy::static_vptr<leaf0>;
+            this->direct_intrusive_base<ordinary_inheritance>::vptr = direct_intrusive_dispatch::policy::static_vptr<leaf0>;
+            this->direct_intrusive_base<virtual_inheritance>::vptr = direct_intrusive_dispatch::policy::static_vptr<leaf0>;
+            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &indirect_intrusive_dispatch::policy::static_vptr<leaf0>;
+            this->indirect_intrusive_base<virtual_inheritance>::vptr = &indirect_intrusive_dispatch::policy::static_vptr<leaf0>;
         }
     };
 
     template<typename>
     struct leaf1 : intermediate<1> {
         leaf1() {
-            this->direct_intrusive_base<ordinary_inheritance>::vptr = default_policy::static_vptr<leaf1>;
-            this->direct_intrusive_base<virtual_inheritance>::vptr = default_policy::static_vptr<leaf1>;
-            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &default_policy::static_vptr<leaf1>;
-            this->indirect_intrusive_base<virtual_inheritance>::vptr = &default_policy::static_vptr<leaf1>;
+            this->direct_intrusive_base<ordinary_inheritance>::vptr = direct_intrusive_dispatch::policy::static_vptr<leaf1>;
+            this->direct_intrusive_base<virtual_inheritance>::vptr = direct_intrusive_dispatch::policy::static_vptr<leaf1>;
+            this->indirect_intrusive_base<ordinary_inheritance>::vptr = &indirect_intrusive_dispatch::policy::static_vptr<leaf1>;
+            this->indirect_intrusive_base<virtual_inheritance>::vptr = &indirect_intrusive_dispatch::policy::static_vptr<leaf1>;
         }
     };
 
@@ -280,8 +278,6 @@ struct population : abstract_population {
 
     using classes = mp_append<non_leaf_classes, leaf_classes>;
 
-    use_classes<classes> YOMM2_GENSYM;
-
     template<typename Base, typename Policy>
     using method_1 = method<population, void(virtual_<Base&>), Policy>;
 
@@ -290,9 +286,11 @@ struct population : abstract_population {
 
     template<typename Dispatch, typename Inheritance>
     struct ref_methods {
-        using Policy = typename Dispatch::policy_type;
+        using Policy = typename Dispatch::policy;
         using Base = typename Dispatch::template base_type<Inheritance>;
         using varg_type = Base&;
+
+        use_classes<Policy, classes> YOMM2_GENSYM;
 
         using method1 = method<Policy, population, void(virtual_<Base&>)>;
         using method2 = method<Policy, population, void(virtual_<Base&>, virtual_<Base&>)>;
@@ -314,10 +312,12 @@ struct population : abstract_population {
 
     template<typename Dispatch, typename Inheritance>
     struct vptr_methods {
+        using Policy = typename Dispatch::policy;
         using Base = orthogonal_base<Inheritance>;
-        using Policy = typename Dispatch::policy_type;
-        template<class Class> using vptr = virtual_ptr<Policy, Class>;
+        template<class Class> using vptr = virtual_ptr_<Policy, Class>;
         using varg_type = vptr<Base>;
+
+        use_classes<Policy, classes> YOMM2_GENSYM;
 
         using method1 = method<Policy, population, void(vptr<Base>)>;
         using method2 = method<
@@ -413,8 +413,8 @@ struct population : abstract_population {
     std::default_random_engine rnd;
     std::uniform_int_distribution<std::size_t> dist{0, OBJECTS() - 1};
     std::vector<base*> objects;
-    std::vector<virtual_ptr<base>> vptrs;
-    std::vector<virtual_ptr<indirect_policy, base>> ivptrs;
+    std::vector<virtual_ptr<direct_virtual_ptr_dispatch::policy, base>> vptrs;
+    std::vector<virtual_ptr<indirect_virtual_ptr_dispatch::policy, base>> ivptrs;
 
     static population instance;
 
@@ -425,7 +425,7 @@ struct population : abstract_population {
 
     std::vector<base* (*)()> factories;
 
-    population() {
+    void populate() {
         mp_for_each<leaf_classes>([this](auto value) {
             factories.push_back(make<decltype(value)>);
         });
@@ -543,10 +543,13 @@ int main(int argc, char** argv) {
         >
     > YOMM2_GENSYM;
 
-    yorel::yomm2::update();
+    mp_for_each<method_dispatch_types>([](auto value) {
+        update<typename decltype(value)::policy>();
+    });
 
     mp_for_each<mp_iota_c<NH>>([](auto I_value) {
         using I = decltype(I_value);
+        population<I>::instance.populate();
         populations.push_back(&population<I>::instance);
     });
 
@@ -573,7 +576,6 @@ int main(int argc, char** argv) {
     }
 
     auto pop = populations[0];
-    pop->dispatcher<virtual_dispatch, arity_1, ordinary_inheritance>()();
     pop->dispatcher<direct_virtual_ptr_dispatch, arity_1, ordinary_inheritance>()();
 
 #if !defined(NDEBUG)

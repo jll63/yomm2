@@ -547,16 +547,16 @@ class virtual_ptr_ {
 
     template<typename Other>
     auto cast() const {
+        using namespace detail;
         std::remove_cv_t<std::remove_reference_t<Other>> result;
         result.vptr = vptr;
 
         if constexpr (IsSmartPtr) {
-            result.obj = detail::virtual_ptr_traits<
-                Policy, Class>::template cast<Other>(obj);
+            result.obj =
+                virtual_ptr_traits<Policy, Class>::template cast<Other>(obj);
         } else {
             result.obj =
-                &detail::optimal_cast<Policy, typename Other::element_type&>(
-                    *obj);
+                &optimal_cast<Policy, typename Other::element_type&>(*obj);
         }
 
         return result;
@@ -884,8 +884,7 @@ template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
           Policy, generic_domain<Policy>, generic_external_vptr<Policy>,
-          generic_indirect_vptr<Policy>, std_rtti,
-          generic_error_handler<Policy>, Facets...> {};
+          std_rtti, generic_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
@@ -910,22 +909,19 @@ struct debug_shared;
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) generic_domain<debug_shared>;
 extern template class __declspec(dllimport) generic_external_vptr<debug_shared>;
-extern template class __declspec(dllimport) generic_indirect_vptr<debug_shared>;
 extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
 extern template class __declspec(dllimport) fast_projection<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
     debug_shared, generic_domain<debug_shared>,
-    generic_external_vptr<debug_shared>, generic_indirect_vptr<debug_shared>,
-    std_rtti, checked_fast_projection<debug_shared>,
-    generic_output<debug_shared>,
+    generic_external_vptr<debug_shared>, std_rtti,
+    checked_fast_projection<debug_shared>, generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
           debug_shared, generic_domain<debug_shared>,
-          generic_external_vptr<debug_shared>,
-          generic_indirect_vptr<debug_shared>, std_rtti,
+          generic_external_vptr<debug_shared>, std_rtti,
           checked_fast_projection<debug_shared>, generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
@@ -988,22 +984,13 @@ template<class Policy, typename Key, typename R, typename... A>
 template<typename ArgType>
 inline const std::uintptr_t*
 method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
-    using namespace detail;
-
-    const std::uintptr_t* vptr;
-
-    if constexpr (has_mptr<ArgType>) {
-        vptr = arg.yomm2_vptr();
-        check_intrusive_method_pointer<Policy>(vptr, Policy::dynamic_type(arg));
-    } else if constexpr (is_virtual_ptr<ArgType>) {
-        vptr = arg._vptr();
+    if constexpr (detail::is_virtual_ptr<ArgType>) {
+        return arg._vptr();
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.
     } else {
-        vptr = Policy::vptr(arg);
+        return Policy::vptr(arg);
     }
-
-    return vptr;
 }
 
 template<class Policy, typename Key, typename R, typename... A>
