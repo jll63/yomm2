@@ -387,10 +387,10 @@ struct virtual_traits<Policy, T*> {
 // virtual_ptr
 
 template<class Policy, class Class>
-struct is_virtual<virtual_ptr_<Policy, Class>> : std::true_type {};
+struct is_virtual<basic_virtual_ptr<Policy, Class>> : std::true_type {};
 
 template<class Policy, class Class>
-struct is_virtual<const virtual_ptr_<Policy, Class>&> : std::true_type {};
+struct is_virtual<const basic_virtual_ptr<Policy, Class>&> : std::true_type {};
 
 template<class Policy, class Class>
 struct virtual_ptr_traits {
@@ -404,8 +404,7 @@ struct virtual_ptr_traits<Policy, std::shared_ptr<Class>> {
     using polymorphic_type = Class;
 
     template<typename OtherPtrRef>
-    static decltype(auto)
-    cast(const std::shared_ptr<Class>& ptr) {
+    static decltype(auto) cast(const std::shared_ptr<Class>& ptr) {
         using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
         using OtherClass = typename OtherPtr::box_type::element_type;
 
@@ -418,34 +417,34 @@ struct virtual_ptr_traits<Policy, std::shared_ptr<Class>> {
 };
 
 template<class Policy, class Class>
-struct virtual_traits<Policy, virtual_ptr_<Policy, Class>> {
+struct virtual_traits<Policy, basic_virtual_ptr<Policy, Class>> {
     using ptr_traits = virtual_ptr_traits<Policy, Class>;
     using polymorphic_type = typename ptr_traits::polymorphic_type;
 
-    static const virtual_ptr_<Policy, Class>&
-    rarg(const virtual_ptr_<Policy, Class>& ptr) {
+    static const basic_virtual_ptr<Policy, Class>&
+    rarg(const basic_virtual_ptr<Policy, Class>& ptr) {
         return ptr;
     }
 
     template<typename Derived>
-    static decltype(auto) cast(const virtual_ptr_<Policy, Class>& ptr) {
+    static decltype(auto) cast(const basic_virtual_ptr<Policy, Class>& ptr) {
         return ptr.template cast<Derived>();
     }
 };
 
 template<class Policy, class Class>
-struct virtual_traits<Policy, const virtual_ptr_<Policy, Class>&>
-    : virtual_traits<Policy, virtual_ptr_<Policy, Class>> {};
+struct virtual_traits<Policy, const basic_virtual_ptr<Policy, Class>&>
+    : virtual_traits<Policy, basic_virtual_ptr<Policy, Class>> {};
 
 template<typename>
 struct is_virtual_ptr_aux : std::false_type {};
 
 template<class Class, class Policy>
-struct is_virtual_ptr_aux<virtual_ptr_<Class, Policy>> : std::true_type {};
+struct is_virtual_ptr_aux<basic_virtual_ptr<Class, Policy>> : std::true_type {};
 
 template<class Class, class Policy>
-struct is_virtual_ptr_aux<const virtual_ptr_<Class, Policy>&> : std::true_type {
-};
+struct is_virtual_ptr_aux<const basic_virtual_ptr<Class, Policy>&>
+    : std::true_type {};
 
 template<typename T>
 constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
@@ -476,12 +475,12 @@ template<class Policy, typename T>
 struct argument_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
 
 template<class Policy, class Class>
-struct argument_traits<Policy, virtual_ptr_<Policy, Class>>
-    : virtual_traits<Policy, virtual_ptr_<Policy, Class>> {};
+struct argument_traits<Policy, basic_virtual_ptr<Policy, Class>>
+    : virtual_traits<Policy, basic_virtual_ptr<Policy, Class>> {};
 
 template<class Policy, class Class>
-struct argument_traits<Policy, const virtual_ptr_<Policy, Class>&>
-    : virtual_traits<Policy, const virtual_ptr_<Policy, Class>&> {};
+struct argument_traits<Policy, const basic_virtual_ptr<Policy, Class>&>
+    : virtual_traits<Policy, const basic_virtual_ptr<Policy, Class>&> {};
 
 template<typename T>
 struct shared_ptr_traits {
@@ -583,16 +582,17 @@ struct select_spec_polymorphic_type_aux<Policy, virtual_<P>, Q> {
 
 template<class Policy, typename P, typename Q>
 struct select_spec_polymorphic_type_aux<
-    Policy, virtual_ptr_<Policy, P>, virtual_ptr_<Policy, Q>> {
+    Policy, basic_virtual_ptr<Policy, P>, basic_virtual_ptr<Policy, Q>> {
     using type = typename virtual_traits<
-        Policy, virtual_ptr_<Policy, Q>>::polymorphic_type;
+        Policy, basic_virtual_ptr<Policy, Q>>::polymorphic_type;
 };
 
 template<class Policy, typename P, typename Q>
 struct select_spec_polymorphic_type_aux<
-    Policy, const virtual_ptr_<Policy, P>&, const virtual_ptr_<Policy, Q>&> {
+    Policy, const basic_virtual_ptr<Policy, P>&,
+    const basic_virtual_ptr<Policy, Q>&> {
     using type = typename virtual_traits<
-        Policy, const virtual_ptr_<Policy, Q>&>::polymorphic_type;
+        Policy, const basic_virtual_ptr<Policy, Q>&>::polymorphic_type;
 };
 
 template<class Policy, typename P, typename Q>

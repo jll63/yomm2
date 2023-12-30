@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         // Using  deduction guide.
         boost::test_tools::output_test_stream os;
         Animal&& animal = Dog();
-        auto vptr = virtual_ptr_(animal); // GLOP
+        auto vptr = basic_virtual_ptr(animal); // GLOP
         kick::fn(vptr, os);
         BOOST_CHECK(os.is_equal("bark"));
     }

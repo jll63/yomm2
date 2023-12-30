@@ -324,7 +324,7 @@ struct population : abstract_population {
     struct vptr_methods {
         using Policy = typename Dispatch::policy;
         using Base = orthogonal_base<Inheritance>;
-        template<class Class> using vptr = virtual_ptr_<Policy, Class>;
+        template<class Class> using vptr = basic_virtual_ptr<Policy, Class>;
         using varg_type = vptr<Base>;
 
         use_classes<Policy, classes> YOMM2_GENSYM;

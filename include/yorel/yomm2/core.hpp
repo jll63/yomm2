@@ -49,7 +49,7 @@ using type_id = std::uintptr_t;
 constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
 template<class Policy, class Class>
-struct virtual_ptr_;
+struct basic_virtual_ptr;
 
 // -----------------------------------------------------------------------------
 // Error handling
@@ -402,9 +402,9 @@ using use_classes = typename detail::use_classes_aux<
 // virtual_ptr
 
 template<class Policy, class Class>
-class virtual_ptr_ {
+class basic_virtual_ptr {
     template<class, class>
-    friend class virtual_ptr_;
+    friend class basic_virtual_ptr;
 
     template<class, typename>
     friend struct detail::virtual_traits;
@@ -451,7 +451,7 @@ class virtual_ptr_ {
     using box_type = Box;
 
     template<class Other>
-    virtual_ptr_(Other&& other) {
+    basic_virtual_ptr(Other&& other) {
         box(other);
 
         using namespace policy;
@@ -493,17 +493,17 @@ class virtual_ptr_ {
     }
 
     template<class Other>
-    virtual_ptr_(virtual_ptr_<Policy, Other>& other)
+    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>& other)
         : obj(other.obj), vptr(other.vptr) {
     }
 
     template<class Other>
-    virtual_ptr_(const virtual_ptr_<Policy, Other>& other)
+    basic_virtual_ptr(const basic_virtual_ptr<Policy, Other>& other)
         : obj(other.obj), vptr(other.vptr) {
     }
 
     template<class Other>
-    virtual_ptr_(virtual_ptr_<Policy, Other>&& other)
+    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>&& other)
         : obj(std::move(other.obj)), vptr(other.vptr) {
     }
 
@@ -547,7 +547,7 @@ class virtual_ptr_ {
             }
         }
 
-        virtual_ptr_ result;
+        basic_virtual_ptr result;
         result.box(obj);
         result.vptr = vptr;
 
@@ -581,14 +581,14 @@ class virtual_ptr_ {
     }
 
   protected:
-    virtual_ptr_() = default;
+    basic_virtual_ptr() = default;
 };
 
 template<class Class>
-virtual_ptr_(Class&) -> virtual_ptr_<default_policy, Class>;
+basic_virtual_ptr(Class&) -> basic_virtual_ptr<default_policy, Class>;
 
 template<class... Class>
-using virtual_ptr = virtual_ptr_<
+using virtual_ptr = basic_virtual_ptr<
     detail::virtual_ptr_policy<Class...>, detail::virtual_ptr_class<Class...>>;
 
 template<class... Ts>
