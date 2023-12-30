@@ -124,7 +124,7 @@ struct rtti {
     }
 };
 
-struct projection {};
+struct type_hash {};
 
 struct std_rtti : rtti {
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
@@ -472,7 +472,7 @@ class virtual_ptr_ {
         } else {
             auto index = dynamic_id;
 
-            if constexpr (has_facet<Policy, projection>) {
+            if constexpr (has_facet<Policy, type_hash>) {
                 index = Policy::project_type_id(index);
             }
 
@@ -658,7 +658,7 @@ using replace_facet = boost::mp11::mp_apply<
 struct external_vptr {};
 
 template<class Policy>
-struct yOMM2_API_gcc generic_external_vptr : external_vptr {
+struct yOMM2_API_gcc generic_external_vptr : virtual external_vptr {
     static std::vector<std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
@@ -673,7 +673,7 @@ struct yOMM2_API_gcc generic_external_vptr : external_vptr {
     static auto vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
 
-        if constexpr (has_facet<Policy, projection>) {
+        if constexpr (has_facet<Policy, type_hash>) {
             index = Policy::project_type_id(index);
         }
 
@@ -685,7 +685,7 @@ template<class Policy>
 std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
 
 template<class Policy>
-struct yOMM2_API_gcc generic_compact_external_vptr : external_vptr {
+struct yOMM2_API_gcc generic_compact_external_vptr : virtual external_vptr {
     static std::unordered_map<type_id, std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
@@ -706,7 +706,7 @@ std::unordered_map<type_id, std::uintptr_t*>
     generic_compact_external_vptr<Policy>::vptrs;
 
 template<class Policy>
-struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
+struct yOMM2_API_gcc generic_indirect_vptr : virtual indirect_vptr {
     static std::vector<std::uintptr_t**> indirect_vptrs;
 
     static void resize_indirect_vptrs(size_t n) {
@@ -725,7 +725,7 @@ std::vector<std::uintptr_t**> generic_indirect_vptr<Policy>::indirect_vptrs;
 struct output {};
 
 template<class Policy, typename Stream = detail::ostdstream>
-struct yOMM2_API_gcc generic_output : output {
+struct yOMM2_API_gcc generic_output : virtual output {
     static Stream stream;
 };
 
@@ -758,7 +758,7 @@ template<class Key>
 std::vector<std::uintptr_t> generic_domain<Key>::dispatch_data;
 
 template<class Policy>
-struct yOMM2_API_gcc fast_projection : projection {
+struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
     static type_id mult;
     static std::size_t shift;
     static auto constexpr invalid = std::numeric_limits<type_id>::max();
@@ -783,18 +783,19 @@ struct yOMM2_API_gcc fast_projection : projection {
 };
 
 template<class Policy>
-type_id fast_projection<Policy>::mult;
+type_id simple_perfect_hash<Policy>::mult;
 
 template<class Policy>
-std::size_t fast_projection<Policy>::shift;
+std::size_t simple_perfect_hash<Policy>::shift;
 
 template<class Policy>
-struct yOMM2_API_gcc checked_fast_projection : fast_projection<Policy>,
-                                               virtual runtime_checks {
+struct yOMM2_API_gcc checked_simple_perfect_hash
+    : virtual simple_perfect_hash<Policy>,
+      virtual runtime_checks {
     static std::vector<type_id> control;
 
     static type_id project_type_id(type_id type) {
-        auto index = fast_projection<Policy>::project_type_id(type);
+        auto index = simple_perfect_hash<Policy>::project_type_id(type);
 
         if (control[index] != type) {
             using namespace policy;
@@ -812,15 +813,15 @@ struct yOMM2_API_gcc checked_fast_projection : fast_projection<Policy>,
 
     template<typename Container>
     static size_t project_type_ids(const Container& type_ids) {
-        return fast_projection<Policy>::project_type_ids(type_ids, control);
+        return simple_perfect_hash<Policy>::project_type_ids(type_ids, control);
     }
 };
 
 template<class Policy>
-std::vector<type_id> checked_fast_projection<Policy>::control;
+std::vector<type_id> checked_simple_perfect_hash<Policy>::control;
 
 template<class Policy>
-struct yOMM2_API_gcc generic_error_handler : virtual error_handler {
+struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
     static error_handler_type error;
 
     static void default_error_handler(const error_type& error_v) {
@@ -866,11 +867,11 @@ struct yOMM2_API_gcc generic_error_handler : virtual error_handler {
 };
 
 template<class Policy>
-error_handler_type generic_error_handler<Policy>::error;
+error_handler_type vectored_error_handler<Policy>::error;
 
 template<class Policy>
 struct yOMM2_API_gcc backward_compatible_error_handler
-    : virtual generic_error_handler<Policy> {
+    : virtual vectored_error_handler<Policy> {
     static method_call_error_handler call_error;
 
     static void default_error_handler(const error_type& error_v) {
@@ -884,7 +885,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
             abort();
         }
 
-        generic_error_handler<Policy>::default_error_handler(error_v);
+        vectored_error_handler<Policy>::default_error_handler(error_v);
     }
 
     static void default_call_error_handler(
@@ -922,12 +923,12 @@ template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
           Policy, generic_domain<Policy>, generic_external_vptr<Policy>,
-          std_rtti, generic_error_handler<Policy>, Facets...> {};
+          std_rtti, vectored_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
     : generic_static_policy<
-          Policy, checked_fast_projection<Policy>, generic_output<Policy>,
+          Policy, checked_simple_perfect_hash<Policy>, generic_output<Policy>,
           Facets...> {};
 
 struct yOMM2_API_gcc debug_static
@@ -936,7 +937,7 @@ struct yOMM2_API_gcc debug_static
 
 template<class Policy, class... Facets>
 struct generic_release_static
-    : generic_static_policy<Policy, fast_projection<Policy>, Facets...> {};
+    : generic_static_policy<Policy, simple_perfect_hash<Policy>, Facets...> {};
 
 struct release_static
     : generic_release_static<release_static>::replace<
@@ -947,12 +948,13 @@ struct debug_shared;
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) generic_domain<debug_shared>;
 extern template class __declspec(dllimport) generic_external_vptr<debug_shared>;
-extern template class __declspec(dllimport) generic_error_handler<debug_shared>;
-extern template class __declspec(dllimport) fast_projection<debug_shared>;
+extern template class __declspec(dllimport)
+    vectored_error_handler<debug_shared>;
+extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
     debug_shared, generic_domain<debug_shared>,
     generic_external_vptr<debug_shared>, std_rtti,
-    checked_fast_projection<debug_shared>, generic_output<debug_shared>,
+    checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
@@ -960,11 +962,12 @@ struct yOMM2_API_gcc debug_shared
     : generic_policy<
           debug_shared, generic_domain<debug_shared>,
           generic_external_vptr<debug_shared>, std_rtti,
-          checked_fast_projection<debug_shared>, generic_output<debug_shared>,
+          checked_simple_perfect_hash<debug_shared>,
+          generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
 struct yOMM2_API_gcc release_shared : debug_shared {
-    using fast_projection<debug_shared>::project_type_id;
+    using simple_perfect_hash<debug_shared>::project_type_id;
 };
 
 } // namespace policy

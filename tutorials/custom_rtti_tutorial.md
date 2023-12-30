@@ -324,15 +324,15 @@ struct Cat : Animal {
 ```
 
 
-In this situation, we can save time on hashing. If a policy has a `projection`
+In this situation, we can save time on hashing. If a policy has a `type_hash`
 facet (as is with the default policy), it is used to hash the `type_id`s to a
 smaller range of integers. Otherwise, the id is used as a straight index in a
 table that contains pointers to method tables for all registered classes.
 
-Thus all we need to do is to remove the `projection` facet from the policy.
+Thus all we need to do is to remove the `type_hash` facet from the policy.
 
-This is controlled by facet `projection`. It has two implementations:
-`fast_projection`, used in release builds; and `checked_fast_projection`, used
+This is controlled by facet `type_hash`. It has two implementations:
+`simple_perfect_hash`, used in release builds; and `checked_simple_perfect_hash`, used
 in debug builds, that checks that the type ids it is presented with correspond
 to classes that were actually registered.
 
@@ -364,7 +364,7 @@ struct custom_rtti : policy::rtti {
 struct custom_policy
     : default_static_policy::copy<custom_policy>
         ::replace<policy::rtti, custom_rtti>
-        ::remove<policy::projection> {};
+        ::remove<policy::type_hash> {};
 ```
 
 
@@ -481,5 +481,3 @@ struct custom_rtti : policy::deferred_static_rtti {
 
 The only change is that the custom facet now inherits from
 `deferred_static_rtti`. The rest of the code is as before.
-
-

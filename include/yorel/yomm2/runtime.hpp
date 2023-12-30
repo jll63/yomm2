@@ -1024,7 +1024,7 @@ size_t runtime<Policy>::find_hash_function(
     const std::deque<rt_class>& classes, metrics_t& metrics) {
     using namespace policy;
 
-    if constexpr (has_facet<Policy, projection>) {
+    if constexpr (has_facet<Policy, type_hash>) {
         std::vector<type_id> type_ids;
 
         for (auto& cls : classes) {
@@ -1139,7 +1139,7 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                 for (auto type : cls.ti_ptrs) {
                     auto index = type;
 
-                    if constexpr (has_facet<Policy, projection>) {
+                    if constexpr (has_facet<Policy, type_hash>) {
                         index = Policy::project_type_id(index);
                     }
 
@@ -1286,7 +1286,7 @@ namespace policy {
 
 template<class Policy>
 template<typename Container>
-size_t fast_projection<Policy>::project_type_ids(
+size_t simple_perfect_hash<Policy>::project_type_ids(
     const Container& type_ids, std::vector<type_id>& buckets) {
     using namespace policy;
 

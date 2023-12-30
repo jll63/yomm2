@@ -108,7 +108,7 @@ struct basic_policy : virtual_by_reference {
 
 struct compact_map_policy : virtual_by_reference {
     struct policy : default_static_policy::copy<policy>
-        ::remove<yomm2::policy::projection>
+        ::remove<yomm2::policy::type_hash>
         ::replace<yomm2::policy::external_vptr, yomm2::policy::generic_compact_external_vptr<policy>> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "compact_map_policy"; };
@@ -637,9 +637,9 @@ void call_project_1(leaf& obj) {
     population<_0>::ref_methods<basic_policy, ordinary_inheritance>::method1::fn(obj);
 	// mov	rax, qword ptr [rdi + 8]
 	// add	rdi, 8
-	// mov	rdx, qword ptr [rip + fast_projection<policy>::mult]
+	// mov	rdx, qword ptr [rip + simple_perfect_hash<policy>::mult]
 	// imul	rdx, qword ptr [rax - 8]
-	// movzx	ecx, byte ptr [rip + fast_projection<policy>::shift]
+	// movzx	ecx, byte ptr [rip + simple_perfect_hash<policy>::shift]
 	// shr	rdx, cl
 	// mov	rax, qword ptr [rip + generic_external_vptr<policy>::vptrs]
 	// mov	rax, qword ptr [rax + 8*rdx]

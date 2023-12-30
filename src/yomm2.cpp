@@ -25,14 +25,14 @@ namespace policy {
 template class yOMM2_API_msc generic_domain<debug_shared>;
 template class yOMM2_API_msc generic_external_vptr<debug_shared>;
 template class yOMM2_API_msc generic_indirect_vptr<debug_shared>;
-template class yOMM2_API_msc generic_error_handler<debug_shared>;
+template class yOMM2_API_msc vectored_error_handler<debug_shared>;
 template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
-template class yOMM2_API_msc fast_projection<debug_shared>;
-template class yOMM2_API_msc checked_fast_projection<debug_shared>;
+template class yOMM2_API_msc simple_perfect_hash<debug_shared>;
+template class yOMM2_API_msc checked_simple_perfect_hash<debug_shared>;
 template class yOMM2_API_msc generic_output<debug_shared>;
 template class yOMM2_API_msc generic_policy<
     debug_shared, generic_domain<debug_shared>, std_rtti,
-    checked_fast_projection<debug_shared>, generic_output<debug_shared>,
+    checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 
 } // namespace policy

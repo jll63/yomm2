@@ -7,7 +7,7 @@
 
 using namespace yorel::yomm2;
 
-namespace projection {
+namespace type_hash {
 
 struct Animal {
     const char* name;
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_simple_projection) {
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
-} // namespace projection
+} // namespace type_hash
 
 namespace no_projection {
 
@@ -155,7 +155,7 @@ struct custom_rtti : policy::rtti {
 
 struct test_policy
     : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -311,7 +311,7 @@ struct custom_rtti : policy::rtti {
 
 struct test_policy
     : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -451,7 +451,7 @@ struct custom_rtti : policy::deferred_static_rtti {
 
 struct test_policy
     : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
