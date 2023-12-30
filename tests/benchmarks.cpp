@@ -105,6 +105,14 @@ struct basic_policy : virtual_by_reference {
     static std::string name() { return "basic_policy"; };
 };
 
+struct compact_map_policy : virtual_by_reference {
+    struct policy : default_static_policy::copy<policy>
+        ::remove<yomm2::policy::projection>
+        ::replace<yomm2::policy::external_vptr, yomm2::policy::generic_compact_external_vptr<policy>> {};
+    template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
+    static std::string name() { return "compact_map_policy"; };
+};
+
 struct direct_intrusive_dispatch : virtual_by_reference {
     struct policy : default_static_policy::copy<policy>::remove<yomm2::policy::external_vptr> {
         template<class Class>
@@ -144,6 +152,7 @@ struct indirect_virtual_ptr_dispatch {
 
 using method_dispatch_types = std::tuple<
     basic_policy,
+    compact_map_policy,
     direct_virtual_ptr_dispatch,
     indirect_virtual_ptr_dispatch,
     direct_intrusive_dispatch,

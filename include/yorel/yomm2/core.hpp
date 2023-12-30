@@ -660,7 +660,7 @@ template<class Policy>
 struct yOMM2_API_gcc generic_external_vptr : external_vptr {
     static std::vector<std::uintptr_t*> vptrs;
 
-    static void reserve_vptrs(size_t n) {
+    static void resize_vptrs(size_t n) {
         vptrs.resize(n);
     }
 
@@ -684,10 +684,31 @@ template<class Policy>
 std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
 
 template<class Policy>
+struct yOMM2_API_gcc generic_compact_external_vptr : external_vptr {
+    static std::unordered_map<type_id, std::uintptr_t*> vptrs;
+
+    static void resize_vptrs(size_t n) {
+    }
+
+    static void assign_vptr(type_id type, std::uintptr_t* vptr) {
+        vptrs[type] = vptr;
+    }
+
+    template<class Class>
+    static auto vptr(const Class& arg) {
+        return vptrs[Policy::dynamic_type(arg)];
+    }
+};
+
+template<class Policy>
+std::unordered_map<type_id, std::uintptr_t*>
+    generic_compact_external_vptr<Policy>::vptrs;
+
+template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
     static std::vector<std::uintptr_t**> indirect_vptrs;
 
-    static void reserve_indirect_vptrs(size_t n) {
+    static void resize_indirect_vptrs(size_t n) {
         indirect_vptrs.resize(n);
     }
 

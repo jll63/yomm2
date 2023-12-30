@@ -1065,11 +1065,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
     using namespace policy;
 
     if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::reserve_vptrs(type_ids);
+        Policy::resize_vptrs(type_ids);
     }
 
     if constexpr (has_facet<Policy, indirect_vptr>) {
-        Policy::reserve_indirect_vptrs(type_ids);
+        Policy::resize_indirect_vptrs(type_ids);
     }
 
     for (size_t pass = 0; pass != 2; ++pass) {
