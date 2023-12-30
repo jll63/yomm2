@@ -31,8 +31,8 @@ template class yOMM2_API_msc simple_perfect_hash<debug_shared>;
 template class yOMM2_API_msc checked_simple_perfect_hash<debug_shared>;
 template class yOMM2_API_msc generic_output<debug_shared>;
 template class yOMM2_API_msc generic_policy<
-    debug_shared, generic_domain<debug_shared>, std_rtti,
-    checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
+    debug_shared, std_rtti, checked_simple_perfect_hash<debug_shared>,
+    generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 
 } // namespace policy
@@ -43,7 +43,8 @@ yOMM2_API_gcc yOMM2_API_msc void update() {
     update<policy::debug_shared>();
 }
 
-yOMM2_API_gcc yOMM2_API_msc error_handler_type set_error_handler(error_handler_type handler) {
+yOMM2_API_gcc yOMM2_API_msc error_handler_type
+set_error_handler(error_handler_type handler) {
     auto prev = default_policy::error;
     default_policy::error = handler;
     return prev;

@@ -599,6 +599,31 @@ inline auto make_virtual_shared() {
 
 namespace policy {
 
+template<class Key>
+struct yOMM2_API_gcc yOMM2_API_msc method_tables {
+    // Why is yOMM2_API_msc needed here???
+    template<class Class>
+    static std::uintptr_t* static_vptr;
+};
+
+template<class Key>
+template<class Class>
+std::uintptr_t* method_tables<Key>::static_vptr;
+
+struct domain {};
+
+template<class Key>
+struct yOMM2_API_gcc generic_domain : domain, method_tables<Key> {
+    static struct catalog catalog;
+    static std::vector<std::uintptr_t> dispatch_data;
+};
+
+template<class Key>
+catalog generic_domain<Key>::catalog;
+
+template<class Key>
+std::vector<std::uintptr_t> generic_domain<Key>::dispatch_data;
+
 template<typename Policy, class Facet>
 struct copy_facet {
     using type = Facet;
@@ -612,7 +637,9 @@ struct copy_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
 };
 
 template<class Policy, class... Facets>
-struct generic_policy : virtual abstract_policy, virtual Facets... {
+struct generic_policy : virtual abstract_policy,
+                        virtual generic_domain<Policy>,
+                        virtual Facets... {
     using facets = detail::types<Facets...>;
 
     template<class Facet>
@@ -702,8 +729,7 @@ struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
 };
 
 template<class Policy>
-std::unordered_map<type_id, std::uintptr_t*>
-    external_vptr_map<Policy>::vptrs;
+std::unordered_map<type_id, std::uintptr_t*> external_vptr_map<Policy>::vptrs;
 
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : virtual indirect_vptr {
@@ -731,31 +757,6 @@ struct yOMM2_API_gcc generic_output : virtual output {
 
 template<class Policy, typename Stream>
 Stream generic_output<Policy, Stream>::stream;
-
-template<class Key>
-struct yOMM2_API_gcc yOMM2_API_msc method_tables {
-    // Why is yOMM2_API_msc needed here???
-    template<class Class>
-    static std::uintptr_t* static_vptr;
-};
-
-template<class Key>
-template<class Class>
-std::uintptr_t* method_tables<Key>::static_vptr;
-
-struct domain {};
-
-template<class Key>
-struct yOMM2_API_gcc generic_domain : domain, method_tables<Key> {
-    static struct catalog catalog;
-    static std::vector<std::uintptr_t> dispatch_data;
-};
-
-template<class Key>
-catalog generic_domain<Key>::catalog;
-
-template<class Key>
-std::vector<std::uintptr_t> generic_domain<Key>::dispatch_data;
 
 template<class Policy>
 struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
@@ -922,8 +923,8 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_static_policy
     : generic_policy<
-          Policy, generic_domain<Policy>, external_vptr_vector<Policy>,
-          std_rtti, vectored_error_handler<Policy>, Facets...> {};
+          Policy, external_vptr_vector<Policy>, std_rtti,
+          vectored_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc generic_debug_static
@@ -952,15 +953,14 @@ extern template class __declspec(dllimport)
     vectored_error_handler<debug_shared>;
 extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) generic_policy<
-    debug_shared, generic_domain<debug_shared>,
-    external_vptr_vector<debug_shared>, std_rtti,
+    debug_shared, external_vptr_vector<debug_shared>, std_rtti,
     checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
-          debug_shared, generic_domain<debug_shared>,
+          debug_shared,
           external_vptr_vector<debug_shared>, std_rtti,
           checked_simple_perfect_hash<debug_shared>,
           generic_output<debug_shared>,

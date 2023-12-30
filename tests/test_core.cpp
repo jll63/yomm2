@@ -254,18 +254,18 @@ static_assert(std::is_same_v<
 // yorel::yomm2::policy::generic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
 // yorel::yomm2::policy::generic_policy<yorel::yomm2::policy::generic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
 
-struct policy1 : generic_policy<policy1, generic_domain<policy1>, std_rtti> {};
+struct policy1 : generic_policy<policy1, std_rtti> {};
 struct policy2 : policy1::copy<policy2> {};
 struct policy3 : policy1::copy<policy3>::replace<std_rtti, alt_rtti> {};
 
 static_assert(std::is_same_v<
     policy2::facets,
-    types<generic_domain<policy2>, std_rtti>
+    types<std_rtti>
 >);
 
 static_assert(std::is_same_v<
     policy3::facets,
-    types<generic_domain<policy3>, alt_rtti>
+    types<alt_rtti>
 >);
 
 // static_assert(std::is_same_v<
