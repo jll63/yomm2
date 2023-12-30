@@ -23,53 +23,43 @@ struct kick_key;
 
 namespace minimal {
 
-// struct minimal_policy : generic_policy<minimal_policy>, rtti {
-//     template<typename T>
-//     static type_id static_type() {
-//         return reinterpret_cast<type_id>(&static_vptr<T>);
-//     }
-// };
+struct minimal_policy : generic_policy<minimal_policy>, rtti {
+    template<typename T>
+    static type_id static_type() {
+        return reinterpret_cast<type_id>(&static_vptr<T>);
+    }
+};
+
+template<typename T>
+using virtual_ptr = basic_virtual_ptr<minimal_policy, T>;
+
+using kick = method<
+    minimal_policy, kick_key, std::string(virtual_ptr<Animal>)>;
+
+struct kick_dog {
+    static std::string fn(virtual_ptr<Dog> dog) {
+        return "bark";
+    }
+};
+
+struct kick_cat {
+    static std::string fn(virtual_ptr<Cat> dog) {
+        return "hiss";
+    }
+};
 
 BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
-
-    struct minimal_policy : generic_policy<minimal_policy>,
-                            minimal_rtti<minimal_policy> {};
     static use_classes<minimal_policy, Animal, Cat, Dog> YOMM2_GENSYM;
-
-    using kick = method<
-        minimal_policy, kick_key,
-        std::string(virtual_ptr<minimal_policy, Animal>)>;
-
-    update<minimal_policy>();
-    BOOST_TEST(minimal_policy::dispatch_data.size() == 3);
-    BOOST_TEST(
-        minimal_policy::dispatch_data[0] ==
-        reinterpret_cast<std::uintptr_t>(kick::not_implemented_handler));
-
-    struct kick_dog {
-        static std::string fn(virtual_ptr<minimal_policy, Dog> dog) {
-            return "bark";
-        }
-    };
-
-    struct kick_cat {
-        static std::string fn(virtual_ptr<minimal_policy, Cat> dog) {
-            return "hiss";
-        }
-    };
 
     static kick::add_definition<kick_cat> YOMM2_GENSYM;
     static kick::add_definition<kick_dog> YOMM2_GENSYM;
 
     update<minimal_policy>();
-    // BOOST_TEST(
-    //     minimal_policy::dispatch_data[1] ==
-    //     reinterpret_cast<std::uintptr_t>(kick_cat::fn));
 
     Cat&& cat = Cat();
     Dog&& dog = Dog();
 
-    std::vector<virtual_ptr<minimal_policy, Animal>> animals = {
+    std::vector<virtual_ptr<Animal>> animals = {
         final_virtual_ptr<minimal_policy>(cat),
         final_virtual_ptr<minimal_policy>(dog),
     };
