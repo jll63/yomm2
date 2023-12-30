@@ -126,7 +126,15 @@ struct rtti {
 
 struct type_hash {};
 
-struct std_rtti : rtti {
+template<class Policy>
+struct minimal_rtti : virtual rtti {
+    template<typename T>
+    static type_id static_type() {
+        return reinterpret_cast<type_id>(&Policy::template static_vptr<T>);
+    }
+};
+
+struct std_rtti : virtual rtti {
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
     template<typename T>
     static type_id static_type() {
@@ -594,6 +602,11 @@ inline auto make_virtual_shared() {
         std::make_shared<detail::virtual_ptr_class<Ts...>>());
 }
 
+template<class Policy, class Class>
+inline auto final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Policy, Class>::final(obj);
+}
+
 // -----------------------------------------------------------------------------
 // policy
 
@@ -960,8 +973,7 @@ extern template class __declspec(dllimport) generic_policy<
 
 struct yOMM2_API_gcc debug_shared
     : generic_policy<
-          debug_shared,
-          external_vptr_vector<debug_shared>, std_rtti,
+          debug_shared, external_vptr_vector<debug_shared>, std_rtti,
           checked_simple_perfect_hash<debug_shared>,
           generic_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
@@ -1043,7 +1055,14 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_uni(
     using namespace boost::mp11;
 
     if constexpr (is_virtual<mp_first<MethodArgList>>::value) {
-        auto vtbl = vptr<ArgType>(arg);
+        const std::uintptr_t* vtbl;
+
+        if constexpr (is_virtual_ptr<ArgType>) {
+            vtbl = arg._vptr();
+        } else {
+            vtbl = vptr<ArgType>(arg);
+        }
+
         return vtbl[this->slots_strides[0]];
     } else {
         return resolve_uni<mp_rest<MethodArgList>>(more_args...);
@@ -1122,15 +1141,18 @@ template<class Policy, typename Key, typename R, typename... A>
 typename method<Policy, Key, R(A...)>::return_type
 method<Policy, Key, R(A...)>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
-    resolution_error error;
-    error.status = resolution_error::no_definition;
-    error.method_name = fn.name;
-    error.arity = arity;
-    type_id tis[sizeof...(args)];
-    error.tis = tis;
-    auto ti_iter = tis;
-    (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
-    Policy::error(error_type(std::move(error)));
+    if constexpr (Policy::template has_facet<policy::error_handler>) {
+        resolution_error error;
+        error.status = resolution_error::no_definition;
+        error.method_name = fn.name;
+        error.arity = arity;
+        type_id tis[sizeof...(args)];
+        error.tis = tis;
+        auto ti_iter = tis;
+        (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
+        Policy::error(error_type(std::move(error)));
+    }
+
     abort(); // in case user handler "forgets" to abort
 }
 
@@ -1138,15 +1160,18 @@ template<class Policy, typename Key, typename R, typename... A>
 typename method<Policy, Key, R(A...)>::return_type
 method<Policy, Key, R(A...)>::ambiguous_handler(
     detail::remove_virtual<A>... args) {
-    resolution_error error;
-    error.status = resolution_error::ambiguous;
-    error.method_name = fn.name;
-    error.arity = arity;
-    type_id tis[sizeof...(args)];
-    error.tis = tis;
-    auto ti_iter = tis;
-    (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
-    Policy::error(error_type(std::move(error)));
+    if constexpr (Policy::template has_facet<policy::error_handler>) {
+        resolution_error error;
+        error.status = resolution_error::ambiguous;
+        error.method_name = fn.name;
+        error.arity = arity;
+        type_id tis[sizeof...(args)];
+        error.tis = tis;
+        auto ti_iter = tis;
+        (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
+        Policy::error(error_type(std::move(error)));
+    }
+
     abort(); // in case user handler "forgets" to abort
 }
 
