@@ -1065,11 +1065,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
     using namespace policy;
 
     if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::vptrs.resize(type_ids);
+        Policy::reserve_vptrs(type_ids);
     }
 
     if constexpr (has_facet<Policy, indirect_vptr>) {
-        Policy::indirect_vptrs.resize(type_ids);
+        Policy::reserve_indirect_vptrs(type_ids);
     }
 
     for (size_t pass = 0; pass != 2; ++pass) {
@@ -1148,11 +1148,11 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                     }
 
                     if constexpr (has_facet<Policy, external_vptr>) {
-                        Policy::vptrs[index] = *cls.static_vptr;
+                        Policy::assign_vptr(index, *cls.static_vptr);
                     }
 
                     if constexpr (has_facet<Policy, indirect_vptr>) {
-                        Policy::indirect_vptrs[index] = cls.static_vptr;
+                        Policy::assign_indirect_vptr(index, cls.static_vptr);
                     }
                 }
             }
@@ -1181,8 +1181,7 @@ void runtime<Policy>::optimize() {
                             << " (function)"
                             << "\n";
                 }
-                (*cls->static_vptr)[slot] =
-                    reinterpret_cast<std::uintptr_t>(pf);
+                (*cls->static_vptr)[slot] = pf;
             }
         } else {
             for (auto cls : m.vp[0]->compatible_classes) {

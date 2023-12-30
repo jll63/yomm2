@@ -660,6 +660,14 @@ template<class Policy>
 struct yOMM2_API_gcc generic_external_vptr : external_vptr {
     static std::vector<std::uintptr_t*> vptrs;
 
+    static void reserve_vptrs(size_t n) {
+        vptrs.resize(n);
+    }
+
+    static void assign_vptr(type_id type, std::uintptr_t* vptr) {
+        vptrs[type] = vptr;
+    }
+
     template<class Class>
     static auto vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
@@ -678,6 +686,15 @@ std::vector<std::uintptr_t*> generic_external_vptr<Policy>::vptrs;
 template<class Policy>
 struct yOMM2_API_gcc generic_indirect_vptr : indirect_vptr {
     static std::vector<std::uintptr_t**> indirect_vptrs;
+
+    static void reserve_indirect_vptrs(size_t n) {
+        indirect_vptrs.resize(n);
+    }
+
+    static void
+    assign_indirect_vptr(type_id type, std::uintptr_t** indirect_vptr) {
+        indirect_vptrs[type] = indirect_vptr;
+    }
 };
 
 template<class Policy>
