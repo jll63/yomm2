@@ -27,6 +27,10 @@ add_executable(templates_tutorial_matrix_2 templates_tutorial_matrix_2.cpp)
 target_link_libraries(templates_tutorial_matrix_2 YOMM2::yomm2)
 add_test(NAME templates_tutorial_matrix_2 COMMAND templates_tutorial_matrix_2)
 
+add_executable(policy_tutorial policy_tutorial.cpp)
+target_link_libraries(policy_tutorial YOMM2::yomm2)
+add_test(NAME policy_tutorial COMMAND policy_tutorial)
+
 add_executable(custom_rtti_tutorial custom_rtti_tutorial.cpp)
 if(NOT YOMM2_SHARED)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
