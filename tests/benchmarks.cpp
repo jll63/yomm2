@@ -21,6 +21,7 @@ int main() {}
 #include <benchmark/benchmark.h>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/runtime.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "benchmarks_parameters.hpp"
@@ -627,5 +628,69 @@ int main(int argc, char** argv) {
 // 	// movslq method.fn.slots_strides(%rip), %rcx
 // 	// jmpq	*(%rax,%rcx,8)
 // }
+
+using _0 = std::integral_constant<size_t, 0>;
+using leaf = population<_0>::leaf0<_0>;
+
+void call_project_1(leaf& obj) {
+    //pop.dispatcher<compact_map_policy, arity_1, ordinary_inheritance>()();
+    population<_0>::ref_methods<basic_policy, ordinary_inheritance>::method1::fn(obj);
+	// mov	rax, qword ptr [rdi + 8]
+	// add	rdi, 8
+	// mov	rdx, qword ptr [rip + fast_projection<policy>::mult]
+	// imul	rdx, qword ptr [rax - 8]
+	// movzx	ecx, byte ptr [rip + fast_projection<policy>::shift]
+	// shr	rdx, cl
+	// mov	rax, qword ptr [rip + generic_external_vptr<policy>::vptrs]
+	// mov	rax, qword ptr [rax + 8*rdx]
+	// mov	rcx, qword ptr [rip + method<policy, population<integral_constant<unsigned long, 0ul> >, void (virtual_<orthogonal_base<ordinary_inheritance>&>)>::fn+80]
+	// jmp	qword ptr [rax + 8*rcx]         # TAILCALL
+}
+
+void call_unordered_map_1(leaf& obj) {
+    //pop.dispatcher<compact_map_policy, arity_1, ordinary_inheritance>()();
+    population<_0>::ref_methods<compact_map_policy, ordinary_inheritance>::method1::fn(obj);
+
+    // 	mov	rax, qword ptr [rdi + 8]
+    // 	add	rdi, 8
+    // 	mov	rcx, qword ptr [rax - 8]
+    // 	cmp	qword ptr [rip + generic_compact_external_vptr<policy>::vptrs+24], 0
+    // 	je	.LBB9_1
+    // 	mov	rsi, qword ptr [rip + generic_compact_external_vptr<policy>::vptrs+8]
+    // 	mov	rax, rcx
+    // 	or	rax, rsi
+    // 	shr	rax, 32
+    // 	je	.LBB9_4
+    // 	mov	rax, rcx
+    // 	xor	edx, edx
+    // 	div	rsi
+    // 	jmp	.LBB9_6
+    // .LBB9_1:                                # %.preheader.i.i.i.i.i.preheader
+    // 	lea	rax, [rip + generic_compact_external_vptr<policy>::vptrs+16]
+    // .LBB9_2:                                # %.preheader.i.i.i.i.i
+    //                                         # =>This Inner Loop Header: Depth=1
+    // 	mov	rax, qword ptr [rax]
+    // 	cmp	qword ptr [rax + 8], rcx
+    // 	jne	.LBB9_2
+    // 	jmp	.LBB9_8
+    // .LBB9_4:
+    // 	mov	eax, ecx
+    // 	xor	edx, edx
+    // 	div	esi
+    // .LBB9_6:
+    // 	mov	rax, qword ptr [rip + generic_compact_external_vptr<policy>::vptrs]
+    // 	mov	rax, qword ptr [rax + 8*rdx]
+    // 	.p2align	4, 0x90
+    // .LBB9_7:                                # %.lr.ph.i.i.i.i.i.i.i.i.i
+    //                                         # =>This Inner Loop Header: Depth=1
+    // 	mov	rax, qword ptr [rax]
+    // 	cmp	qword ptr [rax + 8], rcx
+    // 	jne	.LBB9_7
+    // .LBB9_8:                                # %method<policy, population<integral_constant<unsigned long, 0ul> >, void (virtual_<orthogonal_base<ordinary_inheritance>&>)>::operator()(orthogonal_base<ordinary_inheritance>&) const [clone .exit]
+    // 	mov	rax, qword ptr [rax + 16]
+    // 	mov	rcx, qword ptr [rip + method<policy, population<integral_constant<unsigned long, 0ul> >, void (virtual_<orthogonal_base<ordinary_inheritance>&>)>::fn+80]
+    // 	jmp	qword ptr [rax + 8*rcx]         # TAILCALL
+
+}
 
 #endif // exclude gcc
