@@ -146,7 +146,7 @@ compatible with `Class`, and a pointer to the method table corresponding to
 polymorphic types.
 
 In debug builds, `final` compares `typeid(Class)` and `typeid(obj)`. If they are
-different, `error_handler` is called with a `method_table_error` object. This
+different, `error` is called with a `method_table_error` object. This
 can help detect misuses of `final`, but only for polymorphic classes.
 
 ---

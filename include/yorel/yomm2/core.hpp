@@ -603,6 +603,11 @@ inline auto make_virtual_shared() {
 }
 
 template<class Policy, class Class>
+inline auto basic_final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Policy, Class>::final(obj);
+}
+
+template<class Policy, class Class>
 inline auto final_virtual_ptr(Class& obj) {
     return virtual_ptr<Policy, Class>::final(obj);
 }
@@ -695,7 +700,8 @@ using replace_facet = boost::mp11::mp_apply<
             Facet>,
         NewPolicy>>;
 
-struct external_vptr {};
+struct vptr {};
+struct external_vptr : virtual vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {

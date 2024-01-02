@@ -32,21 +32,8 @@ YOMM2 uses Run-Time Type Information for three purposes:
    the typeid(_expression_) operator.
 3. To cast from base to derived class, using the dynamic_cast operator.
 
-YOMM2's customization point is the _policy_ class, which consists of a
-collection of _facets_, aggregated via inheritance. Templates `use_classes` and
-`method`, and macros `register_classes` and `declare_method`, use the
-`yorel::yomm2::default_policy`; this can be overriden by specifying a policy
-class as the first argument. Alternatively, the default policy used by
-`register_classes` and `declare_method` can be overridden by re-defining
-preprocessor symbol `YOMM2_DEFAULT_POLICY`.
-
-Note that class registrations and methods are scoped in their policy. If a class
-is used as a virtual parameter in methods using different policies, it must be
-registered with each of them.
-
 The policy's `rtti` facet provides type information, and performs dynamic casts.
-A `rtti` facet must derived from `policy::rtti`. It provides the following
-static member functions:
+It provides the following static member functions:
 
 * `template<typename T> static type_id static_type();`<br>
     Returns a `type_id` (a typedef for `std::uintptr_t`) for type `T`.
@@ -119,18 +106,96 @@ struct std_rtti : rtti {
 };
 ```
 
-If standard RTTI is disabled, the body of the class is `#ifdef`'ed out, and the
+If standard RTTI is disabled, the body of this class is `#ifdef`'ed out, and the
 `default_policy` cannot be used.
 
-
-## A custom RTTI facet
-
-Let's consider a toy RTTI implementation that uses `const char*`s as type ids.
-It also provides its own dynamic casting facility.
+## Minimal RTTI
 
 #endif
 
-namespace type_hash {
+#ifdef YOMM2_CODE
+
+#include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/runtime.hpp>
+#include <yorel/yomm2/symbols.hpp>
+
+using namespace yorel::yomm2;
+using namespace policy;
+
+#endif
+
+#ifdef YOMM2_CODE
+
+class Animal {
+  public:
+    virtual ~Animal() {
+    }
+};
+
+class Cat : public Animal {};
+class Dog : public Animal {};
+
+struct kick_key;
+
+namespace minimal {
+
+struct minimal_policy : generic_policy<minimal_policy>, rtti {
+    template<typename T>
+    static type_id static_type() {
+        return reinterpret_cast<type_id>(&static_vptr<T>);
+    }
+};
+
+template<typename T>
+using virtual_ptr = basic_virtual_ptr<minimal_policy, T>;
+
+using kick = method<minimal_policy, kick_key, std::string(virtual_ptr<Animal>)>;
+
+struct kick_dog {
+    static std::string fn(virtual_ptr<Dog> dog) {
+        return "bark";
+    }
+};
+
+struct kick_cat {
+    static std::string fn(virtual_ptr<Cat> dog) {
+        return "hiss";
+    }
+};
+
+BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
+    static use_classes<minimal_policy, Animal, Cat, Dog> YOMM2_GENSYM;
+
+    static kick::add_definition<kick_cat> YOMM2_GENSYM;
+    static kick::add_definition<kick_dog> YOMM2_GENSYM;
+
+    update<minimal_policy>();
+
+    Cat&& cat = Cat();
+    Dog&& dog = Dog();
+
+    std::vector<virtual_ptr<Animal>> animals = {
+        final_virtual_ptr<minimal_policy>(cat),
+        final_virtual_ptr<minimal_policy>(dog),
+    };
+
+    BOOST_TEST(kick::fn(animals[0]) == "hiss");
+    BOOST_TEST(kick::fn(animals[1]) == "bark");
+}
+} // namespace minimal
+
+#endif
+
+#ifdef YOMM2_MD
+
+## A custom RTTI facet
+
+Let's interface YOMM2 to a toy RTTI implementation that uses `const char*`s as
+type ids. It also provides its own dynamic casting facility.
+
+#endif
+
+namespace using_type_hash {
 
 #ifdef YOMM2_CODE
 

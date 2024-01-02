@@ -27,10 +27,6 @@ add_executable(templates_tutorial_matrix_2 templates_tutorial_matrix_2.cpp)
 target_link_libraries(templates_tutorial_matrix_2 YOMM2::yomm2)
 add_test(NAME templates_tutorial_matrix_2 COMMAND templates_tutorial_matrix_2)
 
-add_executable(policy_tutorial policy_tutorial.cpp)
-target_link_libraries(policy_tutorial YOMM2::yomm2)
-add_test(NAME policy_tutorial COMMAND policy_tutorial)
-
 add_executable(custom_rtti_tutorial custom_rtti_tutorial.cpp)
 if(NOT YOMM2_SHARED)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -45,7 +41,7 @@ string(REGEX MATCHALL "templates_tutorial_[^_]+_." templates_tutorial_execs "${t
 
 if(${YOMM2_ENABLE_DOC})
     SET(tutorials "")
-    SET(cpps "api.cpp;templates_tutorial.cpp;custom_rtti_tutorial.cpp")
+    SET(cpps "api.cpp;templates_tutorial.cpp;policy_tutorial.cpp;custom_rtti_tutorial.cpp")
     foreach(cpp ${cpps})
         cmake_path(GET cpp STEM LAST_ONLY stem)
         set(md "${stem}.md")

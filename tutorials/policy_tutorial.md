@@ -1,4 +1,4 @@
-#ifdef YOMM2_MD
+
 
 YOMM2's customization point for method dispatch is the _policy_ class. Templates
 `use_classes` and `method`, and macros `register_classes` and `declare_method`,
@@ -63,7 +63,4 @@ of these facets.
 
 ## The `output` facet
 
-#endif
 
-#define BOOST_TEST_MODULE api
-#include <boost/test/included/unit_test.hpp>
