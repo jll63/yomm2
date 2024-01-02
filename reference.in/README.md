@@ -158,7 +158,6 @@ This was the recommended header before version 1.3.0. Includes
 | ->declare_static_method          | macro             | declares a static method inside a class                                  |
 | ->define_method                  | macro             | adds a definition to a method                                            |
 | ->define_method_inline           | macro             | adds an definition to a method in a container, and make it inline        |
-| ->derived                        | class template    | helper for intrusive modes                                               |
 | ->error_handler_type             | type              | handler function                                                         |
 | ->error_type                     | variant           | object passed to error handler                                           |
 | ->friend_method                  | macro             | makes a method in a container, or the entire container, a friend         |
@@ -172,7 +171,6 @@ This was the recommended header before version 1.3.0. Includes
 | ->register_class                 | macro             | registers a class and its bases (deprecated)                             |
 | ->register_classes               | macro             | registers classes and their inheritance relationships                    |
 | ->resolution_error               | class             | method call does not resolve to exactly one definition                   |
-| ->root                           | class template    | helper for intrusive modes                                               |
 | ->set_error_handler              | function          | sets the function called for all errors                                  |
 | ->set_method_call_error_handler  | function          | sets function to call when a method call fails                           |
 | ->unknown_class_error            | class             | class used in method declaration, definition, or call was not registered |

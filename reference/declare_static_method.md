@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **declare_static_method**<br>
 <sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
@@ -12,10 +12,10 @@
 ```
 ---
 Declare a method as a static member in a `struct` or `class`. Otherwise, the
-macro does exactly the same things as [declare_method](declare_method.md).
+macro does exactly the same things as [declare_method](/reference/declare_method.md).
 
 This macro can be used when Argument Dependent Lookup is considered Evil. Note
-that there is no need for a static version of [define_method](define_method.md), since it does not
+that there is no need for a static version of [define_method](/reference/define_method.md), since it does not
 create functions that can be picked via ADL.
 
 ## example

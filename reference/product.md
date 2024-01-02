@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::product** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp>></sub>
@@ -12,7 +12,7 @@ using product = /*unspecified*/;
 ```
 ---
 
-`product` takes a list of [types](types.md) lists, and evaluates to a `types` list
+`product` takes a list of [types](/reference/types.md) lists, and evaluates to a `types` list
 consisting of the n-fold Cartesian product of the input lists.
 
 ## example

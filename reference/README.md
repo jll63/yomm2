@@ -1,5 +1,5 @@
 <!-- target:reference -->
-<sub>/ [home](/README.md) </sub>
+<sub>/ [home](/reference//README.md) </sub>
 
 # Reference
 
@@ -49,7 +49,7 @@ that the selection happens at runtime.
 The library is normally used via the _keyword interface_, provided by the
 `<yorel/yomm2/keywords.hpp>` header. It attempts to present open methods as a
 language feature. It consists of a collection of macros, which are, of course,
-global, but so are keywords. The [virtual_](virtual_.md) template, used to specify
+global, but so are keywords. The [virtual_](/reference/virtual_.md) template, used to specify
 virtual parameters, is also aliases in the global namespace.
 
 The library can also be used through the _core interface_, which is almost
@@ -62,7 +62,7 @@ more details and examples.
 
 YOMM2 is exception agnostic. The library does not throw nor catches exceptions,
 but it is exception safe. Errors are reported via an indirect call to a handler
-function, which can be set with [set_error_handler](set_error_handler.md). A handler may throw
+function, which can be set with [set_error_handler](/reference/set_error_handler.md). A handler may throw
 exceptions.
 
 ## Headers
@@ -89,14 +89,14 @@ tutorial](../tutorials/api.md) for an introduction to the main features of
 
 The main constructs are:
 
-* [method](method.md), a class template that contains:
+* [method](/reference/method.md), a class template that contains:
   * a static function object [fn](method.md#fn), to call the method
   * nested class templates [add_function](method.md#add_function) and
     [add_definition](method.md#add_definition), to add definitions to a method
   * [next_type](method.md#next_type) and [use_next](method.md#use_next), to call
     the next most specialised method
-* [use_classes](use_classes.md), a class template, provides the class and inheritance information.
-* [update_methods](update_methods.md), a function that calculates the method dispatch tables, using
+* [use_classes](/reference/use_classes.md), a class template, provides the class and inheritance information.
+* [update_methods](/reference/update_methods.md), a function that calculates the method dispatch tables, using
   the method, definition, and class information.
 
 The header itself does not define any macros, except for its include guard
@@ -121,7 +121,7 @@ an obfuscated symbol (the same symbol for the same value of `seed`).
 
 These macros are useful when using the core interface, which requires
 instantiating static objects to register classes, methods, and definitions; and
-for defining the "key" type for the [method](method.md) template.
+for defining the "key" type for the [method](/reference/method.md) template.
 
 ### `<yorel/yomm2/templates.hpp>`
 
@@ -153,46 +153,46 @@ This was the recommended header before version 1.3.0. Includes
 
 | name                             | type              | purpose                                                                  |
 | -------------------------------- | ----------------- | ------------------------------------------------------------------------ |
-| [class_declaration](class_declaration.md)              | class template    | declares a class and its bases                                           |
-| [declare_method](declare_method.md)                 | macro             | declares a method                                                        |
-| [declare_static_method](declare_static_method.md)          | macro             | declares a static method inside a class                                  |
-| [define_method](define_method.md)                  | macro             | adds a definition to a method                                            |
-| [define_method_inline](define_method_inline.md)           | macro             | adds an definition to a method in a container, and make it inline        |
-| [derived](intrusive_modes.md)                        | class template    | helper for intrusive modes                                               |
-| [error_handler_type](set_error_handler.md)             | type              | handler function                                                         |
-| [error_type](set_error_handler.md)                     | variant           | object passed to error handler                                           |
-| [friend_method](friend_method.md)                  | macro             | makes a method in a container, or the entire container, a friend         |
-| [hash_search_error](set_error_handler.md)              | class             | failure to find a hash function for registered classes                   |
-| [make_virtual_shared](virtual_ptr.md)            | function template | creates an object and return a `virtual_shared_ptr`                      |
-| [method](method.md)                         | class template    | implements a method                                                      |
-| [method_call_error](method_call_error.md)              | class             | information about a failed method call                                   |
-| [method_call_error_handler](method_call_error.md)      | type              | type of a function called when a method call fails                       |
-| [method_container](method_container.md)               | macro             | declares a method definition container                                   |
-| [method_definition](method_definition.md)              | macro             | retrieves a definition from a container                                  |
-| [register_class](register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
-| [register_classes](use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
-| [resolution_error](set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
-| [root](intrusive_modes.md)                           | class template    | helper for intrusive modes                                               |
-| [set_error_handler](set_error_handler.md)              | function          | sets the function called for all errors                                  |
-| [set_method_call_error_handler](method_call_error.md)  | function          | sets function to call when a method call fails                           |
-| [unknown_class_error](set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |
-| [update](update.md)                         | function          | sets up dispatch tables                                                  |
-| [update_methods](update_methods.md)                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
-| [use_classes](use_classes.md)                    | class template    | registers classes and their inheritance relationships                    |
-| [virtual_](virtual_.md)                       | class template    | marks a method parameter as virtual                                      |
-| [virtual_ptr](virtual_ptr.md)                    | class template    | fat pointer for optimal method dispatch                                  |
-| [virtual_shared_ptr](virtual_ptr.md)             | class template    | `virtual_ptr` using a `std::shared_ptr`                                  |
-| [YOMM2_CLASS](register_class.md)                    | macro             | same as `register_class` (deprecated)                                    |
-| [YOMM2_CLASSES](use_classes.md)                  | macro             | same as `register_classes`                                               |
-| [YOMM2_DECLARE](declare_method.md)                  | macro             | same as `declare_method`                                                 |
-| [YOMM2_DECLARE_METHOD_CONTAINER](method_container.md) | macro             | same as `method_container`                                               |
-| [YOMM2_DEFINE](define_method.md)                   | macro             | same as `define_method`                                                  |
-| [YOMM2_DEFINE_INLINE](define_method_inline.md)            | macro             | same as `define_method_inline`                                           |
-| [YOMM2_DEFINITION](method_definition.md)               | macro             | same as `method_definition`                                              |
-| [YOMM2_FRIEND](friend_method.md)                   | macro             | same as `friend_method`                                                  |
-| [YOMM2_GENSYM](YOMM2_GENSYM.md)                   | macro             | generates a unique symbol                                                |
-| [YOMM2_STATIC_DECLARE](declare_static_method.md)           | macro             | declares a static method inside a class                                  |
-| [YOMM2_SYMBOL](YOMM2_SYMBOL.md)                   | macro             | generates an obfuscated symbol                                           |
+| [class_declaration](/reference/class_declaration.md)              | class template    | declares a class and its bases                                           |
+| [declare_method](/reference/declare_method.md)                 | macro             | declares a method                                                        |
+| [declare_static_method](/reference/declare_static_method.md)          | macro             | declares a static method inside a class                                  |
+| [define_method](/reference/define_method.md)                  | macro             | adds a definition to a method                                            |
+| [define_method_inline](/reference/define_method_inline.md)           | macro             | adds an definition to a method in a container, and make it inline        |
+| [derived](/reference/None)                        | class template    | helper for intrusive modes                                               |
+| [error_handler_type](/reference/set_error_handler.md)             | type              | handler function                                                         |
+| [error_type](/reference/set_error_handler.md)                     | variant           | object passed to error handler                                           |
+| [friend_method](/reference/friend_method.md)                  | macro             | makes a method in a container, or the entire container, a friend         |
+| [hash_search_error](/reference/set_error_handler.md)              | class             | failure to find a hash function for registered classes                   |
+| [make_virtual_shared](/reference/virtual_ptr.md)            | function template | creates an object and return a `virtual_shared_ptr`                      |
+| [method](/reference/method.md)                         | class template    | implements a method                                                      |
+| [method_call_error](/reference/method_call_error.md)              | class             | information about a failed method call                                   |
+| [method_call_error_handler](/reference/method_call_error.md)      | type              | type of a function called when a method call fails                       |
+| [method_container](/reference/method_container.md)               | macro             | declares a method definition container                                   |
+| [method_definition](/reference/method_definition.md)              | macro             | retrieves a definition from a container                                  |
+| [register_class](/reference/register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
+| [register_classes](/reference/use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
+| [resolution_error](/reference/set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
+| [root](/reference/None)                           | class template    | helper for intrusive modes                                               |
+| [set_error_handler](/reference/set_error_handler.md)              | function          | sets the function called for all errors                                  |
+| [set_method_call_error_handler](/reference/method_call_error.md)  | function          | sets function to call when a method call fails                           |
+| [unknown_class_error](/reference/set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |
+| [update](/reference/update.md)                         | function          | sets up dispatch tables                                                  |
+| [update_methods](/reference/update_methods.md)                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
+| [use_classes](/reference/use_classes.md)                    | class template    | registers classes and their inheritance relationships                    |
+| [virtual_](/reference/virtual_.md)                       | class template    | marks a method parameter as virtual                                      |
+| [virtual_ptr](/reference/virtual_ptr.md)                    | class template    | fat pointer for optimal method dispatch                                  |
+| [virtual_shared_ptr](/reference/virtual_ptr.md)             | class template    | `virtual_ptr` using a `std::shared_ptr`                                  |
+| [YOMM2_CLASS](/reference/register_class.md)                    | macro             | same as `register_class` (deprecated)                                    |
+| [YOMM2_CLASSES](/reference/use_classes.md)                  | macro             | same as `register_classes`                                               |
+| [YOMM2_DECLARE](/reference/declare_method.md)                  | macro             | same as `declare_method`                                                 |
+| [YOMM2_DECLARE_METHOD_CONTAINER](/reference/method_container.md) | macro             | same as `method_container`                                               |
+| [YOMM2_DEFINE](/reference/define_method.md)                   | macro             | same as `define_method`                                                  |
+| [YOMM2_DEFINE_INLINE](/reference/define_method_inline.md)            | macro             | same as `define_method_inline`                                           |
+| [YOMM2_DEFINITION](/reference/method_definition.md)               | macro             | same as `method_definition`                                              |
+| [YOMM2_FRIEND](/reference/friend_method.md)                   | macro             | same as `friend_method`                                                  |
+| [YOMM2_GENSYM](/reference/YOMM2_GENSYM.md)                   | macro             | generates a unique symbol                                                |
+| [YOMM2_STATIC_DECLARE](/reference/declare_static_method.md)           | macro             | declares a static method inside a class                                  |
+| [YOMM2_SYMBOL](/reference/YOMM2_SYMBOL.md)                   | macro             | generates an obfuscated symbol                                           |
 
 
 
@@ -200,10 +200,10 @@ This was the recommended header before version 1.3.0. Includes
 
 | name              | type           | purpose                                                          |
 | ----------------- | -------------- | ---------------------------------------------------------------- |
-| [apply_product](apply_product.md)   | meta-function  | apply templates to the n-fold Cartesian product of `types` lists |
-| [not_defined](not_defined.md)     | meta-function  | tell [use_definitions](use_definitions.md) to discard a definition                   |
-| [product](product.md)         | meta-function  | form n-fold Cartesian product of `types` lists                   |
-| [template_](template_.md)       | class template | wrap a template in a type                                        |
-| [templates](templates.md)       | class template | wrap templates in a `types` list                                 |
-| [types](types.md)           | class template | sequence of types                                                |
-| [use_definitions](use_definitions.md) | class template | add batch of definitions from a generic container to methods     |
+| [apply_product](/reference/apply_product.md)   | meta-function  | apply templates to the n-fold Cartesian product of `types` lists |
+| [not_defined](/reference/not_defined.md)     | meta-function  | tell [use_definitions](/reference/use_definitions.md) to discard a definition                   |
+| [product](/reference/product.md)         | meta-function  | form n-fold Cartesian product of `types` lists                   |
+| [template_](/reference/template_.md)       | class template | wrap a template in a type                                        |
+| [templates](/reference/templates.md)       | class template | wrap templates in a `types` list                                 |
+| [types](/reference/types.md)           | class template | sequence of types                                                |
+| [use_definitions](/reference/use_definitions.md) | class template | add batch of definitions from a generic container to methods     |

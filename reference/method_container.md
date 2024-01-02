@@ -2,7 +2,7 @@
 
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **method_container**<br>
 <sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
@@ -22,7 +22,7 @@ template, parameterized by the definition's signature. This makes it possible
 for a class to grant friendship to a set of definitions, or to all the
 definitions, of a method. It also makes it possible to retrieve a specific
 method, for example to call it. This is especially useful for definitions
-created with [define_method_inline](define_method_inline.md).
+created with [define_method_inline](/reference/define_method_inline.md).
 
 This macro only creates declarations, and thus can be placed in a header
 file. The four argument form makes it possible to access a method definition

@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
         BOOST_FAIL("did not throw");
     } catch (const unknown_class_error& error) {
         BOOST_TEST(
-            error.ti ==
+            error.type ==
             reinterpret_cast<type_id>(&typeid(identity_matrix)));
     } catch (...) {
         BOOST_FAIL("unexpected exception");
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE(test_update_error_handling) {
         update<test_policy>();
     } catch (const unknown_class_error& error) {
         test_policy::error = prev_handler;
-        BOOST_TEST(error.ti == reinterpret_cast<type_id>(&typeid(base)));
+        BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(base)));
         return;
     } catch (...) {
         test_policy::error = prev_handler;

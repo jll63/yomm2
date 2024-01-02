@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::method**<br>
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
@@ -19,7 +19,7 @@ The method can be called via the singleton [`method::fn`](#fn). Method
 definitions can be added with the [`method::add_function`](#add_function) and
 [`method::add_definition`](#add_definition) class templates.
 
-At least one of the `Args` parameter types must be decorated with [virtual_](virtual_.md).
+At least one of the `Args` parameter types must be decorated with [virtual_](/reference/virtual_.md).
 
 `Key` is a user-suplied type that makes it possible to have distinct methods
 with the same signature.
@@ -65,7 +65,7 @@ Remove the method from the global method list.
 method<Key, R(Args...)>::operator()(args...);
 ```
 Call the method. The dynamic types of the arguments corresponding to a
-[virtual_](virtual_.md) parameter determine which method definition to call.
+[virtual_](/reference/virtual_.md) parameter determine which method definition to call.
 
 ### fn
 ```c++

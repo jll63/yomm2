@@ -1,5 +1,5 @@
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::error_type**<br>
 **yorel::yomm2::error_handler_type**<br>
@@ -37,13 +37,13 @@ message to `stderr` in debug mode.
 
 The handler can determine the exact type of the error by examining the
 variant:
-- `hash_search_error`: [update](update.md) could not find a hash function for
+- `hash_search_error`: [update](/reference/update.md) could not find a hash function for
   the registered classes.
 - `resolution_error`: there is no applicable definition for the arguments of
   a method call or (next)[method.md#add_definition], or it is ambiguous; the
   `status` field is set accordingly
 - `unknown_class_error`: a class that has not been registered is used as a
-  base in [register_class](register_class.md), or in a method declaration or definition, or (in
+  base in [register_class](/reference/register_class.md), or in a method declaration or definition, or (in
   debug mode only) as an argument for a method call
 
 `set_error_handler` returns the previous handler.

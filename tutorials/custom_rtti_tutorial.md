@@ -71,7 +71,7 @@ struct std_rtti : rtti {
 
     template<class Stream>
     static void type_name(type_id type, Stream& stream) {
-        stream << reinterpret_cast<const std::type_info*>(type)[name](None)();
+        stream << reinterpret_cast<const std::type_info*>(type)[name](/reference/None)();
     }
 
     static std::type_index type_index(type_id type) {

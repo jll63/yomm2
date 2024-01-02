@@ -1,4 +1,4 @@
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::class_declaration**<br>
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
@@ -46,5 +46,5 @@ class_declaration<types<Cat, Animal>> register_cat;
 
 ## see also
 `class_declaration` is a low level construct. It is recommended to use
-[use_classes](use_classes.md) instead, which can register many classes, and their inheritance
+[use_classes](/reference/use_classes.md) instead, which can register many classes, and their inheritance
 relationships,  using a single [registration object](static-object.md).

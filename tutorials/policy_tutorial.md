@@ -28,7 +28,7 @@ release (R) builds only, or in both.
 | vptr, external_vptr | fetch vptr for virtual argument | **external_vptr_vector** (D, R), external_vptr_map                              |
 | **rtti**            | type information                | **std_rtti** (D, R), minimal_rtti                                               |
 | type_hash           | map type info to integer index  | **simple_perfect_hash** (R), **checked_simple_perfect_hash** (D)                |
-| error       | report errors                   | **backward_compatible_error_handler** (D, R), vectored_error_handler, exception |
+| error               | report errors                   | **backward_compatible_error_handler** (D, R), vectored_error_handler, exception |
 | output              | report errors, trace            | **generic_output** (D)                                                          |
 
 ## The `vptr` facet
@@ -48,7 +48,7 @@ arguments corresponding to the `virtual_` parameters in the method declaration.
 It is also used by the constructor of `virtual_ptr` to obtain a vptr on the
 basis of an object's dynamic type.
 
-`virtual_ptr::final`, and it associated convenience functions, assume that the
+`virtual_ptr::final`, and the related convenience functions, assume that the
 static and dynamic types of their argument are the same. The vptr is obtained
 statically from the policy's `static_vptr<Class>` member. It is conceivable to
 organize an entire program around the "final" constructs; thus, the `vptr` facet
@@ -59,7 +59,40 @@ is optional.
 See the [custom RTTI tutorial](custom_rtti_tutorial.md) for a full explanation
 of these facets.
 
-## The `error` facet
+## The `error_handler` facet
+
+If the facet is present, it provides one static member: `error`, either a
+function or a functor that takes a [`error_type`](/reference/set_error_handler.md) variant. It is called in the
+following situations:
+
+* While building dispatch tables (`update`), a class that has not been
+  registered is used as a virtual parameter in a method declaration or
+  definition.
+* During a method call, no definition is available for a combination of virtual
+  arguments, or more than one is available and none is more specialized than all
+  the others.
+* A facet encounters an error.
+
+The function is allowed to throw an exception, `exit`, or anything it sees fit.
+If it returns, the program is terminated with `abort`.
+
+YOMM2 provides three implementations of the facet.
+
+### backward_compatible_error_handler
+
+Used by the default policy. If the error is a `method_call_error`, call the
+function specified by [`set_method_call_error_handler`](/reference/method_call_error.md); otherwise, call the
+function specified by [`set_error_handler`](/reference/set_error_handler.md).
+
+### vectored_error_handler
+
+Call the function specified in the `error` static member variable of the facet -
+a `std::function<void(const error_type& error)>` -, passing it the  error
+variant.
+
+### exception
+
+Unpack the value of the variant, and throw it as an exception.
 
 ## The `output` facet
 

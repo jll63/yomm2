@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::aggregate**<br>
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
@@ -14,7 +14,7 @@ An instance of `aggregate<T...>` contains one `T` sub-object for each
 specified `T`, just like a `std::tuple`.
 `aggregate` provides a convenient way to instantiate a collection of [YOMM2
 registration objects](static-object.md). Typically, the name of the variable
-does not matter, and [YOMM2_GENSYM](YOMM2_GENSYM.md) can be used to generated that single-use
+does not matter, and [YOMM2_GENSYM](/reference/YOMM2_GENSYM.md) can be used to generated that single-use
 identifier.
 Unlike typical `std::tuple<typename... T>` implementations, `aggregate` can
 handle large numbers of `T`s. For example, clang++-12 has a limit of 1024

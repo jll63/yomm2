@@ -42,7 +42,7 @@ def replace_links(text, **kwargs):
         if target is None:
             print("BROKEN:", symbol, file=sys.stderr)
             symbol = f"{symbol} (BROKEN)"
-        return f"[{text}]({target})"
+        return f"[{text}](/reference/{target})"
 
     return re.sub(r"->(`?[\w_-]+`?)", sub, text, **kwargs)
 

@@ -1,5 +1,5 @@
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::virtual_ptr**<br>
 **virtual_shared_ptr**<br>
@@ -14,8 +14,8 @@ class virtual_ptr;
 ```
 ---
 `virtual_ptr` is a fat pointer that consists of a pointer to an object, and a
-pointer to its associated method table. It can be used in [`declare_method`](declare_method.md), in
-place of the [`virtual_`](virtual_.md), for virtual method parameters.
+pointer to its associated method table. It can be used in [`declare_method`](/reference/declare_method.md), in
+place of the [`virtual_`](/reference/virtual_.md), for virtual method parameters.
 
 Unlike `virtual_`, `virtual_ptr` should be used in method definitions as well -
 see examples below.
@@ -146,7 +146,7 @@ compatible with `Class`, and a pointer to the method table corresponding to
 polymorphic types.
 
 In debug builds, `final` compares `typeid(Class)` and `typeid(obj)`. If they are
-different, `error` is called with a `method_table_error` object. This
+different, `error_handler` is called with a `method_table_error` object. This
 can help detect misuses of `final`, but only for polymorphic classes.
 
 ---

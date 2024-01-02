@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::apply_product** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>
@@ -11,7 +11,7 @@ template<typename TemplateList, typename... TypeLists>
 using apply_product = /*unspecified*/;
 ```
 ---
-`apply_product` takes a [templates](templates.md) list and list of [types](types.md) lists, and
+`apply_product` takes a [templates](/reference/templates.md) list and list of [types](/reference/types.md) lists, and
 evaluates to a `types` list consisting of the application of each template to
 the n-fold Cartesian product of the input `types` lists.
 

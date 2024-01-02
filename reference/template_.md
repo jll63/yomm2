@@ -1,5 +1,5 @@
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::template_** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>
@@ -16,7 +16,7 @@ struct template_ {
 ---
 
 `template_` wraps a template in a type, making it possible to appear in
-[types](types.md) lists. Nested template `fn<Ts...>` evaluates to the instantiation of
+[types](/reference/types.md) lists. Nested template `fn<Ts...>` evaluates to the instantiation of
 the template with the specified types.
 
 ## example

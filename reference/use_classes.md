@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yomm2::use_classes**<br>
 <sub>defined in <yorel/yomm2/core.hpp></sub>
@@ -112,6 +112,6 @@ use_classes<Sheep, Herbivore> YOMM2_GENSYM; // ok
 
 |  | |
 |---|---|
-| [YOMM2_GENSYM](YOMM2_GENSYM.md) | generate a symbol
+| [YOMM2_GENSYM](/reference/YOMM2_GENSYM.md) | generate a symbol
 
 

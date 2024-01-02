@@ -2,7 +2,7 @@
 
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **define_method**<br>
 <sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub></sub>
@@ -37,15 +37,15 @@ Inside the block, a function pointer named `next` points to the next most
 specific definition, if one exists, and it is unique. Otherwise, `next` points
 to an error handler, which writes a message to `stderr`, and terminates the
 program via `abort`. The handler can be customized. See
-[set_method_call_error_handler](method_call_error.md).
+[set_method_call_error_handler](/reference/method_call_error.md).
 
 
-See the documentation of [declare_method](declare_method.md) for information on handling types that
+See the documentation of [declare_method](/reference/declare_method.md) for information on handling types that
 contain commas.
 
 If `container` is specified, the method definition is placed inside the
 container, which must have been declared with `method_container`. See the
-documentation of [`method_container`](method_container.md) for more information on method containers.
+documentation of [`method_container`](/reference/method_container.md) for more information on method containers.
 
 ## example
 
