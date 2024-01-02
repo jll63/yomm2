@@ -54,25 +54,27 @@ struct basic_virtual_ptr;
 // -----------------------------------------------------------------------------
 // Error handling
 
-struct resolution_error {
+struct error {};
+
+struct resolution_error : error {
     enum status_type { no_definition = 1, ambiguous } status;
     std::string_view method_name;
     size_t arity;
     type_id* tis;
 };
 
-struct unknown_class_error {
+struct unknown_class_error : error {
     enum { update = 1, call } context;
-    type_id ti;
+    type_id type;
 };
 
-struct hash_search_error {
+struct hash_search_error : error {
     size_t attempts;
     size_t buckets;
 };
 
-struct method_table_error {
-    type_id ti;
+struct method_table_error : error {
+    type_id type;
 };
 
 using error_type = std::variant<
@@ -543,7 +545,9 @@ class basic_virtual_ptr {
             auto static_type = Policy::template static_type<polymorphic_type>();
 
             if (dynamic_type != static_type) {
-                Policy::error(method_table_error{dynamic_type});
+                method_table_error error;
+                error.type = dynamic_type;
+                Policy::error(error);
             }
         }
 
@@ -821,11 +825,13 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
             using namespace policy;
 
             if constexpr (has_facet<Policy, error_handler>) {
-                Policy::error(
-                    unknown_class_error{unknown_class_error::call, type});
-            } else {
-                abort();
+                unknown_class_error error;
+                error.context = unknown_class_error::call;
+                error.type = type;
+                Policy::error(error);
             }
+
+            abort();
         }
 
         return index;
@@ -869,11 +875,11 @@ struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
             } else if (
                 auto error = std::get_if<unknown_class_error>(&error_v)) {
                 Policy::stream << "unknown class ";
-                Policy::type_name(error->ti, Policy::stream);
+                Policy::type_name(error->type, Policy::stream);
                 Policy::stream << "\n";
             } else if (auto error = std::get_if<method_table_error>(&error_v)) {
                 Policy::stream << "invalid method table for ";
-                Policy::type_name(error->ti, Policy::stream);
+                Policy::type_name(error->type, Policy::stream);
                 Policy::stream << "\n";
             } else if (auto error = std::get_if<hash_search_error>(&error_v)) {
                 Policy::stream << "could not find hash factors after "

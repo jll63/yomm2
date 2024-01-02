@@ -444,7 +444,7 @@ void runtime<Policy>::augment_classes() {
 
             if (!rtb) {
                 unknown_class_error error;
-                error.ti = *base_iter;
+                error.type = *base_iter;
 
                 if constexpr (Policy::template has_facet<
                                   policy::error_handler>) {
@@ -587,7 +587,7 @@ void runtime<Policy>::augment_methods() {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
-                error.ti = ti;
+                error.type = ti;
 
                 if constexpr (has_facet<Policy, error_handler>) {
                     Policy::error(error_type(error));
@@ -610,15 +610,15 @@ void runtime<Policy>::augment_methods() {
             spec_iter->vp.reserve(meth_info.arity());
             size_t param_index = 0;
 
-            for (auto ti :
+            for (auto type :
                  type_range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
-                auto rt_class = class_map[Policy::type_index(ti)];
+                auto rt_class = class_map[Policy::type_index(type)];
                 if (!rt_class) {
                     ++trace << "error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
-                    error.ti = ti;
+                    error.type = type;
 
                     if constexpr (has_facet<Policy, error_handler>) {
                         Policy::error(error_type(error));
