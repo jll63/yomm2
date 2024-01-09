@@ -61,7 +61,7 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy : default_static_policy::copy<test_policy>::replace<
+struct test_policy : default_static_policy::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti> {};
 
 #undef YOMM2_DEFAULT_POLICY
@@ -154,7 +154,7 @@ struct custom_rtti : policy::rtti {
 };
 
 struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
+    : default_static_policy::rebind<test_policy>::replace<
           policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY
@@ -176,7 +176,7 @@ void call_kick(Animal& a, std::ostream& os) {
     return kick(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
-// mov     rcx, qword ptr [rip + generic_domain<test_policy>::context+24]
+// mov     rcx, qword ptr [rip + basic_domain<test_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
 // mov     rcx, qword ptr [rip + method<test_policy, kick, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
@@ -310,7 +310,7 @@ struct custom_rtti : policy::rtti {
 };
 
 struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
+    : default_static_policy::rebind<test_policy>::replace<
           policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY
@@ -332,7 +332,7 @@ void call_kick(Animal& a, std::ostream& os) {
     return kick(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
-// mov     rcx, qword ptr [rip + generic_domain<test_policy>::context+24]
+// mov     rcx, qword ptr [rip + basic_domain<test_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
 // mov     rcx, qword ptr [rip + method<test_policy, kick, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
@@ -450,7 +450,7 @@ struct custom_rtti : policy::deferred_static_rtti {
 };
 
 struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
+    : default_static_policy::rebind<test_policy>::replace<
           policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 #undef YOMM2_DEFAULT_POLICY

@@ -158,7 +158,6 @@ This was the recommended header before version 1.3.0. Includes
 | [declare_static_method](/reference/declare_static_method.md)          | macro             | declares a static method inside a class                                  |
 | [define_method](/reference/define_method.md)                  | macro             | adds a definition to a method                                            |
 | [define_method_inline](/reference/define_method_inline.md)           | macro             | adds an definition to a method in a container, and make it inline        |
-| [derived](/reference/None)                        | class template    | helper for intrusive modes                                               |
 | [error_handler_type](/reference/set_error_handler.md)             | type              | handler function                                                         |
 | [error_type](/reference/set_error_handler.md)                     | variant           | object passed to error handler                                           |
 | [friend_method](/reference/friend_method.md)                  | macro             | makes a method in a container, or the entire container, a friend         |
@@ -172,7 +171,6 @@ This was the recommended header before version 1.3.0. Includes
 | [register_class](/reference/register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
 | [register_classes](/reference/use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
 | [resolution_error](/reference/set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
-| [root](/reference/None)                           | class template    | helper for intrusive modes                                               |
 | [set_error_handler](/reference/set_error_handler.md)              | function          | sets the function called for all errors                                  |
 | [set_method_call_error_handler](/reference/method_call_error.md)  | function          | sets function to call when a method call fails                           |
 | [unknown_class_error](/reference/set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |

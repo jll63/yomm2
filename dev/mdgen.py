@@ -34,17 +34,17 @@ with open(".hrefs", "w", encoding="ascii") as fh:
     json.dump(hrefs, fh, indent=4)
 
 
-def replace_links(text, **kwargs):
+def replace_links(text):
     def sub(m):
         text = m.group(1)
         symbol = text.replace("`", "")
         target = hrefs.get(symbol)
         if target is None:
-            print("BROKEN:", symbol, file=sys.stderr)
-            symbol = f"{symbol} (BROKEN)"
+            print("POSSIBLY BROKEN:", symbol, file=sys.stderr)
+            return f"->{text}"
         return f"[{text}](/reference/{target})"
 
-    return re.sub(r"->(`?[\w_-]+`?)", sub, text, **kwargs)
+    return re.sub(r"->(`?[\w_-]+`?)", sub, text)
 
 
 def replace_md(text):

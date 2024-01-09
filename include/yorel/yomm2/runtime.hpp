@@ -124,8 +124,9 @@ template<class Policy>
 struct runtime {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
-    static constexpr bool trace_enabled =
-        policy::has_facet<Policy, policy::output>;
+    template<typename Facet>
+    static constexpr bool has_facet = Policy::template has_facet<Facet>;
+    static constexpr bool trace_enabled = has_facet<policy::update_output>;
 
     std::unordered_map<type_index_type, rt_class*> class_map;
     std::deque<rt_class> classes;
@@ -149,10 +150,8 @@ struct runtime {
     void build_dispatch_table(
         rt_method& m, size_t dim, std::vector<group_map>::const_iterator group,
         const bitvec& candidates, bool concrete);
-    void install_gv(size_t type_ids);
+    void install_gv();
     void optimize();
-    size_t
-    find_hash_function(const std::deque<rt_class>& classes, metrics_t& metrics);
     void print(const dispatch_stats_t& stats);
     static std::vector<const rt_spec*>
     best(std::vector<const rt_spec*>& candidates);
@@ -177,15 +176,12 @@ struct runtime {
     };
 
     struct trace_type {
-        bool on = false;
         size_t indentation_level{0};
 
         trace_type& operator++() {
             if constexpr (trace_enabled) {
-                if (on) {
-                    for (int i = 0; i < indentation_level; ++i) {
-                        Policy::stream << "  ";
-                    }
+                for (int i = 0; i < indentation_level; ++i) {
+                    Policy::update_stream << "  ";
                 }
             }
 
@@ -194,25 +190,23 @@ struct runtime {
 
         trace_type& operator<<(const rflush& rf) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    auto pad = rf.width;
-                    auto remain = rf.value;
+                auto pad = rf.width;
+                auto remain = rf.value;
 
-                    do {
-                        remain /= 10;
-                        --pad;
+                do {
+                    remain /= 10;
+                    --pad;
 
-                        if (pad < 0) {
-                            return *this;
-                        }
-                    } while (remain);
-
-                    while (pad--) {
-                        *this << " ";
+                    if (pad < 0) {
+                        return *this;
                     }
+                } while (remain);
 
-                    *this << rf.value;
+                while (pad--) {
+                    *this << " ";
                 }
+
+                *this << rf.value;
             }
 
             return *this;
@@ -220,12 +214,10 @@ struct runtime {
 
         trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    auto i = bits.size();
-                    while (i != 0) {
-                        --i;
-                        Policy::stream << bits[i];
-                    }
+                auto i = bits.size();
+                while (i != 0) {
+                    --i;
+                    Policy::update_stream << bits[i];
                 }
             }
             return *this;
@@ -234,25 +226,21 @@ struct runtime {
         template<typename T>
         trace_type& operator<<(const T& value) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    Policy::stream << value;
-                }
+                Policy::update_stream << value;
             }
             return *this;
         }
 
         trace_type& operator<<(type_range<type_id*> tips) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << "(";
-                    const char* sep = "";
-                    for (auto t : tips) {
-                        *this << sep << type_name(t);
-                        sep = ", ";
-                    }
-
-                    *this << ")";
+                *this << "(";
+                const char* sep = "";
+                for (auto t : tips) {
+                    *this << sep << type_name(t);
+                    sep = ", ";
                 }
+
+                *this << ")";
             }
 
             return *this;
@@ -261,16 +249,14 @@ struct runtime {
         template<template<typename...> typename Container, typename... T>
         trace_type& operator<<(Container<rt_class*, T...>& classes) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << "(";
-                    const char* sep = "";
-                    for (auto cls : classes) {
-                        *this << sep << *cls;
-                        sep = ", ";
-                    }
-
-                    *this << ")";
+                *this << "(";
+                const char* sep = "";
+                for (auto cls : classes) {
+                    *this << sep << *cls;
+                    sep = ", ";
                 }
+
+                *this << ")";
             }
 
             return *this;
@@ -278,9 +264,7 @@ struct runtime {
 
         trace_type& operator<<(type_name manip) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    Policy::type_name(manip.type, *this);
-                }
+                Policy::type_name(manip.type, *this);
             }
 
             return *this;
@@ -288,9 +272,7 @@ struct runtime {
 
         trace_type& operator<<(const rt_class& cls) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << type_name(cls.ti_ptrs[0]);
-                }
+                *this << type_name(cls.ti_ptrs[0]);
             }
 
             return *this;
@@ -317,7 +299,7 @@ template<class Policy>
 void runtime<Policy>::update() {
     using namespace policy;
 
-    if constexpr (has_facet<Policy, error_handler>) {
+    if constexpr (has_facet<error_handler>) {
         if (!Policy::error) {
             Policy::error = Policy::default_error_handler;
         }
@@ -328,8 +310,7 @@ void runtime<Policy>::update() {
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    auto type_ids = find_hash_function(classes, metrics);
-    install_gv(type_ids);
+    install_gv();
     optimize();
 
     print(metrics);
@@ -339,9 +320,6 @@ void runtime<Policy>::update() {
 
 template<class Policy>
 runtime<Policy>::runtime() {
-    if constexpr (trace_enabled) {
-        trace.on = Policy::stream.is_on();
-    }
 }
 
 template<class Policy>
@@ -589,7 +567,7 @@ void runtime<Policy>::augment_methods() {
                 unknown_class_error error;
                 error.type = ti;
 
-                if constexpr (has_facet<Policy, error_handler>) {
+                if constexpr (has_facet<error_handler>) {
                     Policy::error(error_type(error));
                 }
 
@@ -620,7 +598,7 @@ void runtime<Policy>::augment_methods() {
                     unknown_class_error error;
                     error.type = type;
 
-                    if constexpr (has_facet<Policy, error_handler>) {
+                    if constexpr (has_facet<error_handler>) {
                         Policy::error(error_type(error));
                     }
 
@@ -1034,34 +1012,6 @@ void runtime<Policy>::build_dispatch_table(
     }
 }
 
-template<class Policy>
-size_t runtime<Policy>::find_hash_function(
-    const std::deque<rt_class>& classes, metrics_t& metrics) {
-    using namespace policy;
-
-    if constexpr (has_facet<Policy, type_hash>) {
-        std::vector<type_id> type_ids;
-
-        for (auto& cls : classes) {
-            std::copy(
-                cls.ti_ptrs.begin(), cls.ti_ptrs.end(),
-                std::back_inserter(type_ids));
-        }
-
-        return Policy::project_type_ids(type_ids);
-    } else {
-        type_id max_id = 0;
-
-        for (auto& cls : classes) {
-            for (auto type : cls.ti_ptrs) {
-                max_id = std::max(max_id, type);
-            }
-        }
-
-        return max_id + 1;
-    }
-}
-
 inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
     concrete_cells += other.concrete_cells;
@@ -1072,16 +1022,8 @@ inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
 }
 
 template<class Policy>
-void runtime<Policy>::install_gv(size_t type_ids) {
+void runtime<Policy>::install_gv() {
     using namespace policy;
-
-    if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::resize_vptrs(type_ids);
-    }
-
-    if constexpr (has_facet<Policy, indirect_vptr>) {
-        Policy::resize_indirect_vptrs(type_ids);
-    }
 
     for (size_t pass = 0; pass != 2; ++pass) {
         Policy::dispatch_data.resize(0);
@@ -1150,21 +1092,19 @@ void runtime<Policy>::install_gv(size_t type_ids) {
                     std::back_inserter(Policy::dispatch_data));
             }
 
-            if (pass) {
-                for (auto type : cls.ti_ptrs) {
-                    auto index = type;
+            if constexpr (has_facet<external_vptr>) {
+                if (pass) {
+                    std::vector<
+                        std::pair<type_id, const std::uintptr_t* const*>>
+                        vptrs;
 
-                    if constexpr (has_facet<Policy, type_hash>) {
-                        index = Policy::project_type_id(index);
+                    for (auto& cls : classes) {
+                        for (auto type : cls.ti_ptrs) {
+                            vptrs.emplace_back(type, cls.static_vptr);
+                        }
                     }
 
-                    if constexpr (has_facet<Policy, external_vptr>) {
-                        Policy::assign_vptr(index, *cls.static_vptr);
-                    }
-
-                    if constexpr (has_facet<Policy, indirect_vptr>) {
-                        Policy::assign_indirect_vptr(index, cls.static_vptr);
-                    }
+                    Policy::register_vptrs(vptrs.begin(), vptrs.end());
                 }
             }
         }
@@ -1300,15 +1240,17 @@ void runtime<Policy>::print(const dispatch_stats_t& stats) {
 namespace policy {
 
 template<class Policy>
-template<typename Container>
-size_t simple_perfect_hash<Policy>::project_type_ids(
-    const Container& type_ids, std::vector<type_id>& buckets) {
+template<typename ForwardIterator>
+size_t simple_perfect_hash<Policy>::hash_type_initialize(
+    ForwardIterator first, ForwardIterator last,
+    std::vector<type_id>& buckets) {
     using namespace policy;
 
-    const auto N = type_ids.size();
+    constexpr bool has_output = Policy::template has_facet<update_output>;
+    const auto N = std::distance(first, last);
 
-    if constexpr (has_facet<Policy, output>) {
-        Policy::stream << "Finding hash factor for " << N << " types\n";
+    if constexpr (has_output) {
+        Policy::update_stream << "Finding hash factor for " << N << " types\n";
     }
 
     std::default_random_engine rnd(13081963);
@@ -1325,9 +1267,9 @@ size_t simple_perfect_hash<Policy>::project_type_ids(
         shift = 8 * sizeof(type_id) - M;
         auto hash_size = 1 << M;
 
-        if constexpr (has_facet<Policy, output>) {
-            Policy::stream << "  trying with M = " << M << ", " << hash_size
-                           << " buckets\n";
+        if constexpr (has_output) {
+            Policy::update_stream << "  trying with M = " << M << ", "
+                                  << hash_size << " buckets\n";
         }
 
         bool found = false;
@@ -1341,7 +1283,8 @@ size_t simple_perfect_hash<Policy>::project_type_ids(
             found = true;
             mult = uniform_dist(rnd) | 1;
 
-            for (auto type : type_ids) {
+            for (auto iter = first; iter != last; ++iter) {
+                auto type = iter->first;
                 auto index = (type * mult) >> shift;
 
                 if (buckets[index] != invalid) {
@@ -1359,10 +1302,11 @@ size_t simple_perfect_hash<Policy>::project_type_ids(
         // metrics.hash_table_size = hash_size;
 
         if (found) {
-            if constexpr (has_facet<Policy, output>) {
-                Policy::stream << "  found " << mult << " after "
-                               << total_attempts << " attempts\n";
+            if constexpr (has_output) {
+                Policy::update_stream << "  found " << mult << " after "
+                                      << total_attempts << " attempts\n";
             }
+
             return buckets.size();
         }
     }

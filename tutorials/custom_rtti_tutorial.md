@@ -71,7 +71,7 @@ struct std_rtti : rtti {
 
     template<class Stream>
     static void type_name(type_id type, Stream& stream) {
-        stream << reinterpret_cast<const std::type_info*>(type)[name](/reference/None)();
+        stream << reinterpret_cast<const std::type_info*>(type)->name();
     }
 
     static std::type_index type_index(type_id type) {
@@ -113,7 +113,7 @@ struct kick_key;
 
 namespace minimal {
 
-struct minimal_policy : generic_policy<minimal_policy>, rtti {
+struct minimal_policy : basic_policy<minimal_policy>, rtti {
     template<typename T>
     static type_id static_type() {
         return reinterpret_cast<type_id>(&static_vptr<T>);
@@ -290,7 +290,7 @@ Thus we create the policy with:
 
 ```c++
 struct custom_policy :
-    default_policy::copy<custom_policy>::replace<policy::rtti, custom_rtti> {};
+    default_policy::rebind<custom_policy>::replace<policy::rtti, custom_rtti> {};
 ```
 
 
@@ -420,7 +420,7 @@ struct custom_rtti : policy::rtti {
 };
 
 struct custom_policy
-    : default_static_policy::copy<custom_policy>
+    : default_static_policy::rebind<custom_policy>
         ::replace<policy::rtti, custom_rtti>
         ::remove<policy::type_hash> {};
 ```
@@ -454,7 +454,7 @@ A call to `kick` now compiles to a shorter assembly code:
 
 ```asm
 mov     rax, qword ptr [rdi + 8]
-mov     rcx, qword ptr [rip + generic_domain<custom_policy>::context+24]
+mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 mov     rax, qword ptr [rcx + 8*rax]
 mov     rcx, qword ptr [rip + method<custom_policy, kick, ...>::fn+80]
 mov     rax, qword ptr [rax + 8*rcx]

@@ -29,7 +29,7 @@ release (R) builds only, or in both.
 | **rtti**            | type information                | **std_rtti** (D, R), minimal_rtti                                               |
 | type_hash           | map type info to integer index  | **simple_perfect_hash** (R), **checked_simple_perfect_hash** (D)                |
 | error               | report errors                   | **backward_compatible_error_handler** (D, R), vectored_error_handler, exception |
-| output              | report errors, trace            | **generic_output** (D)                                                          |
+| error_output              | report errors, trace            | **generic_output** (D)                                                          |
 
 ## The `vptr` facet
 
@@ -92,8 +92,26 @@ variant.
 
 ### exception
 
-Unpack the value of the variant, and throw it as an exception.
+Throw the error as an exception.
 
-## The `output` facet
+## The `error_output` facet
+
+If the facet is present, it provides one static data member, `stream`, which
+must support a small subset of the protocol of `std::stream`. The following
+insertion operators are required:
+
+```c++
+Stream& operator<<(Stream& os, const std::string_view& view);
+Stream& operator<<(Stream& os, const void* value);
+Stream& operator<<(Stream& os, size_t value);
+```
+(where `Stream` is the type of the `stream` data member)
+
+When an error is encountered, information is written to `stream` using the
+operators above.
+
+YOMM2 provides one implementation of this facet: `generic_output<class Policy,
+class Stream = unspecified>`. The default value of `Stream` is not
+`std::ostream`, but a more lightweight mechanism that writes to `stderr`
 
 

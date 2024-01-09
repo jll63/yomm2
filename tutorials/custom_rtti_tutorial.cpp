@@ -139,7 +139,7 @@ struct kick_key;
 
 namespace minimal {
 
-struct minimal_policy : generic_policy<minimal_policy>, rtti {
+struct minimal_policy : basic_policy<minimal_policy>, rtti {
     template<typename T>
     static type_id static_type() {
         return reinterpret_cast<type_id>(&static_vptr<T>);
@@ -330,7 +330,7 @@ Thus we create the policy with:
 #ifdef YOMM2_CODE
 
 struct custom_policy :
-    default_policy::copy<custom_policy>::replace<policy::rtti, custom_rtti> {};
+    default_policy::rebind<custom_policy>::replace<policy::rtti, custom_rtti> {};
 
 #endif
 
@@ -479,7 +479,7 @@ struct custom_rtti : policy::rtti {
 };
 
 struct custom_policy
-    : default_static_policy::copy<custom_policy>
+    : default_static_policy::rebind<custom_policy>
         ::replace<policy::rtti, custom_rtti>
         ::remove<policy::type_hash> {};
 
@@ -536,7 +536,7 @@ void call_kick(Animal& a, std::ostream& os) {
     return kick(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
-// mov     rcx, qword ptr [rip + generic_domain<custom_policy>::context+24]
+// mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
 // mov     rcx, qword ptr [rip + method<custom_policy, kick, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
@@ -551,7 +551,7 @@ A call to `kick` now compiles to a shorter assembly code:
 
 ```asm
 mov     rax, qword ptr [rdi + 8]
-mov     rcx, qword ptr [rip + generic_domain<custom_policy>::context+24]
+mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 mov     rax, qword ptr [rcx + 8*rax]
 mov     rcx, qword ptr [rip + method<custom_policy, kick, ...>::fn+80]
 mov     rax, qword ptr [rax + 8*rcx]
@@ -650,7 +650,7 @@ The only change is that the custom facet now inherits from
 #endif
 
 struct custom_policy
-    : default_static_policy::copy<custom_policy>
+    : default_static_policy::rebind<custom_policy>
         ::replace<policy::rtti, custom_rtti>
         ::remove<policy::type_hash> {};
 

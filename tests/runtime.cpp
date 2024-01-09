@@ -513,8 +513,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST_REQUIRE(pay_Manager->info->next != nullptr);
     BOOST_TEST(*pay_Manager->info->next == pay_Employee->info->pf);
 
-    const auto buckets = rt.find_hash_function(rt.classes, rt.metrics);
-    rt.install_gv(buckets);
+    rt.install_gv();
 
     {
         // pay
@@ -523,9 +522,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             +12        // approve: 3 slots and 12 cells for dispatch table
                 + 12); // 3 vtbl of 2 cells for Roles + 6 vtbl of 1 cells for
                        // Expenses
-        BOOST_TEST_REQUIRE(test_policy::vptrs.size() == buckets);
+        BOOST_TEST_REQUIRE(
+            test_policy::vptrs.size() ==
+            (1 << (std::numeric_limits<size_t>::digits - test_policy::shift)));
 #ifndef NDEBUG
-        BOOST_TEST_REQUIRE(test_policy::control.size() == buckets);
+        BOOST_TEST_REQUIRE(
+            test_policy::control.size() == test_policy::vptrs.size());
 #endif
 
         auto gv_iter = test_policy::dispatch_data.data();

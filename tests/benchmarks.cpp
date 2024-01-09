@@ -101,13 +101,13 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct basic_policy : virtual_by_reference {
-    struct policy : default_static_policy::copy<policy> {};
+    struct policy : default_static_policy::rebind<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "basic_policy"; };
 };
 
 struct compact_map_policy : virtual_by_reference {
-    struct policy : default_static_policy::copy<policy>
+    struct policy : default_static_policy::rebind<policy>
         ::remove<yomm2::policy::type_hash>
         ::replace<yomm2::policy::external_vptr, yomm2::policy::external_vptr_map<policy>> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
@@ -115,7 +115,7 @@ struct compact_map_policy : virtual_by_reference {
 };
 
 struct direct_intrusive_dispatch : virtual_by_reference {
-    struct policy : default_static_policy::copy<policy>::remove<yomm2::policy::external_vptr> {
+    struct policy : default_static_policy::rebind<policy>::remove<yomm2::policy::external_vptr> {
         template<class Class>
         static auto vptr(const Class& arg) {
             return arg.yomm2_vptr();
@@ -126,7 +126,7 @@ struct direct_intrusive_dispatch : virtual_by_reference {
 };
 
 struct indirect_intrusive_dispatch : virtual_by_reference {
-    struct policy : default_static_policy::copy<policy> {};
+    struct policy : default_static_policy::rebind<policy> {};
     template<typename Inheritance> using base_type = indirect_intrusive_base<Inheritance>;
     static std::string name() { return "indirect_intrusive"; };
 };
@@ -136,7 +136,7 @@ struct direct_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.vptr_draw();
     }
-    struct policy : default_static_policy::copy<policy> {};
+    struct policy : default_static_policy::rebind<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "direct_virtual_ptr"; };
 };
@@ -146,7 +146,7 @@ struct indirect_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.ivptr_draw();
     }
-    struct policy : default_static_policy::copy<policy>, yomm2::policy::generic_indirect_vptr<policy> {};
+    struct policy : default_static_policy::rebind<policy>, yomm2::policy::basic_indirect_vptr<policy> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "indirect_virtual_ptr"; };
 };

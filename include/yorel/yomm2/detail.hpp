@@ -698,12 +698,7 @@ std::ostream* log_off();
 struct ostdstream {
     FILE* stream = nullptr;
 
-    ostdstream() {
-        if (auto env_trace = getenv("YOMM2_TRACE")) {
-            if (std::atoi(env_trace) != 0) {
-                on();
-            }
-        }
+    ostdstream(FILE* stream = nullptr) : stream(stream) {
     }
 
     void on(FILE* stream = stderr) {
@@ -737,8 +732,7 @@ inline ostdstream& operator<<(ostdstream& os, const std::string_view& view) {
     return os;
 }
 
-template<typename T>
-inline ostdstream& operator<<(ostdstream& os, T* value) {
+inline ostdstream& operator<<(ostdstream& os, const void* value) {
     if (os.stream) {
         std::array<char, 20> str;
         auto end = std::to_chars(

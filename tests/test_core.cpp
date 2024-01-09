@@ -247,16 +247,16 @@ struct key2;
 struct alt_rtti {};
 
 static_assert(std::is_same_v<
-    copy_facet<key2, generic_domain<key1>>::type,
-    generic_domain<key2>
+    rebind_facet<key2, basic_domain<key1>>::type,
+    basic_domain<key2>
 >);
 
-// yorel::yomm2::policy::generic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
-// yorel::yomm2::policy::generic_policy<yorel::yomm2::policy::generic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
+// yorel::yomm2::policy::basic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
+// yorel::yomm2::policy::basic_policy<yorel::yomm2::policy::basic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
 
-struct policy1 : generic_policy<policy1, std_rtti> {};
-struct policy2 : policy1::copy<policy2> {};
-struct policy3 : policy1::copy<policy3>::replace<std_rtti, alt_rtti> {};
+struct policy1 : basic_policy<policy1, std_rtti> {};
+struct policy2 : policy1::rebind<policy2> {};
+struct policy3 : policy1::rebind<policy3>::replace<std_rtti, alt_rtti> {};
 
 static_assert(std::is_same_v<
     policy2::facets,
@@ -269,8 +269,8 @@ static_assert(std::is_same_v<
 >);
 
 // static_assert(std::is_same_v<
-//     generic_policy<generic_domain<key1>, std_rtti>::replace<std_rtti, alt_rtti>,
-//     generic_policy<generic_domain<key1>, alt_rtti>
+//     basic_policy<basic_domain<key1>, std_rtti>::replace<std_rtti, alt_rtti>,
+//     basic_policy<basic_domain<key1>, alt_rtti>
 // >);
 
 }

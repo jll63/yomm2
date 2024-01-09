@@ -105,9 +105,6 @@ namespace policy {
 
 struct abstract_policy {};
 
-template<class Policy, class Facet>
-constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
-
 struct facet {};
 struct error_handler {};
 
@@ -129,7 +126,7 @@ struct rtti {
 struct type_hash {};
 
 template<class Policy>
-struct minimal_rtti : virtual rtti {
+struct no_rtti : virtual rtti {
     template<typename T>
     static type_id static_type() {
         return reinterpret_cast<type_id>(&Policy::template static_vptr<T>);
@@ -412,16 +409,17 @@ class basic_virtual_ptr {
     friend struct detail::virtual_traits;
     template<class, typename>
     friend struct detail::virtual_ptr_traits;
+    template<typename Facet>
+    static constexpr bool has_facet = Policy::template has_facet<Facet>;
 
   protected:
     constexpr static bool IsSmartPtr =
         detail::virtual_ptr_traits<Policy, Class>::is_smart_ptr;
     using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
-    static constexpr bool is_indirect =
-        Policy::template has_facet<policy::indirect_vptr>;
+    static constexpr bool is_indirect = has_facet<policy::indirect_vptr>;
 
-    using vptr_type =
-        std::conditional_t<is_indirect, std::uintptr_t**, std::uintptr_t*>;
+    using vptr_type = std::conditional_t<
+        is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
 
     Box obj;
     vptr_type vptr;
@@ -470,7 +468,7 @@ class basic_virtual_ptr {
             typename virtual_traits<Policy, Other&>::polymorphic_type>();
 
         if (dynamic_id == static_id) {
-            if constexpr (has_facet<Policy, indirect_vptr>) {
+            if constexpr (has_facet<indirect_vptr>) {
                 vptr = &Policy::template static_vptr<
                     typename detail::virtual_traits<
                         Policy, Other&>::polymorphic_type>;
@@ -482,11 +480,11 @@ class basic_virtual_ptr {
         } else {
             auto index = dynamic_id;
 
-            if constexpr (has_facet<Policy, type_hash>) {
-                index = Policy::project_type_id(index);
+            if constexpr (has_facet<type_hash>) {
+                index = Policy::hash_type_id(index);
             }
 
-            if constexpr (has_facet<Policy, indirect_vptr>) {
+            if constexpr (has_facet<indirect_vptr>) {
                 vptr = Policy::indirect_vptrs[index];
             } else {
                 vptr = Policy::vptrs[index];
@@ -532,13 +530,13 @@ class basic_virtual_ptr {
 
         vptr_type vptr;
 
-        if constexpr (has_facet<Policy, indirect_vptr>) {
+        if constexpr (has_facet<indirect_vptr>) {
             vptr = &Policy::template static_vptr<polymorphic_type>;
         } else {
             vptr = Policy::template static_vptr<polymorphic_type>;
         }
 
-        if constexpr (has_facet<Policy, runtime_checks>) {
+        if constexpr (has_facet<runtime_checks>) {
             // check that dynamic type == static type
             auto dynamic_type =
                 Policy::dynamic_type(other_virtual_traits::rarg(obj));
@@ -635,45 +633,45 @@ std::uintptr_t* method_tables<Key>::static_vptr;
 struct domain {};
 
 template<class Key>
-struct yOMM2_API_gcc generic_domain : domain, method_tables<Key> {
+struct yOMM2_API_gcc basic_domain : domain, method_tables<Key> {
     static struct catalog catalog;
     static std::vector<std::uintptr_t> dispatch_data;
 };
 
 template<class Key>
-catalog generic_domain<Key>::catalog;
+catalog basic_domain<Key>::catalog;
 
 template<class Key>
-std::vector<std::uintptr_t> generic_domain<Key>::dispatch_data;
+std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;
 
 template<typename Policy, class Facet>
-struct copy_facet {
+struct rebind_facet {
     using type = Facet;
 };
 
 template<
     typename NewPolicy, typename OldPolicy,
     template<typename...> class GenericFacet, typename... Args>
-struct copy_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
+struct rebind_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
     using type = GenericFacet<NewPolicy, Args...>;
 };
 
 template<class Policy, class... Facets>
-struct generic_policy : virtual abstract_policy,
-                        virtual generic_domain<Policy>,
-                        virtual Facets... {
+struct basic_policy : virtual abstract_policy,
+                      virtual basic_domain<Policy>,
+                      virtual Facets... {
     using facets = detail::types<Facets...>;
 
     template<class Facet>
-    constexpr static bool has_facet = policy::has_facet<Policy, Facet>;
+    static constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
 
     template<class NewPolicy>
-    using copy = generic_policy<
-        NewPolicy, typename copy_facet<NewPolicy, Facets>::type...>;
+    using rebind = basic_policy<
+        NewPolicy, typename rebind_facet<NewPolicy, Facets>::type...>;
 
     template<class Base, class Facet>
     using replace = boost::mp11::mp_apply<
-        generic_policy,
+        basic_policy,
         boost::mp11::mp_push_front<
             boost::mp11::mp_replace_if_q<
                 facets,
@@ -684,7 +682,7 @@ struct generic_policy : virtual abstract_policy,
 
     template<class Base>
     using remove = boost::mp11::mp_apply<
-        generic_policy,
+        basic_policy,
         boost::mp11::mp_push_front<
             boost::mp11::mp_remove_if_q<
                 facets,
@@ -695,7 +693,7 @@ struct generic_policy : virtual abstract_policy,
 
 template<class Policy, class Base, class Facet, class NewPolicy>
 using replace_facet = boost::mp11::mp_apply<
-    generic_policy,
+    basic_policy,
     boost::mp11::mp_push_front<
         boost::mp11::mp_replace_if_q<
             typename Policy::facets,
@@ -709,22 +707,44 @@ struct external_vptr : virtual vptr {};
 
 template<class Policy>
 struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
-    static std::vector<std::uintptr_t*> vptrs;
+    static std::vector<const std::uintptr_t*> vptrs;
+    template<typename Facet>
+    static constexpr bool has_facet = Policy::template has_facet<Facet>;
 
-    static void resize_vptrs(size_t n) {
-        vptrs.resize(n);
-    }
+    template<typename ForwardIterator>
+    static void register_vptrs(ForwardIterator first, ForwardIterator last) {
+        size_t size;
 
-    static void assign_vptr(type_id type, std::uintptr_t* vptr) {
-        vptrs[type] = vptr;
+        if constexpr (has_facet<type_hash>) {
+            size = Policy::hash_type_initialize(first, last);
+        } else {
+            size = 1 + std::max_element(
+                first, last, [](auto a, auto b) { return a < b; })->first;
+        }
+
+        vptrs.resize(size);
+
+        for (auto iter = first; iter != last; ++iter) {
+            auto index = iter->first;
+
+            if constexpr (has_facet<type_hash>) {
+                index = Policy::hash_type_id(index);
+            }
+
+            vptrs[index] = *iter->second;
+
+            if constexpr (has_facet<indirect_vptr>) {
+                Policy::indirect_vptrs[index] = iter->second;
+            }
+        }
     }
 
     template<class Class>
     static auto vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
 
-        if constexpr (has_facet<Policy, type_hash>) {
-            index = Policy::project_type_id(index);
+        if constexpr (has_facet<type_hash>) {
+            index = Policy::hash_type_id(index);
         }
 
         return vptrs[index];
@@ -732,17 +752,24 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
 };
 
 template<class Policy>
-std::vector<std::uintptr_t*> external_vptr_vector<Policy>::vptrs;
+std::vector<const std::uintptr_t*> external_vptr_vector<Policy>::vptrs;
 
 template<class Policy>
 struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
-    static std::unordered_map<type_id, std::uintptr_t*> vptrs;
+    static std::unordered_map<type_id, const std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
     }
 
     static void assign_vptr(type_id type, std::uintptr_t* vptr) {
         vptrs[type] = vptr;
+    }
+
+    template<typename ForwardIterator>
+    static void register_vptrs(ForwardIterator first, ForwardIterator last) {
+        for (auto iter = first; iter != last; ++iter) {
+            vptrs[iter->first] = *iter->second;
+        }
     }
 
     template<class Class>
@@ -752,34 +779,40 @@ struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
 };
 
 template<class Policy>
-std::unordered_map<type_id, std::uintptr_t*> external_vptr_map<Policy>::vptrs;
+std::unordered_map<type_id, const std::uintptr_t*>
+    external_vptr_map<Policy>::vptrs;
 
 template<class Policy>
-struct yOMM2_API_gcc generic_indirect_vptr : virtual indirect_vptr {
-    static std::vector<std::uintptr_t**> indirect_vptrs;
-
-    static void resize_indirect_vptrs(size_t n) {
-        indirect_vptrs.resize(n);
-    }
-
-    static void
-    assign_indirect_vptr(type_id type, std::uintptr_t** indirect_vptr) {
-        indirect_vptrs[type] = indirect_vptr;
-    }
+struct yOMM2_API_gcc basic_indirect_vptr : virtual indirect_vptr {
+    static std::vector<std::uintptr_t const* const*> indirect_vptrs;
 };
 
 template<class Policy>
-std::vector<std::uintptr_t**> generic_indirect_vptr<Policy>::indirect_vptrs;
+std::vector<std::uintptr_t const* const*>
+    basic_indirect_vptr<Policy>::indirect_vptrs;
 
-struct output {};
+struct error_output {};
 
 template<class Policy, typename Stream = detail::ostdstream>
-struct yOMM2_API_gcc generic_output : virtual output {
-    static Stream stream;
+struct yOMM2_API_gcc basic_error_output : virtual error_output {
+    static Stream error_stream;
 };
 
 template<class Policy, typename Stream>
-Stream generic_output<Policy, Stream>::stream;
+Stream basic_error_output<Policy, Stream>::error_stream(stderr);
+
+struct update_output {};
+
+template<class Policy, typename Stream = detail::ostdstream>
+struct yOMM2_API_gcc basic_update_output : virtual update_output {
+    static Stream update_stream;
+};
+
+template<class Policy, typename Stream>
+Stream basic_update_output<Policy, Stream>::update_stream([]() {
+    auto env = getenv("YOMM2_TRACE");
+    return env && !(*env++ == '0' && !*env) ? stderr : nullptr;
+}());
 
 template<class Policy>
 struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
@@ -791,19 +824,21 @@ struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
     __forceinline
 #endif
         static type_id
-        project_type_id(type_id type) {
+        hash_type_id(type_id type) {
         return (mult * type) >> shift;
     }
 
-    template<typename Container>
-    static size_t project_type_ids(const Container& type_ids) {
+    template<typename ForwardIterator>
+    static size_t
+    hash_type_initialize(ForwardIterator first, ForwardIterator last) {
         std::vector<type_id> buckets;
-        return project_type_ids(type_ids, buckets);
+        return hash_type_initialize(first, last, buckets);
     }
 
-    template<typename Container>
-    static size_t
-    project_type_ids(const Container& type_ids, std::vector<type_id>& buckets);
+    template<typename ForwardIterator>
+    static size_t hash_type_initialize(
+        ForwardIterator first, ForwardIterator last,
+        std::vector<type_id>& buckets);
 };
 
 template<class Policy>
@@ -818,13 +853,13 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
       virtual runtime_checks {
     static std::vector<type_id> control;
 
-    static type_id project_type_id(type_id type) {
-        auto index = simple_perfect_hash<Policy>::project_type_id(type);
+    static type_id hash_type_id(type_id type) {
+        auto index = simple_perfect_hash<Policy>::hash_type_id(type);
 
         if (control[index] != type) {
             using namespace policy;
 
-            if constexpr (has_facet<Policy, error_handler>) {
+            if constexpr (Policy::template has_facet<error_handler>) {
                 unknown_class_error error;
                 error.context = unknown_class_error::call;
                 error.type = type;
@@ -837,9 +872,11 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
         return index;
     }
 
-    template<typename Container>
-    static size_t project_type_ids(const Container& type_ids) {
-        return simple_perfect_hash<Policy>::project_type_ids(type_ids, control);
+    template<typename ForwardIterator>
+    static size_t
+    hash_type_initialize(ForwardIterator first, ForwardIterator last) {
+        return simple_perfect_hash<Policy>::hash_type_initialize(
+            first, last, control);
     }
 };
 
@@ -854,11 +891,11 @@ struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
         using namespace detail;
         using namespace policy;
 
-        if constexpr (has_facet<Policy, output>) {
+        if constexpr (Policy::template has_facet<error_output>) {
             if (auto error = std::get_if<resolution_error>(&error_v)) {
                 const char* explanation[] = {
                     "no applicable definition", "ambiguous call"};
-                Policy::stream
+                Policy::error_stream
                     << explanation
                            [error->status - resolution_error::no_definition]
                     << " for " << error->method_name << "(";
@@ -866,25 +903,25 @@ struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
 
                 for (auto ti :
                      type_range{error->tis, error->tis + error->arity}) {
-                    Policy::stream << comma;
-                    Policy::type_name(ti, Policy::stream);
+                    Policy::error_stream << comma;
+                    Policy::type_name(ti, Policy::error_stream);
                     comma = ", ";
                 }
 
-                Policy::stream << ")\n";
+                Policy::error_stream << ")\n";
             } else if (
                 auto error = std::get_if<unknown_class_error>(&error_v)) {
-                Policy::stream << "unknown class ";
-                Policy::type_name(error->type, Policy::stream);
-                Policy::stream << "\n";
+                Policy::error_stream << "unknown class ";
+                Policy::type_name(error->type, Policy::error_stream);
+                Policy::error_stream << "\n";
             } else if (auto error = std::get_if<method_table_error>(&error_v)) {
-                Policy::stream << "invalid method table for ";
-                Policy::type_name(error->type, Policy::stream);
-                Policy::stream << "\n";
+                Policy::error_stream << "invalid method table for ";
+                Policy::type_name(error->type, Policy::error_stream);
+                Policy::error_stream << "\n";
             } else if (auto error = std::get_if<hash_search_error>(&error_v)) {
-                Policy::stream << "could not find hash factors after "
-                               << error->attempts << "s using "
-                               << error->buckets << " buckets\n";
+                Policy::error_stream << "could not find hash factors after "
+                                     << error->attempts << "s using "
+                                     << error->buckets << " buckets\n";
             }
         }
 
@@ -899,6 +936,8 @@ template<class Policy>
 struct yOMM2_API_gcc backward_compatible_error_handler
     : virtual vectored_error_handler<Policy> {
     static method_call_error_handler call_error;
+    template<typename Facet>
+    static constexpr bool has_facet = Policy::template has_facet<Facet>;
 
     static void default_error_handler(const error_type& error_v) {
         using namespace detail;
@@ -919,21 +958,21 @@ struct yOMM2_API_gcc backward_compatible_error_handler
 
         using namespace policy;
 
-        if constexpr (has_facet<Policy, output>) {
+        if constexpr (has_facet<error_output>) {
             const char* explanation[] = {
                 "no applicable definition", "ambiguous call"};
-            Policy::stream
+            Policy::error_stream
                 << explanation[error.code - resolution_error::no_definition]
                 << " for " << error.method_name << "(";
             auto comma = "";
 
             for (auto ti : detail::type_range{ti_ptrs, ti_ptrs + arity}) {
-                Policy::stream << comma;
-                Policy::type_name(ti, Policy::stream);
+                Policy::error_stream << comma;
+                Policy::type_name(ti, Policy::error_stream);
                 comma = ", ";
             }
 
-            Policy::stream << ")\n";
+            Policy::error_stream << ")\n";
         }
 
         abort();
@@ -946,53 +985,54 @@ method_call_error_handler
         backward_compatible_error_handler<Policy>::default_call_error_handler;
 
 template<class Policy, class... Facets>
-struct yOMM2_API_gcc generic_static_policy
-    : generic_policy<
+struct yOMM2_API_gcc basic_static_policy
+    : basic_policy<
           Policy, external_vptr_vector<Policy>, std_rtti,
           vectored_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
-struct yOMM2_API_gcc generic_debug_static
-    : generic_static_policy<
-          Policy, checked_simple_perfect_hash<Policy>, generic_output<Policy>,
-          Facets...> {};
+struct yOMM2_API_gcc basic_debug_static
+    : basic_static_policy<
+          Policy, checked_simple_perfect_hash<Policy>,
+          basic_error_output<Policy>, basic_update_output<Policy>, Facets...> {
+};
 
 struct yOMM2_API_gcc debug_static
-    : generic_debug_static<debug_static>::replace<
+    : basic_debug_static<debug_static>::replace<
           error_handler, backward_compatible_error_handler<debug_static>> {};
 
 template<class Policy, class... Facets>
-struct generic_release_static
-    : generic_static_policy<Policy, simple_perfect_hash<Policy>, Facets...> {};
+struct basic_release_static
+    : basic_static_policy<Policy, simple_perfect_hash<Policy>, Facets...> {};
 
 struct release_static
-    : generic_release_static<release_static>::replace<
+    : basic_release_static<release_static>::replace<
           error_handler, backward_compatible_error_handler<release_static>> {};
 
 struct debug_shared;
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
-extern template class __declspec(dllimport) generic_domain<debug_shared>;
+extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) external_vptr_vector<debug_shared>;
 extern template class __declspec(dllimport)
     vectored_error_handler<debug_shared>;
 extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
-extern template class __declspec(dllimport) generic_policy<
+extern template class __declspec(dllimport) basic_policy<
     debug_shared, external_vptr_vector<debug_shared>, std_rtti,
-    checked_simple_perfect_hash<debug_shared>, generic_output<debug_shared>,
+    checked_simple_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
+    basic_update_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
 struct yOMM2_API_gcc debug_shared
-    : generic_policy<
+    : basic_policy<
           debug_shared, external_vptr_vector<debug_shared>, std_rtti,
           checked_simple_perfect_hash<debug_shared>,
-          generic_output<debug_shared>,
+          basic_error_output<debug_shared>, basic_update_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
-struct yOMM2_API_gcc release_shared : debug_shared {
-    using simple_perfect_hash<debug_shared>::project_type_id;
-};
+struct yOMM2_API_gcc release_shared
+    : debug_shared::replace<type_hash, simple_perfect_hash<debug_shared>> {};
 
 } // namespace policy
 

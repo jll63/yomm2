@@ -41,7 +41,7 @@ string(REGEX MATCHALL "templates_tutorial_[^_]+_." templates_tutorial_execs "${t
 
 if(${YOMM2_ENABLE_DOC})
     SET(tutorials "")
-    SET(cpps "api.cpp;templates_tutorial.cpp;policy_tutorial.cpp;custom_rtti_tutorial.cpp")
+    SET(cpps "api.cpp;templates_tutorial.cpp;custom_rtti_tutorial.cpp")
     foreach(cpp ${cpps})
         cmake_path(GET cpp STEM LAST_ONLY stem)
         set(md "${stem}.md")
