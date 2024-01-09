@@ -718,11 +718,16 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
         if constexpr (has_facet<type_hash>) {
             size = Policy::hash_type_initialize(first, last);
         } else {
-            size = 1 + std::max_element(
-                first, last, [](auto a, auto b) { return a < b; })->first;
+            size = 1 + std::max_element(first, last, [](auto a, auto b) {
+                           return a < b;
+                       })->first;
         }
 
         vptrs.resize(size);
+
+        if constexpr (has_facet<indirect_vptr>) {
+            Policy::indirect_vptrs.resize(size);
+        }
 
         for (auto iter = first; iter != last; ++iter) {
             auto index = iter->first;
@@ -936,8 +941,6 @@ template<class Policy>
 struct yOMM2_API_gcc backward_compatible_error_handler
     : virtual vectored_error_handler<Policy> {
     static method_call_error_handler call_error;
-    template<typename Facet>
-    static constexpr bool has_facet = Policy::template has_facet<Facet>;
 
     static void default_error_handler(const error_type& error_v) {
         using namespace detail;
@@ -958,7 +961,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
 
         using namespace policy;
 
-        if constexpr (has_facet<error_output>) {
+        if constexpr (Policy::template has_facet<error_output>) {
             const char* explanation[] = {
                 "no applicable definition", "ambiguous call"};
             Policy::error_stream
