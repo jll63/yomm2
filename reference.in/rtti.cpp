@@ -24,4 +24,4 @@ The [custom RTTI tutorial](custom_rtti_tutorial.md) for a full explanation
 of these facets.
 #endif
 
-BOOST_AUTO_TEST_CASE(reference_rtti) {}
+BOOST_AUTO_TEST_CASE(ref_rtti) {}

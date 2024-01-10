@@ -37,4 +37,4 @@ class Stream = unspecified>`. The default value of `Stream` is not
 
 #endif
 
-BOOST_AUTO_TEST_CASE(reference_output) {}
+BOOST_AUTO_TEST_CASE(ref_output) {}

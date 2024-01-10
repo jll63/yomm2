@@ -17,4 +17,4 @@ struct facet;
 
 #endif
 
-BOOST_AUTO_TEST_CASE(reference_type_hash) {}
+BOOST_AUTO_TEST_CASE(ref_type_hash) {}

@@ -79,7 +79,7 @@ use_definitions<
     >
 > YOMM2_GENSYM; // 5
 
-BOOST_AUTO_TEST_CASE(reference_use_definitions) {
+BOOST_AUTO_TEST_CASE(ref_use_definitions) {
     update();
 
     const abstract_matrix& ordinary = ordinary_matrix();

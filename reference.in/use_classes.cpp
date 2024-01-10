@@ -63,7 +63,7 @@ Given the following hierarchy:
 #include <boost/test/included/unit_test.hpp>
 #include <yorel/yomm2/keywords.hpp>
 
-BOOST_AUTO_TEST_CASE(reference_dummy) {}
+BOOST_AUTO_TEST_CASE(ref_dummy) {}
 
 #ifdef YOMM2_CODE
 

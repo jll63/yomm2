@@ -49,4 +49,6 @@ static functions to allow it to initialize its data structures.
 
 #endif
 
-BOOST_AUTO_TEST_CASE(reference_vptr) {}
+
+
+BOOST_AUTO_TEST_CASE(ref_vptr) {}

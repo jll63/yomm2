@@ -77,7 +77,7 @@ define_method(kicks, std::string, kick, (Bulldog* dog)) {
     return kicks<std::string(Dog*)>::fn(dog) + " and bites";
 }
 
-BOOST_AUTO_TEST_CASE(reference_example) {
+BOOST_AUTO_TEST_CASE(ref_example) {
     yorel::yomm2::update();
 
     Dog snoopy("Snoopy");

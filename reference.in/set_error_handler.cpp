@@ -88,7 +88,7 @@ void no_definition_handler(const error_type& ev) {
     next_error_handler(ev);
 }
 
-BOOST_AUTO_TEST_CASE(reference_set_error_handler_example) {
+BOOST_AUTO_TEST_CASE(ref_set_error_handler_example) {
     next_error_handler = set_error_handler(no_definition_handler);
     update();
 

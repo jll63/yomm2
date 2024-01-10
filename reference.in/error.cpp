@@ -36,4 +36,4 @@ variant.
 
 #endif
 
-BOOST_AUTO_TEST_CASE(reference_error) {}
+BOOST_AUTO_TEST_CASE(ref_error) {}
