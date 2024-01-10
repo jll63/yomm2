@@ -124,9 +124,8 @@ template<class Policy>
 struct runtime {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
-    template<typename Facet>
-    static constexpr bool has_facet = Policy::template has_facet<Facet>;
-    static constexpr bool trace_enabled = has_facet<policy::update_output>;
+    static constexpr bool trace_enabled =
+        Policy::template has_facet<policy::update_output>;
 
     std::unordered_map<type_index_type, rt_class*> class_map;
     std::deque<rt_class> classes;
@@ -299,7 +298,7 @@ template<class Policy>
 void runtime<Policy>::update() {
     using namespace policy;
 
-    if constexpr (has_facet<error_handler>) {
+    if constexpr (has_facet<Policy, error_handler>) {
         if (!Policy::error) {
             Policy::error = Policy::default_error_handler;
         }
@@ -567,7 +566,7 @@ void runtime<Policy>::augment_methods() {
                 unknown_class_error error;
                 error.type = ti;
 
-                if constexpr (has_facet<error_handler>) {
+                if constexpr (has_facet<Policy, error_handler>) {
                     Policy::error(error_type(error));
                 }
 
@@ -598,7 +597,7 @@ void runtime<Policy>::augment_methods() {
                     unknown_class_error error;
                     error.type = type;
 
-                    if constexpr (has_facet<error_handler>) {
+                    if constexpr (has_facet<Policy, error_handler>) {
                         Policy::error(error_type(error));
                     }
 
@@ -1092,7 +1091,7 @@ void runtime<Policy>::install_gv() {
                     std::back_inserter(Policy::dispatch_data));
             }
 
-            if constexpr (has_facet<external_vptr>) {
+            if constexpr (has_facet<Policy, external_vptr>) {
                 if (pass) {
                     std::vector<
                         std::pair<type_id, const std::uintptr_t* const*>>

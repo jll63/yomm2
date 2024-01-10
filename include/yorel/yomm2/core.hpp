@@ -398,223 +398,6 @@ using use_classes = typename detail::use_classes_aux<
     detail::remove_policy<First, Rest...>>::type;
 
 // -----------------------------------------------------------------------------
-// virtual_ptr
-
-template<class Policy, class Class>
-class basic_virtual_ptr {
-    template<class, class>
-    friend class basic_virtual_ptr;
-
-    template<class, typename>
-    friend struct detail::virtual_traits;
-    template<class, typename>
-    friend struct detail::virtual_ptr_traits;
-    template<typename Facet>
-    static constexpr bool has_facet = Policy::template has_facet<Facet>;
-
-  protected:
-    constexpr static bool IsSmartPtr =
-        detail::virtual_ptr_traits<Policy, Class>::is_smart_ptr;
-    using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
-    static constexpr bool is_indirect = has_facet<policy::indirect_vptr>;
-
-    using vptr_type = std::conditional_t<
-        is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
-
-    Box obj;
-    vptr_type vptr;
-
-    template<typename Other>
-    void box(Other&& value) {
-        if constexpr (IsSmartPtr) {
-            if constexpr (std::is_rvalue_reference_v<Other>) {
-                obj = std::move(value);
-            } else {
-                obj = value;
-            }
-        } else {
-            static_assert(std::is_lvalue_reference_v<Other>);
-            obj = &value;
-        }
-    }
-
-    auto& unbox() const {
-        if constexpr (IsSmartPtr) {
-            return obj;
-        } else {
-            return *obj;
-        }
-    }
-
-  public:
-    using element_type = Class;
-    using box_type = Box;
-
-    template<class Other>
-    basic_virtual_ptr(Other&& other) {
-        box(other);
-
-        using namespace policy;
-        using namespace detail;
-
-        static_assert(
-            std::is_polymorphic_v<polymorphic_type<
-                Policy, const std::remove_reference_t<Other>&>>,
-            "use 'final' if intended");
-
-        auto dynamic_id =
-            Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(other));
-        auto static_id = Policy::template static_type<
-            typename virtual_traits<Policy, Other&>::polymorphic_type>();
-
-        if (dynamic_id == static_id) {
-            if constexpr (has_facet<indirect_vptr>) {
-                vptr = &Policy::template static_vptr<
-                    typename detail::virtual_traits<
-                        Policy, Other&>::polymorphic_type>;
-            } else {
-                vptr = Policy::template static_vptr<
-                    typename detail::virtual_traits<
-                        Policy, Other&>::polymorphic_type>;
-            }
-        } else {
-            auto index = dynamic_id;
-
-            if constexpr (has_facet<type_hash>) {
-                index = Policy::hash_type_id(index);
-            }
-
-            if constexpr (has_facet<indirect_vptr>) {
-                vptr = Policy::indirect_vptrs[index];
-            } else {
-                vptr = Policy::vptrs[index];
-            }
-        }
-    }
-
-    template<class Other>
-    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>& other)
-        : obj(other.obj), vptr(other.vptr) {
-    }
-
-    template<class Other>
-    basic_virtual_ptr(const basic_virtual_ptr<Policy, Other>& other)
-        : obj(other.obj), vptr(other.vptr) {
-    }
-
-    template<class Other>
-    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>&& other)
-        : obj(std::move(other.obj)), vptr(other.vptr) {
-    }
-
-    auto get() const noexcept {
-        return obj;
-    }
-
-    auto operator->() const noexcept {
-        return get();
-    }
-
-    decltype(auto) operator*() const noexcept {
-        return *get();
-    }
-
-    template<class Other>
-    static auto final(Other&& obj) {
-        using namespace detail;
-        using namespace policy;
-
-        using other_virtual_traits = virtual_traits<Policy, Other>;
-        using polymorphic_type =
-            typename other_virtual_traits::polymorphic_type;
-
-        vptr_type vptr;
-
-        if constexpr (has_facet<indirect_vptr>) {
-            vptr = &Policy::template static_vptr<polymorphic_type>;
-        } else {
-            vptr = Policy::template static_vptr<polymorphic_type>;
-        }
-
-        if constexpr (has_facet<runtime_checks>) {
-            // check that dynamic type == static type
-            auto dynamic_type =
-                Policy::dynamic_type(other_virtual_traits::rarg(obj));
-            auto static_type = Policy::template static_type<polymorphic_type>();
-
-            if (dynamic_type != static_type) {
-                method_table_error error;
-                error.type = dynamic_type;
-                Policy::error(error);
-            }
-        }
-
-        basic_virtual_ptr result;
-        result.box(obj);
-        result.vptr = vptr;
-
-        return result;
-    }
-
-    template<typename Other>
-    auto cast() const {
-        using namespace detail;
-        std::remove_cv_t<std::remove_reference_t<Other>> result;
-        result.vptr = vptr;
-
-        if constexpr (IsSmartPtr) {
-            result.obj =
-                virtual_ptr_traits<Policy, Class>::template cast<Other>(obj);
-        } else {
-            result.obj =
-                &optimal_cast<Policy, typename Other::element_type&>(*obj);
-        }
-
-        return result;
-    }
-
-    // consider as private, public for tests only
-    auto _vptr() const noexcept {
-        if constexpr (is_indirect) {
-            return *vptr;
-        } else {
-            return vptr;
-        }
-    }
-
-  protected:
-    basic_virtual_ptr() = default;
-};
-
-template<class Class>
-basic_virtual_ptr(Class&) -> basic_virtual_ptr<default_policy, Class>;
-
-template<class... Class>
-using virtual_ptr = basic_virtual_ptr<
-    detail::virtual_ptr_policy<Class...>, detail::virtual_ptr_class<Class...>>;
-
-template<class... Ts>
-using virtual_shared_ptr = virtual_ptr<
-    detail::virtual_ptr_policy<Ts...>,
-    std::shared_ptr<detail::virtual_ptr_class<Ts...>>>;
-
-template<class... Ts>
-inline auto make_virtual_shared() {
-    return virtual_shared_ptr<Ts...>::final(
-        std::make_shared<detail::virtual_ptr_class<Ts...>>());
-}
-
-template<class Policy, class Class>
-inline auto basic_final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Policy, Class>::final(obj);
-}
-
-template<class Policy, class Class>
-inline auto final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Policy, Class>::final(obj);
-}
-
-// -----------------------------------------------------------------------------
 // policy
 
 namespace policy {
@@ -691,16 +474,8 @@ struct basic_policy : virtual abstract_policy,
             Policy>>;
 };
 
-template<class Policy, class Base, class Facet, class NewPolicy>
-using replace_facet = boost::mp11::mp_apply<
-    basic_policy,
-    boost::mp11::mp_push_front<
-        boost::mp11::mp_replace_if_q<
-            typename Policy::facets,
-            boost::mp11::mp_bind_front_q<
-                boost::mp11::mp_quote_trait<std::is_base_of>, Base>,
-            Facet>,
-        NewPolicy>>;
+template<class Policy, class Facet>
+constexpr bool has_facet = Policy::template has_facet<Facet>;
 
 struct vptr {};
 struct external_vptr : virtual vptr {};
@@ -708,14 +483,14 @@ struct external_vptr : virtual vptr {};
 template<class Policy>
 struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
     static std::vector<const std::uintptr_t*> vptrs;
-    template<typename Facet>
-    static constexpr bool has_facet = Policy::template has_facet<Facet>;
 
     template<typename ForwardIterator>
     static void register_vptrs(ForwardIterator first, ForwardIterator last) {
+        using namespace policy;
+
         size_t size;
 
-        if constexpr (has_facet<type_hash>) {
+        if constexpr (has_facet<Policy, type_hash>) {
             size = Policy::hash_type_initialize(first, last);
         } else {
             size = 1 + std::max_element(first, last, [](auto a, auto b) {
@@ -725,20 +500,20 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
 
         vptrs.resize(size);
 
-        if constexpr (has_facet<indirect_vptr>) {
+        if constexpr (has_facet<Policy, indirect_vptr>) {
             Policy::indirect_vptrs.resize(size);
         }
 
         for (auto iter = first; iter != last; ++iter) {
             auto index = iter->first;
 
-            if constexpr (has_facet<type_hash>) {
+            if constexpr (has_facet<Policy, type_hash>) {
                 index = Policy::hash_type_id(index);
             }
 
             vptrs[index] = *iter->second;
 
-            if constexpr (has_facet<indirect_vptr>) {
+            if constexpr (has_facet<Policy, indirect_vptr>) {
                 Policy::indirect_vptrs[index] = iter->second;
             }
         }
@@ -748,7 +523,7 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
     static auto vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
 
-        if constexpr (has_facet<type_hash>) {
+        if constexpr (has_facet<Policy, type_hash>) {
             index = Policy::hash_type_id(index);
         }
 
@@ -1038,6 +813,221 @@ struct yOMM2_API_gcc release_shared
     : debug_shared::replace<type_hash, simple_perfect_hash<debug_shared>> {};
 
 } // namespace policy
+
+// -----------------------------------------------------------------------------
+// virtual_ptr
+
+template<class Policy, class Class>
+class basic_virtual_ptr {
+    template<class, class>
+    friend class basic_virtual_ptr;
+
+    template<class, typename>
+    friend struct detail::virtual_traits;
+    template<class, typename>
+    friend struct detail::virtual_ptr_traits;
+
+  protected:
+    constexpr static bool IsSmartPtr =
+        detail::virtual_ptr_traits<Policy, Class>::is_smart_ptr;
+    using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
+    static constexpr bool is_indirect = Policy::template has_facet<policy::indirect_vptr>;
+
+    using vptr_type = std::conditional_t<
+        is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
+
+    Box obj;
+    vptr_type vptr;
+
+    template<typename Other>
+    void box(Other&& value) {
+        if constexpr (IsSmartPtr) {
+            if constexpr (std::is_rvalue_reference_v<Other>) {
+                obj = std::move(value);
+            } else {
+                obj = value;
+            }
+        } else {
+            static_assert(std::is_lvalue_reference_v<Other>);
+            obj = &value;
+        }
+    }
+
+    auto& unbox() const {
+        if constexpr (IsSmartPtr) {
+            return obj;
+        } else {
+            return *obj;
+        }
+    }
+
+  public:
+    using element_type = Class;
+    using box_type = Box;
+
+    template<class Other>
+    basic_virtual_ptr(Other&& other) {
+        box(other);
+
+        using namespace policy;
+        using namespace detail;
+
+        static_assert(
+            std::is_polymorphic_v<polymorphic_type<
+                Policy, const std::remove_reference_t<Other>&>>,
+            "use 'final' if intended");
+
+        auto dynamic_id =
+            Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(other));
+        auto static_id = Policy::template static_type<
+            typename virtual_traits<Policy, Other&>::polymorphic_type>();
+
+        if (dynamic_id == static_id) {
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = &Policy::template static_vptr<
+                    typename detail::virtual_traits<
+                        Policy, Other&>::polymorphic_type>;
+            } else {
+                vptr = Policy::template static_vptr<
+                    typename detail::virtual_traits<
+                        Policy, Other&>::polymorphic_type>;
+            }
+        } else {
+            auto index = dynamic_id;
+
+            if constexpr (has_facet<Policy, type_hash>) {
+                index = Policy::hash_type_id(index);
+            }
+
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = Policy::indirect_vptrs[index];
+            } else {
+                vptr = Policy::vptrs[index];
+            }
+        }
+    }
+
+    template<class Other>
+    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    basic_virtual_ptr(const basic_virtual_ptr<Policy, Other>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    basic_virtual_ptr(basic_virtual_ptr<Policy, Other>&& other)
+        : obj(std::move(other.obj)), vptr(other.vptr) {
+    }
+
+    auto get() const noexcept {
+        return obj;
+    }
+
+    auto operator->() const noexcept {
+        return get();
+    }
+
+    decltype(auto) operator*() const noexcept {
+        return *get();
+    }
+
+    template<class Other>
+    static auto final(Other&& obj) {
+        using namespace detail;
+        using namespace policy;
+
+        using other_virtual_traits = virtual_traits<Policy, Other>;
+        using polymorphic_type =
+            typename other_virtual_traits::polymorphic_type;
+
+        vptr_type vptr;
+
+        if constexpr (has_facet<Policy, indirect_vptr>) {
+            vptr = &Policy::template static_vptr<polymorphic_type>;
+        } else {
+            vptr = Policy::template static_vptr<polymorphic_type>;
+        }
+
+        if constexpr (has_facet<Policy, runtime_checks>) {
+            // check that dynamic type == static type
+            auto dynamic_type =
+                Policy::dynamic_type(other_virtual_traits::rarg(obj));
+            auto static_type = Policy::template static_type<polymorphic_type>();
+
+            if (dynamic_type != static_type) {
+                method_table_error error;
+                error.type = dynamic_type;
+                Policy::error(error);
+            }
+        }
+
+        basic_virtual_ptr result;
+        result.box(obj);
+        result.vptr = vptr;
+
+        return result;
+    }
+
+    template<typename Other>
+    auto cast() const {
+        using namespace detail;
+        std::remove_cv_t<std::remove_reference_t<Other>> result;
+        result.vptr = vptr;
+
+        if constexpr (IsSmartPtr) {
+            result.obj =
+                virtual_ptr_traits<Policy, Class>::template cast<Other>(obj);
+        } else {
+            result.obj =
+                &optimal_cast<Policy, typename Other::element_type&>(*obj);
+        }
+
+        return result;
+    }
+
+    // consider as private, public for tests only
+    auto _vptr() const noexcept {
+        if constexpr (is_indirect) {
+            return *vptr;
+        } else {
+            return vptr;
+        }
+    }
+
+  protected:
+    basic_virtual_ptr() = default;
+};
+
+template<class Class>
+basic_virtual_ptr(Class&) -> basic_virtual_ptr<default_policy, Class>;
+
+template<class... Class>
+using virtual_ptr = basic_virtual_ptr<
+    detail::virtual_ptr_policy<Class...>, detail::virtual_ptr_class<Class...>>;
+
+template<class... Ts>
+using virtual_shared_ptr = virtual_ptr<
+    detail::virtual_ptr_policy<Ts...>,
+    std::shared_ptr<detail::virtual_ptr_class<Ts...>>>;
+
+template<class... Ts>
+inline auto make_virtual_shared() {
+    return virtual_shared_ptr<Ts...>::final(
+        std::make_shared<detail::virtual_ptr_class<Ts...>>());
+}
+
+template<class Policy, class Class>
+inline auto basic_final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Policy, Class>::final(obj);
+}
+
+template<class Policy, class Class>
+inline auto final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Policy, Class>::final(obj);
+}
 
 // -----------------------------------------------------------------------------
 // definitions
