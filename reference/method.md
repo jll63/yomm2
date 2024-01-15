@@ -197,7 +197,7 @@ pet::add_function<pet_cat> YOMM2_GENSYM;
 std::string pet_dog(Dog& dog) { return "wag tail"; }
 pet::add_function<pet_dog> YOMM2_GENSYM;
 
-BOOST_AUTO_TEST_CASE(reference_method_example) {
+BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::update();
 
     std::unique_ptr<Animal>

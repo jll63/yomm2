@@ -228,7 +228,7 @@ define_method(
     os << "chase";
 }
 
-BOOST_AUTO_TEST_CASE(reference_virtual_ptr) {
+BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
     yorel::yomm2::update();
 
     Dog snoopy, hector;
@@ -339,7 +339,7 @@ define_method(
     os << "chase";
 }
 
-BOOST_AUTO_TEST_CASE(reference_virtual_ptr_final) {
+BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final) {
     yorel::yomm2::update();
 
     Dog snoopy, hector;
@@ -388,7 +388,7 @@ define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
     os << "wrong call";
 }
 
-BOOST_AUTO_TEST_CASE(reference_virtual_ptr_final_incorrect) {
+BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final_incorrect) {
     yorel::yomm2::update();
 
     Dog snoopy;
@@ -473,7 +473,7 @@ define_method(
     os << "chase";
 }
 
-BOOST_AUTO_TEST_CASE(reference_make_virtual_shared) {
+BOOST_AUTO_TEST_CASE(ref_make_virtual_shared) {
     yorel::yomm2::update();
 
     using yorel::yomm2::make_virtual_shared;

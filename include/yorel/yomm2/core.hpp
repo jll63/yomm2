@@ -831,7 +831,8 @@ class basic_virtual_ptr {
     constexpr static bool IsSmartPtr =
         detail::virtual_ptr_traits<Policy, Class>::is_smart_ptr;
     using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
-    static constexpr bool is_indirect = Policy::template has_facet<policy::indirect_vptr>;
+    static constexpr bool is_indirect =
+        Policy::template has_facet<policy::indirect_vptr>;
 
     using vptr_type = std::conditional_t<
         is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
@@ -948,6 +949,7 @@ class basic_virtual_ptr {
         if constexpr (has_facet<Policy, indirect_vptr>) {
             vptr = &Policy::template static_vptr<polymorphic_type>;
         } else {
+            auto x = typeid(polymorphic_type).name();
             vptr = Policy::template static_vptr<polymorphic_type>;
         }
 
@@ -1001,32 +1003,31 @@ class basic_virtual_ptr {
     basic_virtual_ptr() = default;
 };
 
+#ifdef YOMM2_DEFAULT_POLICY
 template<class Class>
-basic_virtual_ptr(Class&) -> basic_virtual_ptr<default_policy, Class>;
+using virtual_ptr = basic_virtual_ptr<YOMM2_DEFAULT_POLICY, Class>;
+#else
+template<class Class>
+using virtual_ptr = basic_virtual_ptr<default_policy, Class>;
+#endif
 
-template<class... Class>
-using virtual_ptr = basic_virtual_ptr<
-    detail::virtual_ptr_policy<Class...>, detail::virtual_ptr_class<Class...>>;
+template<class Class>
+using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>>;
 
-template<class... Ts>
-using virtual_shared_ptr = virtual_ptr<
-    detail::virtual_ptr_policy<Ts...>,
-    std::shared_ptr<detail::virtual_ptr_class<Ts...>>>;
-
-template<class... Ts>
+template<class Class>
 inline auto make_virtual_shared() {
-    return virtual_shared_ptr<Ts...>::final(
-        std::make_shared<detail::virtual_ptr_class<Ts...>>());
+    return virtual_shared_ptr<Class>::final(
+        std::make_shared<detail::virtual_ptr_class<Class>>());
 }
 
 template<class Policy, class Class>
 inline auto basic_final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Policy, Class>::final(obj);
+    return basic_virtual_ptr<Policy, Class>::final(obj);
 }
 
-template<class Policy, class Class>
+template<class Class>
 inline auto final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Policy, Class>::final(obj);
+    return virtual_ptr<Class>::final(obj);
 }
 
 // -----------------------------------------------------------------------------
