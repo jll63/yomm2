@@ -3,7 +3,6 @@
 
 #include <array>
 #include <charconv>
-#include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -39,14 +38,13 @@
 #pragma push_macro("max")
 #undef max
 
+#include <yorel/yomm2/policy.hpp>
+
 // -----------------------------------------------------------------------------
 // type_id
 
 namespace yorel {
 namespace yomm2 {
-
-using type_id = std::uintptr_t;
-constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
 template<class Policy, class Class>
 struct basic_virtual_ptr;
@@ -97,83 +95,6 @@ using method_call_error_handler =
 
 // -----------------------------------------------------------------------------
 // Policies
-
-struct context;
-struct catalog;
-
-namespace policy {
-
-struct abstract_policy {};
-
-struct facet {};
-struct error_handler {};
-
-struct runtime_checks {};
-
-struct indirect_vptr {};
-
-struct rtti {
-    static type_id type_index(type_id type) {
-        return type;
-    }
-
-    template<typename Stream>
-    static void type_name(type_id type, Stream& stream) {
-        stream << "type_id(" << type << ")";
-    }
-};
-
-struct type_hash {};
-
-template<class Policy>
-struct no_rtti : virtual rtti {
-    template<typename T>
-    static type_id static_type() {
-        return reinterpret_cast<type_id>(&Policy::template static_vptr<T>);
-    }
-};
-
-struct std_rtti : virtual rtti {
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-    template<typename T>
-    static type_id static_type() {
-        auto tip = &typeid(T);
-        return reinterpret_cast<type_id>(tip);
-    }
-
-    template<typename T>
-    static type_id dynamic_type(const T& obj) {
-        auto tip = &typeid(obj);
-        return reinterpret_cast<type_id>(tip);
-    }
-
-    template<typename Stream>
-    static void type_name(type_id type, Stream& stream) {
-        stream << reinterpret_cast<const std::type_info*>(type)->name();
-    }
-
-    static std::type_index type_index(type_id type) {
-        return std::type_index(*reinterpret_cast<const std::type_info*>(type));
-    }
-
-    template<typename D, typename B>
-    static D dynamic_cast_(B&& obj) {
-        return dynamic_cast<D>(obj);
-    }
-#endif
-};
-
-struct deferred_static_rtti : virtual rtti {};
-
-struct debug_static;
-struct release_static;
-struct debug_shared;
-struct release_shared;
-
-template<typename T>
-constexpr bool implemented = !std::is_same_v<T, void>;
-
-} // namespace policy
 
 #ifdef NDEBUG
     #if defined(YOMM2_SHARED)
@@ -447,6 +368,12 @@ struct basic_policy : virtual abstract_policy,
 
     template<class Facet>
     static constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
+
+    template<class Facet>
+    using use_facet = boost::mp11::mp_first<boost::mp11::mp_filter_q<
+        boost::mp11::mp_bind_front_q<
+            boost::mp11::mp_quote_trait<std::is_base_of>, Facet>,
+        facets>>;
 
     template<class NewPolicy>
     using rebind = basic_policy<
@@ -1003,16 +930,24 @@ class basic_virtual_ptr {
     basic_virtual_ptr() = default;
 };
 
-#ifdef YOMM2_DEFAULT_POLICY
-template<class Class>
-using virtual_ptr = basic_virtual_ptr<YOMM2_DEFAULT_POLICY, Class>;
-#else
+// template<class Policy, class Class>
+// basic_virtual_ptr<Policy, Class>(Class&) -> basic_virtual_ptr<Policy, Class>;
+
 template<class Class>
 using virtual_ptr = basic_virtual_ptr<default_policy, Class>;
-#endif
+
+template<class Policy, class Class>
+using basic_virtual_shared_ptr =
+    basic_virtual_ptr<Policy, std::shared_ptr<Class>>;
 
 template<class Class>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>>;
+
+template<class Policy, class Class>
+inline auto basic_make_virtual_shared() {
+    return basic_virtual_shared_ptr<Policy, Class>::final(
+        std::make_shared<detail::virtual_ptr_class<Class>>());
+}
 
 template<class Class>
 inline auto make_virtual_shared() {

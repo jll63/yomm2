@@ -50,8 +50,36 @@
 
 // #endif
 
-#include <iostream>
-#include <vector>
+#include <yorel/yomm2/policy.hpp>
+
+struct Number {};
+
+struct Integer : Number {
+    explicit Integer(int value) : value(value) {
+    }
+
+    int value;
+};
+
+struct Rational : Number {
+    Rational(int a, int b) : num(a), den(b) {
+    }
+
+    int num, den;
+};
+
+struct Person {
+    std::uintptr_t* vptr;
+    virtual ~Person() {
+    }
+};
+
+struct Engineer : Person {};
+
+struct number_policy;
+
+#undef YOMM2_DEFAULT_POLICY
+#define YOMM2_DEFAULT_POLICY number_policy
 
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
@@ -60,127 +88,92 @@
 using namespace yorel::yomm2;
 using namespace policy;
 
-struct vptr_page : virtual vptr {
-    static std::vector<const std::uintptr_t*> vptrs;
-
-    template<typename ForwardIterator>
-    static void register_vptrs(ForwardIterator first, ForwardIterator last) {
-    }
+struct vptr_page : virtual default_policy::use_facet<vptr> {
 
     template<class Class>
     static auto vptr(const Class& arg) {
-        auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
-        return *reinterpret_cast<std::uintptr_t**>(page);
+        if constexpr (std::is_base_of_v<Number, Class>) {
+            auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
+            return *reinterpret_cast<std::uintptr_t**>(page);
+        } else {
+            return default_policy::use_facet<policy::vptr>::vptr(arg);
+        }
     }
 };
 
 struct number_policy : default_policy::replace<vptr, vptr_page> {};
 
 template<class T>
-class naive_page_allocator {
+class Page {
   private:
-    static void* top;
-    static size_t space;
-
-    template<typename U>
-    static auto alloc(size_t n) -> U* {
-        if (auto result = std::align(alignof(U), n * sizeof(U), top, space)) {
-            top = reinterpret_cast<char*>(top) + n * sizeof(U);
-            space -= n * sizeof(U);
-            return reinterpret_cast<U*>(result);
-        }
-
-        throw std::bad_alloc();
-    }
+    static constexpr size_t page_size = 1024;
+    char* base;
+    T* top;
 
   public:
-    static void intialize() {
-        *alloc<std::uintptr_t**>(1) = number_policy::static_vptr<T>;
+    Page() {
+        base =
+            reinterpret_cast<char*>(std::aligned_alloc(page_size, page_size));
+        *reinterpret_cast<std::uintptr_t**>(base) =
+            number_policy::static_vptr<T>;
+        void* first = base + sizeof(std::uintptr_t*);
+        size_t space = page_size - sizeof(std::uintptr_t*);
+        std::align(alignof(T), sizeof(T), first, space);
+        top = reinterpret_cast<T*>(first);
     }
 
-    typedef T value_type;
-
-    naive_page_allocator() {
+    ~Page() {
+        free(base);
     }
 
-    template<class U>
-    constexpr naive_page_allocator(const naive_page_allocator<U>&) noexcept {
-    }
+    template<typename... U>
+    T& construct(U... args) {
+        if (reinterpret_cast<char*>(top + 1) > base + page_size) {
+            throw std::bad_alloc();
+        }
 
-    T* allocate(std::size_t n) {
-        if (n > std::numeric_limits<std::size_t>::max() / sizeof(T))
-            throw std::bad_array_new_length();
-
-        return alloc<T>(n);
-    }
-
-    void deallocate(T* p, std::size_t n) noexcept {
-    }
-};
-
-template<class T>
-void* naive_page_allocator<T>::top;
-
-template<class T>
-size_t naive_page_allocator<T>::space;
-
-struct Number {};
-
-template<class Class>
-struct PageObject {
-    static naive_page_allocator<Class> allocator;
-    static void* operator new(size_t) {
-        return allocator.allocate(1);
-    }
-    static void* operator new[](size_t count) {
-        return allocator.allocate(count);
+        return *new (top++) T(std::forward<U>(args)...);
     }
 };
 
-template<class Class>
-naive_page_allocator<Class> PageObject<Class>::allocator;
+register_classes(Number, Integer, Rational, Person, Engineer);
 
-struct Integer : Number, PageObject<Integer> {
-    explicit Integer(int value) : value(value) {
-    }
-
-    int value;
-};
-
-struct Rational : Number, PageObject<Rational> {
-    Rational(int a, int b) : num(a), den(b) {
-    }
-    int num, den;
-};
-
-template<class T, class U>
-bool operator==(
-    const naive_page_allocator<T>&, const naive_page_allocator<U>&) {
-    return true;
-}
-
-template<class T, class U>
-bool operator!=(
-    const naive_page_allocator<T>&, const naive_page_allocator<U>&) {
-    return false;
-}
-
-// #undef YOMM2_DEFAULT_POLICY
-// #define YOMM2_DEFAULT_POLICY number_policy
+#include <iostream>
 
 declare_method(
     void, add,
-    (virtual_<const Number&>, virtual_<const Number&>, std::ostream&));
+    (virtual_<Person&>, virtual_<const Number&>, virtual_<const Number&>,
+     std::ostream&));
 
 define_method(
-    void, add, (const Integer& a, const Integer& b, std::ostream& os)) {
-    os << a.value + b.value;
+    void, add, (Person&, const Number& a, const Number& b, std::ostream& os)) {
+    os << "I don't know how to do this...\n";
+}
+
+define_method(
+    void, add,
+    (Person&, const Integer& a, const Integer& b, std::ostream& os)) {
+    os << a.value << " + " << b.value << " = " << a.value + b.value << "\n";
+}
+
+define_method(
+    void, add,
+    (Engineer&, const Rational& a, const Rational& b, std::ostream& os)) {
+    os << a.num << "/" << a.den << " + " << b.num << "/" << b.den << " = "
+       << a.num * b.den + a.den * b.num << "/" << a.den * b.den << "\n";
 }
 
 BOOST_AUTO_TEST_CASE(ref_vptr_page) {
-    std::vector<int, naive_page_allocator<int>> integers = { 1, 2, 3 };
-
-    // naive_page_allocator<Integer>::intialize();
-    // const Number& i1 = *new Integer(1);
-    // const Number& i2 = *new Integer(2);
+    static_assert(sizeof(Integer) == sizeof(int));
+    static_assert(sizeof(Rational) == 2 * sizeof(int));
+    update<number_policy>();
+    Page<Integer> ints;
+    Number &i_2 = ints.construct(2), &i_3 = ints.construct(3);
+    Page<Rational> rationals;
+    Number &r_2_3 = rationals.construct(2, 3), &r_3_4 = rationals.construct(3, 4);
+    Person&& alice = Engineer();
+    Person&& bob = Person();
+    add(bob, i_2, i_3, std::cout);
+    add(bob, r_2_3, r_3_4, std::cout);
+    add(alice, r_2_3, r_3_4, std::cout);
 }

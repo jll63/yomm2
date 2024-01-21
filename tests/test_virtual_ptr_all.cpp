@@ -64,16 +64,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     using namespace detail;
 
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
-    using kick = method<Policy, void, std::string(virtual_ptr<Policy, Player>)>;
+    using kick =
+        method<Policy, void, std::string(basic_virtual_ptr<Policy, Player>)>;
     static typename kick::template add_function<
-        kick_bear<virtual_ptr<Policy, Player>>>
+        kick_bear<basic_virtual_ptr<Policy, Player>>>
         YOMM2_GENSYM;
 
     update<Policy>();
 
-    using vptr_player = virtual_ptr<Policy, Player>;
+    using vptr_player = basic_virtual_ptr<Policy, Player>;
     static_assert(detail::is_virtual_ptr<vptr_player>);
-    using vptr_cat = virtual_ptr<Policy, Bear>;
+    using vptr_cat = basic_virtual_ptr<Policy, Bear>;
 
     Player player;
     auto virtual_player = vptr_player::final(player);
@@ -120,33 +121,35 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
 
-    using kick = method<Policy, void, std::string(virtual_ptr<Policy, Player>)>;
+    using kick =
+        method<Policy, void, std::string(basic_virtual_ptr<Policy, Player>)>;
     static typename kick::template add_function<
-        kick_bear<virtual_ptr<Policy, Player>>>
+        kick_bear<basic_virtual_ptr<Policy, Player>>>
         YOMM2_GENSYM;
 
     using fight = method<
         Policy, void,
         std::string(
-            virtual_ptr<Policy, Player>, virtual_ptr<Policy, Object>,
-            virtual_ptr<Policy, Player>)>;
+            basic_virtual_ptr<Policy, Player>,
+            basic_virtual_ptr<Policy, Object>,
+            basic_virtual_ptr<Policy, Player>)>;
     static typename fight::template add_function<fight_bear<
-        virtual_ptr<Policy, Player>, virtual_ptr<Policy, Object>,
-        virtual_ptr<Policy, Player>>>
+        basic_virtual_ptr<Policy, Player>, basic_virtual_ptr<Policy, Object>,
+        basic_virtual_ptr<Policy, Player>>>
         YOMM2_GENSYM;
 
     update<Policy>();
 
     Bear bear;
-    BOOST_TEST(kick::fn(virtual_ptr<Policy, Player>(bear)) == "growl");
+    BOOST_TEST(kick::fn(basic_virtual_ptr<Policy, Player>(bear)) == "growl");
 
     Warrior warrior;
     Axe axe;
     BOOST_TEST(
         fight::fn(
-            virtual_ptr<Policy, Player>(warrior),
-            virtual_ptr<Policy, Object>(axe),
-            virtual_ptr<Policy, Player>(bear)) == "kill bear");
+            basic_virtual_ptr<Policy, Player>(warrior),
+            basic_virtual_ptr<Policy, Object>(axe),
+            basic_virtual_ptr<Policy, Player>(bear)) == "kill bear");
 }
 
 } // namespace test_virtual_ptr_dispatch
@@ -167,30 +170,31 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
 
-    using kick =
-        method<Policy, void, std::string(virtual_shared_ptr<Policy, Player>)>;
+    using kick = method<
+        Policy, void, std::string(basic_virtual_shared_ptr<Policy, Player>)>;
 
     static typename kick::template add_function<
-        kick_bear<virtual_shared_ptr<Policy, Player>>>
+        kick_bear<basic_virtual_shared_ptr<Policy, Player>>>
         YOMM2_GENSYM;
 
     using fight = method<
         Policy, void,
         std::string(
-            virtual_shared_ptr<Policy, Player>,
-            virtual_shared_ptr<Policy, Object>,
-            virtual_shared_ptr<Policy, Player>)>;
+            basic_virtual_shared_ptr<Policy, Player>,
+            basic_virtual_shared_ptr<Policy, Object>,
+            basic_virtual_shared_ptr<Policy, Player>)>;
 
     static typename fight::template add_function<fight_bear<
-        virtual_shared_ptr<Policy, Player>, virtual_shared_ptr<Policy, Object>,
-        virtual_shared_ptr<Policy, Player>>>
+        basic_virtual_shared_ptr<Policy, Player>,
+        basic_virtual_shared_ptr<Policy, Object>,
+        basic_virtual_shared_ptr<Policy, Player>>>
         YOMM2_GENSYM;
 
     update<Policy>();
 
-    auto bear = make_virtual_shared<Policy, Bear>();
-    auto warrior = make_virtual_shared<Policy, Warrior>();
-    auto axe = make_virtual_shared<Policy, Axe>();
+    auto bear = basic_make_virtual_shared<Policy, Bear>();
+    auto warrior = basic_make_virtual_shared<Policy, Warrior>();
+    auto axe = basic_make_virtual_shared<Policy, Axe>();
 
     BOOST_TEST(kick::fn(bear) == "growl");
 
