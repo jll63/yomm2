@@ -7,6 +7,20 @@ import sys
 
 import mdgen
 
+def code(text):
+    print("```c++", file=out)
+    text = text.replace("elided", "...")
+    text = text.strip()
+    print(text, file=out)
+    print("```", file=out)
+
+def md(text):
+    text = re.sub(r"^// ?", "", text, flags=re.MULTILINE)
+    text = mdgen.replace_md(text)
+    print(text, file=out)
+
+action = {"MD": md, "md": md, "/***": md, "CODE": code, "code": code, "//{": code}
+
 with open(sys.argv[1]) as fh:
     code = fh.read()
 
@@ -17,30 +31,39 @@ with contextlib.suppress(FileNotFoundError):
 
 with open(out_path, "w") as out:
     # print(f"{out_path}...")
-    fragments = re.findall(
-        r"// (md|code)<(.*?)// > *",
-        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL),
-        flags=re.MULTILINE | re.DOTALL,
-    ) + re.findall(
-        r"# *ifdef YOMM2_(MD|CODE)(.*?)# *endif",
-        re.sub(r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL),
-        flags=re.MULTILINE | re.DOTALL,
+    fragments = (
+        re.findall(
+            r"// (md|code)<(.*?)// > *",
+            re.sub(
+                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+            ),
+            flags=re.MULTILINE | re.DOTALL,
+        )
+        + re.findall(
+            r"# *ifdef YOMM2_(MD|CODE)(.*?)# *endif",
+            re.sub(
+                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+            ),
+            flags=re.MULTILINE | re.DOTALL,
+        )
+        + re.findall(
+            r"(/\*\*\*)(.*?)\*\*\*/",
+            re.sub(
+                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+            ),
+            flags=re.MULTILINE | re.DOTALL,
+        )
+        + re.findall(
+            r"(//{)(.*?)//}",
+            re.sub(
+                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+            ),
+            flags=re.MULTILINE | re.DOTALL,
+        )
     )
 
-    def code(text):
-        print("```c++", file=out)
-        text = text.replace("elided", "...")
-        text = text.strip()
-        print(text, file=out)
-        print("```", file=out)
-
-    def md(text):
-        text = re.sub(r"^// ?", "", text, flags=re.MULTILINE)
-        text = mdgen.replace_md(text)
-        print(text, file=out)
-
     for fragment in fragments:
-        action, content = fragment
-        globals()[action.lower()](content)
+        prefix, content = fragment
+        action[prefix](content)
 
 out_path.chmod(0o400)
