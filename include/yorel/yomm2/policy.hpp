@@ -3,6 +3,11 @@
 
 #include <cstdint>
 
+#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#include <typeinfo>
+#include <typeindex>
+#endif
+
 namespace yorel {
 namespace yomm2 {
 
@@ -36,11 +41,11 @@ struct rtti {
 
 struct type_hash {};
 
-template<class Policy>
-struct no_rtti : virtual rtti {
+struct final_only_rtti : virtual rtti {
     template<typename T>
     static type_id static_type() {
-        return reinterpret_cast<type_id>(&Policy::template static_vptr<T>);
+        static char id;
+        return reinterpret_cast<type_id>(&id);
     }
 };
 

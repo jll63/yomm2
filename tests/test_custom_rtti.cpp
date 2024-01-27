@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_simple) {
 namespace using_vptr {
 
 template<class C>
-using vptr = virtual_ptr<test_policy, C>;
+using vptr = virtual_ptr<C, test_policy>;
 
 declare_method(void, kick, (vptr<Animal>, std::ostream&));
 
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(virtual_base) {
 namespace using_vptr {
 
 template<class C>
-using vptr = virtual_ptr<test_policy, C>;
+using vptr = virtual_ptr<C, test_policy>;
 
 declare_method(void, kick, (vptr<Animal>, std::ostream&));
 

@@ -324,7 +324,7 @@ struct population : abstract_population {
     struct vptr_methods {
         using Policy = typename Dispatch::policy;
         using Base = orthogonal_base<Inheritance>;
-        template<class Class> using vptr = basic_virtual_ptr<Policy, Class>;
+        template<class Class> using vptr = virtual_ptr<Class, Policy>;
         using varg_type = vptr<Base>;
 
         use_classes<Policy, classes> YOMM2_GENSYM;
@@ -423,8 +423,8 @@ struct population : abstract_population {
     std::default_random_engine rnd;
     std::uniform_int_distribution<std::size_t> dist{0, OBJECTS() - 1};
     std::vector<base*> objects;
-    std::vector<virtual_ptr<direct_virtual_ptr_dispatch::policy, base>> vptrs;
-    std::vector<virtual_ptr<indirect_virtual_ptr_dispatch::policy, base>> ivptrs;
+    std::vector<virtual_ptr<base, direct_virtual_ptr_dispatch::policy>> vptrs;
+    std::vector<virtual_ptr<base, indirect_virtual_ptr_dispatch::policy>> ivptrs;
 
     static population instance;
 

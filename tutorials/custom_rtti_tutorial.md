@@ -121,7 +121,7 @@ struct minimal_policy : basic_policy<minimal_policy>, rtti {
 };
 
 template<typename T>
-using virtual_ptr = basic_virtual_ptr<minimal_policy, T>;
+using virtual_ptr = virtual_ptr<T, minimal_policy>;
 
 using kick = method<minimal_policy, kick_key, std::string(virtual_ptr<Animal>)>;
 

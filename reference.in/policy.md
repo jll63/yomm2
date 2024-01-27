@@ -38,7 +38,7 @@ implementation for each category. They are summed up in the following table.
 | facet category      | responsibility                  | implementations                                                              |
 | ------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
 | vptr, external_vptr | fetch vptr for virtual argument | **external_vptr_vector\<...>** (D, R), external_vptr_map\<...>               |
-| rtti                | type information                | **std_rtti** (D, R), no_rtti                                                 |
+| rtti, deferred_rtti | type information                | **std_rtti** (D, R), no_rtti                                                 |
 | type_hash           | map type info to integer index  | **simple_perfect_hash\<...>** (R), **checked_simple_perfect_hash`<...>** (D) |
 | error               | report errors                   | vectored_error_handler\<...>                                                 |
 | error_output        | describe error                  | **basic_error_output\<...>** (D)                                             |

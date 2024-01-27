@@ -1,4 +1,3 @@
-
 // Copyright (c) 2018-2023 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
@@ -147,7 +146,7 @@ struct minimal_policy : basic_policy<minimal_policy>, rtti {
 };
 
 template<typename T>
-using virtual_ptr = basic_virtual_ptr<minimal_policy, T>;
+using virtual_ptr = virtual_ptr<T, minimal_policy>;
 
 using kick = method<minimal_policy, kick_key, std::string(virtual_ptr<Animal>)>;
 
