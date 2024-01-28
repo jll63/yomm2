@@ -1,6 +1,9 @@
 #ifndef YOREL_YOMM2_DETAIL_INCLUDED
 #define YOREL_YOMM2_DETAIL_INCLUDED
 
+#include <boost/mp11/algorithm.hpp>
+#include <boost/mp11/bind.hpp>
+
 #include "yorel/yomm2/detail/chain.hpp"
 
 namespace yorel {

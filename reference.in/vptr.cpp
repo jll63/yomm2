@@ -48,7 +48,7 @@ facet is optional.
 its static functions to allow it to initialize its data structures.
 ***/
 
-//{
+//***
 
 #include <yorel/yomm2/policy.hpp>
 
@@ -194,4 +194,4 @@ BOOST_AUTO_TEST_CASE(ref_vptr_page) {
     add(alice, r_2_3, r_3_4, std::cout);
 }
 
-//}
+//***
