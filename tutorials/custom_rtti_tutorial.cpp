@@ -3,9 +3,6 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// clang-format off
-
-
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 #include <boost/utility/identity_type.hpp>
@@ -321,8 +318,8 @@ Thus we create the policy with:
 
 //***
 
-struct custom_policy :
-    default_policy::rebind<custom_policy>::replace<policy::rtti, custom_rtti> {};
+struct custom_policy : default_policy::rebind<custom_policy>::replace<
+                           policy::rtti, custom_rtti> {};
 
 //***
 
@@ -384,7 +381,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
 }
 //***
 
-} // namespace type_hash
+} // namespace using_type_hash
 
 /***
 
@@ -471,9 +468,8 @@ struct custom_rtti : policy::rtti {
 };
 
 struct custom_policy
-    : default_static_policy::rebind<custom_policy>
-        ::replace<policy::rtti, custom_rtti>
-        ::remove<policy::type_hash> {};
+    : default_static_policy::rebind<custom_policy>::replace<
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 //***
 
@@ -642,9 +638,8 @@ The only change is that the custom facet now inherits from
 ***/
 
 struct custom_policy
-    : default_static_policy::rebind<custom_policy>
-        ::replace<policy::rtti, custom_rtti>
-        ::remove<policy::type_hash> {};
+    : default_static_policy::rebind<custom_policy>::replace<
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
 register_classes(custom_policy, Animal, Dog, Cat);
 

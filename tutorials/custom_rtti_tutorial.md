@@ -288,8 +288,8 @@ Thus we create the policy with:
 
 
 ```c++
-struct custom_policy :
-    default_policy::rebind<custom_policy>::replace<policy::rtti, custom_rtti> {};
+struct custom_policy : default_policy::rebind<custom_policy>::replace<
+                           policy::rtti, custom_rtti> {};
 ```
 
 
@@ -419,9 +419,8 @@ struct custom_rtti : policy::rtti {
 };
 
 struct custom_policy
-    : default_static_policy::rebind<custom_policy>
-        ::replace<policy::rtti, custom_rtti>
-        ::remove<policy::type_hash> {};
+    : default_static_policy::rebind<custom_policy>::replace<
+          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 ```
 
 
