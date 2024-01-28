@@ -8,6 +8,9 @@
 #include <typeindex>
 #endif
 
+// -----------------------------------------------------------------------------
+// Forward declarations needed by "detail.hpp"
+
 namespace yorel {
 namespace yomm2 {
 
@@ -17,16 +20,60 @@ struct catalog;
 using type_id = std::uintptr_t;
 constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
+template<class Class, class Policy>
+struct virtual_ptr;
+
+template<typename T>
+struct virtual_;
+
+template<class Policy, typename Key, typename Signature>
+struct method;
+
+template<typename Class, typename... Rest>
+struct class_declaration;
+
 namespace policy {
 
 struct abstract_policy {};
-
 struct facet {};
 struct error_handler {};
-
 struct runtime_checks {};
-
 struct indirect_vptr {};
+struct type_hash {};
+
+struct deferred_static_rtti;
+struct debug_static;
+struct release_static;
+struct debug_shared;
+struct release_shared;
+
+} // namespace policy
+
+#ifdef NDEBUG
+    #if defined(YOMM2_SHARED)
+using default_policy = policy::release_shared;
+    #else
+using default_policy = policy::release_static;
+    #endif
+using default_static_policy = policy::release_static;
+#else
+    #if defined(YOMM2_SHARED)
+using default_policy = policy::debug_shared;
+    #else
+using default_policy = policy::debug_static;
+    #endif
+using default_static_policy = policy::debug_static;
+#endif
+
+} // namespace yomm2
+} // namespace yorel
+
+#include "detail.hpp"
+
+namespace yorel {
+namespace yomm2 {
+
+namespace policy {
 
 struct rtti {
     static type_id type_index(type_id type) {
@@ -38,8 +85,6 @@ struct rtti {
         stream << "type_id(" << type << ")";
     }
 };
-
-struct type_hash {};
 
 struct final_only_rtti : virtual rtti {
     template<typename T>
@@ -80,11 +125,6 @@ struct std_rtti : virtual rtti {
 };
 
 struct deferred_static_rtti : virtual rtti {};
-
-struct debug_static;
-struct release_static;
-struct debug_shared;
-struct release_shared;
 
 template<typename T>
 constexpr bool implemented = !std::is_same_v<T, void>;

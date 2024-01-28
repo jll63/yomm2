@@ -1,9 +1,11 @@
 
 <sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
-**yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr entry:**<br>
-yorel::yomm2::policy::external_vptr_vector entry: yorel::yomm2::policy::external_vptr_map headers: yorel/yomm2/core.hpp,
-yorel/yomm2/keywords.hpp
+**yorel::yomm2::policy::vptr**<br>
+**yorel::yomm2::policy::external_vptr**<br>
+**yorel::yomm2::policy::external_vptr_vector**<br>
+**yorel::yomm2::policy::external_vptr_map**<br>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```
@@ -11,9 +13,11 @@ struct vptr;
 
 struct external_vptr;
 
-template<class Policy> struct external_vptr_vector;
+template<class Policy>
+struct external_vptr_vector;
 
-template<class Policy> struct external_vptr_map;
+template<class Policy>
+struct external_vptr_map;
 ```
 ---
 A `vptr` facet is provides a static function that returns a pointer to the
@@ -33,9 +37,9 @@ vptr on the basis of an object's dynamic type.
 
 `virtual_ptr::final`, and the related convenience functions, assume that the
 static and dynamic types of their argument are the same. The vptr is obtained
-statically from the policy's `static_vptr<Class>` member. It is conceivable to
-organize an entire program around the "final" constructs; thus, the `vptr` facet
-is optional.
+statically from the policy's `static_vptr<Class>` member. It is conceivable
+to organize an entire program around the "final" constructs; thus, the `vptr`
+facet is optional.
 
 `external_vptr` is a sub-category of `facet`. If present, the runtime calls
 its static functions to allow it to initialize its data structures.
@@ -72,13 +76,9 @@ struct Engineer : Person {
     Engineer();
 };
 
-struct number_policy;
+struct my_vptr_policy;
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY number_policy
-
-#include <yorel/yomm2/keywords.hpp>
-#include <yorel/yomm2/runtime.hpp>
+#include <yorel/yomm2/policy.hpp>
 
 // for brevity
 using namespace yorel::yomm2;
@@ -99,7 +99,7 @@ struct vptr_page : virtual default_policy::use_facet<vptr> {
     }
 };
 
-struct number_policy : default_policy::replace<vptr, vptr_page> {};
+struct my_vptr_policy : default_policy::replace<vptr, vptr_page> {};
 
 template<class T>
 class Page {
@@ -113,7 +113,7 @@ class Page {
         base =
             reinterpret_cast<char*>(std::aligned_alloc(page_size, page_size));
         *reinterpret_cast<std::uintptr_t**>(base) =
-            number_policy::static_vptr<T>;
+            my_vptr_policy::static_vptr<T>;
         void* first = base + sizeof(std::uintptr_t*);
         size_t space = page_size - sizeof(std::uintptr_t*);
         std::align(alignof(T), sizeof(T), first, space);
@@ -135,12 +135,16 @@ class Page {
 };
 
 Person::Person() {
-    vptr = number_policy::static_vptr<Person>;
+    vptr = my_vptr_policy::static_vptr<Person>;
 }
 
 Engineer::Engineer() {
-    vptr = number_policy::static_vptr<Engineer>;
+    vptr = my_vptr_policy::static_vptr<Engineer>;
 }
+
+#define YOMM2_DEFAULT_POLICY my_vptr_policy
+#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/runtime.hpp>
 
 register_classes(Number, Integer, Rational, Person, Engineer);
 
@@ -172,7 +176,7 @@ define_method(
 BOOST_AUTO_TEST_CASE(ref_vptr_page) {
     static_assert(sizeof(Integer) == sizeof(int));
     static_assert(sizeof(Rational) == 2 * sizeof(int));
-    update<number_policy>();
+    update<my_vptr_policy>();
     Page<Integer> ints;
     Number &i_2 = ints.construct(2), &i_3 = ints.construct(3);
     Page<Rational> rationals;

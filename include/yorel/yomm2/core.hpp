@@ -40,14 +40,8 @@
 #pragma push_macro("max")
 #undef max
 
-// -----------------------------------------------------------------------------
-// type_id
-
 namespace yorel {
 namespace yomm2 {
-
-template<class Class, class Policy>
-struct virtual_ptr;
 
 // -----------------------------------------------------------------------------
 // Error handling
@@ -96,41 +90,11 @@ using method_call_error_handler =
 // -----------------------------------------------------------------------------
 // Policies
 
-#ifdef NDEBUG
-    #if defined(YOMM2_SHARED)
-using default_policy = policy::release_shared;
-    #else
-using default_policy = policy::release_static;
-    #endif
-using default_static_policy = policy::release_static;
-#else
-    #if defined(YOMM2_SHARED)
-using default_policy = policy::debug_shared;
-    #else
-using default_policy = policy::debug_static;
-    #endif
-using default_static_policy = policy::debug_static;
-#endif
-
-// -----------------------------------------------------------------------------
-// Forward declarations needed by "detail.hpp"
-
-template<typename T>
-struct virtual_;
-
-template<class Policy, typename Key, typename Signature>
-struct method;
-
-template<typename Class, typename... Rest>
-struct class_declaration;
-
 } // namespace yomm2
 } // namespace yorel
 
 // -----------------------------------------------------------------------------
 // details
-
-#include "detail.hpp"
 
 namespace yorel {
 namespace yomm2 {
