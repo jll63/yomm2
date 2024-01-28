@@ -1,5 +1,4 @@
 
-
 <sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::method**<br>
@@ -78,7 +77,7 @@ The single instance of `method<Key, R(Args...)>`. Used to call the method.
 ```c++
 template<typename Key, typename R, typename... Args>
 struct method<Key, R(Args...)> {
-    using next_type = /*unspecified*/;
+    using next_type = unspecified;
 };
 ```
 

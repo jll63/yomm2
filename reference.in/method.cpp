@@ -1,5 +1,4 @@
-#ifdef YOMM2_MD
-
+/***
 <sub>/ ->home / ->reference </sub>
 
 entry: yorel::yomm2::method
@@ -78,7 +77,7 @@ The single instance of `method<Key, R(Args...)>`. Used to call the method.
 ```c++
 template<typename Key, typename R, typename... Args>
 struct method<Key, R(Args...)> {
-    using next_type = /*unspecified*/;
+    using next_type = unspecified;
 };
 ```
 
@@ -156,7 +155,7 @@ make sense, see the example below.
 
 ## example
 
-#endif
+***/
 
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
@@ -164,7 +163,7 @@ make sense, see the example below.
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 
-#ifdef YOMM2_CODE
+//***
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
@@ -222,4 +221,4 @@ BOOST_AUTO_TEST_CASE(ref_method_example) {
     BOOST_TEST(pet::fn(*hector) == "wag tail");
 }
 
-#endif
+//***
