@@ -1,6 +1,7 @@
 #ifndef YOREL_YOMM2_POLICY_INCLUDED
 #define YOREL_YOMM2_POLICY_INCLUDED
 
+#include <array>
 #include <charconv>
 #include <cstdint>
 #include <limits>
