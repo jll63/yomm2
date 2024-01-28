@@ -45,6 +45,8 @@ facet is optional.
 its static functions to allow it to initialize its data structures.
 
 ```c++
+#include <cstdlib>
+
 #include <yorel/yomm2/policy.hpp>
 
 struct Number {};
