@@ -7,63 +7,69 @@ import sys
 
 import mdgen
 
-def code(text):
+
+def generate_code(text, out):
     print("```c++", file=out)
     text = text.replace("elided", "...")
     text = text.strip()
     print(text, file=out)
     print("```", file=out)
 
-def md(text):
+
+def generate_md(text, out):
     text = re.sub(r"^// ?", "", text, flags=re.MULTILINE)
     text = mdgen.replace_md(text)
     print(text, file=out)
 
-action = {"MD": md, "md": md, "/***": md, "CODE": code, "code": code, "//{": code}
 
-with open(sys.argv[1]) as fh:
-    code = fh.read()
+action = {"MD": generate_md, "md": generate_md, "/***": generate_md, "CODE": generate_code, "code": generate_code, "//***": generate_code}
 
 out_path = Path(sys.argv[2]).absolute()
 
 with contextlib.suppress(FileNotFoundError):
     out_path.chmod(0o600)
 
-with open(out_path, "w") as out:
-    # print(f"{out_path}...")
-    fragments = (
-        re.findall(
+
+def generate():
+    with open(sys.argv[1]) as fh:
+        input = fh.read()
+
+    with open(out_path, "w") as out:
+        fragments = re.findall(
+            r"(/\*{3}(.*?)\*{3}/)|(//\*{3}(.*?)//\*{3})",
+            re.sub(
+                r"// etc<.*?// >.*?$", r"// etc", input, flags=re.MULTILINE | re.DOTALL
+            ),
+            flags=re.MULTILINE | re.DOTALL,
+        )
+
+        for fragment in fragments:
+            if fragment[1] != "":
+                generate_md(fragment[1], out)
+            else:
+                generate_code(fragment[3], out)
+
+        if len(fragments) > 0:
+            return
+
+        fragments = re.findall(
             r"// (md|code)<(.*?)// > *",
             re.sub(
-                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+                r"// etc<.*?// >.*?$", r"// etc", input, flags=re.MULTILINE | re.DOTALL
             ),
             flags=re.MULTILINE | re.DOTALL,
-        )
-        + re.findall(
+        ) + re.findall(
             r"# *ifdef YOMM2_(MD|CODE)(.*?)# *endif",
             re.sub(
-                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
+                r"// etc<.*?// >.*?$", r"// etc", input, flags=re.MULTILINE | re.DOTALL
             ),
             flags=re.MULTILINE | re.DOTALL,
         )
-        + re.findall(
-            r"(/\*\*\*)(.*?)\*\*\*/",
-            re.sub(
-                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
-            ),
-            flags=re.MULTILINE | re.DOTALL,
-        )
-        + re.findall(
-            r"(//{)(.*?)//}",
-            re.sub(
-                r"// etc<.*?// >.*?$", r"// etc", code, flags=re.MULTILINE | re.DOTALL
-            ),
-            flags=re.MULTILINE | re.DOTALL,
-        )
-    )
 
-    for fragment in fragments:
-        prefix, content = fragment
-        action[prefix](content)
+        for fragment in fragments:
+            prefix, content = fragment
+            action[prefix](content, out)
 
+
+generate()
 out_path.chmod(0o400)

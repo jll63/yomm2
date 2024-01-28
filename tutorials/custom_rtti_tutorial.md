@@ -98,8 +98,7 @@ If standard RTTI is disabled, the body of this class is `#ifdef`'ed out, and the
 
 using namespace yorel::yomm2;
 using namespace policy;
-```
-```c++
+
 class Animal {
   public:
     virtual ~Animal() {

@@ -16,9 +16,7 @@
 // for brevity
 using namespace yorel::yomm2;
 
-#define YOMM2_CODE
-
-#ifdef YOMM2_MD
+/***
 
 # Using Custom RTTI
 
@@ -110,20 +108,15 @@ If standard RTTI is disabled, the body of this class is `#ifdef`'ed out, and the
 
 ## Minimal RTTI
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
-
+//***
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/runtime.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;
 using namespace policy;
-
-#endif
-
-#ifdef YOMM2_CODE
 
 class Animal {
   public:
@@ -183,20 +176,20 @@ BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
 }
 } // namespace minimal
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 ## A custom RTTI facet
 
 Let's interface YOMM2 to a toy RTTI implementation that uses `const char*`s as
 type ids. It also provides its own dynamic casting facility.
 
-#endif
+***/
 
 namespace using_type_hash {
 
-#ifdef YOMM2_CODE
+//***
 
 struct Animal {
     Animal(const char* name, const char* type) : name(name), type(type) {
@@ -247,9 +240,9 @@ struct Cat : virtual Animal {
 
 const char* Cat::static_type = "Cat";
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 Let's write a `rtti` facet for this custom RTTI system. Note that:
 
@@ -264,9 +257,9 @@ each type, so we don't need to provide a `type_index` function.
   to methods that take  `Animal`s. We must thus implement a `dynamic_cast_`
   function.
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
@@ -304,9 +297,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 Now we need to create a policy which is the same as the default policy in every
 respect, except for the `rtti` facet. For this, we use two templates, members of
@@ -324,16 +317,16 @@ policy classes:
 
 Thus we create the policy with:
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 struct custom_policy :
     default_policy::rebind<custom_policy>::replace<policy::rtti, custom_rtti> {};
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 Finally, we must specify the new policy during class registration and method
 declaration. Macros `register_classes` and `declare_method`, and core API
@@ -343,9 +336,9 @@ first argument of the construct.
 It is also possible to change the default policy used by the macros by
 re-defining the `YOMM2_DEFAULT_POLICY` macro symbol.
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 register_classes(custom_policy, Animal, Dog, Cat);
 
@@ -359,17 +352,17 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
     os << cat.name << " hisses.";
 }
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 The `update` function operates on the default policy. We need to call the
 `update` function _template_. It takes a policy class as an explicit function
 template argument:
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
     // Note: call update for our custom policy!
@@ -389,11 +382,11 @@ BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
-#endif
+//***
 
 } // namespace type_hash
 
-#ifdef YOMM2_MD
+/***
 
 ## Taking advantage of custom RTTI specifities
 
@@ -405,11 +398,11 @@ indexes.
 Some custom RTTI implementations use integers as type ids, and they are concentrated
 in a fairly small range. For example:
 
-#endif
+***/
 
 namespace no_projection {
 
-#ifdef YOMM2_CODE
+//***
 
 struct Animal {
     Animal(const char* name, size_t type) : name(name), type(type) {
@@ -434,9 +427,9 @@ struct Cat : Animal {
     static constexpr size_t static_type = 3;
 };
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 In this situation, we can save time on hashing. If a policy has a `type_hash`
 facet (as is with the default policy), it is used to hash the `type_id`s to a
@@ -453,9 +446,9 @@ to classes that were actually registered.
 This time, virtual inheritance is not involved, so we dispense with
 `dynamic_cast_`; we also use the default implementation of `type_name`.
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 struct custom_rtti : policy::rtti {
     template<typename T>
@@ -482,15 +475,15 @@ struct custom_policy
         ::replace<policy::rtti, custom_rtti>
         ::remove<policy::type_hash> {};
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 This time we re-define `YOMM2_DEFAULT_POLICY`:
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 #pragma push_macro("YOMM2_DEFAULT_POLICY")
 #undef YOMM2_DEFAULT_POLICY
@@ -510,7 +503,7 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
 
 #pragma pop_macro("YOMM2_DEFAULT_POLICY")
 
-#endif
+//***
 
 BOOST_AUTO_TEST_CASE(custom_rtti_integer_demo) {
     // Note: call update for our custom policy!
@@ -544,7 +537,7 @@ void call_kick(Animal& a, std::ostream& os) {
 
 } // namespace no_projection
 
-#ifdef YOMM2_MD
+/***
 
 A call to `kick` now compiles to a shorter assembly code:
 
@@ -566,11 +559,11 @@ In the previous examples, type ids were hard-coded. It is unlikely to be the
 case in a real custom RTTI system. More likely, type ids will be allocated at
 static construction time, like this:
 
-#endif
+***/
 
 namespace defered_type_id {
 
-#ifdef YOMM2_CODE
+//***
 
 struct Animal {
     Animal(const char* name, size_t type) : name(name), type(type) {
@@ -603,9 +596,9 @@ struct Cat : Animal {
 
 size_t Cat::static_type = ++Animal::last_type_id;
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 This is potentially a problem, because YOMM2 itself uses static constructors to
 register classes, methods and definitions. In particular, `static_type` is
@@ -615,9 +608,9 @@ variables have already been initialized.
 The solution is the `deferred_static_rtti` facet base. It tells YOMM2 to store a
 pointer to the `static_type` functions; they will be called by `update`:
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 struct custom_rtti : policy::deferred_static_rtti {
     template<typename T>
@@ -639,14 +632,14 @@ struct custom_rtti : policy::deferred_static_rtti {
     }
 };
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 The only change is that the custom facet now inherits from
 `deferred_static_rtti`. The rest of the code is as before.
 
-#endif
+***/
 
 struct custom_policy
     : default_static_policy::rebind<custom_policy>
