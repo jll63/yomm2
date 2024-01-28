@@ -27,9 +27,6 @@
 
 #include <yorel/yomm2/core.hpp>
 
-#pragma push_macro("max")
-#undef max
-
 namespace yorel {
 namespace yomm2 {
 namespace detail {
@@ -1329,7 +1326,5 @@ void update() {
 
 } // namespace yomm2
 } // namespace yorel
-
-#pragma pop_macro("max")
 
 #endif

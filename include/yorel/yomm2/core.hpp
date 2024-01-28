@@ -1,9 +1,7 @@
 #ifndef YOREL_YOMM2_CORE_INCLUDED
 #define YOREL_YOMM2_CORE_INCLUDED
 
-#include <array>
 #include <functional>
-#include <limits>
 #include <memory>
 
 #include <yorel/yomm2/policy.hpp>

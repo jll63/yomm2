@@ -3,6 +3,7 @@
 
 #include <charconv>
 #include <cstdint>
+#include <limits>
 #include <stdio.h>
 #include <string_view>
 #include <unordered_map>
@@ -13,6 +14,9 @@
 #include <typeinfo>
 #include <typeindex>
 #endif
+
+#pragma push_macro("max")
+#undef max
 
 #if defined(YOMM2_SHARED)
     #if defined(_MSC_VER)
@@ -619,5 +623,7 @@ struct yOMM2_API_gcc release_shared
 
 } // namespace yomm2
 } // namespace yorel
+
+#pragma pop_macro("max")
 
 #endif
