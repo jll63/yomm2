@@ -4,11 +4,10 @@
 /***
 <sub>/ ->home / ->reference </sub>
 
-entry: yorel::yomm2::policy::vptr
-entry: yorel::yomm2::policy::external_vptr
-entry: yorel::yomm2::policy::external_vptr_vector
-entry: yorel::yomm2::policy::external_vptr_map
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+entry: yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr
+entry: yorel::yomm2::policy::external_vptr_vector entry:
+yorel::yomm2::policy::external_vptr_map headers: yorel/yomm2/core.hpp,
+yorel/yomm2/keywords.hpp
 
 ---
 ```
@@ -16,11 +15,9 @@ struct vptr;
 
 struct external_vptr;
 
-template<class Policy>
-struct external_vptr_vector;
+template<class Policy> struct external_vptr_vector;
 
-template<class Policy>
-struct external_vptr_map;
+template<class Policy> struct external_vptr_map;
 ```
 ---
 A `vptr` facet is provides a static function that returns a pointer to the
@@ -46,6 +43,15 @@ facet is optional.
 
 `external_vptr` is a sub-category of `facet`. If present, the runtime calls
 its static functions to allow it to initialize its data structures.
+
+## Example
+
+In this example, instances of `Person` and its derived class `Engineer` contain
+a pointer to the vtable, initialized by the constructor [^1]. Instances of
+`Integer` and `Rational` - both derived from `Number` are allocated in pages
+aligned on a 1024 byte boundary. The pointer to the vtable is stored at the
+beginning of the page.
+
 ***/
 
 //***
@@ -55,7 +61,32 @@ its static functions to allow it to initialize its data structures.
 #else
 #include <cstdlib>
 #endif
+
 #include <yorel/yomm2/policy.hpp>
+
+// for brevity
+using namespace yorel::yomm2;
+using namespace policy;
+
+struct Person;
+struct Number;
+
+struct vptr_page : virtual default_static_policy::use_facet<vptr> {
+    template<class QClass>
+    static auto vptr(QClass& arg) {
+        using Class = std::remove_const_t<QClass>;
+        if constexpr (std::is_base_of_v<Number, Class>) {
+            auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
+            return *reinterpret_cast<std::uintptr_t**>(page);
+        } else if constexpr (std::is_base_of_v<Person, Class>) {
+            return arg.vptr;
+        } else {
+            return default_static_policy::use_facet<policy::vptr>::vptr(arg);
+        }
+    }
+};
+
+struct custom_policy : default_static_policy::replace<vptr, vptr_page> {};
 
 struct Number {};
 
@@ -76,40 +107,16 @@ struct Rational : Number {
 struct Person {
     std::uintptr_t* vptr;
 
-    Person();
-
-    virtual ~Person() {
+    Person() {
+        vptr = custom_policy::static_vptr<Person>;
     }
 };
 
 struct Engineer : Person {
-    Engineer();
-};
-
-struct my_vptr_policy;
-
-#include <yorel/yomm2/policy.hpp>
-
-// for brevity
-using namespace yorel::yomm2;
-using namespace policy;
-
-struct vptr_page : virtual default_static_policy::use_facet<vptr> {
-
-    template<class Class>
-    static auto vptr(const Class& arg) {
-        if constexpr (std::is_base_of_v<Number, Class>) {
-            auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
-            return *reinterpret_cast<std::uintptr_t**>(page);
-        } else if constexpr (std::is_base_of_v<Person, Class>) {
-            return arg.vptr;
-        } else {
-            return default_static_policy::use_facet<policy::vptr>::vptr(arg);
-        }
+    Engineer() {
+        vptr = custom_policy::static_vptr<Engineer>;
     }
 };
-
-struct my_vptr_policy : default_static_policy::replace<vptr, vptr_page> {};
 
 template<class T>
 class Page {
@@ -128,7 +135,7 @@ class Page {
 #endif
         );
         *reinterpret_cast<std::uintptr_t**>(base) =
-            my_vptr_policy::static_vptr<T>;
+            custom_policy::static_vptr<T>;
         void* first = base + sizeof(std::uintptr_t*);
         size_t space = page_size - sizeof(std::uintptr_t*);
         std::align(alignof(T), sizeof(T), first, space);
@@ -153,15 +160,7 @@ class Page {
     }
 };
 
-Person::Person() {
-    vptr = my_vptr_policy::static_vptr<Person>;
-}
-
-Engineer::Engineer() {
-    vptr = my_vptr_policy::static_vptr<Engineer>;
-}
-
-#define YOMM2_default_static_policy my_vptr_policy
+#define YOMM2_DEFAULT_POLICY custom_policy
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
@@ -171,41 +170,62 @@ register_classes(Number, Integer, Rational, Person, Engineer);
 
 declare_method(
     void, add,
-    (virtual_<Person&>, virtual_<const Number&>, virtual_<const Number&>,
+    (virtual_<const Person&>, virtual_<const Number&>, virtual_<const Number&>,
      std::ostream&));
 
 define_method(
-    void, add, (Person&, const Number& a, const Number& b, std::ostream& os)) {
-    os << "I don't know how to do this...\n";
+    void, add,
+    (const Person&, const Number& a, const Number& b, std::ostream& os)) {
+    os << "I don't know how to do this...";
 }
 
 define_method(
     void, add,
-    (Person&, const Integer& a, const Integer& b, std::ostream& os)) {
-    os << a.value << " + " << b.value << " = " << a.value + b.value << "\n";
+    (const Person&, const Integer& a, const Integer& b, std::ostream& os)) {
+    os << a.value << " + " << b.value << " = " << a.value + b.value;
 }
 
 define_method(
     void, add,
-    (Engineer&, const Rational& a, const Rational& b, std::ostream& os)) {
+    (const Engineer&, const Rational& a, const Rational& b, std::ostream& os)) {
     os << a.num << "/" << a.den << " + " << b.num << "/" << b.den << " = "
-       << a.num * b.den + a.den * b.num << "/" << a.den * b.den << "\n";
+       << a.num * b.den + a.den * b.num << "/" << a.den * b.den;
 }
+
+#include <sstream>
 
 BOOST_AUTO_TEST_CASE(ref_vptr_page) {
     static_assert(sizeof(Integer) == sizeof(int));
     static_assert(sizeof(Rational) == 2 * sizeof(int));
-    update<my_vptr_policy>();
+
+    update<custom_policy>();
+
     Page<Integer> ints;
-    Number &i_2 = ints.construct(2), &i_3 = ints.construct(3);
+    const Number &i_2 = ints.construct(2), &i_3 = ints.construct(3);
+
     Page<Rational> rationals;
-    Number &r_2_3 = rationals.construct(2, 3),
+    const Number &r_2_3 = rationals.construct(2, 3),
            &r_3_4 = rationals.construct(3, 4);
-    Person&& alice = Engineer();
-    Person&& bob = Person();
-    add(bob, i_2, i_3, std::cout);
-    add(bob, r_2_3, r_3_4, std::cout);
-    add(alice, r_2_3, r_3_4, std::cout);
+
+    const Person& alice = Engineer();
+    const Person& bob = Person();
+
+    std::ostringstream out1, out2, out3;
+
+    add(bob, i_2, i_3, out1);
+    BOOST_TEST(out1.str() == "2 + 3 = 5");
+
+    add(bob, r_2_3, r_3_4, out2);
+    BOOST_TEST(out2.str() == "I don't know how to do this...");
+
+    add(alice, r_2_3, r_3_4, out3);
+    BOOST_TEST(out3.str() == "2/3 + 3/4 = 17/12");
 }
 
 //***
+
+/***
+
+[1]: This is similar to the way YOMM11 works.
+
+***/
