@@ -50,9 +50,13 @@ its static functions to allow it to initialize its data structures.
 
 //***
 
+#ifdef _MSC_VER
+#include <malloc.h>
+#else
 #include <cstdlib>
-
+#endif
 #include <yorel/yomm2/policy.hpp>
+
 
 struct Number {};
 
@@ -91,7 +95,7 @@ struct my_vptr_policy;
 using namespace yorel::yomm2;
 using namespace policy;
 
-struct vptr_page : virtual default_policy::use_facet<vptr> {
+struct vptr_page : virtual default_static_policy::use_facet<vptr> {
 
     template<class Class>
     static auto vptr(const Class& arg) {
@@ -101,12 +105,12 @@ struct vptr_page : virtual default_policy::use_facet<vptr> {
         } else if constexpr (std::is_base_of_v<Person, Class>) {
             return arg.vptr;
         } else {
-            return default_policy::use_facet<policy::vptr>::vptr(arg);
+            return default_static_policy::use_facet<policy::vptr>::vptr(arg);
         }
     }
 };
 
-struct my_vptr_policy : default_policy::replace<vptr, vptr_page> {};
+struct my_vptr_policy : default_static_policy::replace<vptr, vptr_page> {};
 
 template<class T>
 class Page {
@@ -117,8 +121,13 @@ class Page {
 
   public:
     Page() {
-        base =
-            reinterpret_cast<char*>(std::aligned_alloc(page_size, page_size));
+        base = reinterpret_cast<char*>(
+            #ifdef _MSC_VER
+            _aligned_malloc(page_size, page_size)
+            #else
+            std::aligned_alloc(page_size, page_size)
+            #endif
+            );
         *reinterpret_cast<std::uintptr_t**>(base) =
             my_vptr_policy::static_vptr<T>;
         void* first = base + sizeof(std::uintptr_t*);
@@ -128,7 +137,11 @@ class Page {
     }
 
     ~Page() {
-        free(base);
+        #ifdef _MSC_VER
+        _aligned_free(base);
+        #else
+        free(base)
+        #endif
     }
 
     template<typename... U>
@@ -149,7 +162,7 @@ Engineer::Engineer() {
     vptr = my_vptr_policy::static_vptr<Engineer>;
 }
 
-#define YOMM2_DEFAULT_POLICY my_vptr_policy
+#define YOMM2_default_static_policy my_vptr_policy
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
 
