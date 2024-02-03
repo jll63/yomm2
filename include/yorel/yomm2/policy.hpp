@@ -332,7 +332,7 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
     }
 
     template<class Class>
-    static auto vptr(const Class& arg) {
+    static auto dynamic_vptr(const Class& arg) {
         auto index = Policy::dynamic_type(arg);
 
         if constexpr (has_facet<Policy, type_hash>) {
@@ -365,7 +365,7 @@ struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
     }
 
     template<class Class>
-    static auto vptr(const Class& arg) {
+    static auto dynamic_vptr(const Class& arg) {
         return vptrs.find(Policy::dynamic_type(arg))->second;
     }
 };

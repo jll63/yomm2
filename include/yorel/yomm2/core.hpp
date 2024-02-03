@@ -467,7 +467,7 @@ method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.
     } else {
-        return Policy::vptr(arg);
+        return Policy::dynamic_vptr(arg);
     }
 }
 

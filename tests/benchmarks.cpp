@@ -117,7 +117,7 @@ struct compact_map_policy : virtual_by_reference {
 struct direct_intrusive_dispatch : virtual_by_reference {
     struct policy : default_static_policy::rebind<policy>::remove<yomm2::policy::external_vptr> {
         template<class Class>
-        static auto vptr(const Class& arg) {
+        static auto dynamic_vptr(const Class& arg) {
             return arg.yomm2_vptr();
         }
     };

@@ -162,22 +162,6 @@ template<typename Container>
 constexpr bool has_trace =
     !std::is_same_v<decltype(type_trace(std::declval<Container>())), void>;
 
-// --------------
-// intrusive mode
-
-void type_mptr(...);
-
-template<typename Object>
-auto type_mptr(Object* obj) -> decltype(obj->yomm2_vptr());
-
-template<typename Object>
-using type_mptr_t = decltype(type_mptr(std::declval<Object*>()));
-
-template<typename Object>
-constexpr bool has_mptr = !std::is_same_v<
-    decltype(type_mptr(std::declval<std::remove_reference_t<Object>*>())),
-    void>;
-
 template<typename T>
 const char* default_method_name() {
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
