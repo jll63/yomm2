@@ -90,7 +90,7 @@ multi-methods.
 
 namespace std {
 void* aligned_alloc(size_t alignment, size_t size) {
-    return _aligned_malloc(page_size, page_size);
+    return _aligned_malloc(size, alignment);
 }
 } // namespace std
 
