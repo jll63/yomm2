@@ -80,11 +80,7 @@ multi-methods.
 
 
 ```c++
-#ifdef _MSC_VER
-#include <malloc.h>
-#else
 #include <cstdlib>
-#endif
 
 #include <yorel/yomm2/policy.hpp>
 
@@ -122,13 +118,8 @@ class Page {
 
   public:
     Page() {
-        base = reinterpret_cast<char*>(
-#ifdef _MSC_VER
-            _aligned_malloc(page_size, page_size)
-#else
-            std::aligned_alloc(page_size, page_size)
-#endif
-        );
+        base =
+            reinterpret_cast<char*>(std::aligned_alloc(page_size, page_size));
         *reinterpret_cast<std::uintptr_t**>(base) =
             number_aware_policy::static_vptr<T>;
         void* first = base + sizeof(std::uintptr_t*);
@@ -138,11 +129,7 @@ class Page {
     }
 
     ~Page() {
-#ifdef _MSC_VER
-        _aligned_free(base);
-#else
         free(base);
-#endif
     }
 
     template<typename... U>
