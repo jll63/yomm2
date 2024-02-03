@@ -46,11 +46,19 @@ its static functions to allow it to initialize its data structures.
 
 ## Example
 
-In this example, instances of `Person` and its derived class `Engineer` contain
-a pointer to the vtable, initialized by the constructor [^1]. Instances of
-`Integer` and `Rational` - both derived from `Number` are allocated in pages
-aligned on a 1024 byte boundary. The pointer to the vtable is stored at the
-beginning of the page.
+This example involves two hierarchies, `Person` (with one subclass, `Engineer`),
+and `Number` (with two subclasses, `Integer` and `Rational`). Each hierarchy
+collaborates with YOMM2 by providing the pointer to the vtable. The classes are
+_not_ polymorphic.
+
+In the `Person` hierarchy, the vptr is stored directly in the object[^1]. The
+constructor initializes it with the appropriate vtable, obtained from
+`basic_policy::vptr`.
+
+In the `Number` hierarchy, objects are stored in pages, aligned on a 1024 byte
+boundary. A page contains objects of the same type, either `Integer` or
+`Rational`. The appropriate vptr is stored at the beginning of the page, which
+can be found by applying a mask (`~1023`) to the `this` pointer.
 
 ***/
 
