@@ -2,7 +2,7 @@
 
 entry: yorel::yomm2::policy::basic_policy
 entry: yorel::yomm2::default_policy
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
@@ -35,21 +35,21 @@ functionality is not available.
 YOMM2 supports the following facet categories, and provides at least one
 implementation for each category. They are summed up in the following table.
 
-| facet category      | responsibility                  | implementations                                                              |
-| ------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
-| vptr, external_vptr | fetch vptr for virtual argument | **external_vptr_vector\<...>** (D, R), external_vptr_map\<...>               |
-| rtti, deferred_rtti | type information                | **std_rtti** (D, R), no_rtti                                                 |
-| type_hash           | map type info to integer index  | **simple_perfect_hash\<...>** (R), **checked_simple_perfect_hash`<...>** (D) |
-| error               | report errors                   | vectored_error_handler\<...>                                                 |
-| error_output        | describe error                  | **basic_error_output\<...>** (D)                                             |
-| update_output       | trace `update`                  | **basic_update_output\<...>** (D)                                            |
+| facet category          | responsibility                  | implementations                                                              |
+| ----------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
+| vptr, external_vptr     | fetch vptr for virtual argument | **vptr_vector\<...>** (D, R), vptr_map\<...>                                 |
+| **rtti**, deferred_rtti | type information                | **std_rtti** (D, R), final_only_rtti                                         |
+| type_hash               | map type info to integer index  | **simple_perfect_hash\<...>** (R), **checked_simple_perfect_hash`<...>** (D) |
+| error_handler           | report errors                   | vectored_error_handler\<...>                                                 |
+| error_output            | describe error                  | **basic_error_output\<...>** (D)                                             |
+| update_output           | trace `update`                  | **basic_update_output\<...>** (D)                                            |
 
 Facet categories in bold are required for YOMM2 to work at all. Facet
 implementations in bold are used in the default policy, either in debug (D) or
 release (R) builds only, or in both (D, R). A policy needs a `rtti` facet to be
 useable. All others are optional.
 
-Most facets are [CRTP](https://en.cppreference.com/w/cpp/language/crtp) class
+Several facets are [CRTP](https://en.cppreference.com/w/cpp/language/crtp) class
 templates, taking the policy as the first template argument. Some facets contain
 static, global data; parameterizing the facet by the policy ensures that each
 policy gets its own global data. Some facets also need to access other facets in

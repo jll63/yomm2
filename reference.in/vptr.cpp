@@ -4,28 +4,27 @@
 /***
 <sub>/ ->home / ->reference </sub>
 
-entry: yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr
-entry: yorel::yomm2::policy::external_vptr_vector entry:
-yorel::yomm2::policy::external_vptr_map headers: yorel/yomm2/core.hpp,
-yorel/yomm2/keywords.hpp
+entry: yorel::yomm2::policy::vptr
+entry: yorel::yomm2::policy::external_vptr
+entry: yorel::yomm2::policy::vptr_vector
+entry: yorel::yomm2::policy::vptr_map
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
 struct vptr;
-
 struct external_vptr;
-
-template<class Policy> struct external_vptr_vector;
-
-template<class Policy> struct external_vptr_map;
+template<class Policy> struct vptr_vector;
+template<class Policy> struct vptr_map;
 ```
 ---
-A `vptr` facet is provides a static function that returns a pointer to the
-dispatch data for a virtual argument's dynamic class.
+
+The `vptr` facet is responsible for retrieving a pointer to the v-table for an
+object.
 
 YOMM2 implements method dispatch in a way similar to native virtual function
-dispatch: for each virtual argument, fetch a pointer to the dispatch data
-(the v-table), and use it to select a pointer to a function. Method v-tables
+dispatch: for each virtual argument, fetch a pointer to the dispatch data (known
+as the v-table), and use it to select a pointer to a function. YOMM2 v-tables
 contain pointers to functions for unary methods, and, for multi-methods,
 pointers to, and coordinates in, a multi-dimensional table of pointers to
 functions.
@@ -41,8 +40,25 @@ statically from the policy's `static_vptr<Class>` member. It is conceivable
 to organize an entire program around the "final" constructs; thus, the `vptr`
 facet is optional.
 
-`external_vptr` is a sub-category of `facet`. If present, the runtime calls
-its static functions to allow it to initialize its data structures.
+`external_vptr` is a sub-category of `facet`. If present, it provides a
+`register_vptrs` function, called by `update`.
+
+`vptr_vector` is an implementation of `external_vptr` that stores vptrs in a
+`std::vector`. If the policy contains a `type_hash` facet, it is used to convert
+the `type_id` to an index in the vector; otherwise, the `type_id` is used as the
+index.
+
+The default policy uses ->`std_rtti`, ->`simple_perfect_hash` and `vptr_vector`
+to implement efficient method dispatch. Calling a method with a single virtual
+parameter takes only ~33% more time than calling a native virtual function call.
+
+`vptr_map` (also a `external_vptr`) stores vptrs in a `std::unordered_map` keyed
+by the `type_id`. Method dispatch is slower than `vptr_vector` with
+`simple_perfect_hash` (75% slower than native virtual function). However,
+`vptr_map` has some advantages: `simple_perfect_hash` takes more time to
+initialize. It also sacrifices memory space for speed, as it uses a hash
+function that is not suitable for perfect _and_ minimal hashing. Using
+`virtual_ptr`s extensively can mitigate the speed disadvantage of `vptr_map`.
 
 ## Example
 
@@ -226,7 +242,7 @@ define_method(
 //***
 
 /***
-And now let's test:
+Here is a test:
 ***/
 
 //***

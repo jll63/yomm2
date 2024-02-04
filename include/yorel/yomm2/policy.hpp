@@ -293,7 +293,7 @@ template<class Policy, class Facet>
 constexpr bool has_facet = Policy::template has_facet<Facet>;
 
 template<class Policy>
-struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
+struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     static std::vector<const std::uintptr_t*> vptrs;
 
     template<typename ForwardIterator>
@@ -303,7 +303,7 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
         size_t size;
 
         if constexpr (has_facet<Policy, type_hash>) {
-            size = Policy::hash_type_initialize(first, last);
+            size = Policy::type_hash_initialize(first, last);
         } else {
             size = 1 + std::max_element(first, last, [](auto a, auto b) {
                            return a < b;
@@ -344,10 +344,10 @@ struct yOMM2_API_gcc external_vptr_vector : virtual external_vptr {
 };
 
 template<class Policy>
-std::vector<const std::uintptr_t*> external_vptr_vector<Policy>::vptrs;
+std::vector<const std::uintptr_t*> vptr_vector<Policy>::vptrs;
 
 template<class Policy>
-struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
+struct yOMM2_API_gcc vptr_map : virtual external_vptr {
     static std::unordered_map<type_id, const std::uintptr_t*> vptrs;
 
     static void resize_vptrs(size_t n) {
@@ -372,7 +372,7 @@ struct yOMM2_API_gcc external_vptr_map : virtual external_vptr {
 
 template<class Policy>
 std::unordered_map<type_id, const std::uintptr_t*>
-    external_vptr_map<Policy>::vptrs;
+    vptr_map<Policy>::vptrs;
 
 template<class Policy>
 struct yOMM2_API_gcc basic_indirect_vptr : virtual indirect_vptr {
@@ -418,13 +418,13 @@ struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
 
     template<typename ForwardIterator>
     static size_t
-    hash_type_initialize(ForwardIterator first, ForwardIterator last) {
+    type_hash_initialize(ForwardIterator first, ForwardIterator last) {
         std::vector<type_id> buckets;
-        return hash_type_initialize(first, last, buckets);
+        return type_hash_initialize(first, last, buckets);
     }
 
     template<typename ForwardIterator>
-    static size_t hash_type_initialize(
+    static size_t type_hash_initialize(
         ForwardIterator first, ForwardIterator last,
         std::vector<type_id>& buckets);
 };
@@ -462,8 +462,8 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
 
     template<typename ForwardIterator>
     static size_t
-    hash_type_initialize(ForwardIterator first, ForwardIterator last) {
-        return simple_perfect_hash<Policy>::hash_type_initialize(
+    type_hash_initialize(ForwardIterator first, ForwardIterator last) {
+        return simple_perfect_hash<Policy>::type_hash_initialize(
             first, last, control);
     }
 };
@@ -573,7 +573,7 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc basic_static_policy
     : basic_policy<
-          Policy, external_vptr_vector<Policy>, std_rtti,
+          Policy, vptr_vector<Policy>, std_rtti,
           vectored_error_handler<Policy>, Facets...> {};
 
 template<class Policy, class... Facets>
@@ -599,12 +599,12 @@ struct debug_shared;
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
-extern template class __declspec(dllimport) external_vptr_vector<debug_shared>;
+extern template class __declspec(dllimport) vptr_vector<debug_shared>;
 extern template class __declspec(dllimport)
     vectored_error_handler<debug_shared>;
 extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
-    debug_shared, external_vptr_vector<debug_shared>, std_rtti,
+    debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_simple_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
     basic_update_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
@@ -612,7 +612,7 @@ extern template class __declspec(dllimport) basic_policy<
 
 struct yOMM2_API_gcc debug_shared
     : basic_policy<
-          debug_shared, external_vptr_vector<debug_shared>, std_rtti,
+          debug_shared, vptr_vector<debug_shared>, std_rtti,
           checked_simple_perfect_hash<debug_shared>,
           basic_error_output<debug_shared>, basic_update_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};

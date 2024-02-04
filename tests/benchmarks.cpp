@@ -109,7 +109,7 @@ struct basic_policy : virtual_by_reference {
 struct compact_map_policy : virtual_by_reference {
     struct policy : default_static_policy::rebind<policy>
         ::remove<yomm2::policy::type_hash>
-        ::replace<yomm2::policy::external_vptr, yomm2::policy::external_vptr_map<policy>> {};
+        ::replace<yomm2::policy::external_vptr, yomm2::policy::vptr_map<policy>> {};
     template<typename Inheritance> using base_type = orthogonal_base<Inheritance>;
     static std::string name() { return "compact_map_policy"; };
 };
@@ -641,7 +641,7 @@ void call_project_1(leaf& obj) {
 	// imul	rdx, qword ptr [rax - 8]
 	// movzx	ecx, byte ptr [rip + simple_perfect_hash<policy>::shift]
 	// shr	rdx, cl
-	// mov	rax, qword ptr [rip + external_vptr_vector<policy>::vptrs]
+	// mov	rax, qword ptr [rip + vptr_vector<policy>::vptrs]
 	// mov	rax, qword ptr [rax + 8*rdx]
 	// mov	rcx, qword ptr [rip + method<policy, population<integral_constant<unsigned long, 0ul> >, void (virtual_<orthogonal_base<ordinary_inheritance>&>)>::fn+80]
 	// jmp	qword ptr [rax + 8*rcx]         # TAILCALL
@@ -654,9 +654,9 @@ void call_unordered_map_1(leaf& obj) {
     // 	mov	rax, qword ptr [rdi + 8]
     // 	add	rdi, 8
     // 	mov	rcx, qword ptr [rax - 8]
-    // 	cmp	qword ptr [rip + external_vptr_map<policy>::vptrs+24], 0
+    // 	cmp	qword ptr [rip + vptr_map<policy>::vptrs+24], 0
     // 	je	.LBB9_1
-    // 	mov	rsi, qword ptr [rip + external_vptr_map<policy>::vptrs+8]
+    // 	mov	rsi, qword ptr [rip + vptr_map<policy>::vptrs+8]
     // 	mov	rax, rcx
     // 	or	rax, rsi
     // 	shr	rax, 32
@@ -666,7 +666,7 @@ void call_unordered_map_1(leaf& obj) {
     // 	div	rsi
     // 	jmp	.LBB9_6
     // .LBB9_1:                                # %.preheader.i.i.i.i.i.preheader
-    // 	lea	rax, [rip + external_vptr_map<policy>::vptrs+16]
+    // 	lea	rax, [rip + vptr_map<policy>::vptrs+16]
     // .LBB9_2:                                # %.preheader.i.i.i.i.i
     //                                         # =>This Inner Loop Header: Depth=1
     // 	mov	rax, qword ptr [rax]
@@ -678,7 +678,7 @@ void call_unordered_map_1(leaf& obj) {
     // 	xor	edx, edx
     // 	div	esi
     // .LBB9_6:
-    // 	mov	rax, qword ptr [rip + external_vptr_map<policy>::vptrs]
+    // 	mov	rax, qword ptr [rip + vptr_map<policy>::vptrs]
     // 	mov	rax, qword ptr [rax + 8*rdx]
     // 	.p2align	4, 0x90
     // .LBB9_7:                                # %.lr.ph.i.i.i.i.i.i.i.i.i
