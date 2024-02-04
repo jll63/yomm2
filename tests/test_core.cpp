@@ -236,6 +236,45 @@ static_assert(
         >
 >);
 
+static_assert(
+    std::is_same_v<
+        use_classes<Animal, Dog, Bulldog, Cat, Dolphin>,
+        std::tuple<
+            class_declaration_aux<default_policy, types<Animal, Animal>>,
+            class_declaration_aux<default_policy, types<Dog, Animal, Dog>>,
+            class_declaration_aux<default_policy, types<Bulldog, Animal, Dog, Bulldog>>,
+            class_declaration_aux<default_policy, types<Cat, Animal, Cat>>,
+            class_declaration_aux<default_policy, types<Dolphin, Animal, Dolphin>>
+        >
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, default_policy>,
+        std::tuple<
+            class_declaration_aux<default_policy, types<Animal, Animal>>
+        >
+>);
+
+struct my_policy : policy::abstract_policy {};
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, my_policy, default_policy>,
+        std::tuple<
+            class_declaration_aux<my_policy, types<Animal, Animal>>
+        >
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, my_policy>,
+        std::tuple<
+            class_declaration_aux<my_policy, types<Animal, Animal>>
+        >
+>);
+
+
 } // namespace test_use_classes
 
 namespace facets {

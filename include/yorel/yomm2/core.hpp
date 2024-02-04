@@ -178,18 +178,17 @@ typename method<Key, R(A...), Policy>::next_type
 // -----------------------------------------------------------------------------
 // class_declaration
 
-template<typename First, class... Rest>
-struct class_declaration : detail::class_declaration_aux<
-                               detail::get_policy<First, Rest...>,
-                               detail::remove_policy<First, Rest...>> {};
+template<class... Classes>
+struct class_declaration
+    : detail::class_declaration_aux<
+          detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
-template<class... First>
-struct class_declaration<detail::types<First...>>
-    : detail::class_declaration_aux<default_policy, detail::types<First...>> {};
 
-template<class Policy, class... First>
-struct class_declaration<Policy, detail::types<First...>>
-    : detail::class_declaration_aux<Policy, detail::types<First...>> {};
+template<class... Classes>
+struct class_declaration<detail::types<Classes...>>
+    : detail::class_declaration_aux<
+          detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
+
 
 template<typename First, class... Rest>
 using use_classes = typename detail::use_classes_aux<

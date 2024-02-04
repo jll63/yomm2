@@ -93,12 +93,12 @@ struct Human : Carnivore, Herbivore {};
 using whole_hierarchy = test_policy_<__COUNTER__>;
 using incremental = test_policy_<__COUNTER__>;
 
-use_classes<whole_hierarchy, Animal, Herbivore, Carnivore, Cow, Wolf, Human>
+use_classes<Animal, Herbivore, Carnivore, Cow, Wolf, Human, whole_hierarchy>
     YOMM2_GENSYM;
 
-use_classes<incremental, Animal, Herbivore, Cow> YOMM2_GENSYM;
-use_classes<incremental, Animal, Carnivore, Wolf> YOMM2_GENSYM;
-use_classes<incremental, Herbivore, Carnivore, Human> YOMM2_GENSYM;
+use_classes<Animal, Herbivore, Cow, incremental> YOMM2_GENSYM;
+use_classes<Animal, Carnivore, Wolf, incremental> YOMM2_GENSYM;
+use_classes<Herbivore, Carnivore, Human, incremental> YOMM2_GENSYM;
 
 using policies = std::tuple<whole_hierarchy, incremental>;
 
@@ -153,10 +153,10 @@ struct Jet : Expense {};
 using test_policy = test_policy_<__COUNTER__>;
 // any type from this namespace would work.
 
-use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
+use_classes<Role, Employee, Manager, Founder, Expense, test_policy>
     YOMM2_GENSYM;
 
-use_classes<test_policy, Expense, Public, Bus, Metro, Taxi, Jet> YOMM2_GENSYM;
+use_classes<Expense, Public, Bus, Metro, Taxi, Jet, test_policy> YOMM2_GENSYM;
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -708,7 +708,7 @@ struct E : D {};
 
 using test_policy = test_policy_<__COUNTER__>;
 
-use_classes<test_policy, A, B, AB, C, D, E> YOMM2_GENSYM;
+use_classes<A, B, AB, C, D, E, test_policy> YOMM2_GENSYM;
 
 BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     std::vector<rt_class*> actual, expected;

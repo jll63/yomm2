@@ -58,7 +58,7 @@ struct virtual_;
 template<class Policy, typename Key, typename Signature>
 struct method;
 
-template<typename Class, typename... Rest>
+template<class... Classes>
 struct class_declaration;
 
 // -----------------------------------------------------------------------------

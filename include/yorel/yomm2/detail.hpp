@@ -259,34 +259,18 @@ struct is_policy_aux<types<T...>> : std::false_type {};
 template<typename T>
 constexpr bool is_policy = is_policy_aux<T>::value;
 
-template<bool, typename... Classes>
-struct split_policy_aux;
-
-template<typename Policy, typename... Classes>
-struct split_policy_aux<true, Policy, Classes...> {
-    using policy = Policy;
-    using classes = types<Classes...>;
-};
+template<typename T>
+constexpr bool is_not_policy = !is_policy<T>;
 
 template<typename... Classes>
-struct split_policy_aux<false, Classes...> {
-    using policy = default_policy;
-    using classes = types<Classes...>;
-};
-
-template<typename ClassOrPolicy, typename... Classes>
-struct split_policy
-    : split_policy_aux<is_policy<ClassOrPolicy>, ClassOrPolicy, Classes...> {};
+using get_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_back<types<Classes...>>, default_policy>;
 
 template<typename... Classes>
-using get_policy = typename split_policy<Classes...>::policy;
-
-template<typename... Classes>
-using remove_policy = typename split_policy<Classes...>::classes;
-
-template<typename ClassOrPolicy, typename... Classes>
-using remove_policy_first =
-    boost::mp11::mp_first<remove_policy<ClassOrPolicy, Classes...>>;
+using remove_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
 
 template<typename Signature>
 struct next_ptr_t;
@@ -430,8 +414,8 @@ template<class Class, class Policy>
 struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
 
 template<class Class, class Policy>
-struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&>
-    : std::true_type {};
+struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
+};
 
 template<typename T>
 constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
@@ -576,8 +560,7 @@ struct select_spec_polymorphic_type_aux<
 
 template<class Policy, typename P, typename Q>
 struct select_spec_polymorphic_type_aux<
-    Policy, const virtual_ptr<P, Policy>&,
-    const virtual_ptr<Q, Policy>&> {
+    Policy, const virtual_ptr<P, Policy>&, const virtual_ptr<Q, Policy>&> {
     using type = typename virtual_traits<
         Policy, const virtual_ptr<Q, Policy>&>::polymorphic_type;
 };
@@ -671,10 +654,19 @@ struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
 
 {};
 
-template<class First, class Second, class... Rest>
+template<typename... Ts>
+using second_last = boost::mp11::mp_at_c<
+    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
+
+template<class... Classes>
 using use_classes_macro = typename std::conditional_t<
-    is_policy<Second>, use_classes_aux<Second, types<Rest...>>,
-    use_classes_aux<First, types<Second, Rest...>>>::type;
+    is_policy<second_last<Classes...>>,
+    use_classes_aux<
+        second_last<Classes...>,
+        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
+    use_classes_aux<
+        boost::mp11::mp_back<types<Classes...>>,
+        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
 
 std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();

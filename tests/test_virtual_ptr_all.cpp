@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr, Policy, policy_types<__COUNTER__>) {
     using namespace detail;
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
     using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
     static typename kick::template add_function<
         kick_bear<virtual_ptr<Player, Policy>>>
@@ -118,7 +118,7 @@ namespace test_virtual_ptr_dispatch {
 BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr_dispatch, Policy, policy_types<__COUNTER__>) {
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
     using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
     static typename kick::template add_function<
@@ -166,7 +166,7 @@ namespace test_virtual_shared_ptr_dispatch {
 BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr_dispatch, Policy, policy_types<__COUNTER__>) {
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
     using kick =
         method<void, std::string(virtual_shared_ptr<Player, Policy>), Policy>;

@@ -137,7 +137,7 @@ struct kick_cat {
 };
 
 BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
-    static use_classes<minimal_policy, Animal, Cat, Dog> YOMM2_GENSYM;
+    static use_classes<Animal, Cat, Dog, minimal_policy> YOMM2_GENSYM;
 
     static kick::add_definition<kick_cat> YOMM2_GENSYM;
     static kick::add_definition<kick_dog> YOMM2_GENSYM;
@@ -303,7 +303,7 @@ re-defining the `YOMM2_DEFAULT_POLICY` macro symbol.
 
 
 ```c++
-register_classes(custom_policy, Animal, Dog, Cat);
+register_classes(Animal, Dog, Cat, custom_policy);
 
 declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
 
