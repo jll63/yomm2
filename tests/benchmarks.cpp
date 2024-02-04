@@ -300,10 +300,10 @@ struct population : abstract_population {
         using Base = typename Dispatch::template base_type<Inheritance>;
         using varg_type = Base&;
 
-        use_classes<classes, Policy>; YOMM2_GENSYM;
+        use_classes<classes, Policy> YOMM2_GENSYM;
 
-        using method1 = method<population, void(virtual_<Base&>), Policy>
-        using method2 = method<population, void(virtual_<Base&>, virtual_<Base&>), Policy>
+        using method1 = method<population, void(virtual_<Base&>), Policy>;
+        using method2 = method<population, void(virtual_<Base&>, virtual_<Base&>), Policy>;
 
         template<typename T> static void fn1(T&) {}
         typename method1::template add_function<fn1<intermediate<0>>> YOMM2_GENSYM;
@@ -327,13 +327,10 @@ struct population : abstract_population {
         template<class Class> using vptr = virtual_ptr<Class, Policy>;
         using varg_type = vptr<Base>;
 
-        use_classes<classes, Policy>; YOMM2_GENSYM;
+        use_classes<classes, Policy> YOMM2_GENSYM;
 
-        using method1 = method<population, void(vptr<Base>), Policy>
-        using method2 = method<
-            Policy,
-            population,
-            void(vptr<Base>, vptr<Base>)>;
+        using method1 = method<population, void(vptr<Base>), Policy>;
+        using method2 = method<population, void(vptr<Base>, vptr<Base>), Policy>;
 
         template<typename T> static void fn1(vptr<T>) {}
         typename method1::template add_function<
