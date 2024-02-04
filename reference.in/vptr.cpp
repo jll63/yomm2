@@ -68,6 +68,8 @@ Consider the following class hierarchy:
 ***/
 
 //***
+#include <iosfwd>
+
 struct Number {};
 
 struct Integer : Number {
@@ -198,8 +200,6 @@ struct Person {
 struct Engineer : Person {};
 
 register_classes(Number, Integer, Rational, Person, Engineer);
-
-#include <iosfwd>
 
 declare_method(
     void, add,

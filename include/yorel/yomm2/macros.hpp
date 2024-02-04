@@ -46,8 +46,8 @@
 
 #define yOMM2_SELECTOR(ID) ID##_yOMM2_selector_
 
-#define yOMM2_method(POLICY, R, ID, ARGS)                                      \
-    ::yorel::yomm2::method<POLICY, YOMM2_SYMBOL(ID), R ARGS>
+#define yOMM2_method(R, ID, ARGS, POLICY)                                      \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(ID), R ARGS, POLICY>
 
 #if !BOOST_PP_VARIADICS_MSVC
     #define YOMM2_DECLARE(...)                                                 \
@@ -69,31 +69,31 @@
 #endif
 
 #define YOMM2_DECLARE_3(R, ID, ARGS)                                           \
-    yOMM2_DECLARE(YOMM2_DEFAULT_POLICY, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC)
+    yOMM2_DECLARE(R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_NOT_STATIC)
 
-#define YOMM2_DECLARE_4(POLICY, R, ID, ARGS)                                   \
-    yOMM2_DECLARE(POLICY, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC)
+#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                   \
+    yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_NOT_STATIC)
 
 #define YOMM2_STATIC_DECLARE_3(R, ID, ARGS)                                    \
-    yOMM2_DECLARE(YOMM2_DEFAULT_POLICY, R, ID, ARGS, yOMM2_WHEN_STATIC)
+    yOMM2_DECLARE(R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_STATIC)
 
-#define YOMM2_STATIC_DECLARE_4(POLICY, R, ID, ARGS)                            \
-    yOMM2_DECLARE(POLICY, R, ID, ARGS, yOMM2_WHEN_STATIC)
+#define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY)                            \
+    yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_STATIC)
 
-#define yOMM2_DECLARE(POLICY, R, ID, ARGS, IF_STATIC)                          \
+#define yOMM2_DECLARE(R, ID, ARGS, POLICY, IF_STATIC)                          \
     struct YOMM2_SYMBOL(ID);                                                   \
     IF_STATIC(static, )                                                        \
-    yOMM2_method(POLICY, R, ID, ARGS) yOMM2_SELECTOR(ID)(                      \
+    yOMM2_method(R, ID, ARGS, POLICY) yOMM2_SELECTOR(ID)(                      \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));        \
     IF_STATIC(static, )                                                        \
     inline const char* yOMM2_SELECTOR(ID)(                                     \
-        const yOMM2_method(POLICY, R, ID, ARGS)&) {                            \
+        const yOMM2_method(R, ID, ARGS, POLICY)&) {                            \
         return #R " " #ID #ARGS;                                               \
     }                                                                          \
     IF_STATIC(static, )                                                        \
     inline R ID(                                                               \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
-        return yOMM2_method(POLICY, R, ID, ARGS)::fn(                          \
+        return yOMM2_method(R, ID, ARGS, POLICY)::fn(                          \
             BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));    \
     }
 

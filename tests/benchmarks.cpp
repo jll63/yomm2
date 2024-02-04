@@ -302,8 +302,8 @@ struct population : abstract_population {
 
         use_classes<Policy, classes> YOMM2_GENSYM;
 
-        using method1 = method<Policy, population, void(virtual_<Base&>)>;
-        using method2 = method<Policy, population, void(virtual_<Base&>, virtual_<Base&>)>;
+        using method1 = method<population, void(virtual_<Base&>), Policy>
+        using method2 = method<population, void(virtual_<Base&>, virtual_<Base&>), Policy>
 
         template<typename T> static void fn1(T&) {}
         typename method1::template add_function<fn1<intermediate<0>>> YOMM2_GENSYM;
@@ -329,7 +329,7 @@ struct population : abstract_population {
 
         use_classes<Policy, classes> YOMM2_GENSYM;
 
-        using method1 = method<Policy, population, void(vptr<Base>)>;
+        using method1 = method<population, void(vptr<Base>), Policy>
         using method2 = method<
             Policy,
             population,

@@ -761,11 +761,11 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
 }
 
 struct key;
-auto& m_a = method<test_policy, key, void(virtual_<A&>)>::fn;
-auto& m_b = method<test_policy, key, void(virtual_<B&>)>::fn;
-auto& m_ab = method<test_policy, key, void(virtual_<A&>, virtual_<B&>)>::fn;
-auto& m_c = method<test_policy, key, void(virtual_<C&>)>::fn;
-auto& m_d = method<test_policy, key, void(virtual_<D&>)>::fn;
+auto& m_a = method<key, void(virtual_<A&>), test_policy>::fn;
+auto& m_b = method<key, void(virtual_<B&>), test_policy>::fn;
+auto& m_ab = method<key, void(virtual_<A&>, virtual_<B&>), test_policy>::fn;
+auto& m_c = method<key, void(virtual_<C&>), test_policy>::fn;
+auto& m_d = method<key, void(virtual_<D&>), test_policy>::fn;
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime<test_policy> rt;

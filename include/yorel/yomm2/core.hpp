@@ -27,14 +27,11 @@ namespace yomm2 {
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename A, typename B, typename C = void>
+template<typename Key, typename Signature, class Policy = default_policy>
 struct method;
 
-template<typename Key, typename Signature>
-struct method<Key, Signature, void> : method<default_policy, Key, Signature> {};
-
-template<class Policy, typename Key, typename R, typename... A>
-struct method<Policy, Key, R(A...)> : detail::method_info {
+template<typename Key, typename R, class Policy, typename... A>
+struct method<Key, R(A...), Policy> : detail::method_info {
     using self_type = method;
     using policy_type = Policy;
     using declared_argument_types = detail::types<A...>;
@@ -166,17 +163,17 @@ struct method<Policy, Key, R(A...)> : detail::method_info {
     };
 };
 
-template<class Policy, typename Key, typename R, typename... A>
-method<Policy, Key, R(A...)> method<Policy, Key, R(A...)>::fn;
+template<typename Key, typename R, class Policy, typename... A>
+method<Key, R(A...), Policy> method<Key, R(A...), Policy>::fn;
 
-template<class Policy, typename Key, typename R, typename... A>
-typename method<Policy, Key, R(A...)>::function_pointer_type
-    method<Policy, Key, R(A...)>::fake_definition;
+template<typename Key, typename R, class Policy, typename... A>
+typename method<Key, R(A...), Policy>::function_pointer_type
+    method<Key, R(A...), Policy>::fake_definition;
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<typename Container>
-typename method<Policy, Key, R(A...)>::next_type
-    method<Policy, Key, R(A...)>::use_next<Container>::next;
+typename method<Key, R(A...), Policy>::next_type
+    method<Key, R(A...), Policy>::use_next<Container>::next;
 
 // -----------------------------------------------------------------------------
 // class_declaration
@@ -412,8 +409,8 @@ inline auto final_virtual_ptr(Class& obj) {
 // -----------------------------------------------------------------------------
 // definitions
 
-template<class Policy, typename Key, typename R, typename... A>
-method<Policy, Key, R(A...)>::method() {
+template<typename Key, typename R, class Policy, typename... A>
+method<Key, R(A...), Policy>::method() {
     this->name = detail::default_method_name<method>();
     this->slots_strides_p = slots_strides;
     using virtual_type_ids = detail::type_id_list<
@@ -428,23 +425,23 @@ method<Policy, Key, R(A...)>::method() {
     Policy::catalog.methods.push_front(*this);
 }
 
-template<class Policy, typename Key, typename R, typename... A>
-method<Policy, Key, R(A...)>::~method() {
+template<typename Key, typename R, class Policy, typename... A>
+method<Key, R(A...), Policy>::~method() {
     Policy::catalog.methods.remove(*this);
 }
 
-template<class Policy, typename Key, typename R, typename... A>
-typename method<Policy, Key, R(A...)>::return_type inline method<
-    Policy, Key, R(A...)>::operator()(detail::remove_virtual<A>... args) const {
+template<typename Key, typename R, class Policy, typename... A>
+typename method<Key, R(A...), Policy>::return_type inline method<
+    Key, R(A...), Policy>::operator()(detail::remove_virtual<A>... args) const {
     using namespace detail;
     return resolve(argument_traits<Policy, A>::rarg(args)...)(
         std::forward<remove_virtual<A>>(args)...);
 }
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<typename... ArgType>
-inline typename method<Policy, Key, R(A...)>::function_pointer_type
-method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
+inline typename method<Key, R(A...), Policy>::function_pointer_type
+method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     using namespace detail;
 
     std::uintptr_t pf;
@@ -458,10 +455,10 @@ method<Policy, Key, R(A...)>::resolve(const ArgType&... args) const {
     return reinterpret_cast<function_pointer_type>(pf);
 }
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<typename ArgType>
 inline const std::uintptr_t*
-method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
+method<Key, R(A...), Policy>::vptr(const ArgType& arg) const {
     if constexpr (detail::is_virtual_ptr<ArgType>) {
         return arg._vptr();
         // No need to check the method pointer: this was done when the
@@ -471,9 +468,9 @@ method<Policy, Key, R(A...)>::vptr(const ArgType& arg) const {
     }
 }
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_uni(
+inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
@@ -494,11 +491,11 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_uni(
     }
 }
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<
     size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_first(
+inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
@@ -528,11 +525,11 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_first(
     }
 }
 
-template<class Policy, typename Key, typename R, typename... A>
+template<typename Key, typename R, class Policy, typename... A>
 template<
     size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_next(
+inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const {
 
@@ -562,9 +559,9 @@ inline std::uintptr_t method<Policy, Key, R(A...)>::resolve_multi_next(
     }
 }
 
-template<class Policy, typename Key, typename R, typename... A>
-typename method<Policy, Key, R(A...)>::return_type
-method<Policy, Key, R(A...)>::not_implemented_handler(
+template<typename Key, typename R, class Policy, typename... A>
+typename method<Key, R(A...), Policy>::return_type
+method<Key, R(A...), Policy>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
@@ -581,9 +578,9 @@ method<Policy, Key, R(A...)>::not_implemented_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
-template<class Policy, typename Key, typename R, typename... A>
-typename method<Policy, Key, R(A...)>::return_type
-method<Policy, Key, R(A...)>::ambiguous_handler(
+template<typename Key, typename R, class Policy, typename... A>
+typename method<Key, R(A...), Policy>::return_type
+method<Key, R(A...), Policy>::ambiguous_handler(
     detail::remove_virtual<A>... args) {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
@@ -612,7 +609,7 @@ set_method_call_error_handler(method_call_error_handler handler);
 
 #else
 
-    #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
 
 inline void update() {
     update<default_policy>();
@@ -634,7 +631,7 @@ set_method_call_error_handler(method_call_error_handler handler) {
     return prev;
 }
 
-    #endif
+#endif
 
 #endif
 
@@ -650,7 +647,7 @@ set_method_call_error_handler(method_call_error_handler handler) {
 } // namespace yorel
 
 #ifndef YOMM2_SHARED
-    #include <yorel/yomm2/runtime.hpp>
+#include <yorel/yomm2/runtime.hpp>
 #endif
 
 #pragma pop_macro("max")

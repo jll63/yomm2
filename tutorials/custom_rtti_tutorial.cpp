@@ -138,7 +138,7 @@ struct minimal_policy : basic_policy<minimal_policy>, rtti {
 template<typename T>
 using virtual_ptr = virtual_ptr<T, minimal_policy>;
 
-using kick = method<minimal_policy, kick_key, std::string(virtual_ptr<Animal>)>;
+using kick = method<kick_key, std::string(virtual_ptr<Animal>), minimal_policy>;
 
 struct kick_dog {
     static std::string fn(virtual_ptr<Dog> dog) {
@@ -339,7 +339,7 @@ re-defining the `YOMM2_DEFAULT_POLICY` macro symbol.
 
 register_classes(custom_policy, Animal, Dog, Cat);
 
-declare_method(custom_policy, void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
@@ -643,7 +643,7 @@ struct custom_policy
 
 register_classes(custom_policy, Animal, Dog, Cat);
 
-declare_method(custom_policy, void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
