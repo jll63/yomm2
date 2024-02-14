@@ -3,8 +3,6 @@
 
 **yorel::yomm2::policy::vptr**<br>
 **yorel::yomm2::policy::external_vptr**<br>
-**yorel::yomm2::policy::vptr_vector**<br>
-**yorel::yomm2::policy::vptr_map**<br>
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
@@ -40,15 +38,6 @@ facet is optional.
 `external_vptr` is a sub-category of `facet`. If present, it provides a
 `register_vptrs` function, called by `update`.
 
-`vptr_vector` is an implementation of `external_vptr` that stores vptrs in a
-`std::vector`. If the policy contains a `type_hash` facet, it is used to convert
-the `type_id` to an index in the vector; otherwise, the `type_id` is used as the
-index.
-
-The default policy uses ->`std_rtti`, ->`simple_perfect_hash` and `vptr_vector`
-to implement efficient method dispatch. Calling a method with a single virtual
-parameter takes only ~33% more time than calling a native virtual function call.
-
 `vptr_map` (also a `external_vptr`) stores vptrs in a `std::unordered_map` keyed
 by the `type_id`. Method dispatch is slower than `vptr_vector` with
 `simple_perfect_hash` (75% slower than native virtual function). However,
@@ -56,6 +45,47 @@ by the `type_id`. Method dispatch is slower than `vptr_vector` with
 initialize. It also sacrifices memory space for speed, as it uses a hash
 function that is not suitable for perfect _and_ minimal hashing. Using
 `virtual_ptr`s extensively can mitigate the speed disadvantage of `vptr_map`.
+
+### Requirements for implementations of `vptr`
+
+An implementation of `vptr` must provide the following static function template:
+
+|                               |                                                 |
+| ----------------------------- | ----------------------------------------------- |
+| [dynamic_vptr](#dynamic_vptr) | return the address of the v-table for an object |
+
+
+### dynamic_vptr
+```c++
+struct vptr_facet {
+    template<class Class>
+    static const std::uintptr_t* dynamic_vptr(const Class& arg);
+};
+```
+
+### Requirements for implementations of `external_vptr`
+
+In addition to the requirements for `vptr`, an implementation of `external_vptr`
+must provide the following static function template:
+
+|                                   |                                         |
+| --------------------------------- | --------------------------------------- |
+| [register_vptrs](#register_vptrs) | implementation dependent initialization |
+
+
+### register_vptrs
+
+```c++
+struct external_vptr_facet {
+    template<typename ForwardIterator>
+    static void register_vptrs(ForwardIterator first, ForwardIterator last)};
+```
+
+This function is called by `update`, after the v-tables have been set up, with a
+range of pairs. The first member is a `type_index` of a registered class; the
+second member is a pointer to a pointer to the v-table for that class. The vptrs
+(`**iter.second`) change after a call to `update`, as the v-tables are rebuilt.
+However, the pointers to the vptrs (`*iter.second`) are stable across updates.
 
 ## Example
 
