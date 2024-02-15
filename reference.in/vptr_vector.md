@@ -51,7 +51,7 @@ template<typename ForwardIterator>
 void vptr_vector<Policy>::register_vptrs(ForwardIterator first, ForwardIterator last);
 ```
 
-If `Policy` contains a `type_hash` facet, call its `type_hash_initialize`
+If `Policy` contains a `type_hash` facet, call its `hash_initialize`
 function.
 
 Store the pointers to the v-tables in a vector, indexed by the (possibly hashed)

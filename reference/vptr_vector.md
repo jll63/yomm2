@@ -12,7 +12,7 @@ struct vptr_vector : virtual external_vptr { ... };
 
 `vptr_vector` is an implementation of [`external_vptr`](vptr.md) that stores the
 pointers to the v-tables in a `std::vector`. If the policy contains a
-[`type_hash`](/reference/type_hash.md) facet, it is used to convert the ->`type_id` to an index in the
+[`type_hash`](/reference/type_hash.md) facet, it is used to convert the [`type_id`](/reference/type_id.md) to an index in the
 vector; otherwise, the `type_id` is used as the index.
 
 The default policy uses [`std_rtti`](/reference/std_rtti.md), ->`simple_perfect_hash` and `vptr_vector`
@@ -51,7 +51,7 @@ template<typename ForwardIterator>
 void vptr_vector<Policy>::register_vptrs(ForwardIterator first, ForwardIterator last);
 ```
 
-If `Policy` contains a `type_hash` facet, call its `type_hash_initialize`
+If `Policy` contains a `type_hash` facet, call its `hash_initialize`
 function.
 
 Store the pointers to the v-tables in a vector, indexed by the (possibly hashed)

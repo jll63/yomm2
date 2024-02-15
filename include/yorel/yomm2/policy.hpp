@@ -303,7 +303,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
         size_t size;
 
         if constexpr (has_facet<Policy, type_hash>) {
-            size = Policy::type_hash_initialize(first, last);
+            size = Policy::hash_initialize(first, last);
         } else {
             size = 1 + std::max_element(first, last, [](auto a, auto b) {
                            return a < b;
@@ -418,13 +418,13 @@ struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
 
     template<typename ForwardIterator>
     static size_t
-    type_hash_initialize(ForwardIterator first, ForwardIterator last) {
+    hash_initialize(ForwardIterator first, ForwardIterator last) {
         std::vector<type_id> buckets;
-        return type_hash_initialize(first, last, buckets);
+        return hash_initialize(first, last, buckets);
     }
 
     template<typename ForwardIterator>
-    static size_t type_hash_initialize(
+    static size_t hash_initialize(
         ForwardIterator first, ForwardIterator last,
         std::vector<type_id>& buckets);
 };
@@ -462,8 +462,8 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
 
     template<typename ForwardIterator>
     static size_t
-    type_hash_initialize(ForwardIterator first, ForwardIterator last) {
-        return simple_perfect_hash<Policy>::type_hash_initialize(
+    hash_initialize(ForwardIterator first, ForwardIterator last) {
+        return simple_perfect_hash<Policy>::hash_initialize(
             first, last, control);
     }
 };

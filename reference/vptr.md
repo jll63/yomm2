@@ -7,7 +7,7 @@
 
 ---
 ```
-struct vptr : virtual facet {};
+struct vptr {};
 struct external_vptr : virtual vptr {};
 ```
 ---
@@ -74,7 +74,8 @@ must provide the following static function template:
 ```c++
 struct external_vptr_facet {
     template<typename ForwardIterator>
-    static void register_vptrs(ForwardIterator first, ForwardIterator last)};
+    static void register_vptrs(ForwardIterator first, ForwardIterator last);
+};
 ```
 
 This function is called by `update`, after the v-tables have been set up, with a
