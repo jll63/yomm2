@@ -27,7 +27,7 @@ template class yOMM2_API_msc vptr_vector<debug_shared>;
 template class yOMM2_API_msc basic_indirect_vptr<debug_shared>;
 template class yOMM2_API_msc vectored_error_handler<debug_shared>;
 template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
-template class yOMM2_API_msc simple_perfect_hash<debug_shared>;
+template class yOMM2_API_msc fast_perfect_hash<debug_shared>;
 template class yOMM2_API_msc checked_simple_perfect_hash<debug_shared>;
 template class yOMM2_API_msc basic_error_output<debug_shared>;
 template class yOMM2_API_msc basic_update_output<debug_shared>;

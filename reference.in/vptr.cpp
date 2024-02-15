@@ -5,6 +5,7 @@
 <sub>/ ->home / ->reference </sub>
 
 entry: yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr
+hrefs: external_vptr
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
 
 ---

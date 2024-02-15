@@ -6,7 +6,7 @@
 <sub>/ ->home / ->reference </sub>
 
 entry: yorel::yomm2::policy::vptr
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```

@@ -1237,7 +1237,7 @@ namespace policy {
 
 template<class Policy>
 template<typename ForwardIterator>
-size_t simple_perfect_hash<Policy>::hash_initialize(
+size_t fast_perfect_hash<Policy>::hash_initialize(
     ForwardIterator first, ForwardIterator last,
     std::vector<type_id>& buckets) {
     using namespace policy;

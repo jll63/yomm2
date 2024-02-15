@@ -389,7 +389,7 @@ table that contains pointers to method tables for all registered classes.
 Thus all we need to do is to remove the `type_hash` facet from the policy.
 
 This is controlled by facet `type_hash`. It has two implementations:
-`simple_perfect_hash`, used in release builds; and `checked_simple_perfect_hash`, used
+`fast_perfect_hash`, used in release builds; and `checked_simple_perfect_hash`, used
 in debug builds, that checks that the type ids it is presented with correspond
 to classes that were actually registered.
 

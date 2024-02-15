@@ -15,7 +15,7 @@ pointers to the v-tables in a `std::vector`. If the policy contains a
 [`type_hash`](/reference/type_hash.md) facet, it is used to convert the [`type_id`](/reference/type_id.md) to an index in the
 vector; otherwise, the `type_id` is used as the index.
 
-The default policy uses [`std_rtti`](/reference/std_rtti.md), ->`simple_perfect_hash` and `vptr_vector`
+The default policy uses [`std_rtti`](/reference/std_rtti.md), [`fast_perfect_hash`](/reference/fast_perfect_hash.md) and `vptr_vector`
 to implement efficient method dispatch. Calling a method with a single virtual
 parameter takes only ~33% more time than calling a native virtual function call.
 

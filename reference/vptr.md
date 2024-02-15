@@ -1,14 +1,13 @@
 
 <sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
-**yorel::yomm2::policy::vptr**<br>
-**yorel::yomm2::policy::external_vptr**<br>
+**yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr**<br>
+
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```
-struct vptr {};
-struct external_vptr : virtual vptr {};
+struct vptr {}; struct external_vptr : virtual vptr {};
 ```
 ---
 
@@ -47,9 +46,8 @@ An implementation of `vptr` must provide the following static function template:
 
 ### dynamic_vptr
 ```c++
-struct vptr_facet {
-    template<class Class>
-    static const std::uintptr_t* dynamic_vptr(const Class& arg);
+struct vptr_facet { template<class Class> static const std::uintptr_t*
+    dynamic_vptr(const Class& arg);
 };
 ```
 
@@ -79,7 +77,7 @@ struct external_vptr_facet {
 ```
 
 This function is called by `update`, after the v-tables have been set up, with a
-range of pairs. The first member is a `type_index` of a registered class; the
+range of pairs. The first member is a [`type_id`](/reference/type_id.md) of a registered class; the
 second member is a pointer to a pointer to the v-table for that class. The vptrs
 (`**iter.second`) change after a call to `update`, as the v-tables are rebuilt.
 However, the pointers to the vptrs (`*iter.second`) are stable across updates.

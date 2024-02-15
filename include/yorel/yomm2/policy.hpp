@@ -403,7 +403,7 @@ Stream basic_update_output<Policy, Stream>::update_stream([]() {
 }());
 
 template<class Policy>
-struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
+struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
     static type_id mult;
     static std::size_t shift;
     static auto constexpr invalid = std::numeric_limits<type_id>::max();
@@ -430,19 +430,19 @@ struct yOMM2_API_gcc simple_perfect_hash : virtual type_hash {
 };
 
 template<class Policy>
-type_id simple_perfect_hash<Policy>::mult;
+type_id fast_perfect_hash<Policy>::mult;
 
 template<class Policy>
-std::size_t simple_perfect_hash<Policy>::shift;
+std::size_t fast_perfect_hash<Policy>::shift;
 
 template<class Policy>
 struct yOMM2_API_gcc checked_simple_perfect_hash
-    : virtual simple_perfect_hash<Policy>,
+    : virtual fast_perfect_hash<Policy>,
       virtual runtime_checks {
     static std::vector<type_id> control;
 
     static type_id hash_type_id(type_id type) {
-        auto index = simple_perfect_hash<Policy>::hash_type_id(type);
+        auto index = fast_perfect_hash<Policy>::hash_type_id(type);
 
         if (control[index] != type) {
             using namespace policy;
@@ -463,7 +463,7 @@ struct yOMM2_API_gcc checked_simple_perfect_hash
     template<typename ForwardIterator>
     static size_t
     hash_initialize(ForwardIterator first, ForwardIterator last) {
-        return simple_perfect_hash<Policy>::hash_initialize(
+        return fast_perfect_hash<Policy>::hash_initialize(
             first, last, control);
     }
 };
@@ -589,7 +589,7 @@ struct yOMM2_API_gcc debug_static
 
 template<class Policy, class... Facets>
 struct basic_release_static
-    : basic_static_policy<Policy, simple_perfect_hash<Policy>, Facets...> {};
+    : basic_static_policy<Policy, fast_perfect_hash<Policy>, Facets...> {};
 
 struct release_static
     : basic_release_static<release_static>::replace<
@@ -602,7 +602,7 @@ extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
 extern template class __declspec(dllimport)
     vectored_error_handler<debug_shared>;
-extern template class __declspec(dllimport) simple_perfect_hash<debug_shared>;
+extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_simple_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
@@ -618,7 +618,7 @@ struct yOMM2_API_gcc debug_shared
           backward_compatible_error_handler<debug_shared>> {};
 
 struct yOMM2_API_gcc release_shared
-    : debug_shared::replace<type_hash, simple_perfect_hash<debug_shared>> {};
+    : debug_shared::replace<type_hash, fast_perfect_hash<debug_shared>> {};
 
 } // namespace policy
 

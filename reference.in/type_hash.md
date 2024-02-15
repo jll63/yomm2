@@ -22,10 +22,10 @@ An implementation of `type_hash` must provide the following static functions:
 
 ### Implementations of `type_hash`
 
-|                                                       |                                                                  |
-| ----------------------------------------------------- | ---------------------------------------------------------------- |
-| ->simple_perfect_hash                                 | use a fast, perfect, but not minimal integer hash                |
-| [checked_simple_perfect_hash](simple_perfect_hash.md) | like `simple_perfect_hash`, also checks for unregistered classes |
+|                                                     |                                                               |
+| --------------------------------------------------- | ------------------------------------------------------------- |
+| ->fast_perfect_hash                                 | use a fast, perfect, but not minimal integer hash             |
+| [checked_simple_perfect_hash](fast_perfect_hash.md) | like `fast_perfect_hash`, also check for unregistered classes |
 
 
 ### hash_initialize

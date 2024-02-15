@@ -10,11 +10,11 @@ struct vptr_map;
 ```
 ---
 
-`vptr_map` is an implementation of [`external_vptr`](vptr.md) that stores the
+`vptr_map` is an implementation of ->`external_vptr` that stores the
 pointers to the v-tables in a `std::unordered_map` keyed by the ->`type_id`s of
 the classes. This makes method dispatch slower than ->`vptr_vector` with
-->`simple_perfect_hash` (75% slower than native virtual function). However,
-`vptr_map` has some advantages: `simple_perfect_hash` takes more time to
+->`fast_perfect_hash` (75% slower than native virtual function). However,
+`vptr_map` has some advantages: `fast_perfect_hash` takes more time to
 initialize. It also sacrifices memory space for speed, as it uses a hash
 function that is not suitable for perfect _and_ minimal hashing. Using
 `virtual_ptr`s extensively can mitigate the speed disadvantage of `vptr_map`.
