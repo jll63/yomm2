@@ -7,10 +7,8 @@
 
 ---
 ```
-struct vptr;
-struct external_vptr;
-template<class Policy> struct vptr_vector;
-template<class Policy> struct vptr_map;
+struct vptr : virtual facet {};
+struct external_vptr : virtual vptr {};
 ```
 ---
 
@@ -38,14 +36,6 @@ facet is optional.
 `external_vptr` is a sub-category of `facet`. If present, it provides a
 `register_vptrs` function, called by `update`.
 
-`vptr_map` (also a `external_vptr`) stores vptrs in a `std::unordered_map` keyed
-by the `type_id`. Method dispatch is slower than `vptr_vector` with
-`simple_perfect_hash` (75% slower than native virtual function). However,
-`vptr_map` has some advantages: `simple_perfect_hash` takes more time to
-initialize. It also sacrifices memory space for speed, as it uses a hash
-function that is not suitable for perfect _and_ minimal hashing. Using
-`virtual_ptr`s extensively can mitigate the speed disadvantage of `vptr_map`.
-
 ### Requirements for implementations of `vptr`
 
 An implementation of `vptr` must provide the following static function template:
@@ -68,10 +58,16 @@ struct vptr_facet {
 In addition to the requirements for `vptr`, an implementation of `external_vptr`
 must provide the following static function template:
 
-|                                   |                                         |
-| --------------------------------- | --------------------------------------- |
-| [register_vptrs](#register_vptrs) | implementation dependent initialization |
+|                                   |                |
+| --------------------------------- | -------------- |
+| [register_vptrs](#register_vptrs) | initialization |
 
+### Implementations of `external_vptr`
+
+|               |                                           |
+| ------------- | ----------------------------------------- |
+| [vptr_map](/reference/vptr_map.md)    | store the vptrs in a `std::unordered_map` |
+| [vptr_vector](/reference/vptr_vector.md) | store the vptrs in a `std::vector`        |
 
 ### register_vptrs
 
@@ -115,10 +111,10 @@ struct Rational : Number {
  Making these classes polymorphic would double the size of `Integer`, and
 increase the size of `Rational` by 50%.
 
-A possible solution is to allocate objects in homogeneous pages, and store the
-pointer to the v-table at the beginning of each page. It is thus shared between
-a large number of objects. To make it easy to find the beginning of the page, we
-allocate the pages on a 1024 byte boundary.
+A possible solution is to allocate objects of the same class as pages, and store
+the pointer to the v-table at the beginning of each page. It is thus shared by a
+large number of objects. To make it easy to find the beginning of the page, we
+allocate the pages on a 1024 byte boundary (or some other power of two).
 
 For this, we create a new `vptr` facet, which checks if the object is derived
 from `Number`. If yes, it locates the base of the page (`&obj & ~1023`) and

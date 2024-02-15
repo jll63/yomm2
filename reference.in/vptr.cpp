@@ -10,10 +10,8 @@ headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
-struct vptr;
-struct external_vptr;
-template<class Policy> struct vptr_vector;
-template<class Policy> struct vptr_map;
+struct vptr {};
+struct external_vptr : virtual vptr {};
 ```
 ---
 
@@ -63,10 +61,16 @@ struct vptr_facet {
 In addition to the requirements for `vptr`, an implementation of `external_vptr`
 must provide the following static function template:
 
-|                                   |                                         |
-| --------------------------------- | --------------------------------------- |
-| [register_vptrs](#register_vptrs) | implementation dependent initialization |
+|                                   |                |
+| --------------------------------- | -------------- |
+| [register_vptrs](#register_vptrs) | initialization |
 
+### Implementations of `external_vptr`
+
+|               |                                           |
+| ------------- | ----------------------------------------- |
+| ->vptr_map    | store the vptrs in a `std::unordered_map` |
+| ->vptr_vector | store the vptrs in a `std::vector`        |
 
 ### register_vptrs
 
@@ -112,10 +116,10 @@ struct Rational : Number {
 /*** Making these classes polymorphic would double the size of `Integer`, and
 increase the size of `Rational` by 50%.
 
-A possible solution is to allocate objects in homogeneous pages, and store the
-pointer to the v-table at the beginning of each page. It is thus shared between
-a large number of objects. To make it easy to find the beginning of the page, we
-allocate the pages on a 1024 byte boundary.
+A possible solution is to allocate objects of the same class as pages, and store
+the pointer to the v-table at the beginning of each page. It is thus shared by a
+large number of objects. To make it easy to find the beginning of the page, we
+allocate the pages on a 1024 byte boundary (or some other power of two).
 
 For this, we create a new `vptr` facet, which checks if the object is derived
 from `Number`. If yes, it locates the base of the page (`&obj & ~1023`) and
