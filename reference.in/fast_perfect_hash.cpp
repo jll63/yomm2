@@ -52,13 +52,18 @@ BOOST_AUTO_TEST_CASE(ref_fast_perfect_hash) {
     // 666 -> 0 !!!
 }
 
-struct checks : basic_policy<
-                    checks, final_only_rtti, vectored_error_handler<checks>,
-                    basic_error_output<checks, std::ostringstream>> {};
+struct throw_policy : basic_policy<throw_policy, throw_error_handler> {};
 
 BOOST_AUTO_TEST_CASE(ref_check_fast_perfect_hash) {
     std::vector<type_id> ids = {42, 1963, 602701};
-    checked_perfect_hash<checks>::hash_initialize(ids.begin(), ids.end());
-    BOOST_TEST_MESSAGE(
-        666 << " -> " << checked_perfect_hash<checks>::hash_type_id(666));
+    checked_perfect_hash<throw_policy>::hash_initialize(ids.begin(), ids.end());
+    bool caught = false;
+
+    try {
+        checked_perfect_hash<throw_policy>::hash_type_id(666);
+    } catch (unknown_class_error& error) {
+        caught = true;
+    }
+
+    BOOST_TEST(caught);
 }
