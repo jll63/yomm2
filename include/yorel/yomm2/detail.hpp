@@ -179,8 +179,8 @@ class pair_first_iterator {
     PairIterator iter;
 
   public:
-    using iterator_category =  typename std::forward_iterator_tag;
-    using difference_type =  typename PairIterator::difference_type;
+    using iterator_category = typename std::forward_iterator_tag;
+    using difference_type = typename PairIterator::difference_type;
     using value_type = decltype(std::declval<PairIterator>()->first);
     using pointer = const value_type*;
     using reference = const value_type&;
@@ -723,7 +723,8 @@ struct ostdstream {
 };
 
 struct ostderr : ostdstream {
-    ostderr() : ostdstream(stderr) {}
+    ostderr() : ostdstream(stderr) {
+    }
 };
 
 inline ostdstream cerr;

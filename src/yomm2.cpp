@@ -4,14 +4,14 @@
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #if !defined(YOMM2_SHARED)
-    #error "This should be compiled only for a shared library build."
+#error "This should be compiled only for a shared library build."
 #endif
 
 #if defined(_MSC_VER)
-    #define yOMM2_API_msc __declspec(dllexport)
-    #define yOMM2_DLL
+#define yOMM2_API_msc __declspec(dllexport)
+#define yOMM2_DLL
 #else
-    #define yOMM2_API_gcc __attribute__((__visibility__("default")))
+#define yOMM2_API_gcc __attribute__((__visibility__("default")))
 #endif
 
 #include <yorel/yomm2/core.hpp>

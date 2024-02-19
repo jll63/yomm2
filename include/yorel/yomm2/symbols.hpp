@@ -9,4 +9,3 @@
 #define YOMM2_SYMBOL(ID) BOOST_PP_CAT(YoMm2_S_, ID)
 
 #endif
-

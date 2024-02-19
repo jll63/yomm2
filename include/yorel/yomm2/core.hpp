@@ -183,12 +183,10 @@ struct class_declaration
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
-
 template<class... Classes>
 struct class_declaration<detail::types<Classes...>>
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
-
 
 template<typename First, class... Rest>
 using use_classes = typename detail::use_classes_aux<
