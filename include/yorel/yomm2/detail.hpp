@@ -171,23 +171,52 @@ const char* default_method_name() {
 #endif
 }
 
-// -------------
-// hash function
+// -----------------------------------------------------------------------------
+// iterator adapter for passing range from external_vpt to fast_perfect_hash
 
-struct hash_function {
-    type_id mult;
-    std::size_t shift;
+template<class PairIterator>
+class pair_first_iterator {
+    PairIterator iter;
 
-    auto operator()(type_id tip) const {
-        return (mult * tip) >> shift;
+  public:
+    using iterator_category =  typename std::forward_iterator_tag;
+    using difference_type =  typename PairIterator::difference_type;
+    using value_type = decltype(std::declval<PairIterator>()->first);
+    using pointer = const value_type*;
+    using reference = const value_type&;
+
+    explicit pair_first_iterator(PairIterator iter) : iter(iter) {
+    }
+
+    reference operator*() const {
+        return iter->first;
+    }
+
+    pointer operator->() const {
+        return &iter->first;
+    }
+
+    pair_first_iterator& operator++() {
+        ++iter;
+        return *this;
+    }
+
+    pair_first_iterator operator++(int) const {
+        return pair_first_iterator(iter++);
+    }
+
+    friend bool
+    operator==(const pair_first_iterator& a, const pair_first_iterator& b) {
+        return a.iter == b.iter;
+    }
+
+    friend bool
+    operator!=(const pair_first_iterator& a, const pair_first_iterator& b) {
+        return a.iter != b.iter;
     }
 };
 
-inline std::size_t hash(type_id mult, std::size_t shift, type_id value) {
-    return static_cast<std::size_t>((mult * value) >> shift);
-}
-
-// ----------
+// -----------------------------------------------------------------------------
 // class info
 
 struct class_info : static_chain<class_info>::static_link {
@@ -691,6 +720,10 @@ struct ostdstream {
     bool is_on() const {
         return stream != nullptr;
     }
+};
+
+struct ostderr : ostdstream {
+    ostderr() : ostdstream(stderr) {}
 };
 
 inline ostdstream cerr;

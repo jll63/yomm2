@@ -15,7 +15,6 @@
 #include <list>          // for list, _List_iterator
 #include <map>           // for map
 #include <memory>        // for allocator_traits<...
-#include <random>        // for default_random_en...
 #include <stdexcept>     // for runtime_error
 #include <string>        // for char_traits, allo...
 #include <unordered_map> // for _Node_iterator
@@ -1232,91 +1231,6 @@ void runtime<Policy>::print(const dispatch_stats_t& stats) {
 }
 
 } // namespace detail
-
-namespace policy {
-
-template<class Policy>
-template<typename ForwardIterator>
-size_t fast_perfect_hash<Policy>::hash_initialize(
-    ForwardIterator first, ForwardIterator last,
-    std::vector<type_id>& buckets) {
-    using namespace policy;
-
-    constexpr bool has_output = Policy::template has_facet<update_output>;
-    const auto N = std::distance(first, last);
-
-    if constexpr (has_output) {
-        Policy::update_stream << "Finding hash factor for " << N << " types\n";
-    }
-
-    std::default_random_engine rnd(13081963);
-    size_t total_attempts = 0;
-    size_t M = 1;
-
-    for (auto size = N * 5 / 4; size >>= 1;) {
-        ++M;
-    }
-
-    std::uniform_int_distribution<type_id> uniform_dist;
-
-    for (size_t pass = 0; pass < 4; ++pass, ++M) {
-        shift = 8 * sizeof(type_id) - M;
-        auto hash_size = 1 << M;
-
-        if constexpr (has_output) {
-            Policy::update_stream << "  trying with M = " << M << ", "
-                                  << hash_size << " buckets\n";
-        }
-
-        bool found = false;
-        size_t attempts = 0;
-        buckets.resize(hash_size);
-
-        while (!found && attempts < 100000) {
-            std::fill(buckets.begin(), buckets.end(), invalid);
-            ++attempts;
-            ++total_attempts;
-            found = true;
-            mult = uniform_dist(rnd) | 1;
-
-            for (auto iter = first; iter != last; ++iter) {
-                auto type = iter->first;
-                auto index = (type * mult) >> shift;
-
-                if (buckets[index] != invalid) {
-                    found = false;
-                    break;
-                }
-
-                buckets[index] = type;
-            }
-        }
-
-        // metrics.hash_search_attempts = total_attempts;
-        // metrics.hash_search_time =
-        //     std::chrono::steady_clock::now() - start_time;
-        // metrics.hash_table_size = hash_size;
-
-        if (found) {
-            if constexpr (has_output) {
-                Policy::update_stream << "  found " << mult << " after "
-                                      << total_attempts << " attempts\n";
-            }
-
-            return buckets.size();
-        }
-    }
-
-    hash_search_error error;
-    error.attempts = total_attempts;
-    // error.duration = std::chrono::steady_clock::now() - start_time;
-    error.buckets = 1 << M;
-    Policy::error(error_type(error));
-
-    abort();
-}
-
-} // namespace policy
 
 template<class Policy>
 void update() {
