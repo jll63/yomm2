@@ -531,6 +531,14 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 template <class Policy>
 std::vector<type_id> checked_perfect_hash<Policy>::control;
 
+#ifdef __cpp_exceptions
+struct yOMM2_API_gcc throw_error_handler : virtual error_handler {
+  static void error(const error_type &error_v) {
+    std::visit([](auto &&arg) { throw arg; }, error_v);
+  }
+};
+#endif
+
 template <class Policy>
 struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
   static error_handler_type error;

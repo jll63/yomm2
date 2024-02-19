@@ -35,14 +35,14 @@ functionality is not available.
 YOMM2 supports the following facet categories, and provides at least one
 implementation for each category. They are summed up in the following table.
 
-| facet category          | responsibility                  | implementations                                                              |
-| ----------------------- | ------------------------------- | ---------------------------------------------------------------------------- |
-| vptr, external_vptr     | fetch vptr for virtual argument | **vptr_vector\<...>** (D, R), vptr_map\<...>                                 |
-| **rtti**, deferred_rtti | type information                | **std_rtti** (D, R), final_only_rtti                                         |
+| facet category          | responsibility                  | implementations                                                     |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------------- |
+| vptr, external_vptr     | fetch vptr for virtual argument | **vptr_vector\<...>** (D, R), vptr_map\<...>                        |
+| **rtti**, deferred_rtti | type information                | **std_rtti** (D, R), final_only_rtti                                |
 | type_hash               | map type info to integer index  | **fast_perfect_hash\<...>** (R), **checked_perfect_hash`<...>** (D) |
-| error_handler           | report errors                   | vectored_error_handler\<...>                                                 |
-| error_output            | describe error                  | **basic_error_output\<...>** (D)                                             |
-| update_output           | trace `update`                  | **basic_update_output\<...>** (D)                                            |
+| error_handler           | report errors                   | vectored_error_handler\<...>, throw_error_handler                   |
+| error_output            | describe error                  | **basic_error_output\<...>** (D)                                    |
+| update_output           | trace `update`                  | **basic_update_output\<...>** (D)                                   |
 
 Facet categories in bold are required for YOMM2 to work at all. Facet
 implementations in bold are used in the default policy, either in debug (D) or
