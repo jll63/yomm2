@@ -19,11 +19,11 @@ initialize. It also sacrifices memory space for speed, as it uses a hash
 function that is not suitable for perfect _and_ minimal hashing. Using
 `virtual_ptr`s extensively can mitigate the speed disadvantage of `vptr_map`.
 
-### Template parameters
+## Template parameters
 
 **Policy** - the policy containing the facet.
 
-### static member functions
+## static member functions
 |                                   |                                                 |
 | --------------------------------- | ----------------------------------------------- |
 | [dynamic_vptr](#dynamic_vptr)     | return the address of the v-table for an object |

@@ -19,11 +19,11 @@ The default policy uses [`std_rtti`](/reference/std_rtti.md), [`fast_perfect_has
 to implement efficient method dispatch. Calling a method with a single virtual
 parameter takes only ~33% more time than calling a native virtual function call.
 
-### Template parameters
+## Template parameters
 
 **Policy** - the policy containing the facet.
 
-### static member functions
+## static member functions
 |                                   |                                                    |
 | --------------------------------- | -------------------------------------------------- |
 | [dynamic_vptr](#dynamic_vptr)     | return the address of the v-table for an object    |
