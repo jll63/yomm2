@@ -18,7 +18,7 @@ include(cmake/find_or_download_package.cmake)
 find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
-if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
   add_compile_options(-save-temps -fverbose-asm -masm=intel)
 endif()
 

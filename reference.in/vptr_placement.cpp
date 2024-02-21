@@ -1,17 +1,22 @@
+#define BOOST_TEST_MODULE api
+#include <boost/test/included/unit_test.hpp>
 
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+/***
+<sub>/ ->home / ->reference </sub>
 
-**yorel::yomm2::policy::vptr entry: yorel::yomm2::policy::external_vptr**<br>
-
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+entry: yorel::yomm2::policy::vptr_placement
+entry: yorel::yomm2::policy::external_vptr
+hrefs: external_vptr
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
-struct vptr {}; struct external_vptr : virtual vptr {};
+struct vptr_placement;
+struct external_vptr;
 ```
 ---
 
-The `vptr` facet is responsible for retrieving a pointer to the v-table for an
+The `vptr_placement` facet is responsible for retrieving a pointer to the v-table for an
 object.
 
 YOMM2 implements method dispatch in a way similar to native virtual function
@@ -21,23 +26,23 @@ contain pointers to functions for unary methods, and, for multi-methods,
 pointers to, and coordinates in, a multi-dimensional table of pointers to
 functions.
 
-The `vptr` facet is used during method call to fetch the vptr for virtual
+The `vptr_placement` facet is used during method call to fetch the vptr_placement for virtual
 arguments corresponding to the `virtual_` parameters in the method
 declaration. It is also used by the constructor of `virtual_ptr` to obtain a
-vptr on the basis of an object's dynamic type.
+vptr_placement on the basis of an object's dynamic type.
 
 `virtual_ptr::final`, and the related convenience functions, assume that the
-static and dynamic types of their argument are the same. The vptr is obtained
+static and dynamic types of their argument are the same. The vptr_placement is obtained
 statically from the policy's `static_vptr<Class>` member. It is conceivable
-to organize an entire program around the "final" constructs; thus, the `vptr`
+to organize an entire program around the "final" constructs; thus, the `vptr_placement`
 facet is optional.
 
 `external_vptr` is a sub-category of `facet`. If present, it provides a
 `register_vptrs` function, called by `update`.
 
-### Requirements for implementations of `vptr`
+### Requirements for implementations of `vptr_placement`
 
-An implementation of `vptr` must provide the following static function template:
+An implementation of `vptr_placement` must provide the following static function template:
 
 |                               |                                                 |
 | ----------------------------- | ----------------------------------------------- |
@@ -53,7 +58,7 @@ struct vptr_facet { template<class Class> static const std::uintptr_t*
 
 ### Requirements for implementations of `external_vptr`
 
-In addition to the requirements for `vptr`, an implementation of `external_vptr`
+In addition to the requirements for `vptr_placement`, an implementation of `external_vptr`
 must provide the following static function template:
 
 |                                   |                |
@@ -64,8 +69,8 @@ must provide the following static function template:
 
 |               |                                           |
 | ------------- | ----------------------------------------- |
-| [vptr_map](/reference/vptr_map.md)    | store the vptrs in a `std::unordered_map` |
-| [vptr_vector](/reference/vptr_vector.md) | store the vptrs in a `std::vector`        |
+| ->vptr_map    | store the vptrs in a `std::unordered_map` |
+| ->vptr_vector | store the vptrs in a `std::vector`        |
 
 ### register_vptrs
 
@@ -77,7 +82,7 @@ struct external_vptr_facet {
 ```
 
 This function is called by `update`, after the v-tables have been set up, with a
-range of pairs. The first member is a [`type_id`](/reference/type_id.md) of a registered class; the
+range of pairs. The first member is a ->`type_id` of a registered class; the
 second member is a pointer to a pointer to the v-table for that class. The vptrs
 (`**iter.second`) change after a call to `update`, as the v-tables are rebuilt.
 However, the pointers to the vptrs (`*iter.second`) are stable across updates.
@@ -87,8 +92,9 @@ However, the pointers to the vptrs (`*iter.second`) are stable across updates.
 Virtual functions are sometimes criticized for having a non-zero overhead.
 Consider the following class hierarchy:
 
+***/
 
-```c++
+//***
 #include <iosfwd>
 
 struct Number {};
@@ -106,8 +112,9 @@ struct Rational : Number {
 
     int num, den;
 };
-```
- Making these classes polymorphic would double the size of `Integer`, and
+//***
+
+/*** Making these classes polymorphic would double the size of `Integer`, and
 increase the size of `Rational` by 50%.
 
 A possible solution is to allocate objects of the same class as pages, and store
@@ -115,14 +122,27 @@ the pointer to the v-table at the beginning of each page. It is thus shared by a
 large number of objects. To make it easy to find the beginning of the page, we
 allocate the pages on a 1024 byte boundary (or some other power of two).
 
-For this, we create a new `vptr` facet, which checks if the object is derived
+For this, we create a new `vptr_placement` facet, which checks if the object is derived
 from `Number`. If yes, it locates the base of the page (`&obj & ~1023`) and
-returns the vptr stored there. Otherwise, it falls back to the default behavior,
+returns the vptr_placement stored there. Otherwise, it falls back to the default behavior,
 so we can have both `Number` and normal, polymorphic classes as parameters in
 multi-methods.
 
+***/
 
-```c++
+#ifdef _MSC_VER
+#include <malloc.h>
+
+namespace std {
+void* aligned_alloc(size_t alignment, size_t size) {
+    return _aligned_malloc(size, alignment);
+}
+} // namespace std
+
+#define free _aligned_free
+#endif
+
+//***
 #include <cstdlib>
 
 #include <yorel/yomm2/policy.hpp>
@@ -131,27 +151,31 @@ multi-methods.
 using namespace yorel::yomm2;
 using namespace policy;
 
-struct vptr_page : virtual default_static_policy::use_facet<vptr> {
+struct vptr_page : virtual default_static_policy::use_facet<vptr_placement> {
     template<class Class>
     static auto dynamic_vptr(Class& arg) {
         if constexpr (std::is_base_of_v<Number, std::remove_const_t<Class>>) {
             auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
             return *reinterpret_cast<std::uintptr_t**>(page);
         } else {
-            return default_static_policy::use_facet<vptr>::dynamic_vptr(arg);
+            return default_static_policy::use_facet<vptr_placement>::dynamic_vptr(arg);
         }
     }
 };
 
-struct number_aware_policy : default_static_policy::replace<vptr, vptr_page> {};
+struct number_aware_policy : default_static_policy::replace<vptr_placement, vptr_page> {};
 
 // Make it the default policy.
 #define YOMM2_DEFAULT_POLICY number_aware_policy
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/runtime.hpp>
-```
- Here is a bare-bone implementation of the page allocator: 
-```c++
+
+//***
+
+/*** Here is a bare-bone implementation of the page allocator: ***/
+
+//***
+
 template<class T>
 class Page {
   private:
@@ -184,14 +208,17 @@ class Page {
         return *new (top++) T(std::forward<U>(args)...);
     }
 };
-```
+//***
 
+/***
 
 Let's create a couple of "ordinary" classes, register all the classes, and
 define a method:
 
+***/
 
-```c++
+//***
+
 struct Person {
     virtual ~Person() {
     }
@@ -238,11 +265,15 @@ define_method(
     os << a.num << "/" << a.den << " + " << b.num << "/" << b.den << " = "
        << a.num * b.den + a.den * b.num << "/" << a.den * b.den;
 }
-```
 
+//***
+
+/***
 Here is a test:
+***/
 
-```c++
+//***
+
 #include <sstream>
 
 BOOST_AUTO_TEST_CASE(ref_vptr_page) {
@@ -278,9 +309,11 @@ BOOST_AUTO_TEST_CASE(ref_vptr_page) {
     add(alice, i_2, r_2_3, out4);
     BOOST_TEST(out4.str() == "2 + 2/3 = 8/3");
 }
-```
 
+//***
+
+/***
 
 [1]: This is similar to the way YOMM11 works.
 
-
+***/

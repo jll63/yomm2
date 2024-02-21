@@ -10,7 +10,7 @@ struct vptr_vector : virtual external_vptr { ... };
 ```
 ---
 
-`vptr_vector` is an implementation of [`external_vptr`](vptr.md) that stores the
+`vptr_vector` is an implementation of [`external_vptr`](vptr_placement.md) that stores the
 pointers to the v-tables in a `std::vector`. If the policy contains a
 [`type_hash`](/reference/type_hash.md) facet, it is used to convert the [`type_id`](/reference/type_id.md) to an index in the
 vector; otherwise, the `type_id` is used as the index.

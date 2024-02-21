@@ -481,7 +481,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
                 auto type = *iter;
                 auto index = (type * mult) >> shift;
 
-                if (index > hash_last) {
+                if (index >= hash_last) {
                     hash_last = index + 1;
                 }
 
