@@ -25,7 +25,7 @@ namespace policy {
 template class yOMM2_API_msc basic_domain<debug_shared>;
 template class yOMM2_API_msc vptr_vector<debug_shared>;
 template class yOMM2_API_msc basic_indirect_vptr<debug_shared>;
-template class yOMM2_API_msc vectored_error_handler<debug_shared>;
+template class yOMM2_API_msc vectored_error<debug_shared>;
 template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
 template class yOMM2_API_msc fast_perfect_hash<debug_shared>;
 template class yOMM2_API_msc checked_perfect_hash<debug_shared>;

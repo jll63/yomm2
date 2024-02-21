@@ -1,19 +1,16 @@
-#define BOOST_TEST_MODULE checked_perfect_hash
-#include <boost/test/included/unit_test.hpp>
 
-/***
 
-<sub>/ ->home / ->reference </sub>
+<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
-entry: yorel::yomm2::policy::checked_perfect_hash
-headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+**yorel::yomm2::policy::checked_perfect_hash**<br>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```
 struct checked_perfect_hash;
 ```
 
-`checked_perfect_hash` is a subclass of ->`fast_perfect_hash`. It checks that
+`checked_perfect_hash` is a subclass of [`fast_perfect_hash`](/reference/fast_perfect_hash.md). It checks that
 the id passed to `hash_type_index` is valid, i.e. was in the set of ids
 registered via `hash_initialize`.
 
@@ -82,13 +79,12 @@ None.
 
 #### Errors
 
-* ->`unknown_class_error`, with `context` set to `unknown_class_error::update`.
+* [`unknown_class_error`](/reference/set_error_handler.md), with `context` set to `unknown_class_error::update`.
 
 ### Example
 
-***/
 
-//***
+```c++
 #include <yorel/yomm2/policy.hpp>
 
 // for brevity
@@ -116,4 +112,4 @@ BOOST_AUTO_TEST_CASE(ref_check_checked_perfect_hash) {
 
     BOOST_TEST(caught);
 }
-//***
+```

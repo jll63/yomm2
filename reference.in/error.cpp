@@ -29,7 +29,7 @@ following situations:
 The function is allowed to throw an exception, `exit`, or anything it sees fit.
 If it returns, the program is terminated with `abort`.
 
-YOMM2 provides three implementations of the facet: `vectored_error_handler`. It
+YOMM2 provides three implementations of the facet: `vectored_error`. It
 calls the function specified in the `error` static member variable of the facet
 - a `std::function<void(const error_type& error)>` -, passing it the  error
 variant.

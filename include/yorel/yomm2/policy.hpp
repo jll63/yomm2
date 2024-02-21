@@ -542,7 +542,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 
             if constexpr (Policy::template has_facet<error_handler>) {
                 unknown_class_error error;
-                error.context = unknown_class_error::call;
+                error.context = unknown_class_error::update;
                 error.type = type;
                 Policy::error(error);
             }
@@ -563,7 +563,7 @@ template<class Policy>
 std::vector<type_id> checked_perfect_hash<Policy>::control;
 
 #ifdef __cpp_exceptions
-struct yOMM2_API_gcc throw_error_handler : virtual error_handler {
+struct yOMM2_API_gcc throw_error : virtual error_handler {
     static void error(const error_type& error_v) {
         std::visit([](auto&& arg) { throw arg; }, error_v);
     }
@@ -571,7 +571,7 @@ struct yOMM2_API_gcc throw_error_handler : virtual error_handler {
 #endif
 
 template<class Policy>
-struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
+struct yOMM2_API_gcc vectored_error : virtual error_handler {
     static error_handler_type error;
 
     static void default_error_handler(const error_type& error_v) {
@@ -617,11 +617,11 @@ struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
 };
 
 template<class Policy>
-error_handler_type vectored_error_handler<Policy>::error; // set by update!
+error_handler_type vectored_error<Policy>::error; // set by update!
 
 template<class Policy>
 struct yOMM2_API_gcc backward_compatible_error_handler
-    : vectored_error_handler<Policy> {
+    : vectored_error<Policy> {
     static method_call_error_handler call_error;
 
     static void default_error_handler(const error_type& error_v) {
@@ -635,7 +635,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
             abort();
         }
 
-        vectored_error_handler<Policy>::default_error_handler(error_v);
+        vectored_error<Policy>::default_error_handler(error_v);
     }
 
     static void default_call_error_handler(
@@ -672,7 +672,7 @@ method_call_error_handler
 template<class Policy, class... Facets>
 struct yOMM2_API_gcc basic_static_policy
     : basic_policy<
-          Policy, vptr_vector<Policy>, std_rtti, vectored_error_handler<Policy>,
+          Policy, vptr_vector<Policy>, std_rtti, vectored_error<Policy>,
           Facets...> {};
 
 template<class Policy, class... Facets>
@@ -698,8 +698,7 @@ struct debug_shared;
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
-extern template class __declspec(dllimport)
-    vectored_error_handler<debug_shared>;
+extern template class __declspec(dllimport) vectored_error<debug_shared>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,

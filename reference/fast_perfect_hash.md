@@ -44,6 +44,12 @@ registrations.
 `default_policy` uses `fast_perfect_hash` in release builds, and
 `checked_perfect_hash` in debug builds.
 
+## Interactions with other facets
+
+* `error_handler` - to report error conditions.
+* `error_output` - for diagnostics.
+* `update_output` - for trace.
+
 ## Template parameters
 
 **Policy** - the policy containing the facet.
@@ -76,7 +82,7 @@ None.
 
 #### Errors
 
-None.
+* Any exception thrown by Allocator::allocate() (typically std::bad_alloc).
 
 ### hash_type_id
 
@@ -111,28 +117,28 @@ using namespace yorel::yomm2;
 using namespace yorel::yomm2::policy;
 
 struct fast_hash_policy
-    : basic_policy<fast_hash_policy, fast_perfect_hash<fast_hash_policy>> {
-};
+    : basic_policy<fast_hash_policy, fast_perfect_hash<fast_hash_policy>> {};
 
 BOOST_AUTO_TEST_CASE(ref_fast_perfect_hash) {
-  std::vector<type_id> ids = {42, 1963, 2001};
-  fast_hash_policy::hash_initialize(ids.begin(), ids.end());
+    std::vector<type_id> ids = {42, 1963, 2001};
+    fast_hash_policy::hash_initialize(ids.begin(), ids.end());
 
-  for (auto id : ids) {
-    BOOST_TEST_MESSAGE(id << " -> " << fast_hash_policy::hash_type_id(id));
-    // Output:
-    // 42 -> 0
-    // 1963 -> 3
-    // 602701 -> 2
+    for (auto id : ids) {
+        BOOST_TEST_MESSAGE(id << " -> " << fast_hash_policy::hash_type_id(id));
+        // Output:
+        // 42 -> 0
+        // 1963 -> 3
+        // 602701 -> 2
 
-    for (auto other : ids) {
-      BOOST_TEST((fast_hash_policy::hash_type_id(id) ==
-                  fast_hash_policy::hash_type_id(other)) == (id == other));
+        for (auto other : ids) {
+            BOOST_TEST(
+                (fast_hash_policy::hash_type_id(id) ==
+                 fast_hash_policy::hash_type_id(other)) == (id == other));
+        }
     }
-  }
 
-  // Calling hash_type_id with an unregistered type_id returns bogus result:
-  BOOST_TEST_MESSAGE(666 << " -> " << fast_hash_policy::hash_type_id(666));
-  // 666 -> 3 !!!
+    // Calling hash_type_id with an unregistered type_id returns bogus result:
+    BOOST_TEST_MESSAGE(666 << " -> " << fast_hash_policy::hash_type_id(666));
+    // 666 -> 3 !!!
 }
 ```
