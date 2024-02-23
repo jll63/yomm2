@@ -502,7 +502,8 @@ struct any : ref_count {
 
 template<typename T>
 struct ordinary : any<T> {
-    void concrete() override {}
+    void concrete() override {
+    }
 };
 
 template<typename T>
@@ -516,7 +517,8 @@ struct any_square : any<T> {
 
 template<typename T>
 struct square : any_square<T> {
-    void concrete() override {}
+    void concrete() override {
+    }
 };
 
 template<typename T>
@@ -531,7 +533,8 @@ struct any_symmetric : any_square<T> {
 
 template<typename T>
 struct symmetric : any_symmetric<T> {
-    void concrete() override {}
+    void concrete() override {
+    }
 };
 ```
 
@@ -578,18 +581,18 @@ Let's start by implementing the three operations in a fully typed manner:
 ```c++
 // transposition
 
-template <typename T>
-auto operator~(const handle<ordinary<T>> &m) {
+template<typename T>
+auto operator~(const handle<ordinary<T>>& m) {
     return handle(new ordinary<T>(...));
 }
 
-template <typename T>
-auto operator~(const handle<square<T>> &m) {
+template<typename T>
+auto operator~(const handle<square<T>>& m) {
     return handle(new square<T>(...));
 }
 
-template <typename T>
-auto operator~(const handle<symmetric<T>> &m) {
+template<typename T>
+auto operator~(const handle<symmetric<T>>& m) {
     return m;
 }
 
@@ -604,63 +607,57 @@ struct is_matrix_aux<M<T>> : std::is_base_of<any<T>, M<T>> {};
 template<typename T>
 constexpr bool is_matrix = is_matrix_aux<T>::value;
 
-template <typename T, typename U>
-auto operator+(const handle<ordinary<T>> &a, const handle<ordinary<U>> &b) {
+template<typename T, typename U>
+auto operator+(const handle<ordinary<T>>& a, const handle<ordinary<U>>& b) {
     return handle(new ordinary<std::common_type_t<T, U>>(...));
 }
 
-template <
-    typename T,
-    typename U,
-    std::enable_if_t<is_matrix<U>, int>...
->
-auto operator+(const handle<ordinary<T>> &a, const handle<U> &b) {
-    return handle(new ordinary<std::common_type_t<T, typename U::element_type>>(...));
+template<typename T, typename U, std::enable_if_t<is_matrix<U>, int>...>
+auto operator+(const handle<ordinary<T>>& a, const handle<U>& b) {
+    return handle(
+        new ordinary<std::common_type_t<T, typename U::element_type>>(...));
 }
 
-template <
-    typename T,
-    typename U,
-    std::enable_if_t<is_matrix<U>, int>...
->
-auto operator+(const handle<U> &a, const handle<ordinary<T>> &b) {
-    return handle(new ordinary<std::common_type_t<T, typename U::element_type>>(...));
+template<typename T, typename U, std::enable_if_t<is_matrix<U>, int>...>
+auto operator+(const handle<U>& a, const handle<ordinary<T>>& b) {
+    return handle(
+        new ordinary<std::common_type_t<T, typename U::element_type>>(...));
 }
 
-template <typename T, typename U>
-auto operator+(const handle<square<T>> &a, const handle<square<U>> &b) {
+template<typename T, typename U>
+auto operator+(const handle<square<T>>& a, const handle<square<U>>& b) {
     return handle(new square<std::common_type_t<T, U>>(...));
 }
 
-template <typename T, typename U>
-auto operator+(const handle<symmetric<T>> &a, const handle<symmetric<U>> &b) {
+template<typename T, typename U>
+auto operator+(const handle<symmetric<T>>& a, const handle<symmetric<U>>& b) {
     return handle(new symmetric<std::common_type_t<T, U>>(...));
 }
 
-template <typename T, typename U>
-auto operator+(const handle<symmetric<T>> &a, const handle<square<U>> &b) {
+template<typename T, typename U>
+auto operator+(const handle<symmetric<T>>& a, const handle<square<U>>& b) {
     return handle(new square<std::common_type_t<T, U>>(...));
 }
 
-template <typename T, typename U>
-auto operator+(const handle<square<T>> &a, const handle<symmetric<U>> &b) {
+template<typename T, typename U>
+auto operator+(const handle<square<T>>& a, const handle<symmetric<U>>& b) {
     return handle(new square<std::common_type_t<T, U>>(...));
 }
 
 // scaling
 
-template <typename T, typename U>
-auto operator*(T a, const handle<ordinary<U>> &b) {
+template<typename T, typename U>
+auto operator*(T a, const handle<ordinary<U>>& b) {
     return handle(new ordinary<std::common_type_t<T, U>>(...));
 }
 
-template <typename T, typename U>
-auto operator*(T a, const handle<square<U>> &b) {
+template<typename T, typename U>
+auto operator*(T a, const handle<square<U>>& b) {
     return handle(new square<std::common_type_t<T, U>>(...));
 }
 
-template <typename T, typename U>
-auto operator*(T a, const handle<symmetric<U>> &b) {
+template<typename T, typename U>
+auto operator*(T a, const handle<symmetric<U>>& b) {
     return handle(new symmetric<std::common_type_t<T, U>>(...));
 }
 ```
@@ -701,7 +698,8 @@ BOOST_AUTO_TEST_CASE(test_static_operations) {
         handle<square<double>> ab = a + b;
         // handle<symmetric<double>> x = a + b; // wrong: square is-not-a symmetric
         // handle<square<double>> y = a + a;    // wrong: symmetric is-not-a square
-        handle<any_square<double>> y = a + a;   // OK: symmetric is-a any-square - but useless
+        handle<any_square<double>> y =
+            a + a; // OK: symmetric is-a any-square - but useless
     }
 
     {
@@ -738,17 +736,16 @@ classes.
 struct YOMM2_SYMBOL(transpose);
 
 template<typename Matrix>
-using transpose = method<YOMM2_SYMBOL(transpose), handle<Matrix>(virtual_<Matrix&>)>;
+using transpose =
+    method<YOMM2_SYMBOL(transpose), handle<Matrix>(virtual_<Matrix&>)>;
 
 template<
     template<typename> typename Matrix, typename T,
     std::enable_if_t<
-        std::is_base_of_v<any<T>, Matrix<T>> // 1
-        && std::is_abstract_v<Matrix<T>>,    // 2
-        int
-    >...
->
-auto operator~(const handle<Matrix<T>> &m) {
+        std::is_base_of_v<any<T>, Matrix<T>>  // 1
+            && std::is_abstract_v<Matrix<T>>, // 2
+        int>...>
+auto operator~(const handle<Matrix<T>>& m) {
     return transpose<Matrix<T>>::fn(*m.get());
 }
 ```
@@ -775,7 +772,6 @@ class, and this for the required numeric types. E.g.:
 - `transpose<any<int>>`, `any_square`, `symmetrical`
 - `transpose<any<double>>`, `any<double>`, `ordinary<double>`
 - same with `negate`, etc
-
 
 On the other hand, we do *not* want to generate definitions for combinations
 that are useless, e.g.:
@@ -813,29 +809,23 @@ We can now implement `unary_definition`:
 ```c++
 template<
     typename Method, typename Abstract, typename Concrete, typename T,
-    typename = std::bool_constant<
-        std::is_base_of_v<
-            typename Abstract::template fn<T>, typename Concrete::template fn<T>
-        >
-    >                                       // see note 1
->
-struct unary_definition : not_defined {};     // see note 2
+    typename = std::bool_constant<std::is_base_of_v<
+        typename Abstract::template fn<T>,
+        typename Concrete::template fn<T>>> // see note 1
+    >
+struct unary_definition : not_defined {}; // see note 2
 
 template<
-    template<typename> typename Abstract,
-    template<typename> typename Concrete,
-    typename T
->
+    template<typename> typename Abstract, template<typename> typename Concrete,
+    typename T>
 struct unary_definition<
-    template_<transpose>,                   // see note 3
-    template_<Abstract>,
-    template_<Concrete>,
-    T,
-    std::true_type                          // see note 4
-> {
+    template_<transpose>, // see note 3
+    template_<Abstract>, template_<Concrete>, T,
+    std::true_type // see note 4
+    > {
     using method = transpose<Abstract<T>>;
     static auto fn(Concrete<T>& m) {
-        return ~handle<Concrete<T>>(&m);    // see note 5
+        return ~handle<Concrete<T>>(&m); // see note 5
     }
 };
 ```
@@ -865,9 +855,7 @@ that we can use `boost::mp11::mp_append`:
 
 ```c++
 using matrix_templates = boost::mp11::mp_append<
-    abstract_matrix_templates,
-    concrete_matrix_templates
->;
+    abstract_matrix_templates, concrete_matrix_templates>;
 ```
 
 
@@ -879,12 +867,9 @@ We can now use `product` to create all the combinations, and pass them to
 use_definitions<
     unary_definition,
     product<
-        templates<transpose>,
-        abstract_matrix_templates,
-        concrete_matrix_templates,
-        types<double, int>
-    >
-> YOMM2_GENSYM;
+        templates<transpose>, abstract_matrix_templates,
+        concrete_matrix_templates, types<double, int>>>
+    YOMM2_GENSYM;
 ```
 
 
@@ -901,9 +886,7 @@ list of `types` lists. We can thus inject the result of `apply_product` into
 
 
 ```c++
-use_classes<
-    apply_product<matrix_templates, types<double, int>>
-> YOMM2_GENSYM;
+use_classes<apply_product<matrix_templates, types<double, int>>> YOMM2_GENSYM;
 ```
 ```c++
 BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {
@@ -944,20 +927,17 @@ finally, we convert that type to its abstract base class, using
 
 ```c++
 template<typename M1, typename M2>
-using binary_result_type = typename decltype(
-    std::declval<const handle<typename M1::concrete_type>>() +
-    std::declval<const handle<typename M2::concrete_type>>()
-)::body_type::abstract_type;
+using binary_result_type =
+    typename decltype(std::declval<const handle<typename M1::concrete_type>>() + std::declval<const handle<typename M2::concrete_type>>())::
+        body_type::abstract_type;
 
 static_assert(std::is_same_v<
-    binary_result_type<any_symmetric<double>, any_square<int>>,
-    any_square<double>
->);
+              binary_result_type<any_symmetric<double>, any_square<int>>,
+              any_square<double>>);
 
 static_assert(std::is_same_v<
-    binary_result_type<any_symmetric<double>, square<int>>,
-    any_square<double>
->);
+              binary_result_type<any_symmetric<double>, square<int>>,
+              any_square<double>>);
 
 // etc
 ```
@@ -972,22 +952,17 @@ struct YOMM2_SYMBOL(add);
 template<typename M1, typename M2>
 using add = method<
     YOMM2_SYMBOL(add),
-    handle<binary_result_type<M1, M2>>(virtual_<M1&>, virtual_<M2&>)
->;
+    handle<binary_result_type<M1, M2>>(virtual_<M1&>, virtual_<M2&>)>;
 
 template<
     typename M1, typename M2,
     typename = std::enable_if_t<
         is_matrix<M1> && is_matrix<M2> &&
-        (std::is_abstract_v<M1> || std::is_abstract_v<M2>),
-        void
-    >
->
-auto operator+(const handle<M1> &a, const handle<M2> &b) {
-    return add<
-        typename M1::abstract_type,
-        typename M2::abstract_type
-    >::fn(*a, *b);
+            (std::is_abstract_v<M1> || std::is_abstract_v<M2>),
+        void>>
+auto operator+(const handle<M1>& a, const handle<M2>& b) {
+    return add<typename M1::abstract_type, typename M2::abstract_type>::fn(
+        *a, *b);
 }
 ```
 
@@ -1019,7 +994,6 @@ C1, C2 = { concrete class templates }
 T1, T2 = { required numeric types }
 ```
 
-
 ...and selecting the combinations that satisfy the condition:
 - `A1<T1>` is a base of `C1<T1>`
 - `A2<T2>` is a base of `C2<T2>`
@@ -1030,27 +1004,22 @@ methods, let's factorize it:
 
 ```c++
 template<
-    typename A1, typename C1, typename T1,
-    typename A2, typename C2, typename T2
->
+    typename A1, typename C1, typename T1, typename A2, typename C2,
+    typename T2>
 
 struct enable_binary_definition;
 
 template<
     template<typename> typename A1, template<typename> typename C1, typename T1,
-    template<typename> typename A2, template<typename> typename C2, typename T2
->
+    template<typename> typename A2, template<typename> typename C2, typename T2>
 struct enable_binary_definition<
-    template_<A1>, template_<C1>, T1,
-    template_<A2>, template_<C2>, T2
-> : std::bool_constant<
-    std::is_base_of_v<A1<T1>, C1<T1>> &&
-    std::is_base_of_v<A2<T2>, C2<T2>> &&
-    std::is_base_of_v<
-        binary_result_type<A1<T1>, A2<T2>>,
-        binary_result_type<C1<T1>, C2<T2>>
-    >
-> {};
+    template_<A1>, template_<C1>, T1, template_<A2>, template_<C2>, T2>
+    : std::bool_constant<
+          std::is_base_of_v<A1<T1>, C1<T1>> &&
+          std::is_base_of_v<A2<T2>, C2<T2>> &&
+          std::is_base_of_v<
+              binary_result_type<A1<T1>, A2<T2>>,
+              binary_result_type<C1<T1>, C2<T2>>>> {};
 ```
 
 
@@ -1059,26 +1028,17 @@ We can now implement `binary_defintion`:
 
 ```c++
 template<
-    typename Method,
-    typename A1, typename C1, typename T1,
-    typename A2, typename C2, typename T2,
-    typename = typename enable_binary_definition<
-        A1, C1, T1,
-        A2, C2, T2
-    >::type
->
+    typename Method, typename A1, typename C1, typename T1, typename A2,
+    typename C2, typename T2,
+    typename = typename enable_binary_definition<A1, C1, T1, A2, C2, T2>::type>
 struct binary_definition : not_defined {};
 
 template<
     template<typename> typename A1, template<typename> typename D1, typename T1,
-    template<typename> typename A2, template<typename> typename D2, typename T2
->
+    template<typename> typename A2, template<typename> typename D2, typename T2>
 struct binary_definition<
-    template_<add>,
-    template_<A1>, template_<D1>, T1,
-    template_<A2>, template_<D2>, T2,
-    std::true_type
-> {
+    template_<add>, template_<A1>, template_<D1>, T1, template_<A2>,
+    template_<D2>, T2, std::true_type> {
     using method = add<A1<T1>, A2<T2>>;
     static auto fn(D1<T1>& a, D2<T2>& b) {
         return handle<D1<T1>>(&a) + handle<D2<T2>>(&b);
@@ -1095,15 +1055,10 @@ struct binary_definition<
 use_definitions<
     binary_definition,
     product<
-        templates<add>,
-        abstract_matrix_templates,
-        concrete_matrix_templates,
-        types<double, int>,
-        abstract_matrix_templates,
-        concrete_matrix_templates,
-        types<double, int>
-    >
-> YOMM2_GENSYM;
+        templates<add>, abstract_matrix_templates, concrete_matrix_templates,
+        types<double, int>, abstract_matrix_templates,
+        concrete_matrix_templates, types<double, int>>>
+    YOMM2_GENSYM;
 ```
 ```c++
 BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
@@ -1148,10 +1103,9 @@ struct template_of<M<T>> {
     using type = template_<M>;
 };
 
-static_assert(std::is_same_v<
-    template_of<square<int>::abstract_type>::type,
-    template_<any_square>
->);
+static_assert(
+    std::is_same_v<
+        template_of<square<int>::abstract_type>::type, template_<any_square>>);
 ```
 
 
@@ -1163,40 +1117,26 @@ products. We can handle this with traits:
 template<template<typename...> typename Definition>
 struct unary_definition_traits {
     template<
-        typename AbstractMatrixTemplates,
-        typename ConcreteMatrixTemplates,
-        typename NumericTypes
-    >
+        typename AbstractMatrixTemplates, typename ConcreteMatrixTemplates,
+        typename NumericTypes>
     using fn = use_definitions<
         unary_definition,
         product<
-            templates<Definition>,
-            AbstractMatrixTemplates,
-            ConcreteMatrixTemplates,
-            NumericTypes
-        >
-    >;
+            templates<Definition>, AbstractMatrixTemplates,
+            ConcreteMatrixTemplates, NumericTypes>>;
 };
 
 template<template<typename...> typename Definition>
 struct binary_definition_traits {
     template<
-        typename AbstractMatrixTemplates,
-        typename ConcreteMatrixTemplates,
-        typename NumericTypes
-    >
+        typename AbstractMatrixTemplates, typename ConcreteMatrixTemplates,
+        typename NumericTypes>
     using fn = use_definitions<
         binary_definition,
         product<
-            templates<Definition>,
-            AbstractMatrixTemplates,
-            ConcreteMatrixTemplates,
-            NumericTypes,
-            AbstractMatrixTemplates,
-            ConcreteMatrixTemplates,
-            NumericTypes
-        >
-    >;
+            templates<Definition>, AbstractMatrixTemplates,
+            ConcreteMatrixTemplates, NumericTypes, AbstractMatrixTemplates,
+            ConcreteMatrixTemplates, NumericTypes>>;
 };
 
 template<template<typename...> typename Definition>
@@ -1217,24 +1157,19 @@ We can now write `use_polymorphic_matrices` and its nested templates:
 template<template<typename> typename... Ms>
 struct use_polymorphic_matrices {
     using abstract_matrix_templates = types<
-        typename template_of<typename Ms<double>::abstract_type>::type...
-    >;
+        typename template_of<typename Ms<double>::abstract_type>::type...>;
     using concrete_matrix_templates = templates<Ms...>;
     template<typename... Ts>
     struct of {
         using numeric_types = types<Ts...>;
         template<template<typename...> typename... Ops>
-        struct with :
-            use_classes<
-                apply_product<abstract_matrix_templates, types<Ts...>>,
-                apply_product<concrete_matrix_templates, types<Ts...>>
-            >,
-            definition_traits<Ops>::template fn<
-                abstract_matrix_templates,
-                concrete_matrix_templates,
-                numeric_types
-            >... {
-        };
+        struct with
+            : use_classes<
+                  apply_product<abstract_matrix_templates, types<Ts...>>,
+                  apply_product<concrete_matrix_templates, types<Ts...>>>,
+              definition_traits<Ops>::template fn<
+                  abstract_matrix_templates, concrete_matrix_templates,
+                  numeric_types>... {};
         with<transpose, add> all;
     };
 
@@ -1245,5 +1180,6 @@ struct use_polymorphic_matrices {
 };
 
 template<>
-struct use_polymorphic_matrices<> : use_polymorphic_matrices<ordinary, square, symmetric> {};
+struct use_polymorphic_matrices<>
+    : use_polymorphic_matrices<ordinary, square, symmetric> {};
 ```

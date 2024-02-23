@@ -1,0 +1,8 @@
+#!/bin/bash
+
+cd "$(dirname $0)/.."
+
+srcs=$(find include src examples tests \
+    -name '*.?pp' | grep -v cmake_fetchcontent | grep -v /CMakeFiles)
+
+clang-format-15 -i --verbose $srcs

@@ -1,5 +1,5 @@
 
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **yorel::yomm2::virtual_ptr**<br>
 **virtual_shared_ptr**<br>

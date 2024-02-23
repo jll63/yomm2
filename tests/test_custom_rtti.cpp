@@ -153,9 +153,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy
-    : default_static_policy::rebind<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
+struct test_policy : default_static_policy::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -309,9 +309,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy
-    : default_static_policy::rebind<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
+struct test_policy : default_static_policy::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -449,9 +449,9 @@ struct custom_rtti : policy::deferred_static_rtti {
     }
 };
 
-struct test_policy
-    : default_static_policy::rebind<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
+struct test_policy : default_static_policy::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy

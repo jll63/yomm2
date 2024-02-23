@@ -15,7 +15,7 @@ for ref in (Path(__file__).parent.parent / "reference.in").iterdir():
     if ref.suffix == ".cpp" or (ref.suffix == ".md" and ref.stem not in cpps):
         cpps.add(ref.stem)
         md_path = ref.with_suffix(".md").name.replace("reference.in", "reference")
-        hrefs[ref.stem] = md_path
+        hrefs[ref.stem] = f"/reference/{md_path}"
         with open(ref) as rh:
             for text in rh.readlines():
                 if "---" in text:
@@ -25,10 +25,10 @@ for ref in (Path(__file__).parent.parent / "reference.in").iterdir():
                     for symbol in split_list(m[1]):
                         symbol = symbol.strip().replace("yorel::yomm2::", "")
                         if symbol != ref.stem:
-                            hrefs[symbol] = md_path
+                            hrefs[symbol] = f"/reference/{md_path}"
                 if m := re.search(r"hrefs: *([\w_-]+)", text):
                     for href in split_list(m.group(1)):
-                        hrefs[href] = md_path
+                        hrefs[href] = f"/reference/{md_path}"
 
 with open(".hrefs", "w", encoding="ascii") as fh:
     json.dump(hrefs, fh, indent=4)
@@ -42,7 +42,7 @@ def replace_links(text):
         if target is None:
             print("POSSIBLY BROKEN:", symbol, file=sys.stderr)
             return f"->{text}"
-        return f"[{text}](/reference/{target})"
+        return f"[{text}]({target})"
 
     return re.sub(r"->(`?[\w_-]+`?)", sub, text)
 

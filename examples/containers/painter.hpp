@@ -15,24 +15,28 @@
 
 namespace painter {
 
-namespace paint1d { method_container(painters); }
-namespace paint2d { method_container(painters); }
+namespace paint1d {
+method_container(painters);
+}
+namespace paint2d {
+method_container(painters);
+}
 
-class Painter
-{
-public:
+class Painter {
+  public:
     void paint(const geometries::Geometry& geometry);
     int painted() const;
-private:
+
+  private:
     int counter = 0;
     friend_method(paint1d::painters);
-    friend_method(paint2d::painters, void, (Painter&, const geometries::Shape&));
+    friend_method(
+        paint2d::painters, void, (Painter&, const geometries::Shape&));
 };
 
 // Implements paint
 declare_method(
-    void,
-    paintObject,
+    void, paintObject,
     (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>));
 
 inline void Painter::paint(const geometries::Geometry& geometry) {

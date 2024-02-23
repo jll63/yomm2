@@ -153,4 +153,4 @@ BOOST_AUTO_TEST_CASE(test_static_chain_link_link) {
     BOOST_TEST_REQUIRE(&*iter == &a);
     BOOST_TEST_REQUIRE(++iter == last);
 }
-} // namespace chainlink_link
+} // namespace chain_link_link

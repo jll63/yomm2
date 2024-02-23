@@ -76,12 +76,15 @@
 // library code
 
 struct matrix {
-    virtual ~matrix() {}
+    virtual ~matrix() {
+    }
     // ...
 };
 
-struct dense_matrix    : matrix { /* ... */ };
-struct diagonal_matrix : matrix { /* ... */ };
+struct dense_matrix : matrix { /* ... */
+};
+struct diagonal_matrix : matrix { /* ... */
+};
 
 // -----------------------------------------------------------------------------
 // application code

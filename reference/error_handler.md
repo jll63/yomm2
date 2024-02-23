@@ -1,5 +1,3 @@
-
-
 <sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
 
 **yorel::yomm2::error_handler**<br>
@@ -7,42 +5,25 @@
 
 ---
 ```
-struct ENTITY;
+struct error_handler;
 ```
 
-TODO
+The `error_handler` facet provides a static member named `error`, either a
+function or a functor.
 
-## Interactions with other facets
+When YOMM2 detects an error condition, it checks whether the policy contains a
+`error_handler`; if yes, it calls `error`, then `abort`. The function
+can prevent program termination by throwing an exception.
 
-* `error_handler` - to report error conditions.
-* `error_output` - for diagnostics.
-* `update_output` - for trace.
+### Requirements for implementations of `error_handler`
 
-## Template parameters
+|                          |                   |
+| ------------------------ | ----------------- |
+| [error](#register_vptrs) | handle ther error |
 
-**TODO** - TODO
+### Implementations of `external_vptr`
 
-## static member functions
-|      |      |
-| ---- | ---- |
-| TODO | TODO |
-
-### TODO
-
-```c++
-TODO
-```
-
-TODO
-
-#### Parameters
-
-**TODO** - TODO.
-
-#### Return value
-
-TODO.
-
-#### Errors
-
-* TODO
+|                  |                                 |
+| ---------------- | ------------------------------- |
+| [throw_error](/reference/throw_error.md)    | throw the error as an exception |
+| [vectored_error](/reference/vectored_error.md) | call a `std::function`          |

@@ -11,6 +11,7 @@ headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
+template<class Policy>
 struct fast_perfect_hash;
 ```
 
@@ -20,9 +21,6 @@ hash function:
 ```
 H(x) = (x * M) >> S
 ```
-
-The output values are in the interval `[0, 1 << (N - S)[`, where `N` is the
-bit size of `type_id`.
 
 The `M` and `S` coefficients are determined during initialization so that, for
 the given set of type ids, the hash function is _perfect_, i.e. collision-free.
@@ -63,17 +61,21 @@ registrations.
 | [hash_initialize](#hash_initialize) | finds a hash function        |
 | [hash_type_id](#hash_type_id)       | returns the hashed `type_id` |
 
+## static member variables
+|                             |                               |
+| --------------------------- | ----------------------------- |
+| [hash_length](#hash_length) | length of the result interval |
+
 ### hash_initialize
 
 ```c++
-template<class Policy>
 template <typename ForwardIterator>
-static size_t hash_initialize(ForwardIterator first, ForwardIterator last)
+static size_t hash_initialize(ForwardIterator first, ForwardIterator last);
 ```
 
 Finds the `M` and `S` parameters of the hash function. `ForwardIterator` is an
 iterator that satisfies the requirements of forward iterators; dereferencing it
-yields a `type_id`. Sets `type_hash_last` to the maximum hash value, plus one.
+yields a `type_id`. Sets `type_hash_length` to the maximum hash value, plus one.
 
 #### Parameters
 
@@ -90,8 +92,7 @@ None.
 ### hash_type_id
 
 ```c++
-template<class Policy>
-static type_id hash_type_id(type_id type)
+static type_id hash_type_id(type_id type);
 ```
 
 Returns the hashed value of `type`, which must be one of the values passed to
@@ -108,6 +109,17 @@ None.
 #### Errors
 
 None.
+
+### hash_length
+
+```c++
+static std::size_t hash_length;
+```
+
+The length of the zero-based interval that contains the hashed values for all
+the input values. In other words, the maximum value returned for legal inputs,
+plus one.
+
 
 ### Example
 

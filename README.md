@@ -74,12 +74,15 @@ Let's look at an example.
 // library code
 
 struct matrix {
-    virtual ~matrix() {}
+    virtual ~matrix() {
+    }
     // ...
 };
 
-struct dense_matrix    : matrix { /* ... */ };
-struct diagonal_matrix : matrix { /* ... */ };
+struct dense_matrix : matrix { /* ... */
+};
+struct diagonal_matrix : matrix { /* ... */
+};
 
 // -----------------------------------------------------------------------------
 // application code
@@ -113,11 +116,11 @@ int main() {
 
 
 `<yorel/yomm2/keywords.hpp>` is the library's main entry point. It declares a
-set of macros, and injects a single name, [`virtual_`](virtual_.md), in the global
+set of macros, and injects a single name, [`virtual_`](/reference/virtual_.md), in the global
 namespace. The purpose of the header is to make it look as if open methods
 are part of the language.
 
-[`register_classes`](use_classes.md) informs the library of the existence of the classes, and
+[`register_classes`](/reference/use_classes.md) informs the library of the existence of the classes, and
 their inheritance relationships. Any class that can appear in a method call
 needs to be registered, even if it is not directly referenced by a method.
 

@@ -16,14 +16,13 @@ namespace painter {
 namespace paint2d {
 
 define_method(
-    painters,
-    void, paintObject, (Painter& painter, const geometries::Shape& shape))
-{
+    painters, void, paintObject,
+    (Painter & painter, const geometries::Shape& shape)) {
     ++painter.counter;
     static int counter;
     ++counter;
     std::cout << "#" << painter.counter << " #" << counter << " ";
 }
 
-}
-}
+} // namespace paint2d
+} // namespace painter

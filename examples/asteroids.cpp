@@ -10,43 +10,42 @@
 
 class Thing {
   public:
-    virtual ~Thing() {}
+    virtual ~Thing() {
+    }
 };
 
-class Asteroid : public Thing {
-};
+class Asteroid : public Thing {};
 
-class Spaceship : public Thing {
-};
+class Spaceship : public Thing {};
 
 register_classes(Thing, Spaceship, Asteroid);
 
 declare_method(void, collideWith, (virtual_<Thing&>, virtual_<Thing&>));
 
-define_method(void, collideWith, (Thing& left, Thing& right)) {
+define_method(void, collideWith, (Thing & left, Thing& right)) {
     // default collision handling
 }
 
-define_method(void, collideWith, (Asteroid& left, Asteroid& right)) {
+define_method(void, collideWith, (Asteroid & left, Asteroid& right)) {
     // handle Asteroid-Asteroid collision
 }
 
-define_method(void, collideWith, (Asteroid& left, Spaceship& right)) {
+define_method(void, collideWith, (Asteroid & left, Spaceship& right)) {
     // handle Asteroid-Spaceship collision
 }
 
-define_method(void, collideWith, (Spaceship& left, Asteroid& right)) {
+define_method(void, collideWith, (Spaceship & left, Asteroid& right)) {
     // handle Spaceship-Asteroid collision
 }
 
-define_method(void, collideWith, (Spaceship& left, Spaceship& right)) {
+define_method(void, collideWith, (Spaceship & left, Spaceship& right)) {
     // handle Spaceship-Spaceship collision
 }
 
 int main() {
     yorel::yomm2::update();
 
-    Asteroid  a1, a2;
+    Asteroid a1, a2;
     Spaceship s1, s2;
 
     collideWith(a1, a2);

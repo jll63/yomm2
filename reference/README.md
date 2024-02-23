@@ -1,5 +1,5 @@
 <!-- target:reference -->
-<sub>/ [home](/reference//README.md) </sub>
+<sub>/ [home](/README.md) </sub>
 
 # Reference
 

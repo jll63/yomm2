@@ -1,4 +1,4 @@
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **yorel::yomm2::templates** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/core.hpp></sub>

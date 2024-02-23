@@ -1,4 +1,4 @@
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **yorel::yomm2::policy::vptr_map**<br>
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
@@ -10,7 +10,7 @@ struct vptr_map;
 ```
 ---
 
-`vptr_map` is an implementation of [`external_vptr`](/reference/vptr.md) that stores the
+`vptr_map` is an implementation of [`external_vptr`](/reference/vptr_placement.md) that stores the
 pointers to the v-tables in a `std::unordered_map` keyed by the [`type_id`](/reference/type_id.md)s of
 the classes. This makes method dispatch slower than [`vptr_vector`](/reference/vptr_vector.md) with
 [`fast_perfect_hash`](/reference/fast_perfect_hash.md) (75% slower than native virtual function). However,

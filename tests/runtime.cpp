@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                 + 12); // 3 vtbl of 2 cells for Roles + 6 vtbl of 1 cells for
                        // Expenses
         BOOST_TEST_REQUIRE(
-            test_policy::vptrs.size() ==
+            test_policy::vptrs.size() <=
             (1 << (std::numeric_limits<size_t>::digits - test_policy::shift)));
 #ifndef NDEBUG
         BOOST_TEST_REQUIRE(

@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **yorel::yomm2::virtual_**<br>
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>

@@ -341,6 +341,7 @@ class virtual_ptr {
                 method_table_error error;
                 error.type = dynamic_type;
                 Policy::error(error);
+                abort();
             }
         }
 

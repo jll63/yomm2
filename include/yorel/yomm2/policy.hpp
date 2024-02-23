@@ -307,7 +307,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
         if constexpr (has_facet<Policy, type_hash>) {
             Policy::hash_initialize(
                 pair_first_iterator(first), pair_first_iterator(last));
-            size = Policy::hash_last;
+            size = Policy::hash_length;
         } else {
             size = 1 + std::max_element(first, last, [](auto a, auto b) {
                            return a < b;
@@ -409,7 +409,7 @@ template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
     static type_id mult;
     static std::size_t shift;
-    static std::size_t hash_last;
+    static std::size_t hash_length;
     static auto constexpr invalid = std::numeric_limits<type_id>::max();
 
 #ifdef _MSC_VER
@@ -468,7 +468,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
         bool found = false;
         size_t attempts = 0;
         buckets.resize(hash_size);
-        hash_last = 0;
+        hash_length = 0;
 
         while (!found && attempts < 100000) {
             std::fill(buckets.begin(), buckets.end(), invalid);
@@ -481,8 +481,8 @@ void fast_perfect_hash<Policy>::hash_initialize(
                 auto type = *iter;
                 auto index = (type * mult) >> shift;
 
-                if (index >= hash_last) {
-                    hash_last = index + 1;
+                if (index >= hash_length) {
+                    hash_length = index + 1;
                 }
 
                 if (buckets[index] != invalid) {
@@ -526,7 +526,7 @@ type_id fast_perfect_hash<Policy>::mult;
 template<class Policy>
 std::size_t fast_perfect_hash<Policy>::shift;
 template<class Policy>
-std::size_t fast_perfect_hash<Policy>::hash_last;
+std::size_t fast_perfect_hash<Policy>::hash_length;
 
 template<class Policy>
 struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
@@ -536,7 +536,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
     static type_id hash_type_id(type_id type) {
         auto index = fast_perfect_hash<Policy>::hash_type_id(type);
 
-        if (index >= fast_perfect_hash<Policy>::hash_last ||
+        if (index >= fast_perfect_hash<Policy>::hash_length ||
             control[index] != type) {
             using namespace policy;
 
@@ -611,8 +611,6 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                                      << error->buckets << " buckets\n";
             }
         }
-
-        abort();
     }
 };
 

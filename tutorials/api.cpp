@@ -45,7 +45,8 @@ using namespace yorel::yomm2;
 
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
 class Dog : public Animal {};
@@ -216,7 +217,8 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 namespace synopsis_better {
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
 class Dog : public Animal {};
@@ -250,7 +252,9 @@ using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
 
 // code<
 struct kick_dog {
-    static std::string fn(Dog& dog) { return "bark"; }
+    static std::string fn(Dog& dog) {
+        return "bark";
+    }
 };
 
 kick_method::add_definition<kick_dog> YOMM2_GENSYM;

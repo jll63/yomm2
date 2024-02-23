@@ -1,5 +1,5 @@
 
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **yorel::yomm2::error_type**<br>
 **yorel::yomm2::error_handler_type**<br>

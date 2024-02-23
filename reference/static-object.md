@@ -1,6 +1,6 @@
 
 
-// <sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+// <sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
 
 **YOMM2 static objects**<br>
 

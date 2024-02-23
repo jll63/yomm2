@@ -17,7 +17,8 @@ using namespace yorel::yomm2;
 
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
 class Dog : public Animal {};
@@ -193,7 +194,9 @@ function named `fn`. Containers are added to methods via the
 
 ```c++
 struct kick_dog {
-    static std::string fn(Dog& dog) { return "bark"; }
+    static std::string fn(Dog& dog) {
+        return "bark";
+    }
 };
 
 kick_method::add_definition<kick_dog> YOMM2_GENSYM;

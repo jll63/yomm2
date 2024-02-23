@@ -10,6 +10,7 @@ headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
+template<class Policy>
 struct checked_perfect_hash;
 ```
 
@@ -26,7 +27,6 @@ registered via `hash_initialize`.
 ## Template parameters
 
 **Policy** - the policy containing the facet.
-
 
 ## static member functions
 |                                     |                              |

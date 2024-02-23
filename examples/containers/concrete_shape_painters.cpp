@@ -19,20 +19,20 @@ namespace painter {
 namespace paint2d {
 
 define_method(
-    painters,
-    void, paintObject, (Painter& painter, const geometries::Square& square))
-{
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(painter, square);
+    painters, void, paintObject,
+    (Painter & painter, const geometries::Square& square)) {
+    method_definition(painters, void, (Painter&, const geometries::Shape&))(
+        painter, square);
     std::cout << "painting square\n";
 }
 
 define_method(
-    painters,
-    void, paintObject, (Painter& painter, const geometries::Circle& circle))
-{
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(painter, circle);
+    painters, void, paintObject,
+    (Painter & painter, const geometries::Circle& circle)) {
+    method_definition(painters, void, (Painter&, const geometries::Shape&))(
+        painter, circle);
     std::cout << "painting Circle\n";
 }
 
-}
-}
+} // namespace paint2d
+} // namespace painter
