@@ -30,16 +30,18 @@ foreach(cpp ${cpps})
 endforeach()
 
 if(${YOMM2_ENABLE_DOC})
-    file(GLOB mds "*.md")
+    file(GLOB_RECURSE MDs "*.md")
+    message(STATUS "${MDs}")
 
-    foreach(md ${mds})
-        string(REPLACE "reference.in" "reference" md_out "${md}")
+    foreach(MD ${MDs})
+        string(REPLACE "reference.in" "reference" MD_out "${MD}")
         add_custom_command(
-            OUTPUT "${md_out}"
-            COMMAND ${CMAKE_SOURCE_DIR}/dev/md2md "${md}" "${md_out}"
-            DEPENDS "${md};${code_deps}")
-        list(APPEND entries "${md_out}")
-    endforeach()
+            OUTPUT "${MD_out}"
+            COMMAND ${CMAKE_SOURCE_DIR}/dev/md2md "${MD}" "${MD_out}"
+            DEPENDS "${MD};${code_deps}")
+        list(APPEND entries "${MD_out}")
+        message(STATUS "${MD_out}")
+        endforeach()
 
-    add_custom_target(reference ALL DEPENDS "${entries}")
+    add_custom_target(reference DEPENDS "${entries}")
 endif()

@@ -1,16 +1,16 @@
-#define BOOST_TEST_MODULE ENTITY
+#define BOOST_TEST_MODULE CLASS
 #include <boost/test/included/unit_test.hpp>
 
 /***
 
 <sub>/ ->home / ->reference </sub>
 
-entry: yorel::yomm2::ENTITY
+entry: yorel::yomm2::CLASS
 headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ---
 ```
-struct ENTITY;
+struct CLASS;
 ```
 
 TODO

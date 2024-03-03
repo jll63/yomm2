@@ -1,3 +1,4 @@
+import glob
 import json
 from pathlib import Path
 import re
@@ -9,42 +10,44 @@ def split_list(text):
 
 
 hrefs = {"home": "/README.md", "reference": "/reference/README.md"}
+in_path = Path(__file__).parent.parent / "reference.in"
+in_files = list(
+    Path(ref_str)
+    for ref_str in sorted(
+    glob.glob("**/*.md", root_dir=in_path, recursive=True)
+    + glob.glob("**/*.cpp", root_dir=in_path, recursive=True), key=str.lower)
+)
 
-cpps = set()
-for ref in (Path(__file__).parent.parent / "reference.in").iterdir():
-    if ref.suffix == ".cpp" or (ref.suffix == ".md" and ref.stem not in cpps):
-        cpps.add(ref.stem)
-        md_path = ref.with_suffix(".md").name.replace("reference.in", "reference")
-        hrefs[ref.stem] = f"/reference/{md_path}"
-        with open(ref) as rh:
-            for text in rh.readlines():
-                if "---" in text:
-                    break
-                m = re.match(r"^entry: +(.*)", text)
-                if m:
-                    for symbol in split_list(m[1]):
-                        symbol = symbol.strip().replace("yorel::yomm2::", "")
-                        if symbol != ref.stem:
-                            hrefs[symbol] = f"/reference/{md_path}"
-                if m := re.search(r"hrefs: *([\w_-]+)", text):
-                    for href in split_list(m.group(1)):
-                        hrefs[href] = f"/reference/{md_path}"
+for ref in in_files:
+    md_path = str(ref.with_suffix(".md")).replace("reference.in", "reference")
+    hrefs[str(ref.with_suffix(""))] = f"/reference/{md_path}"
+    with open(in_path / ref) as rh:
+        for text in rh.readlines():
+            if "---" in text:
+                break
+            m = re.match(r"^entry: +(.*)", text)
+            if m:
+                for symbol in split_list(m[1]):
+                    symbol = symbol.strip().replace("yorel::yomm2::", "")
+                    if symbol != ref.stem:
+                        hrefs[symbol] = f"/reference/{md_path}"
+            if m := re.search(r"hrefs: *([\w_-]+)", text):
+                for href in split_list(m.group(1)):
+                    hrefs[href] = f"/reference/{md_path}"
 
 with open(".hrefs", "w", encoding="ascii") as fh:
     json.dump(hrefs, fh, indent=4)
 
-
 def replace_links(text):
     def sub(m):
-        text = m.group(1)
-        symbol = text.replace("`", "")
-        target = hrefs.get(symbol)
+        path = m.group(2)
+        target = hrefs.get(path.replace("::", "/"))
         if target is None:
-            print("POSSIBLY BROKEN:", symbol, file=sys.stderr)
-            return f"->{text}"
-        return f"[{text}]({target})"
+            print("POSSIBLY BROKEN:", path, file=sys.stderr)
+            return f"->{path}"
+        return f"[{m.group(1)}{path.split('/')[-1]}{m.group(3)}]({target})"
 
-    return re.sub(r"->(`?[\w_-]+`?)", sub, text)
+    return re.sub(r"->(`?)([/:\w_\-]+)(`?)", sub, text)
 
 
 def replace_md(text):
