@@ -23,12 +23,12 @@ different function, which can `throw` to prevent program termination.
 
 ## Static member functions
 
-|                       |                                  |
-| --------------------- | -------------------------------- |
-| default_error_handler | print diagnostics                |
+|                                        |                   |
+| -------------------------------------- | ----------------- |
+| ->vectored_error/default_error_handler | print diagnostics |
 
 ## Static member variables
 
-|       |                                  |
-| ----- | -------------------------------- |
-| error | throw value contained in variant |
+|                        |                                  |
+| ---------------------- | -------------------------------- |
+| ->vectored_error/error | throw value contained in variant |

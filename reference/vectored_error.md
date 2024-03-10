@@ -25,12 +25,12 @@ different function, which can `throw` to prevent program termination.
 
 ## Static member functions
 
-|                       |                                  |
-| --------------------- | -------------------------------- |
-| default_error_handler | print diagnostics                |
+|                                        |                   |
+| -------------------------------------- | ----------------- |
+| [default_error_handler](/reference/vectored_error/default_error_handler.md) | print diagnostics |
 
 ## Static member variables
 
-|       |                                  |
-| ----- | -------------------------------- |
-| error | throw value contained in variant |
+|                        |                                  |
+| ---------------------- | -------------------------------- |
+| [error](/reference/vectored_error/error.md) | throw value contained in variant |
