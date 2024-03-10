@@ -123,7 +123,7 @@ def replace_md(text: str, trail: list[str] = None):
             path = "/".join(trail[:i + 1])
             trailer.append(f"[{node}](/{path}.md)")
 
-        text = f"<sub>{trailer}</sub><br>\n" + text
+        text = f"<sub>{' / '.join(trailer)}</sub><br>\n" + text
 
     text = replace_links(text)
 
