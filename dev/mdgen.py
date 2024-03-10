@@ -100,7 +100,7 @@ def replace_md(text: str, trail: list[str] = None):
         if len(locations) == 2:
             namespace = f"{namespace}::{locations.pop(0)}"
 
-        locations = split_list(locations.pop())
+        locations = split_list(locations.pop(0))
 
         segments = [f"defined in {namespace} by <{locations.pop()}>"]
 
