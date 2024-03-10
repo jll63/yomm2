@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
 **use_definitions** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>

@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
 **yomm2::use_classes**<br>
 <sub>defined in <yorel/yomm2/core.hpp></sub>

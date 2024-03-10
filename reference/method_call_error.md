@@ -1,4 +1,4 @@
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
 **yorel::yomm2::method_call_error**<br>
 **yorel::yomm2::method_call_error_handler**<br>

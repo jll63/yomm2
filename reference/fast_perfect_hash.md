@@ -1,6 +1,6 @@
 
 
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
 **yorel::yomm2::policy::fast_perfect_hash**<br>
 

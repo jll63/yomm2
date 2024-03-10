@@ -5,8 +5,8 @@ import re
 import sys
 
 
-def split_list(text):
-    return re.split(" *, *", text)
+def split_list(text, sep=","):
+    return list(map(str.strip, text.split(sep)))
 
 
 hrefs = {"home": "/README.md", "reference": "/reference/README.md"}
@@ -14,8 +14,10 @@ in_path = Path(__file__).parent.parent / "reference.in"
 in_files = list(
     Path(ref_str)
     for ref_str in sorted(
-    glob.glob("**/*.md", root_dir=in_path, recursive=True)
-    + glob.glob("**/*.cpp", root_dir=in_path, recursive=True), key=str.lower)
+        glob.glob("**/*.md", root_dir=in_path, recursive=True)
+        + glob.glob("**/*.cpp", root_dir=in_path, recursive=True),
+        key=str.lower,
+    )
 )
 
 for ref in in_files:
@@ -38,6 +40,7 @@ for ref in in_files:
 with open(".hrefs", "w", encoding="ascii") as fh:
     json.dump(hrefs, fh, indent=4)
 
+
 def replace_links(text):
     def sub(m):
         path = m.group(2)
@@ -50,7 +53,7 @@ def replace_links(text):
     return re.sub(r"->(`?)([/:\w_\-]+)(`?)", sub, text)
 
 
-def replace_md(text):
+def replace_md(text: str, trail: list[str] = None):
     text = re.sub(
         r"^entry: *(.*)",
         lambda m: ", ".join([f"**{entry}**" for entry in split_list(m[1])]) + "<br>",
@@ -88,6 +91,39 @@ def replace_md(text):
         text,
         flags=re.MULTILINE,
     )
+
+    def location(m):
+        locations = split_list(m[1], ";")
+        assert len(locations) <= 2
+
+        namespace = "yorel::yomm2"
+        if len(locations) == 2:
+            namespace = f"{namespace}::{locations.pop(0)}"
+
+        locations = split_list(locations.pop())
+
+        segments = [f"defined in {namespace} by <{locations.pop()}>"]
+
+        if len(locations) > 0:
+            segments.append(", also provided by ")
+            segments.append(", ".join([f"<{header}>" for header in locations]))
+
+        return "".join(("<sub>", *segments, "</sub>", "\n"))
+
+    text = re.sub(
+        r"^location: *(.*)",
+        location,
+        text,
+        flags=re.MULTILINE,
+    )
+
+    if trail is not None and "->home" not in text:
+        trailer = ["[home](/README.md)"]
+        for i, node in enumerate(trail):
+            path = "/".join(trail[:i + 1])
+            trailer.append(f"[{node}](/{path}.md)")
+
+        text = f"<sub>{trailer}</sub><br>\n" + text
 
     text = replace_links(text)
 

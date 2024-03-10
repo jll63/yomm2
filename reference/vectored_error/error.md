@@ -1,4 +1,4 @@
-<sub>/ [home](/README.md) / [reference](/reference/README.md) / [vectored_error](/reference/vectored_error.md) / [error](/reference/vectored_error/error.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) / [vectored_error](/reference/vectored_error.md) / [error](/reference/vectored_error/error.md) </sub>
 
 # vectored_error<Policy>::**error**
 

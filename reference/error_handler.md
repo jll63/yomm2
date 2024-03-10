@@ -1,7 +1,7 @@
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
+<sub>['[home](/README.md)', '[reference](/reference.md)']</sub><br>
+**error_handler**<br>
+<sub>defined in yorel::yomm2::policy by <yorel/yomm2/keywords.hpp>, also provided by <yorel/yomm2/core.hpp></sub>
 
-**yorel::yomm2::error_handler**<br>
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 ---
 ```
@@ -21,7 +21,7 @@ can prevent program termination by throwing an exception.
 | ------------------------ | ----------------- |
 | [error](#register_vptrs) | handle ther error |
 
-### Implementations of `external_vptr`
+### Implementations of `error_handler`
 
 |                  |                                 |
 | ---------------- | ------------------------------- |

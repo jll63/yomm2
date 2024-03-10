@@ -1,7 +1,5 @@
-<sub>/ [home](/reference//README.md) / [reference](/reference//reference/README.md) </sub>
-
-**yorel::yomm2::error_handler**<br>
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+**error_handler**<br>
+location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
 ---
 ```
@@ -21,7 +19,7 @@ can prevent program termination by throwing an exception.
 | ------------------------ | ----------------- |
 | [error](#register_vptrs) | handle ther error |
 
-### Implementations of `external_vptr`
+### Implementations of `error_handler`
 
 |                  |                                 |
 | ---------------- | ------------------------------- |

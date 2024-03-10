@@ -9,13 +9,22 @@ import mdgen
 
 out_path = Path(sys.argv[2]).absolute()
 
+repo = Path(__file__).absolute()
+while not (repo / ".git").exists():
+    repo = repo.parent
+
+trail = str(out_path).replace(str(repo), "").split("/")
+trail.pop(0)
+trail.pop()
+
+with open(sys.argv[1]) as rh:
+    text = rh.read()
+
 with contextlib.suppress(FileNotFoundError):
     out_path.chmod(0o600)
 
-
-with open(sys.argv[1]) as rh, open(out_path, "w") as wh:
-    for text in rh.readlines():
-        text = mdgen.replace_md(text)
-        print(text, file=wh, end="")
+with open(out_path, "w") as wh:
+    text = mdgen.replace_md(text, trail=trail)
+    print(text, file=wh, end="")
 
 out_path.chmod(0o400)

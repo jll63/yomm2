@@ -21,7 +21,7 @@ Stroustrup.
 If you are familiar with the concept of open multi-methods, or if you prefer
 to learn by reading code, go directly to [the
 synopsis](examples/synopsis.cpp). The [reference is
-here](reference/README.md)
+here](reference/reference.md)
 
 ## Open Methods in a Nutshell
 

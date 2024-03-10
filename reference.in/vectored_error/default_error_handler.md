@@ -1,18 +1,16 @@
-<sub>/ ->home / ->reference / ->vectored_error / ->vectored_error/default_error_handler </sub>
-
 # vectored_error<Policy>::**default_error_handler**
-
+location: policy;yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 ---
 ```
-static void default_error_handler(const error_type& err);
+static void default_error_handler(const error_type& error);
 ```
 
 If ->`error_output` is available in `Policy`, use it to print a description of
-`err`. Return normally, causing the program to be aborted by the caller.
+`error`. Return normally, causing the program to be aborted by the caller.
 
 **Parameters**
 
-**err** - the variant containing the error.
+**error** - a variant containing the error.
 
 **Return value**
 

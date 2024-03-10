@@ -21,7 +21,7 @@
 // If you are familiar with the concept of open multi-methods, or if you prefer
 // to learn by reading code, go directly to [the
 // synopsis](examples/synopsis.cpp). The [reference is
-// here](reference/README.md)
+// here](reference/reference.md)
 
 // ## Open Methods in a Nutshell
 
@@ -294,7 +294,7 @@ int main() {
 
 // ## Going Further
 
-// The Reference is [here](reference/README.md). Since version 1.3.0, some of
+// The Reference is [here](reference/reference.md). Since version 1.3.0, some of
 // the internals are documented, which make it possible to use the library
 // without using macros - see [the API tutorial](tutorials/api.md).
 

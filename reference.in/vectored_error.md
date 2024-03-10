@@ -1,7 +1,7 @@
 <sub>/ ->home / ->reference / ->vectored_error </sub>
 
-# yorel::yomm2::**vectored_error**
-<small>Defined in header yorel/yomm2/core.hpp</small>
+# **vectored_error**
+location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 ```
 template<class Policy>
 struct vectored_error;

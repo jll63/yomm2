@@ -1,4 +1,4 @@
-<sub>/ [home](/README.md) / [reference](/reference/README.md) </sub>
+<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
 **yorel::yomm2::policy::basic_policy**<br>
 **yorel::yomm2::default_policy**<br>

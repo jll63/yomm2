@@ -1,7 +1,7 @@
 <sub>/ ->home / ->reference / ->CLASS </sub>
 
 # yorel::yomm2::**CLASS**
-<br><small>Defined in header yorel/yomm2/core.hpp</small>
+location:yorel/yomm2/core.hpp
 ```
 template<class TP>
 struct CLASS;
