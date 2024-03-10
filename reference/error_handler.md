@@ -1,6 +1,6 @@
 <sub>[home](/README.md) / [reference](/reference.md)</sub><br>
 **error_handler**<br>
-<sub>defined in yorel::yomm2::policy by <yorel/yomm2/keywords.hpp>, also provided by <yorel/yomm2/core.hpp></sub>
+<sub>defined in yorel::yomm2::policy by <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
 
 
 ---
