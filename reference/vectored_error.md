@@ -1,5 +1,4 @@
-<sub>/ [home](/README.md) / [reference](/reference/reference.md) / [vectored_error](/reference/vectored_error.md) </sub>
-
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
 # **vectored_error**
 <sub>defined in yorel::yomm2::policy by <yorel/yomm2/keywords.hpp>, also provided by <yorel/yomm2/core.hpp></sub>
 

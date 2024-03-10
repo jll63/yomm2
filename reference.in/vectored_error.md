@@ -1,5 +1,3 @@
-<sub>/ ->home / ->reference / ->vectored_error </sub>
-
 # **vectored_error**
 location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 ```

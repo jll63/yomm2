@@ -1,6 +1,4 @@
-<sub>/ ->home / ->reference / ->CLASS </sub>
-
-# yorel::yomm2::**CLASS**
+# **CLASS**
 location:yorel/yomm2/core.hpp
 ```
 template<class TP>
