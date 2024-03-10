@@ -1,6 +1,6 @@
 <sub>[home](/README.md) / [reference](/reference.md)</sub><br>
 # **vectored_error**
-<sub>defined in yorel::yomm2::policy by <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
+<sub>defined in yorel::yomm2::poxxlicy by <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
 
 ```
 template<class Policy>

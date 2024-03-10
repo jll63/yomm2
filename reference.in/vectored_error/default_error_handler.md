@@ -1,3 +1,4 @@
+
 # vectored_error<Policy>::**default_error_handler**
 location: policy;yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 ---
