@@ -1,23 +1,20 @@
-<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
+# throw_error
+<sub>defined in yorel::yomm2::policy by <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
 
-**yorel::yomm2::throw_error**<br>
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
----
-```
-struct throw_error;
-```
+    struct throw_error;
 
 `throw_error` is an implementation of [`error_handler`](/reference/error_handler.md) that throws the error as
 an exception.
 
 If exceptions are disabled, `throw_error` is not defined.
 
-## static member functions
+**Static member functions**
 
-|       |                       |
-| ----- | --------------------- |
-| error | throw variant's value |
+|         |                       |
+| ------- | --------------------- |
+| ->error | throw variant's value |
 
 ### error
 

@@ -1,19 +1,17 @@
-# **CLASS**
-location:yorel/yomm2/core.hpp
-```
-template<class TP>
-struct CLASS;
-```
+## yorel::yomm2::**CLASS**
+headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
----
+    template<class TP>
+    struct CLASS;
 
 TODO
 
 **Template parameters**
 
-**TP** - TP
+* TP: TP
 
 **Member functions**
+
 |      |      |
 | ---- | ---- |
 | TODO | TODO |

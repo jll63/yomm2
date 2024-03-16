@@ -290,7 +290,7 @@ to link to yomm2.
 
 ## Going Further
 
-The Reference is [here](reference/README.md). Since version 1.3.0, some of
+The Reference is [here](reference/reference.md). Since version 1.3.0, some of
 the internals are documented, which make it possible to use the library
 without using macros - see [the API tutorial](tutorials/api.md).
 

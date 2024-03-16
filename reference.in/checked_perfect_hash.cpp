@@ -18,12 +18,6 @@ struct checked_perfect_hash;
 the id passed to `hash_type_index` is valid, i.e. was in the set of ids
 registered via `hash_initialize`.
 
-## Interactions with other facets
-
-* `error_handler` - to report error conditions.
-* `error_output` - for diagnostics.
-* `update_output` - for trace.
-
 ## Template parameters
 
 **Policy** - the policy containing the facet.
@@ -83,6 +77,12 @@ None.
 #### Errors
 
 * ->`unknown_class_error`, with `context` set to `unknown_class_error::update`.
+
+## Interactions with other facets
+
+* `error_handler` - to report error conditions.
+* `error_output` - for diagnostics.
+* `update_output` - for trace.
 
 ### Example
 

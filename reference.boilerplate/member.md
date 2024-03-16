@@ -1,17 +1,13 @@
-<sub>/ ->home / ->reference / ->CLASS / ->MEMBER </sub>
+## yorel::yomm2::CLASS::**MEMBER**
+headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
-# yorel::yomm2::CLASS::**MEMBER**
-
----
-```
-CLASS::MEMBER;
-```
+    MEMBER;
 
 TODO
 
 **Parameters**
 
-**TODO** - TODO.
+* TODO: TODO.
 
 **Return value**
 

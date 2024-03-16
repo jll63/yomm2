@@ -45,12 +45,6 @@ registrations.
 `default_policy` uses `fast_perfect_hash` in release builds, and
 `checked_perfect_hash` in debug builds.
 
-## Interactions with other facets
-
-* `error_handler` - to report error conditions.
-* `error_output` - for diagnostics.
-* `update_output` - for trace.
-
 ## Template parameters
 
 **Policy** - the policy containing the facet.
@@ -120,6 +114,12 @@ The length of the zero-based interval that contains the hashed values for all
 the input values. In other words, the maximum value returned for legal inputs,
 plus one.
 
+
+## Interactions with other facets
+
+* `error_handler` - to report error conditions.
+* `error_output` - for diagnostics.
+* `update_output` - for trace.
 
 ### Example
 

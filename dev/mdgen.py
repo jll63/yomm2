@@ -1,3 +1,4 @@
+import html
 import glob
 import json
 from pathlib import Path
@@ -116,6 +117,8 @@ def replace_md(text: str, trail: list[str] = None):
         text,
         flags=re.MULTILINE,
     )
+
+    text = re.sub(r"@(.)", lambda m: html.escape(m[1]), text)
 
     if trail is not None and "->home" not in text:
         trailer = ["[home](/README.md)"]
