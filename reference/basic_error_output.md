@@ -6,7 +6,7 @@
     struct basic_error_output;
 
 `basic_error_output` is an implementation of `error_output` that provides one
-static data member, `stream`.
+static data member, `stream`. xxx
 
 **Template parameters**
 
@@ -16,6 +16,6 @@ static data member, `stream`.
 
 **Static member variables**
 
-|                                     |                       |
-| ----------------------------------- | --------------------- |
-| [`error_stream`](/reference/basic_error_output/error_stream.md) | current error handler |
+|                                     |      |
+| ----------------------------------- | ---- |
+| [`error_stream`](/reference/basic_error_output/error_stream.md) | TODO |

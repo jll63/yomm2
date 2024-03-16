@@ -5,7 +5,7 @@ headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
     struct basic_error_output;
 
 `basic_error_output` is an implementation of `error_output` that provides one
-static data member, `stream`.
+static data member, `stream`. xxx
 
 **Template parameters**
 
@@ -15,6 +15,6 @@ static data member, `stream`.
 
 **Static member variables**
 
-|                                     |                       |
-| ----------------------------------- | --------------------- |
-| ->`basic_error_output/error_stream` | current error handler |
+|                                     |      |
+| ----------------------------------- | ---- |
+| ->`basic_error_output/error_stream` | TODO |
