@@ -2,7 +2,7 @@
 ## yorel::yomm2::policy::<big>**basic_error_output**</big>
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
-    template<class Policy, typename Stream = /*unspecified*/>
+    template<class Policy, typename Stream = /*unspecified*/
     struct basic_error_output;
 
 `basic_error_output` is an implementation of `error_output` that provides one
