@@ -1,5 +1,5 @@
 <sub>[home](/README.md) / [reference](/reference.md)</sub><br>
-# yorel::yomm2::policy::**error_output**
+## yorel::yomm2::policy::**error_output**
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
     struct error_output;
