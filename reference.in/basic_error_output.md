@@ -1,4 +1,4 @@
-## yorel::yomm2::policy::**basic_error_output**
+## yorel::yomm2::policy::<big>**basic_error_output**</big>
 headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     template<class Policy, typename Stream = /*unspecified*/>
