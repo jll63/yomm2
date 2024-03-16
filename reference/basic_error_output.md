@@ -1,12 +1,12 @@
 <sub>[home](/README.md) / [reference](/reference.md)</sub><br>
-## yorel::yomm2::policy::<big>**basic_error_output**</big>
+## <small>yorel::yomm2::policy::</small>**basic_error_output**
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
     template<class Policy, typename Stream = /*unspecified*/
     struct basic_error_output;
 
 `basic_error_output` is an implementation of `error_output` that provides one
-static data member, `stream`. xxx
+static data member, `stream`.
 
 **Template parameters**
 
