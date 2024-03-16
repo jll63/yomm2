@@ -16,6 +16,6 @@ static data member, `stream`.
 
 **Static member variables**
 
-|                               |                       |
-| ----------------------------- | --------------------- |
-| [`stream`](/reference/basic_error_output/stream.md) | current error handler |
+|                                     |                       |
+| ----------------------------------- | --------------------- |
+| [`error_stream`](/reference/basic_error_output/error_stream.md) | current error handler |
