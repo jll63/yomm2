@@ -117,7 +117,7 @@ struct type_hash {};
 struct vptr_placement {};
 struct external_vptr : virtual vptr_placement {};
 struct error_output {};
-struct update_output {};
+struct trace_output {};
 
 struct deferred_static_rtti;
 struct debug_static;
@@ -395,12 +395,12 @@ template<class Policy, typename Stream>
 Stream basic_error_output<Policy, Stream>::error_stream;
 
 template<class Policy, typename Stream = detail::ostdstream>
-struct yOMM2_API_gcc basic_update_output : virtual update_output {
+struct yOMM2_API_gcc basic_trace_output : virtual trace_output {
     static Stream update_stream;
 };
 
 template<class Policy, typename Stream>
-Stream basic_update_output<Policy, Stream>::update_stream([]() {
+Stream basic_trace_output<Policy, Stream>::update_stream([]() {
     auto env = getenv("YOMM2_TRACE");
     return env && !(*env++ == '0' && !*env) ? stderr : nullptr;
 }());
@@ -439,7 +439,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
     std::vector<type_id>& buckets) {
     using namespace policy;
 
-    constexpr bool has_output = Policy::template has_facet<update_output>;
+    constexpr bool has_output = Policy::template has_facet<trace_output>;
     const auto N = std::distance(first, last);
 
     if constexpr (has_output) {
@@ -677,7 +677,7 @@ template<class Policy, class... Facets>
 struct yOMM2_API_gcc basic_debug_static
     : basic_static_policy<
           Policy, checked_perfect_hash<Policy>, basic_error_output<Policy>,
-          basic_update_output<Policy>, Facets...> {};
+          basic_trace_output<Policy>, Facets...> {};
 
 struct yOMM2_API_gcc debug_static
     : basic_debug_static<debug_static>::replace<
@@ -701,7 +701,7 @@ extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
-    basic_update_output<debug_shared>,
+    basic_trace_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
@@ -709,7 +709,7 @@ struct yOMM2_API_gcc debug_shared
     : basic_policy<
           debug_shared, vptr_vector<debug_shared>, std_rtti,
           checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
-          basic_update_output<debug_shared>,
+          basic_trace_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
 struct yOMM2_API_gcc release_shared

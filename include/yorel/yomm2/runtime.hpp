@@ -121,7 +121,7 @@ struct runtime {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
     static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::update_output>;
+        Policy::template has_facet<policy::trace_output>;
 
     std::unordered_map<type_index_type, rt_class*> class_map;
     std::deque<rt_class> classes;

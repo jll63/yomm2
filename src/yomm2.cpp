@@ -30,10 +30,10 @@ template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
 template class yOMM2_API_msc fast_perfect_hash<debug_shared>;
 template class yOMM2_API_msc checked_perfect_hash<debug_shared>;
 template class yOMM2_API_msc basic_error_output<debug_shared>;
-template class yOMM2_API_msc basic_update_output<debug_shared>;
+template class yOMM2_API_msc basic_trace_output<debug_shared>;
 template class yOMM2_API_msc basic_policy<
     debug_shared, std_rtti, checked_perfect_hash<debug_shared>,
-    basic_error_output<debug_shared>, basic_update_output<debug_shared>,
+    basic_error_output<debug_shared>, basic_trace_output<debug_shared>,
     backward_compatible_error_handler<debug_shared>>;
 
 } // namespace policy

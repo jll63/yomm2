@@ -116,7 +116,7 @@ plus one.
 
 * `error_handler` - to report error conditions.
 * `error_output` - for diagnostics.
-* `update_output` - for trace.
+* `trace_output` - for trace.
 
 ### Example
 

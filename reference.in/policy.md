@@ -42,7 +42,7 @@ implementation for each category. They are summed up in the following table.
 | type_hash                     | map type info to integer index            | **fast_perfect_hash\<...>** (R), **checked_perfect_hash`<...>** (D) |
 | error_handler                 | report errors                             | vectored_error_handler\<...>, throw_error_handler                   |
 | error_output                  | describe error                            | **basic_error_output\<...>** (D)                                    |
-| update_output                 | trace `update`                            | **basic_update_output\<...>** (D)                                   |
+| trace_output                 | trace `update`                            | **basic_trace_output\<...>** (D)                                   |
 
 Facet categories in bold are required for YOMM2 to work at all. Facet
 implementations in bold are used in the default policy, either in debug (D) or
