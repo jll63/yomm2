@@ -21,6 +21,7 @@ in_files = list(
     )
 )
 
+
 for ref in in_files:
     md_path = str(ref.with_suffix(".md")).replace("reference.in", "reference")
     hrefs[str(ref.with_suffix(""))] = f"/reference/{md_path}"
