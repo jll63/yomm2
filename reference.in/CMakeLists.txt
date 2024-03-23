@@ -43,5 +43,5 @@ if(${YOMM2_ENABLE_DOC})
         message(STATUS "${MD_out}")
         endforeach()
 
-    add_custom_target(reference DEPENDS "${entries}")
+    add_custom_target(reference ALL DEPENDS "${entries}")
 endif()

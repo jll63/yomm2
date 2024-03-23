@@ -175,8 +175,10 @@ struct runtime {
 
         trace_type& operator++() {
             if constexpr (trace_enabled) {
-                for (int i = 0; i < indentation_level; ++i) {
-                    Policy::update_stream << "  ";
+                if (Policy::trace_enabled) {
+                    for (int i = 0; i < indentation_level; ++i) {
+                        Policy::trace_stream << "  ";
+                    }
                 }
             }
 
@@ -209,10 +211,12 @@ struct runtime {
 
         trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
             if constexpr (trace_enabled) {
-                auto i = bits.size();
-                while (i != 0) {
-                    --i;
-                    Policy::update_stream << bits[i];
+                if (Policy::trace_enabled) {
+                    auto i = bits.size();
+                    while (i != 0) {
+                        --i;
+                        Policy::trace_stream << bits[i];
+                    }
                 }
             }
             return *this;
@@ -221,7 +225,9 @@ struct runtime {
         template<typename T>
         trace_type& operator<<(const T& value) {
             if constexpr (trace_enabled) {
-                Policy::update_stream << value;
+                if (Policy::trace_enabled) {
+                    Policy::trace_stream << value;
+                }
             }
             return *this;
         }

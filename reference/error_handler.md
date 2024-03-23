@@ -1,22 +1,28 @@
 <sub>[home](/README.md) / [reference](/reference.md)</sub><br>
-## yorel::yomm2::policy::**error_handler**
+# yorel::yomm2::policy::**error_handler**
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
     struct error_handler;
 
-The `error_handler` facet provides a static callable member `error`.
+The `error_handler` is used by YOMM2 to handle error conditions. If it is
+present, its static member `error` is called with a variant describing the
+error. If the function returns normally, the program is terminated by a call to
+`abort`.
 
-When YOMM2 detects an error condition, it checks whether the policy contains a
-`error_handler`; if yes, it calls `error`, then `abort`. The function can
-prevent program termination by throwing an exception.
+## Requirements for implementations of `error_handler`**
 
-**Requirements for implementations of `error_handler`**
+|                                          |                                  |
+| ---------------------------------------- | -------------------------------- |
+| static _unspecified_ [**error**](#error) | called when an error is detected |
 
-|                                   |                                  |
-| --------------------------------- | -------------------------------- |
-| `static error_handler_type error` | called when an error is detected |
+### error
 
-**Implementations of `error_handler`**
+Handle the error condition. `error` can be a function or a function or a
+functor, taking a single `const error_type&` argument, and returning `void`. It
+can throw an exception, derived from class [`error`](/reference/error.md), to prevent program
+termination.
+
+## Implementations of `error_handler`
 
 |                  |                                                                        |
 | ---------------- | ---------------------------------------------------------------------- |

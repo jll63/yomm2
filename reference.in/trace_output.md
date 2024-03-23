@@ -1,29 +1,29 @@
-## yorel::yomm2::policy::**error_output**
+## yorel::yomm2::policy::**trace_output**
 headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
-    struct error_output;
+    struct trace_output;
 
-The `error_output` facet provides one static data member, `error_stream`, which
-must support a small subset of the protocol of `std::ostream`. The following
-insertion operators are required:
+The `trace_output` facet enables the YOMM2 runtime to print information about
+the data structures used at dispatch time, and how they are derived. This
+includes deduction of inheritance lattices, v-table slot allocation, dispatch
+table construction, hash parameters, etc. This can help troubleshoot common
+errors, like missing class registrations, ambiguities in method definitions,
+etc.
 
-    Stream& operator<<(Stream& os, const std::string_view& view);
-    Stream& operator<<(Stream& os, const void* value);
-    Stream& operator<<(Stream& os, size_t value);
+The format of the information is not documented, beyond that it is useful. It
+may change without notice.
 
-(where `Stream` is the type of the `error_stream` data member)
-
-When an error is encountered, diagnostics are written to `error_stream` using these
-operators.
-
-**Requirements for implementations of `error_output`**
+**Requirements for implementations of `trace_output`**
 
 |                                       |                              |
 | ------------------------------------- | ---------------------------- |
-| `static /*unspeficied*/ error_stream` | a `std::ostream`-like object |
+| `static /*unspeficied*/ trace_stream` | a ->`RestrictedOutputStream` |
+| `static bool trace_enabled`           | enable trace if `true`       |
 
-**Implementations of `error_output`**
 
-|                                                               |                          |
-| ------------------------------------------------------------- | ------------------------ |
-| [`basic_error_output<Policy, Stream>`](basic_error_output.md) | provide a `error_stream` |
+
+**Implementations of `trace_output`**
+
+|                                                               |                                       |
+| ------------------------------------------------------------- | ------------------------------------- |
+| [`basic_trace_output<Policy, Stream>`](basic_error_output.md) | print to a `Stream` local to `Policy` |

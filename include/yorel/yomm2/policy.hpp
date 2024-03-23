@@ -394,15 +394,19 @@ struct yOMM2_API_gcc basic_error_output : virtual error_output {
 template<class Policy, typename Stream>
 Stream basic_error_output<Policy, Stream>::error_stream;
 
-template<class Policy, typename Stream = detail::ostdstream>
+template<class Policy, typename Stream = detail::ostderr>
 struct yOMM2_API_gcc basic_trace_output : virtual trace_output {
-    static Stream update_stream;
+    static Stream trace_stream;
+    static bool trace_enabled;
 };
 
 template<class Policy, typename Stream>
-Stream basic_trace_output<Policy, Stream>::update_stream([]() {
+Stream basic_trace_output<Policy, Stream>::trace_stream;
+
+template<class Policy, typename Stream>
+bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
     auto env = getenv("YOMM2_TRACE");
-    return env && !(*env++ == '0' && !*env) ? stderr : nullptr;
+    return env && *env++ == '1' && *env++ == 0;
 }());
 
 template<class Policy>
@@ -439,11 +443,14 @@ void fast_perfect_hash<Policy>::hash_initialize(
     std::vector<type_id>& buckets) {
     using namespace policy;
 
-    constexpr bool has_output = Policy::template has_facet<trace_output>;
+    constexpr bool trace_enabled = Policy::template has_facet<trace_output>;
     const auto N = std::distance(first, last);
 
-    if constexpr (has_output) {
-        Policy::update_stream << "Finding hash factor for " << N << " types\n";
+    if constexpr (trace_enabled) {
+        if (Policy::trace_enabled) {
+            Policy::trace_stream << "Finding hash factor for " << N
+                                 << " types\n";
+        }
     }
 
     std::default_random_engine rnd(13081963);
@@ -460,9 +467,11 @@ void fast_perfect_hash<Policy>::hash_initialize(
         shift = 8 * sizeof(type_id) - M;
         auto hash_size = 1 << M;
 
-        if constexpr (has_output) {
-            Policy::update_stream << "  trying with M = " << M << ", "
-                                  << hash_size << " buckets\n";
+        if constexpr (trace_enabled) {
+            if (Policy::trace_enabled) {
+                Policy::trace_stream << "  trying with M = " << M << ", "
+                                     << hash_size << " buckets\n";
+            }
         }
 
         bool found = false;
@@ -500,9 +509,11 @@ void fast_perfect_hash<Policy>::hash_initialize(
         // metrics.hash_table_size = hash_size;
 
         if (found) {
-            if constexpr (has_output) {
-                Policy::update_stream << "  found " << mult << " after "
-                                      << total_attempts << " attempts\n";
+            if constexpr (trace_enabled) {
+                if (Policy::trace_enabled) {
+                    Policy::trace_stream << "  found " << mult << " after "
+                                         << total_attempts << " attempts\n";
+                }
             }
 
             return;

@@ -1,28 +1,48 @@
-## yorel::yomm2::policy::**vectored_error**
+# yorel::yomm2::policy::**vectored_error**
 headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     template<class Policy>
     struct vectored_error;
 
-`vectored_error` is an implementation of ->`error_handler` that provides `error`
-as a static `std::function` member. `error` can be set to a user-defined
-function, which may throw an exception to prevent program termination.
+`vectored_error` imnplements ->`error_handler` using a static `std::function`.
 
-**Template parameters**
+## Template parameters
 
-* `Policy`: the policy containing the facet.
+| Name                        | Value                           |
+| --------------------------- | ------------------------------- |
+| class [**Policy**](#policy) | the policy containing the facet |
 
-**Static member functions**
+### Policy
 
-|                                          |                   |
-| ---------------------------------------- | ----------------- |
-| ->`vectored_error/default_error_handler` | print diagnostics |
+The policy containing the facet. Since `vectored_error` has a static member
+variable, making the policy a template parameter ensures that each policy has
+its own copy.
 
 **Static member variables**
 
-|                          |                       |
-| ------------------------ | --------------------- |
-| ->`vectored_error/error` | current error handler |
+|                                        |                       |
+| -------------------------------------- | --------------------- |
+| error_handler_type [**error**](#error) | current error handler |
+
+### error
+
+A `std::function` (see ->`error_handler_type`). It is initialized to a null
+function. If it is still when ->`update` is called, it is set to
+`default_error_handler`.
+
+The function may throw an exception (unless they have been disabled), thus
+preventing program termination.
+
+**Static member functions**
+
+|                                                    |                   |
+| -------------------------------------------------- | ----------------- |
+| [**default_error_handler**](default_error_handler) | print diagnostics |
+
+### default_error_handler
+
+If ->`error_output` is available in `Policy`, use it to print a description of
+`error`. Return normally, causing the program to be aborted.
 
 
 ## Interactions with other facets

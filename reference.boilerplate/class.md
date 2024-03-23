@@ -1,4 +1,4 @@
-## yorel::yomm2::**CLASS**
+# yorel::yomm2::**CLASS**
 headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     template<class TP>
@@ -6,22 +6,25 @@ headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
 TODO
 
-**Template parameters**
+## Template parameters
 
-* TP: TP
+### TP
 
-**Member functions**
+# Member functions
 
-|      |      |
-| ---- | ---- |
-| TODO | TODO |
-| TODO | TODO |
+|     |      |
+| --- | ---- |
+| FUN | TODO |
+
+### Fun
 
 **Example**
 
-#include <yorel/yomm2/keywords.hpp>
+//***
 
 ```c++
+#include <yorel/yomm2/keywords.hpp>
+
 // for brevity
 using namespace yorel::yomm2;
 
@@ -29,3 +32,5 @@ BOOST_AUTO_TEST_CASE(ref_TODO) {
     TODO
 }
 ```
+
+//***

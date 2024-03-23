@@ -29,8 +29,7 @@ for ref in in_files:
         for text in rh.readlines():
             if "---" in text:
                 break
-            m = re.match(r"^entry: +(.*)", text)
-            if m:
+            if m := re.match(r"^entry: +(.*)", text):
                 for symbol in split_list(m[1]):
                     symbol = symbol.strip().replace("yorel::yomm2::", "")
                     if symbol != ref.stem:

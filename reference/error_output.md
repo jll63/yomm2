@@ -4,27 +4,16 @@
 
     struct error_output;
 
-The `error_output` facet provides one static data member, `error_stream`, which
-must support a small subset of the protocol of `std::ostream`. The following
-insertion operators are required:
-
-    Stream& operator<<(Stream& os, const std::string_view& view);
-    Stream& operator<<(Stream& os, const void* value);
-    Stream& operator<<(Stream& os, size_t value);
-
-(where `Stream` is the type of the `error_stream` data member)
-
-When an error is encountered, diagnostics are written to `error_stream` using these
-operators.
+The `error_output` facet is used to print diagnostics about error conditions.
 
 **Requirements for implementations of `error_output`**
 
 |                                       |                              |
 | ------------------------------------- | ---------------------------- |
-| `static /*unspeficied*/ error_stream` | a `std::ostream`-like object |
+| `static /*unspeficied*/ error_stream` | a [`RestrictedOutputStream`](/reference/RestrictedOutputStream.md) |
 
 **Implementations of `error_output`**
 
-|                                                               |                          |
-| ------------------------------------------------------------- | ------------------------ |
-| [`basic_error_output<Policy, Stream>`](basic_error_output.md) | provide a `error_stream` |
+|                                                               |                                           |
+| ------------------------------------------------------------- | ----------------------------------------- |
+| [`basic_error_output<Policy, Stream>`](basic_error_output.md) | print to a `Stream` local to the `Policy` |
