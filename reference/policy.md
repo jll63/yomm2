@@ -1,20 +1,17 @@
-<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
+# yorel::yomm2::policy::**basic_policy**
 
-**yorel::yomm2::policy::basic_policy**<br>
-**yorel::yomm2::default_policy**<br>
+
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
----
-```
-template<class Policy, class... Facets>
-struct basic_policy : virtual Facets... { ... };
-```
----
+    template<class Policy, class... Facets>
+    struct basic_policy : virtual Facets... { ... };
+
 Creates a new policy class with the specified facets.
 
-_Policies_ are at the core of method dispatch. A policy  provides a catalog of
-class and method definitions, supplied by the user, and dispatch data, filled by
-`update`, and used during method calls.
+Policies provide a catalog of class and method definitions, supplied by the
+user, and dispatch data, filled by `update`, and used during method calls. They
+also act as customization points.
 
 Templates `use_classes` and `method`, and macros `register_classes` and
 `declare_method` accept a policy class as their first argument. If it is not
@@ -25,29 +22,31 @@ reference classes registered in the same policy. If a class is used as a virtual
 parameter in methods using different policies, it must be registered with each
 of them.
 
-A policy has a collection of _facets_ classes, inherited by the policy via
-virtual inheritance.  Facets control how vptrs are fetched, errors are reported,
-etc. Facets fall into categories, and sometimes sub-categories, expressed via
-inheritance. A policy can have at most one facet per category. Some facet
-categories may be absent from a policy; in which case, the corresponding
-functionality is not available.
+A policy has a collection of _facets_, implemented as classes inherited by the
+policy via inheritance.  Facets control how vptrs are fetched, errors are
+handled, etc. Facets fall into categories, and sometimes sub-categories. A
+policy can have at most one facet per category. Some facet categories may be
+absent from a policy; in which case, the corresponding functionality is not
+available.
 
 YOMM2 supports the following facet categories, and provides at least one
 implementation for each category. They are summed up in the following table.
 
-| facet category                | responsibility                            | implementations                                                     |
-| ----------------------------- | ----------------------------------------- | ------------------------------------------------------------------- |
-| vptr_placement, external_vptr | fetch vptr_placement for virtual argument | **vptr_vector\<...>** (D, R), vptr_map\<...>                        |
-| **rtti**, deferred_rtti       | type information                          | **std_rtti** (D, R), final_only_rtti                                |
-| type_hash                     | map type info to integer index            | **fast_perfect_hash\<...>** (R), **checked_perfect_hash`<...>** (D) |
-| error_handler                 | report errors                             | vectored_error_handler\<...>, throw_error_handler                   |
-| error_output                  | describe error                            | **basic_error_output\<...>** (D)                                    |
-| trace_output                 | trace `update`                            | **basic_trace_output\<...>** (D)                                   |
+(facet sub-categories are in italics)
 
-Facet categories in bold are required for YOMM2 to work at all. Facet
-implementations in bold are used in the default policy, either in debug (D) or
-release (R) builds only, or in both (D, R). A policy needs a `rtti` facet to be
-useable. All others are optional.
+| Facet category           | Responsibility                    | Stock implementations                                         |
+| ------------------------ | --------------------------------- | ------------------------------------------------------------- |
+| [vptr_placement](/reference/vptr_placement.md)         | fetch vptr for virtual argument   |                                                               |
+| *[external_vptr](/reference/vptr_placement.md)*        | store vptr outside the object     | [vptr_vector](/reference/vptr_vector.md)<...> (D), (R), [vptr_map](/reference/vptr_map.md)<...>                  |
+| [rtti](/reference/rtti.md)                   | provide type information          | [std_rtti](/reference/std_rtti.md) (D), (R), [final_only_rtti](/reference/final_only_rtti.md)                        |
+| ->*deferred_static_rtti* | as `rtti`, but avoid static ctors |                                                               |
+| [type_hash](/reference/type_hash.md)              | map type info to integer index    | [fast_perfect_hash](/reference/fast_perfect_hash.md)<...> (R), [checked_perfect_hash](/reference/checked_perfect_hash.md)<...> (D) |
+| [error_handler](/reference/error_handler.md)          | report errors                     | [vectored_error](/reference/vectored_error.md)<...>, [throw_error](/reference/throw_error.md)                          |
+| [error_output](/reference/error_output.md)           | print diagnostics                 | [basic_error_output](/reference/basic_error_output.md)<...> (D)                                 |
+| [trace_output](/reference/trace_output.md)           | trace                             | [basic_trace_output](/reference/basic_trace_output.md)<...> (D)                                 |
+
+(D) denotes facets used in the default policy for debug variants, (R) for release
+variants.
 
 Several facets are [CRTP](https://en.cppreference.com/w/cpp/language/crtp) class
 templates, taking the policy as the first template argument. Some facets contain

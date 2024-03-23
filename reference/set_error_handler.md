@@ -1,30 +1,10 @@
 
 <sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
 
-**yorel::yomm2::error_type**<br>
-**yorel::yomm2::error_handler_type**<br>
-**yorel::yomm2::set_error_handler**<br>
-**yorel::yomm2::hash_search_error**<br>
-**yorel::yomm2::resolution_error**<br>
-**yorel::yomm2::unknown_class_error**<br>
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
 
 ---
 ```
-struct resolution_error {
-    enum status_type { no_definition = 1, ambiguous } status;
-    /*unspecified*/
-};
-
-struct unknown_class_error { /*unspecified*/ };
-
-struct hash_search_error { /*unspecified*/ };
-
-using error_type = std::variant<
-    resolution_error, unknown_class_error, hash_search_error>;
-
-using error_handler_type = void (*)(const error_type& error);
-
 error_handler_type set_error_handler(error_handler_type handler);
 ```
 ---
@@ -34,17 +14,6 @@ a user-defined function with `set_error_handler`. The library calls `abort()`
 immediately after calling the handler, but the handler can prevent program
 termination by throwing an exception. The default handler writes an error
 message to `stderr` in debug mode.
-
-The handler can determine the exact type of the error by examining the
-variant:
-- `hash_search_error`: [update](/reference/update.md) could not find a hash function for
-  the registered classes.
-- `resolution_error`: there is no applicable definition for the arguments of
-  a method call or (next)[method.md#add_definition], or it is ambiguous; the
-  `status` field is set accordingly
-- `unknown_class_error`: a class that has not been registered is used as a
-  base in [register_class](/reference/register_class.md), or in a method declaration or definition, or (in
-  debug mode only) as an argument for a method call
 
 `set_error_handler` returns the previous handler.
 

@@ -27,7 +27,11 @@ its own copy.
 
 ### error
 
-A `std::function` (see [`error_handler_type`](/reference/set_error_handler.md)). It is initialized to a null
+```c++
+static error_handler_type error;
+```
+
+A `std::function` (see [`error_handler_type`](/reference/error.md)). It is initialized to a null
 function. If it is still when [`update`](/reference/update.md) is called, it is set to
 `default_error_handler`.
 
@@ -41,6 +45,10 @@ preventing program termination.
 | [**default_error_handler**](default_error_handler) | print diagnostics |
 
 ### default_error_handler
+
+```c++
+static void default_error_handler(const error_type& error_v)
+```
 
 If [`error_output`](/reference/error_output.md) is available in `Policy`, use it to print a description of
 `error`. Return normally, causing the program to be aborted.

@@ -566,9 +566,9 @@ method<Key, R(A...), Policy>::not_implemented_handler(
         error.status = resolution_error::no_definition;
         error.method_name = fn.name;
         error.arity = arity;
-        type_id tis[sizeof...(args)];
-        error.tis = tis;
-        auto ti_iter = tis;
+        type_id types[sizeof...(args)];
+        error.types = types;
+        auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         Policy::error(error_type(std::move(error)));
     }
@@ -585,9 +585,9 @@ method<Key, R(A...), Policy>::ambiguous_handler(
         error.status = resolution_error::ambiguous;
         error.method_name = fn.name;
         error.arity = arity;
-        type_id tis[sizeof...(args)];
-        error.tis = tis;
-        auto ti_iter = tis;
+        type_id types[sizeof...(args)];
+        error.types = types;
+        auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         Policy::error(error_type(std::move(error)));
     }

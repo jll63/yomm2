@@ -71,7 +71,7 @@ struct resolution_error : error {
     enum status_type { no_definition = 1, ambiguous } status;
     std::string_view method_name;
     size_t arity;
-    type_id* tis;
+    type_id* types;
 };
 
 struct unknown_class_error : error {
@@ -104,7 +104,7 @@ struct method_call_error {
 };
 
 using method_call_error_handler =
-    void (*)(const method_call_error& error, size_t arity, type_id tis[]);
+    void (*)(const method_call_error& error, size_t arity, type_id types[]);
 
 namespace policy {
 
@@ -204,14 +204,14 @@ struct final_only_rtti : virtual rtti {
 
 struct std_rtti : virtual rtti {
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-    template<typename T>
+    template<class Class>
     static type_id static_type() {
-        auto tip = &typeid(T);
+        auto tip = &typeid(Class);
         return reinterpret_cast<type_id>(tip);
     }
 
-    template<typename T>
-    static type_id dynamic_type(const T& obj) {
+    template<class Class>
+    static type_id dynamic_type(const Class& obj) {
         auto tip = &typeid(obj);
         return reinterpret_cast<type_id>(tip);
     }
@@ -600,7 +600,7 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                 auto comma = "";
 
                 for (auto ti :
-                     type_range{error->tis, error->tis + error->arity}) {
+                     type_range{error->types, error->types + error->arity}) {
                     Policy::error_stream << comma;
                     Policy::type_name(ti, Policy::error_stream);
                     comma = ", ";
@@ -640,7 +640,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
             method_call_error old_error;
             old_error.code = err->status;
             old_error.method_name = err->method_name;
-            call_error(std::move(old_error), err->arity, err->tis);
+            call_error(std::move(old_error), err->arity, err->types);
             abort();
         }
 

@@ -1,6 +1,5 @@
-<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
 # yorel::yomm2::policy::rtti, yorel::yomm2::policy::deferred_static_rtti
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 
 ```c++
@@ -41,7 +40,7 @@ Return a type id for `Class`.
 
 **Template parameters**
 
-* Class: a class registered via [register_classes](/reference/use_classes.md) or [use_classes](/reference/use_classes.md).
+* Class: a class registered via ->register_classes or ->use_classes.
 
 ### dynamic_type
 
@@ -55,7 +54,7 @@ Required.
 
 **Template parameters**
 
-* Class: a class registered via [register_classes](/reference/use_classes.md) or [use_classes](/reference/use_classes.md).
+* Class: a class registered via ->register_classes or ->use_classes.
 
 ### type_name
 
@@ -70,7 +69,7 @@ Implementations should provide a more readable description, if possible.
 
 **Template parameters**
 
-* `Stream`: a model of [`RestrictedOutputStream`](/reference/RestrictedOutputStream.md).
+* `Stream`: a model of ->`RestrictedOutputStream`.
 
 **Function parameters**
 
@@ -86,7 +85,7 @@ static /*unspecified*/ type_index(type_id type);
 
 Return an unspecified object that uniquely identifies a class. Required if
 `static_type` can return different type ids for the same class. See
-[`std_rtti`](/reference/std_rtti.md) for an example of this.
+->`std_rtti` for an example of this.
 
 **Function parameters**
 
@@ -119,5 +118,5 @@ is used in the registered classes.
 
 |                   |                      |
 | ----------------- | -------------------- |
-| [std_rtti](/reference/std_rtti.md)        | use standard RTTI    |
-| [final_only_rtti](/reference/final_only_rtti.md) | use static RTTI only |
+| ->std_rtti        | use standard RTTI    |
+| ->final_only_rtti | use static RTTI only |

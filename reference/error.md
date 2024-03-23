@@ -1,12 +1,13 @@
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
 # yorel::yomm2::**error**
-entry: yorel::yomm2::error_type
-entry: yorel::yomm2::error_handler_type
-entry: yorel::yomm2::unknown_class_error
-entry: yorel::yomm2::hash_search_error
-entry: yorel::yomm2::method_table_error
-entry: yorel::yomm2::resolution_error
+**yorel::yomm2::error_type**<br>
+**yorel::yomm2::error_handler_type**<br>
+**yorel::yomm2::unknown_class_error**<br>
+**yorel::yomm2::hash_search_error**<br>
+**yorel::yomm2::method_table_error**<br>
+**yorel::yomm2::resolution_error**<br>
 
-headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 
 
     struct error {
@@ -55,7 +56,7 @@ Classes derived from `error` are used to describe various error conditions.
 ## unknown_class_error
 
 YOMM2 detected that a class used in a method declaration or definition, or a
-method call, was not registered via ->use_classes or ->register_classes.
+method call, was not registered via [use_classes](/reference/use_classes.md) or [register_classes](/reference/use_classes.md).
 
 | Member variable                       | Description                                                             |
 | ------------------------------------- | ----------------------------------------------------------------------- |

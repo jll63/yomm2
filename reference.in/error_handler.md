@@ -8,11 +8,13 @@ present, its static member `error` is called with a variant describing the
 error. If the function returns normally, the program is terminated by a call to
 `abort`.
 
-## Requirements for implementations of `error_handler`**
+## Requirements for implementations of **error_handler**
 
-|                                          |                                  |
-| ---------------------------------------- | -------------------------------- |
-| static _unspecified_ [**error**](#error) | called when an error is detected |
+|                                   |                                  |
+| --------------------------------- | -------------------------------- |
+| _unspecified_ [**error**](#error) | called when an error is detected |
+
+(all members are static)
 
 ### error
 
