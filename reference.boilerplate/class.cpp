@@ -19,7 +19,7 @@ TODO
 
 **TODO** - TODO
 
-## static member functions
+## Static member functions
 |      |      |
 | ---- | ---- |
 | TODO | TODO |

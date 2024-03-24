@@ -19,7 +19,7 @@ registered via `hash_initialize`.
 
 **Policy** - the policy containing the facet.
 
-## static member functions
+## Static member functions
 |                                     |                              |
 | ----------------------------------- | ---------------------------- |
 | [hash_initialize](#hash_initialize) | finds a hash function        |
@@ -73,7 +73,7 @@ None.
 
 #### Errors
 
-* [`unknown_class_error`](/reference/set_error_handler.md), with `context` set to `unknown_class_error::update`.
+* [`unknown_class_error`](/reference/error.md), with `context` set to `unknown_class_error::update`.
 
 ## Interactions with other facets
 

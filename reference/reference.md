@@ -158,10 +158,10 @@ This was the recommended header before version 1.3.0. Includes
 | [declare_static_method](/reference/declare_static_method.md)          | macro             | declares a static method inside a class                                  |
 | [define_method](/reference/define_method.md)                  | macro             | adds a definition to a method                                            |
 | [define_method_inline](/reference/define_method_inline.md)           | macro             | adds an definition to a method in a container, and make it inline        |
-| [error_handler_type](/reference/set_error_handler.md)             | type              | handler function                                                         |
-| [error_type](/reference/set_error_handler.md)                     | variant           | object passed to error handler                                           |
+| [error_handler_type](/reference/error.md)             | type              | handler function                                                         |
+| [error_type](/reference/error.md)                     | variant           | object passed to error handler                                           |
 | [friend_method](/reference/friend_method.md)                  | macro             | makes a method in a container, or the entire container, a friend         |
-| [hash_search_error](/reference/set_error_handler.md)              | class             | failure to find a hash function for registered classes                   |
+| [hash_search_error](/reference/error.md)              | class             | failure to find a hash function for registered classes                   |
 | [make_virtual_shared](/reference/virtual_ptr.md)            | function template | creates an object and return a `virtual_shared_ptr`                      |
 | [method](/reference/method.md)                         | class template    | implements a method                                                      |
 | [method_call_error](/reference/method_call_error.md)              | class             | information about a failed method call                                   |
@@ -170,10 +170,10 @@ This was the recommended header before version 1.3.0. Includes
 | [method_definition](/reference/method_definition.md)              | macro             | retrieves a definition from a container                                  |
 | [register_class](/reference/register_class.md)                 | macro             | registers a class and its bases (deprecated)                             |
 | [register_classes](/reference/use_classes.md)               | macro             | registers classes and their inheritance relationships                    |
-| [resolution_error](/reference/set_error_handler.md)               | class             | method call does not resolve to exactly one definition                   |
+| [resolution_error](/reference/error.md)               | class             | method call does not resolve to exactly one definition                   |
 | [set_error_handler](/reference/set_error_handler.md)              | function          | sets the function called for all errors                                  |
 | [set_method_call_error_handler](/reference/method_call_error.md)  | function          | sets function to call when a method call fails                           |
-| [unknown_class_error](/reference/set_error_handler.md)            | class             | class used in method declaration, definition, or call was not registered |
+| [unknown_class_error](/reference/error.md)            | class             | class used in method declaration, definition, or call was not registered |
 | [update](/reference/update.md)                         | function          | sets up dispatch tables                                                  |
 | [update_methods](/reference/update_methods.md)                 | function          | sets up dispatch tables (deprecated, requires linking with library)      |
 | [use_classes](/reference/use_classes.md)                    | class template    | registers classes and their inheritance relationships                    |

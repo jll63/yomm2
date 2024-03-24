@@ -2,18 +2,13 @@
 
 import contextlib
 from pathlib import Path
-import re
 import sys
 
 import mdgen
 
 out_path = Path(sys.argv[2]).absolute()
 
-repo = Path(__file__).absolute()
-while not (repo / ".git").exists():
-    repo = repo.parent
-
-trail = str(out_path).replace(str(repo), "").split("/")
+trail = str(out_path).replace(str(mdgen.repository), "").split("/")
 trail.pop(0)
 trail.pop()
 

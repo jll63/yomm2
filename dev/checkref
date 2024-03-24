@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+
+import mdgen
+
+from pathlib import Path
+
+refs = set("home reference".split())
+
+with open(mdgen.repository.joinpath("reference.in", "reference.md")) as ref:
+    for line in ref.readlines():
+        if line.startswith("| ->"):
+            refs.add(line.split()[1].replace("->", ""))
+
+for ref in mdgen.hrefs:
+    if ref not in refs:
+        print(ref)

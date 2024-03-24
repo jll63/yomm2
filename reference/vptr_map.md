@@ -1,14 +1,11 @@
-<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
-
-**yorel::yomm2::policy::vptr_map**<br>
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
+# yorel::yomm2::policy::**vptr_map**
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
----
-```
+```c++
 template<class Policy>
 struct vptr_map;
 ```
----
 
 `vptr_map` is an implementation of [`external_vptr`](/reference/vptr_placement.md) that stores the
 pointers to the v-tables in a `std::unordered_map` keyed by the [`type_id`](/reference/type_id.md)s of

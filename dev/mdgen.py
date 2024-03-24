@@ -31,7 +31,7 @@ for ref in in_files:
                 break
             if m := re.match(r"^entry: +(.*)", text):
                 for symbol in split_list(m[1]):
-                    symbol = symbol.strip().replace("yorel::yomm2::", "")
+                    symbol = symbol.strip().replace("yorel::yomm2::", "").replace("policy::", "")
                     if symbol != ref.stem:
                         hrefs[symbol] = f"/reference/{md_path}"
             if m := re.search(r"hrefs: *([\w_-]+)", text):
@@ -131,3 +131,7 @@ def replace_md(text: str, trail: list[str] = None):
     text = replace_links(text)
 
     return text
+
+repository = Path(__file__).absolute()
+while not (repository / ".git").exists():
+    repository = repository.parent

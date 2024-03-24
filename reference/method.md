@@ -30,7 +30,7 @@ with the same signature.
 | [destructor](#destructor)    | destruct and unregister the method |
 | [operator()](#call-operator) | call the method                    |
 
-### static member variable
+### Static member variable
 |           |                               |
 | --------- | ----------------------------- |
 | [fn](#fn) | function object to call the method |

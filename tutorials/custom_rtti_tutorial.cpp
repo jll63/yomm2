@@ -327,11 +327,7 @@ struct custom_policy : default_policy::rebind<custom_policy>::replace<
 
 Finally, we must specify the new policy during class registration and method
 declaration. Macros `register_classes` and `declare_method`, and core API
-templates `use_classes` and `method` accept an addition policy argument, as the
-first argument of the construct.
-
-It is also possible to change the default policy used by the macros by
-re-defining the `YOMM2_DEFAULT_POLICY` macro symbol.
+templates `use_classes` and `method` accept an addition policy argument.
 
 ***/
 
@@ -385,7 +381,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
 
 /***
 
-## Taking advantage of custom RTTI specifities
+## Taking advantage of custom RTTI specificities
 
 In the previous example, we use `const char*` as type ids. The default policy
 uses the addresses of `std::type_id` objects. In both cases, YOMM2 uses a fast,
@@ -471,23 +467,9 @@ struct custom_policy
     : default_static_policy::rebind<custom_policy>::replace<
           policy::rtti, custom_rtti>::remove<policy::type_hash> {};
 
-//***
+register_classes(Animal, Dog, Cat, custom_policy);
 
-/***
-
-This time we re-define `YOMM2_DEFAULT_POLICY`:
-
-***/
-
-//***
-
-#pragma push_macro("YOMM2_DEFAULT_POLICY")
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY custom_policy
-
-register_classes(Animal, Dog, Cat);
-
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
@@ -496,8 +478,6 @@ define_method(void, kick, (Dog & dog, std::ostream& os)) {
 define_method(void, kick, (Cat & cat, std::ostream& os)) {
     os << cat.name << " hisses.";
 }
-
-#pragma pop_macro("YOMM2_DEFAULT_POLICY")
 
 //***
 

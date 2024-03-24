@@ -22,7 +22,7 @@ registered via `hash_initialize`.
 
 **Policy** - the policy containing the facet.
 
-## static member functions
+## Static member functions
 |                                     |                              |
 | ----------------------------------- | ---------------------------- |
 | [hash_initialize](#hash_initialize) | finds a hash function        |

@@ -1,14 +1,11 @@
-<sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
-
-**yorel::yomm2::policy::vptr_vector**<br>
+<sub>[home](/README.md) / [reference](/reference.md)</sub><br>
+# yorel::yomm2::policy::**vptr_vector**
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
 
----
-```
+```c++
 template<class Policy>
 struct vptr_vector : virtual external_vptr { ... };
 ```
----
 
 `vptr_vector` is an implementation of [`external_vptr`](vptr_placement.md) that stores the
 pointers to the v-tables in a `std::vector`. If the policy contains a

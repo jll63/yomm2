@@ -46,13 +46,13 @@ registrations.
 
 **Policy** - the policy containing the facet.
 
-## static member functions
+## Static member functions
 |                                     |                              |
 | ----------------------------------- | ---------------------------- |
 | [hash_initialize](#hash_initialize) | finds a hash function        |
 | [hash_type_id](#hash_type_id)       | returns the hashed `type_id` |
 
-## static member variables
+## Static member variables
 |                             |                               |
 | --------------------------- | ----------------------------- |
 | [hash_length](#hash_length) | length of the result interval |

@@ -1,8 +1,8 @@
+# YOMM2 static objects
+
 
 
 // <sub>/ [home](/README.md) / [reference](/reference/reference.md) </sub>
-
-**YOMM2 static objects**<br>
 
 YOMM2 uses instances of various classes to register user classes, methods, and
 method definitions. The constructors adds the object to an intrusive forward
