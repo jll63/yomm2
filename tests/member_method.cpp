@@ -47,7 +47,7 @@ struct Payroll {
         &Payroll::pay_employee, &Payroll::pay_manager>;
 };
 
-Payroll::pay_functions YOMM2_GENSYM;
+YOMM2_STATIC(Payroll::pay_functions);
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>

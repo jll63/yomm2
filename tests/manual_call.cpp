@@ -22,7 +22,7 @@ struct Dog {
 //     return "bark";
 // }
 
-use_classes<Dog> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Dog>);
 
 struct kick_;
 using kick = method<kick_, const char*(virtual_<Dog&>)>;
@@ -31,7 +31,7 @@ const char* bark(Dog&) {
     return "bark";
 }
 
-kick::add_function<bark> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<bark>);
 
 auto call_kick(Dog& obj) {
     return kick::fn(obj);

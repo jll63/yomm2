@@ -886,7 +886,7 @@ list of `types` lists. We can thus inject the result of `apply_product` into
 
 
 ```c++
-use_classes<apply_product<matrix_templates, types<double, int>>> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<apply_product<matrix_templates, types<double, int>>>);
 ```
 ```c++
 BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {

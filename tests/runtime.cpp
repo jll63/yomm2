@@ -96,9 +96,9 @@ using incremental = test_policy_<__COUNTER__>;
 use_classes<Animal, Herbivore, Carnivore, Cow, Wolf, Human, whole_hierarchy>
     YOMM2_GENSYM;
 
-use_classes<Animal, Herbivore, Cow, incremental> YOMM2_GENSYM;
-use_classes<Animal, Carnivore, Wolf, incremental> YOMM2_GENSYM;
-use_classes<Herbivore, Carnivore, Human, incremental> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Animal, Herbivore, Cow, incremental>);
+YOMM2_STATIC(use_classes<Animal, Carnivore, Wolf, incremental>);
+YOMM2_STATIC(use_classes<Herbivore, Carnivore, Human, incremental>);
 
 using policies = std::tuple<whole_hierarchy, incremental>;
 
@@ -156,7 +156,7 @@ using test_policy = test_policy_<__COUNTER__>;
 use_classes<Role, Employee, Manager, Founder, Expense, test_policy>
     YOMM2_GENSYM;
 
-use_classes<Expense, Public, Bus, Metro, Taxi, Jet, test_policy> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Expense, Public, Bus, Metro, Taxi, Jet, test_policy>);
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -708,7 +708,7 @@ struct E : D {};
 
 using test_policy = test_policy_<__COUNTER__>;
 
-use_classes<A, B, AB, C, D, E, test_policy> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<A, B, AB, C, D, E, test_policy>);
 
 BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     std::vector<rt_class*> actual, expected;

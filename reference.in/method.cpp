@@ -179,30 +179,30 @@ struct Bulldog : Dog {};
 namespace yomm2 = yorel::yomm2; // for brevity
 using yomm2::virtual_;
 
-yomm2::use_classes<Animal, Cat, Dog, Bulldog> YOMM2_GENSYM;
+YOMM2_STATIC(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 
 struct YOMM2_SYMBOL(kick_methods);
 using kick = yomm2::method<YOMM2_SYMBOL(kick_methods), std::string(virtual_<Animal&>)>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
-kick::add_function<kick_cat> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_cat>);
 
 std::string kick_dog(Dog& dog) { return "bark"; }
-kick::add_function<kick_dog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_dog>);
 
 struct kick_bulldog : kick::use_next<kick_bulldog> {
     static std::string fn(Bulldog& dog) { return next(dog) + " and bite"; }
 };
-kick::add_definition<kick_bulldog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_definition<kick_bulldog>);
 
 struct YOMM2_SYMBOL(pet_methods);
 using pet = yomm2::method<YOMM2_SYMBOL(pet_methods), std::string(virtual_<Animal&>)>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
-pet::add_function<pet_cat> YOMM2_GENSYM;
+YOMM2_STATIC(pet::add_function<pet_cat>);
 
 std::string pet_dog(Dog& dog) { return "wag tail"; }
-pet::add_function<pet_dog> YOMM2_GENSYM;
+YOMM2_STATIC(pet::add_function<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::update();

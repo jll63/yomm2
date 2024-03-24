@@ -1049,7 +1049,7 @@ use_definitions<
 // >
 
 // code<
-use_classes<apply_product<matrix_templates, types<double, int>>> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<apply_product<matrix_templates, types<double, int>>>);
 // >
 
 #endif
@@ -1449,7 +1449,7 @@ struct use_polymorphic_matrices<>
     : use_polymorphic_matrices<ordinary, square, symmetric> {};
 // >
 
-use_polymorphic_matrices<>::of<int, double> YOMM2_GENSYM;
+YOMM2_STATIC(use_polymorphic_matrices<>::of<int, double>);
 
 #endif
 

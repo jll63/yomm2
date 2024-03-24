@@ -324,7 +324,7 @@ struct base {
 
 struct derived : base {};
 
-class_declaration<derived, base, test_policy> YOMM2_GENSYM;
+YOMM2_STATIC(class_declaration<derived, base, test_policy>);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
     auto prev_handler = test_policy::error;

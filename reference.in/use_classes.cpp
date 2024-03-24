@@ -111,9 +111,9 @@ Classes can also be registered incrementally:
 
 #ifdef YOMM2_CODE
 
-use_classes<Animal, Herbivore, Carnivore> YOMM2_GENSYM;
-use_classes<Omnivore, Human, Wolf> YOMM2_GENSYM;
-use_classes<Sheep, Herbivore> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Animal, Herbivore, Carnivore>);
+YOMM2_STATIC(use_classes<Omnivore, Human, Wolf>);
+YOMM2_STATIC(use_classes<Sheep, Herbivore>);
 
 #endif
 
@@ -126,9 +126,9 @@ and `Wolf` derive from `Omnivore`.
 
 #ifdef YOMM2_CODE
 
-use_classes<Animal, Herbivore, Carnivore, Omnivore> YOMM2_GENSYM;
-use_classes<Human, Wolf> YOMM2_GENSYM;      // wrong!
-use_classes<Sheep, Herbivore> YOMM2_GENSYM; // ok
+YOMM2_STATIC(use_classes<Animal, Herbivore, Carnivore, Omnivore>);
+YOMM2_STATIC(use_classes<Human, Wolf>);      // wrong!
+YOMM2_STATIC(use_classes<Sheep, Herbivore>); // ok
 
 #endif
 

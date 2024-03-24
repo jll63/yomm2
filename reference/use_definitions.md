@@ -51,7 +51,7 @@ using same_type = method<
 bool same_type_catch_all(const abstract_matrix&, const abstract_matrix&) {
     return false;
 }
-same_type::add_function<same_type_catch_all> YOMM2_GENSYM;
+YOMM2_STATIC(same_type::add_function<same_type_catch_all>);
 
 // 2
 template<typename Method, typename...>
