@@ -298,14 +298,6 @@ struct runtime {
 
 template<class Policy>
 void runtime<Policy>::update() {
-    using namespace policy;
-
-    if constexpr (has_facet<Policy, error_handler>) {
-        if (!Policy::error) {
-            Policy::error = Policy::default_error_handler;
-        }
-    }
-
     resolve_static_type_ids();
     augment_classes();
     augment_methods();

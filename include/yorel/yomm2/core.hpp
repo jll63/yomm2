@@ -561,15 +561,18 @@ template<typename Key, typename R, class Policy, typename... A>
 typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
+
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
         error.status = resolution_error::no_definition;
         error.method_name = fn.name;
         error.arity = arity;
         type_id types[sizeof...(args)];
-        error.types = types;
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
+        std::copy_n(
+            types, std::max(sizeof...(args), resolution_error::max_types),
+            &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
 
@@ -586,9 +589,11 @@ method<Key, R(A...), Policy>::ambiguous_handler(
         error.method_name = fn.name;
         error.arity = arity;
         type_id types[sizeof...(args)];
-        error.types = types;
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
+        std::copy_n(
+            types, std::max(sizeof...(args), resolution_error::max_types),
+            &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
 

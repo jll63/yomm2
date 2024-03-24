@@ -92,9 +92,6 @@ static Derived dynamic_cast_(Base&& obj);
 Cast `obj` using the `dynamic_cast` operator. Note that YOMM2 will use a
 `static_cast` whenever possible.
 
-
-**NOTE:** the underscore at the end.
-
 **Template parameters**
 
 * `Base`: a registered class.  `Base&&` is guaranteed to evaluate to a

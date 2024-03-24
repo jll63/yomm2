@@ -30,8 +30,7 @@ its own copy.
 static error_handler_type error;
 ```
 
-A `std::function` (see ->`error_handler_type`). It is initialized to a null
-function. If it is still when ->`update` is called, it is set to
+A `std::function` (see ->`error_handler_type`), initialized to
 `default_error_handler`.
 
 The function may throw an exception (unless they have been disabled), thus

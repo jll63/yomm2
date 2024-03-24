@@ -220,4 +220,20 @@
         __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
         YOMM2_GENSYM;
 
+#if !BOOST_PP_VARIADICS_MSVC
+#define YOMM2_METHOD_CLASS(...)                                                \
+    BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__)
+#else
+#define YOMM2_METHOD_CLASS(...)                                                \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__),      \
+        BOOST_PP_EMPTY())
+#endif
+
+#define YOMM2_METHOD_CLASS_3(RETURN_TYPE, NAME, ARGS)                          \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE(ARGS)>
+
+#define YOMM2_METHOD_CLASS_4(RETURN_TYPE, NAME, ARGS, POLICY)                  \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE(ARGS), POLICY>
+
 #endif

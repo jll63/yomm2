@@ -85,12 +85,10 @@ class.
 
 A single applicable definition could not be found for a method call.
 
-| Member variable                  | Description                                          |
-| -------------------------------- | ---------------------------------------------------- |
-| status_type **status**           | no_definition, ambiguous                             |
-| std::string_view **method_name** | a the method name                                    |
-| size_t **arity**                 | number of virtual parameters, and size of `types`    |
-| type_id* **types**               | the type ids of the virtual arguments (see **NOTE**) |
-
-**NOTE**: `types` is a pointer to an array allocated on the stack. It is
-invalidated if the `resolution_error` object is thrown as an exception.
+| Member variable                  | Description                                             |
+| -------------------------------- | ------------------------------------------------------- |
+| status_type **status**           | no_definition, ambiguous                                |
+| std::string_view **method_name** | a the method name                                       |
+| size_t **arity**                 | number of virtual parameters, and size of `types`       |
+| size_t **max_types**             | the maximum number of type ids in `types`               |
+| const type_id* **types**         | the type ids of the virtual arguments (up to max_types) |

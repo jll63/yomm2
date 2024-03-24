@@ -71,7 +71,8 @@ struct resolution_error : error {
     enum status_type { no_definition = 1, ambiguous } status;
     std::string_view method_name;
     size_t arity;
-    type_id* types;
+    static constexpr size_t max_types = 16;
+    type_id types[max_types];
 };
 
 struct unknown_class_error : error {
@@ -104,7 +105,7 @@ struct method_call_error {
 };
 
 using method_call_error_handler =
-    void (*)(const method_call_error& error, size_t arity, type_id types[]);
+    void (*)(const method_call_error& error, size_t arity, type_id* types);
 
 namespace policy {
 
@@ -581,7 +582,7 @@ struct yOMM2_API_gcc throw_error : virtual error_handler {
 };
 #endif
 
-template<class Policy>
+template<class Policy, typename DefaultHandlerProvider = void>
 struct yOMM2_API_gcc vectored_error : virtual error_handler {
     static error_handler_type error;
 
@@ -625,12 +626,15 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
     }
 };
 
-template<class Policy>
-error_handler_type vectored_error<Policy>::error; // set by update!
+template<class Policy, typename DefaultHandlerProvider>
+error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
+    std::conditional_t<
+        std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
+        DefaultHandlerProvider>::default_error_handler;
 
 template<class Policy>
 struct yOMM2_API_gcc backward_compatible_error_handler
-    : vectored_error<Policy> {
+    : vectored_error<Policy, backward_compatible_error_handler<Policy>> {
     static method_call_error_handler call_error;
 
     static void default_error_handler(const error_type& error_v) {
@@ -640,7 +644,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
             method_call_error old_error;
             old_error.code = err->status;
             old_error.method_name = err->method_name;
-            call_error(std::move(old_error), err->arity, err->types);
+            call_error(std::move(old_error), err->arity, (type_id*)err->types);
             abort();
         }
 
@@ -648,7 +652,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
     }
 
     static void default_call_error_handler(
-        const method_call_error& error, size_t arity, type_id ti_ptrs[]) {
+        const method_call_error& error, size_t arity, type_id* ti_ptrs) {
 
         using namespace policy;
 
