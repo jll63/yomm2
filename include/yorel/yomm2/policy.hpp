@@ -415,7 +415,6 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
     static type_id mult;
     static std::size_t shift;
     static std::size_t hash_length;
-    static auto constexpr invalid = std::numeric_limits<type_id>::max();
 
 #ifdef _MSC_VER
     __forceinline
@@ -481,7 +480,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
         hash_length = 0;
 
         while (!found && attempts < 100000) {
-            std::fill(buckets.begin(), buckets.end(), invalid);
+            std::fill(buckets.begin(), buckets.end(), static_cast<type_id>(-1));
             ++attempts;
             ++total_attempts;
             found = true;
@@ -495,7 +494,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
                     hash_length = index + 1;
                 }
 
-                if (buckets[index] != invalid) {
+                if (buckets[index] != static_cast<type_id>(-1)) {
                     found = false;
                     break;
                 }
@@ -711,8 +710,13 @@ struct debug_shared;
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
-extern template class __declspec(dllimport) vectored_error<debug_shared>;
+extern template class __declspec(dllimport) vectored_error<debug_shared, backward_compatible_error_handler<debug_shared>>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
+extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
+extern template class __declspec(dllimport) basic_trace_output<debug_shared, detail::ostderr>;
+extern template class __declspec(dllimport) basic_error_output<debug_shared, detail::ostderr>;
+extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
+extern template class __declspec(dllimport) backward_compatible_error_handler<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,

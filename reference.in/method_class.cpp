@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(ref_method_class) {
     yomm2::update();
 
     Animal&& dog = Dog();
-    BOOST_TEST(
-        (method_class(std::string, kick, (virtual_<Animal&>))::fn(dog) ==
-         "bark"));
+    using X = YOMM2_METHOD_CLASS(std::string, kick, (virtual_<Animal&>));
+    auto reply = YOMM2_METHOD_CLASS(std::string, kick, (virtual_<Animal&>))::fn(dog);
+    BOOST_TEST(reply == "bark");
 }

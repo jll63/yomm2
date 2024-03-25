@@ -231,9 +231,9 @@
 #endif
 
 #define YOMM2_METHOD_CLASS_3(RETURN_TYPE, NAME, ARGS)                          \
-    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE(ARGS)>
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS>
 
 #define YOMM2_METHOD_CLASS_4(RETURN_TYPE, NAME, ARGS, POLICY)                  \
-    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE(ARGS), POLICY>
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS, POLICY>
 
 #endif
