@@ -227,8 +227,7 @@ YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void deprecated_test_handler(
-    const method_call_error& error, size_t, type_id*) {
+void deprecated_test_handler(const method_call_error& error, size_t, type_id*) {
     throw error;
 }
 
@@ -303,8 +302,7 @@ BOOST_AUTO_TEST_CASE(call_error_handling) {
         BOOST_FAIL("did not throw");
     } catch (const unknown_class_error& error) {
         BOOST_TEST(
-            error.ti ==
-            reinterpret_cast<type_id>(&typeid(identity_matrix)));
+            error.type == reinterpret_cast<type_id>(&typeid(identity_matrix)));
     } catch (...) {
         BOOST_FAIL("unexpected exception");
     }
@@ -326,7 +324,7 @@ struct base {
 
 struct derived : base {};
 
-class_declaration<test_policy, derived, base> YOMM2_GENSYM;
+YOMM2_STATIC(class_declaration<derived, base, test_policy>);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
     auto prev_handler = test_policy::error;
@@ -336,7 +334,7 @@ BOOST_AUTO_TEST_CASE(test_update_error_handling) {
         update<test_policy>();
     } catch (const unknown_class_error& error) {
         test_policy::error = prev_handler;
-        BOOST_TEST(error.ti == reinterpret_cast<type_id>(&typeid(base)));
+        BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(base)));
         return;
     } catch (...) {
         test_policy::error = prev_handler;

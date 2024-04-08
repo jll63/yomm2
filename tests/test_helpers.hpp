@@ -6,10 +6,11 @@
 template<int Key>
 struct test_policy_ :
 #ifdef NDEBUG
-yorel::yomm2::policy::generic_release_static<test_policy_<Key>>
+    yorel::yomm2::policy::release::rebind<test_policy_<Key>>
 #else
-yorel::yomm2::policy::generic_debug_static<test_policy_<Key>>
+    yorel::yomm2::policy::debug::rebind<test_policy_<Key>>
 #endif
-{};
+{
+};
 
 #endif

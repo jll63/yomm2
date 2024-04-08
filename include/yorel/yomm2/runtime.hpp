@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8,17 +8,13 @@
 
 #include <algorithm> // for max, transform, copy
 #include <cassert>   // for assert
-#include <chrono>    // for operator-, duration
 #include <cstdint>   // for uintptr_t
 #include <cstdio>
 #include <cstdlib> // for abort, getenv
 #include <deque>
-#include <iomanip>       // for operator<<, setw
-#include <iterator>      // for back_insert_iterator
 #include <list>          // for list, _List_iterator
 #include <map>           // for map
 #include <memory>        // for allocator_traits<...
-#include <random>        // for default_random_en...
 #include <stdexcept>     // for runtime_error
 #include <string>        // for char_traits, allo...
 #include <unordered_map> // for _Node_iterator
@@ -29,9 +25,6 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include <yorel/yomm2/core.hpp>
-
-#pragma push_macro("max")
-#undef max
 
 namespace yorel {
 namespace yomm2 {
@@ -57,8 +50,8 @@ struct rt_class {
     int layer{0};
     size_t mark{0};   // temporary mark to detect cycles
     size_t weight{0}; // number of proper direct or indirect bases
-    std::vector<size_t> mtbl;
-    detail::word** method_table;
+    std::vector<size_t> vtbl;
+    std::uintptr_t** static_vptr;
 };
 
 struct rt_spec {
@@ -92,8 +85,8 @@ struct rt_method {
     std::vector<rt_spec> specs;
     std::vector<size_t> slots;
     std::vector<size_t> strides;
-    std::vector<void*> dispatch_table;
-    const detail::word* gv_dispatch_table{nullptr};
+    std::vector<std::uintptr_t> dispatch_table;
+    const std::uintptr_t* gv_dispatch_table{nullptr};
     auto arity() const {
         return vp.size();
     }
@@ -103,7 +96,6 @@ struct rt_method {
 struct metrics_t : dispatch_stats_t {
     size_t method_table_size, dispatch_table_size;
     size_t hash_search_attempts;
-    std::chrono::duration<double> hash_search_time;
 };
 
 inline std::ostream* log_on(std::ostream* os) {
@@ -129,7 +121,7 @@ struct runtime {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
     static constexpr bool trace_enabled =
-        policy::has_facet<Policy, policy::output>;
+        Policy::template has_facet<policy::trace_output>;
 
     std::unordered_map<type_index_type, rt_class*> class_map;
     std::deque<rt_class> classes;
@@ -153,10 +145,8 @@ struct runtime {
     void build_dispatch_table(
         rt_method& m, size_t dim, std::vector<group_map>::const_iterator group,
         const bitvec& candidates, bool concrete);
-    void install_gv(size_t type_ids);
+    void install_gv();
     void optimize();
-    size_t
-    find_hash_function(const std::deque<rt_class>& classes, metrics_t& metrics);
     void print(const dispatch_stats_t& stats);
     static std::vector<const rt_spec*>
     best(std::vector<const rt_spec*>& candidates);
@@ -181,14 +171,13 @@ struct runtime {
     };
 
     struct trace_type {
-        bool on = false;
         size_t indentation_level{0};
 
         trace_type& operator++() {
             if constexpr (trace_enabled) {
-                if (on) {
+                if (Policy::trace_enabled) {
                     for (int i = 0; i < indentation_level; ++i) {
-                        Policy::stream << "  ";
+                        Policy::trace_stream << "  ";
                     }
                 }
             }
@@ -198,25 +187,23 @@ struct runtime {
 
         trace_type& operator<<(const rflush& rf) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    auto pad = rf.width;
-                    auto remain = rf.value;
+                auto pad = rf.width;
+                auto remain = rf.value;
 
-                    do {
-                        remain /= 10;
-                        --pad;
+                do {
+                    remain /= 10;
+                    --pad;
 
-                        if (pad < 0) {
-                            return *this;
-                        }
-                    } while (remain);
-
-                    while (pad--) {
-                        *this << " ";
+                    if (pad < 0) {
+                        return *this;
                     }
+                } while (remain);
 
-                    *this << rf.value;
+                while (pad--) {
+                    *this << " ";
                 }
+
+                *this << rf.value;
             }
 
             return *this;
@@ -224,11 +211,11 @@ struct runtime {
 
         trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
             if constexpr (trace_enabled) {
-                if (on) {
+                if (Policy::trace_enabled) {
                     auto i = bits.size();
                     while (i != 0) {
                         --i;
-                        Policy::stream << bits[i];
+                        Policy::trace_stream << bits[i];
                     }
                 }
             }
@@ -238,8 +225,8 @@ struct runtime {
         template<typename T>
         trace_type& operator<<(const T& value) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    Policy::stream << value;
+                if (Policy::trace_enabled) {
+                    Policy::trace_stream << value;
                 }
             }
             return *this;
@@ -247,16 +234,14 @@ struct runtime {
 
         trace_type& operator<<(type_range<type_id*> tips) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << "(";
-                    const char* sep = "";
-                    for (auto t : tips) {
-                        *this << sep << type_name(t);
-                        sep = ", ";
-                    }
-
-                    *this << ")";
+                *this << "(";
+                const char* sep = "";
+                for (auto t : tips) {
+                    *this << sep << type_name(t);
+                    sep = ", ";
                 }
+
+                *this << ")";
             }
 
             return *this;
@@ -265,16 +250,14 @@ struct runtime {
         template<template<typename...> typename Container, typename... T>
         trace_type& operator<<(Container<rt_class*, T...>& classes) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << "(";
-                    const char* sep = "";
-                    for (auto cls : classes) {
-                        *this << sep << *cls;
-                        sep = ", ";
-                    }
-
-                    *this << ")";
+                *this << "(";
+                const char* sep = "";
+                for (auto cls : classes) {
+                    *this << sep << *cls;
+                    sep = ", ";
                 }
+
+                *this << ")";
             }
 
             return *this;
@@ -282,9 +265,7 @@ struct runtime {
 
         trace_type& operator<<(type_name manip) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << manip.type;
-                }
+                Policy::type_name(manip.type, *this);
             }
 
             return *this;
@@ -292,9 +273,7 @@ struct runtime {
 
         trace_type& operator<<(const rt_class& cls) {
             if constexpr (trace_enabled) {
-                if (on) {
-                    *this << type_name(cls.ti_ptrs[0]);
-                }
+                *this << type_name(cls.ti_ptrs[0]);
             }
 
             return *this;
@@ -319,21 +298,12 @@ struct runtime {
 
 template<class Policy>
 void runtime<Policy>::update() {
-    using namespace policy;
-
-    if constexpr (has_facet<Policy, error_handler>) {
-        if (!Policy::error) {
-            Policy::error = Policy::default_error_handler;
-        }
-    }
-
     resolve_static_type_ids();
     augment_classes();
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    auto type_ids = find_hash_function(classes, metrics);
-    install_gv(type_ids);
+    install_gv();
     optimize();
 
     print(metrics);
@@ -343,9 +313,6 @@ void runtime<Policy>::update() {
 
 template<class Policy>
 runtime<Policy>::runtime() {
-    if constexpr (trace_enabled) {
-        trace.on = Policy::stream.is_on();
-    }
 }
 
 template<class Policy>
@@ -421,7 +388,7 @@ void runtime<Policy>::augment_classes() {
             if (rtc == nullptr) {
                 rtc = &classes.emplace_back();
                 rtc->is_abstract = cr.is_abstract;
-                rtc->method_table = cr.method_table;
+                rtc->static_vptr = cr.static_vptr;
             }
 
             // In the unlikely case that a class does have more than one
@@ -448,8 +415,13 @@ void runtime<Policy>::augment_classes() {
 
             if (!rtb) {
                 unknown_class_error error;
-                error.ti = *base_iter;
-                Policy::error(error_type(error));
+                error.type = *base_iter;
+
+                if constexpr (Policy::template has_facet<
+                                  policy::error_handler>) {
+                    Policy::error(error_type(error));
+                }
+
                 abort();
             }
 
@@ -558,6 +530,8 @@ void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
 
 template<class Policy>
 void runtime<Policy>::augment_methods() {
+    using namespace policy;
+
     methods.resize(Policy::catalog.methods.size());
 
     ++trace << "Methods:\n";
@@ -584,8 +558,12 @@ void runtime<Policy>::augment_methods() {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
-                error.ti = ti;
-                Policy::error(error_type(error));
+                error.type = ti;
+
+                if constexpr (has_facet<Policy, error_handler>) {
+                    Policy::error(error_type(error));
+                }
+
                 abort();
             }
             rt_arg param = {&*meth_iter, param_index++};
@@ -597,22 +575,26 @@ void runtime<Policy>::augment_methods() {
         // reverse the reversed order from 'chain'
 
         for (auto& definition_info : meth_info.specs) {
-            ++trace << definition_info.name << " (" << definition_info.pf
-                    << ")\n";
+            ++trace << type_name(definition_info.type) << " ("
+                    << definition_info.pf << ")\n";
             spec_iter->info = &definition_info;
             spec_iter->vp.reserve(meth_info.arity());
             size_t param_index = 0;
 
-            for (auto ti :
+            for (auto type :
                  type_range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
-                auto rt_class = class_map[Policy::type_index(ti)];
+                auto rt_class = class_map[Policy::type_index(type)];
                 if (!rt_class) {
                     ++trace << "error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
-                    error.ti = ti;
-                    Policy::error(error_type(error));
+                    error.type = type;
+
+                    if constexpr (has_facet<Policy, error_handler>) {
+                        Policy::error(error_type(error));
+                    }
+
                     abort();
                 }
                 spec_iter->vp.push_back(rt_class);
@@ -723,7 +705,7 @@ void runtime<Policy>::allocate_slots() {
     }
 
     for (auto& c : classes) {
-        c.mtbl.resize(c.next_slot);
+        c.vtbl.resize(c.next_slot);
     }
 }
 
@@ -813,7 +795,7 @@ void runtime<Policy>::build_dispatch_tables() {
                         if (spec.vp[dim]->compatible_classes.find(
                                 compatible_classes) !=
                             spec.vp[dim]->compatible_classes.end()) {
-                            ++trace << spec.info->name << "\n";
+                            ++trace << type_name(spec.info->type) << "\n";
                             mask[spec_index] = 1;
                         }
                         ++spec_index;
@@ -849,7 +831,7 @@ void runtime<Policy>::build_dispatch_tables() {
             size_t group_num = 0;
             for (auto& [mask, group] : groups[dim]) {
                 for (auto cls : group.classes) {
-                    cls->mtbl[m.slots[dim]] = group_num;
+                    cls->vtbl[m.slots[dim]] = group_num;
                 }
                 if constexpr (trace_enabled) {
                     ++trace << "group " << dim << "/" << group_num << " mask "
@@ -907,7 +889,7 @@ void runtime<Policy>::build_dispatch_tables() {
 
             for (auto& spec : m.specs) {
                 indent YOMM2_GENSYM(trace);
-                ++trace << spec.info->name << ":\n";
+                ++trace << type_name(spec.info->type) << ":\n";
                 std::vector<const rt_spec*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
@@ -921,7 +903,7 @@ void runtime<Policy>::build_dispatch_tables() {
 
                     for (auto& candidate : candidates) {
                         indent YOMM2_GENSYM(trace);
-                        ++trace << candidate->info->name << "\n";
+                        ++trace << type_name(candidate->info->type) << "\n";
                     }
                 }
 
@@ -931,7 +913,7 @@ void runtime<Policy>::build_dispatch_tables() {
                 if (nexts.size() == 1) {
                     const definition_info* next_info = nexts.front()->info;
                     next = next_info->pf;
-                    ++trace << "-> " << next_info->name << "\n";
+                    ++trace << "-> " << type_name(next_info->type) << "\n";
                 } else if (nexts.empty()) {
                     ++trace << "-> none\n";
                     next = m.info->not_implemented;
@@ -984,7 +966,7 @@ void runtime<Policy>::build_dispatch_table(
                 indent YOMM2_GENSYM(trace);
 
                 for (auto& app : applicable) {
-                    ++trace << app->info->name << "\n";
+                    ++trace << type_name(app->info->type) << "\n";
                 }
             }
 
@@ -993,7 +975,8 @@ void runtime<Policy>::build_dispatch_table(
             if (specs.size() > 1) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "ambiguous\n";
-                m.dispatch_table.push_back(m.info->ambiguous);
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(m.info->ambiguous));
                 ++m.stats.ambiguous;
                 if (concrete) {
                     ++m.stats.concrete_ambiguous;
@@ -1001,14 +984,16 @@ void runtime<Policy>::build_dispatch_table(
             } else if (specs.empty()) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "not implemented\n";
-                m.dispatch_table.push_back(m.info->not_implemented);
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(m.info->not_implemented));
                 ++m.stats.not_implemented;
                 if (concrete) {
                     ++m.stats.concrete_not_implemented;
                 }
             } else {
-                m.dispatch_table.push_back(specs[0]->info->pf);
-                ++trace << "-> " << specs[0]->info->name
+                m.dispatch_table.push_back(
+                    reinterpret_cast<std::uintptr_t>(specs[0]->info->pf));
+                ++trace << "-> " << type_name(specs[0]->info->type)
                         << " pf = " << specs[0]->info->pf << "\n";
             }
         } else {
@@ -1017,34 +1002,6 @@ void runtime<Policy>::build_dispatch_table(
                 concrete && group.has_concrete_classes);
         }
         ++group_index;
-    }
-}
-
-template<class Policy>
-size_t runtime<Policy>::find_hash_function(
-    const std::deque<rt_class>& classes, metrics_t& metrics) {
-    using namespace policy;
-
-    if constexpr (has_facet<Policy, projection>) {
-        std::vector<type_id> type_ids;
-
-        for (auto& cls : classes) {
-            std::copy(
-                cls.ti_ptrs.begin(), cls.ti_ptrs.end(),
-                std::back_inserter(type_ids));
-        }
-
-        return Policy::project_type_ids(type_ids);
-    } else {
-        type_id max_id = 0;
-
-        for (auto& cls : classes) {
-            for (auto type : cls.ti_ptrs) {
-                max_id = std::max(max_id, type);
-            }
-        }
-
-        return max_id + 1;
     }
 }
 
@@ -1058,27 +1015,16 @@ inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
 }
 
 template<class Policy>
-void operator+=(std::vector<word>& words, const std::vector<int>& ints) {
-    words.reserve(words.size() + ints.size());
-    for (auto i : ints) {
-        word w;
-        w.i = i;
-        words.push_back(w);
-    }
-}
-
-template<class Policy>
-void runtime<Policy>::install_gv(size_t type_ids) {
-    Policy::context.mptrs.resize(type_ids);
-    Policy::context.indirect_mptrs.resize(type_ids);
+void runtime<Policy>::install_gv() {
+    using namespace policy;
 
     for (size_t pass = 0; pass != 2; ++pass) {
-        Policy::context.gv.resize(0);
+        Policy::dispatch_data.resize(0);
 
         if constexpr (trace_enabled) {
             if (pass) {
                 ++trace << "Initializing dispatch tables at "
-                        << Policy::context.gv.data() << "\n";
+                        << Policy::dispatch_data.data() << "\n";
             }
         }
 
@@ -1103,62 +1049,62 @@ void runtime<Policy>::install_gv(size_t type_ids) {
 
             if constexpr (trace_enabled) {
                 if (pass) {
-                    ++trace
-                        << rflush(4, Policy::context.gv.size()) << " "
-                        << Policy::context.gv.data() + Policy::context.gv.size()
-                        << " dispatch table for " << m.info->name << "\n";
+                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+                            << Policy::dispatch_data.data() +
+                            Policy::dispatch_data.size()
+                            << " dispatch table for " << m.info->name << "\n";
                 }
             }
 
             m.gv_dispatch_table =
-                Policy::context.gv.data() + Policy::context.gv.size();
-            std::transform(
+                Policy::dispatch_data.data() + Policy::dispatch_data.size();
+            std::copy(
                 m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(Policy::context.gv),
-                [](void* pf) { return make_word(pf); });
+                std::back_inserter(Policy::dispatch_data));
         }
 
         for (auto& cls : classes) {
             if (cls.first_used_slot == -1) {
                 // corner case: no methods for this class
-                *cls.method_table =
-                    Policy::context.gv.data() + Policy::context.gv.size();
+                *cls.static_vptr =
+                    Policy::dispatch_data.data() + Policy::dispatch_data.size();
             } else {
-                *cls.method_table = Policy::context.gv.data() +
-                    Policy::context.gv.size() - cls.first_used_slot;
+                *cls.static_vptr = Policy::dispatch_data.data() +
+                    Policy::dispatch_data.size() - cls.first_used_slot;
             }
             if constexpr (trace_enabled) {
                 if (pass) {
-                    ++trace << rflush(4, Policy::context.gv.size()) << " "
-                            << *cls.method_table << " mtbl for " << cls << "\n";
+                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+                            << *cls.static_vptr << " vtbl for " << cls << "\n";
                 }
             }
 
             if (cls.first_used_slot != -1) {
-                std::transform(
-                    cls.mtbl.begin() + cls.first_used_slot, cls.mtbl.end(),
-                    std::back_inserter(Policy::context.gv),
-                    [](size_t i) { return make_word(i); });
+                std::copy(
+                    cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end(),
+                    std::back_inserter(Policy::dispatch_data));
             }
 
-            if (pass) {
-                for (auto type : cls.ti_ptrs) {
-                    using namespace policy;
-                    auto index = type;
+            if constexpr (has_facet<Policy, external_vptr>) {
+                if (pass) {
+                    std::vector<
+                        std::pair<type_id, const std::uintptr_t* const*>>
+                        vptrs;
 
-                    if constexpr (has_facet<Policy, projection>) {
-                        index = Policy::project_type_id(index);
+                    for (auto& cls : classes) {
+                        for (auto type : cls.ti_ptrs) {
+                            vptrs.emplace_back(type, cls.static_vptr);
+                        }
                     }
 
-                    Policy::context.mptrs[index] = *cls.method_table;
-                    Policy::context.indirect_mptrs[index] = cls.method_table;
+                    Policy::register_vptrs(vptrs.begin(), vptrs.end());
                 }
             }
         }
     }
 
-    ++trace << rflush(4, Policy::context.gv.size()) << " "
-            << Policy::context.gv.data() + Policy::context.gv.size()
+    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+            << Policy::dispatch_data.data() + Policy::dispatch_data.size()
             << " end\n";
 }
 
@@ -1173,24 +1119,25 @@ void runtime<Policy>::optimize() {
 
         if (m.arity() == 1) {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pf = m.dispatch_table[(*cls->method_table)[slot].i];
+                auto pf = m.dispatch_table[(*cls->static_vptr)[slot]];
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " mtbl[" << slot
-                            << "] = " << pf << " (function)"
+                    ++trace << *cls << " vtbl[" << slot << "] = " << pf
+                            << " (function)"
                             << "\n";
                 }
-                (*cls->method_table)[slot].pf = pf;
+                (*cls->static_vptr)[slot] = pf;
             }
         } else {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pw = m.gv_dispatch_table + (*cls->method_table)[slot].i;
+                auto pw = m.gv_dispatch_table + (*cls->static_vptr)[slot];
 
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " mtbl[" << slot << "] = gv+"
-                            << (pw - Policy::context.gv.data()) << "\n";
+                    ++trace << *cls << " vtbl[" << slot << "] = gv+"
+                            << (pw - Policy::dispatch_data.data()) << "\n";
                 }
 
-                (*cls->method_table)[slot].pw = pw;
+                (*cls->static_vptr)[slot] =
+                    reinterpret_cast<std::uintptr_t>(pw);
             }
         }
     }
@@ -1283,87 +1230,6 @@ void runtime<Policy>::print(const dispatch_stats_t& stats) {
 
 } // namespace detail
 
-namespace policy {
-
-template<class Policy>
-template<typename Container>
-size_t fast_projection<Policy>::project_type_ids(
-    const Container& type_ids, std::vector<type_id>& buckets) {
-    using namespace policy;
-
-    const auto N = type_ids.size();
-
-    if constexpr (has_facet<Policy, output>) {
-        Policy::stream << "Finding hash factor for " << N << " types\n";
-    }
-
-    std::default_random_engine rnd(13081963);
-    size_t total_attempts = 0;
-    size_t M = 1;
-
-    for (auto size = N * 5 / 4; size >>= 1;) {
-        ++M;
-    }
-
-    std::uniform_int_distribution<type_id> uniform_dist;
-
-    for (size_t pass = 0; pass < 4; ++pass, ++M) {
-        shift = 8 * sizeof(type_id) - M;
-        auto hash_size = 1 << M;
-
-        if constexpr (has_facet<Policy, output>) {
-            Policy::stream << "  trying with M = " << M << ", " << hash_size
-                           << " buckets\n";
-        }
-
-        bool found = false;
-        size_t attempts = 0;
-        buckets.resize(hash_size);
-
-        while (!found && attempts < 100000) {
-            std::fill(buckets.begin(), buckets.end(), invalid);
-            ++attempts;
-            ++total_attempts;
-            found = true;
-            mult = uniform_dist(rnd) | 1;
-
-            for (auto type : type_ids) {
-                auto index = (type * mult) >> shift;
-
-                if (buckets[index] != invalid) {
-                    found = false;
-                    break;
-                }
-
-                buckets[index] = type;
-            }
-        }
-
-        // metrics.hash_search_attempts = total_attempts;
-        // metrics.hash_search_time =
-        //     std::chrono::steady_clock::now() - start_time;
-        // metrics.hash_table_size = hash_size;
-
-        if (found) {
-            if constexpr (has_facet<Policy, output>) {
-                Policy::stream << "  found " << mult << " after "
-                               << total_attempts << " attempts\n";
-            }
-            return buckets.size();
-        }
-    }
-
-    hash_search_error error;
-    error.attempts = total_attempts;
-    // error.duration = std::chrono::steady_clock::now() - start_time;
-    error.buckets = 1 << M;
-    Policy::error(error_type(error));
-
-    abort();
-}
-
-} // namespace policy
-
 template<class Policy>
 void update() {
     detail::runtime<Policy> rt;
@@ -1372,7 +1238,5 @@ void update() {
 
 } // namespace yomm2
 } // namespace yorel
-
-#pragma pop_macro("max")
 
 #endif

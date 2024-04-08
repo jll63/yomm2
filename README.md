@@ -1,3 +1,4 @@
+# 
 
 
 # YOMM2
@@ -21,7 +22,7 @@ Stroustrup.
 If you are familiar with the concept of open multi-methods, or if you prefer
 to learn by reading code, go directly to [the
 synopsis](examples/synopsis.cpp). The [reference is
-here](reference/README.md)
+here](https://jll63.github.io/yomm2/reference)
 
 ## Open Methods in a Nutshell
 
@@ -74,12 +75,15 @@ Let's look at an example.
 // library code
 
 struct matrix {
-    virtual ~matrix() {}
+    virtual ~matrix() {
+    }
     // ...
 };
 
-struct dense_matrix    : matrix { /* ... */ };
-struct diagonal_matrix : matrix { /* ... */ };
+struct dense_matrix : matrix { /* ... */
+};
+struct diagonal_matrix : matrix { /* ... */
+};
 
 // -----------------------------------------------------------------------------
 // application code
@@ -110,14 +114,15 @@ int main() {
     return 0;
 }
 ```
+# 
 
 
 `<yorel/yomm2/keywords.hpp>` is the library's main entry point. It declares a
-set of macros, and injects a single name, [`virtual_`](virtual_.md), in the global
+set of macros, and injects a single name, [`virtual_`](/yomm2/reference/virtual_.html), in the global
 namespace. The purpose of the header is to make it look as if open methods
 are part of the language.
 
-[`register_classes`](use_classes.md) informs the library of the existence of the classes, and
+[`register_classes`](/yomm2/reference/use_classes.html) informs the library of the existence of the classes, and
 their inheritance relationships. Any class that can appear in a method call
 needs to be registered, even if it is not directly referenced by a method.
 
@@ -139,7 +144,7 @@ shared libraries.
 
 The example can be compiled (from the root of the repository) with:
 ```shell
-clang++-14 -I include -std=c++17 tutorials/readme.cpp -o example
+clang++- -I include -std=c++17 tutorials/README.cpp -o example
 ```
 
 ### Multiple Dispatch
@@ -187,9 +192,9 @@ the body of the method does any amount of work, the difference is
 unnoticeable. See the implementation notes for benchmarks and assembly
 listings.
 
-[`virtual_ptr`](reference/virtual_ptr.md), a fat pointer class, can be used
-to make method dispatch even faster - three instructions and two memory
-reads -, without sacrificing orthogonality.
+[`virtual_ptr`](https://jll63.github.io/yomm2/reference/virtual_ptr.md), a fat
+pointer class, can be used to make method dispatch even faster - three
+instructions and two memory reads -, without sacrificing orthogonality.
 
 ## Building and Installing
 
@@ -277,7 +282,8 @@ The runtime can also be built and installed as a shared library, by adding
 A CMake package configuration is also installed. If the install location is
 in `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2,
 then `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary
-include paths and the library. See [this example](examples/cmakeyomm2).
+include paths and the library. See [this
+example](examples/cmakeyomm2).
 
 Make sure to add the install location to `CMAKE_PREFIX_PATH` so that you can
 use `find_package(YOMM2)` from your including project. For linking, the use
@@ -287,7 +293,7 @@ to link to yomm2.
 
 ## Going Further
 
-The Reference is [here](reference/README.md). Since version 1.3.0, some of
+The Reference is [here](https://jll63.github.io/yomm2/reference). Since version 1.3.0, some of
 the internals are documented, which make it possible to use the library
 without using macros - see [the API tutorial](tutorials/api.md).
 
@@ -296,13 +302,17 @@ definitions - see [the templates tutorial](tutorials/templates_tutorial.md).
 
 The library comes with a series of examples:
 
-* [The complete `matrix` example](examples/matrix.cpp)
+* [The complete `matrix`
+  example](examples/matrix.cpp)
 
-* [The Asteroids example used in Wikipedia's article on Multiple Dispatch](examples/asteroids.cpp)
+* [The Asteroids example used in Wikipedia's article on Multiple
+  Dispatch](examples/asteroids.cpp)
 
-* [Process an AST sans clumsy Visitor](examples/accept_no_visitors.cpp)
+* [Process an AST sans clumsy
+  Visitor](examples/accept_no_visitors.cpp)
 
-* [Adventure: a 3-method example](examples/adventure.cpp)
+* [Adventure: a 3-method
+  example](examples/adventure.cpp)
 
 * [friendship: an example with namespaces, method containers and friend
   declarations](examples/containers)

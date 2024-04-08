@@ -14,18 +14,17 @@
 using namespace std;
 
 define_method(string, encounter, (const Herbivore&, const Carnivore&)) {
-  return "run";
+    return "run";
 }
 
-struct Tiger : Carnivore {
-};
+struct Tiger : Carnivore {};
 
 register_classes(Tiger, Carnivore);
 
 extern "C" Tiger* make_tiger() {
-  return new Tiger;
+    return new Tiger;
 }
 
 define_method(string, encounter, (const Carnivore&, const Herbivore&)) {
-  return "hunt";
+    return "hunt";
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -153,4 +153,4 @@ BOOST_AUTO_TEST_CASE(test_static_chain_link_link) {
     BOOST_TEST_REQUIRE(&*iter == &a);
     BOOST_TEST_REQUIRE(++iter == last);
 }
-} // namespace chainlink_link
+} // namespace chain_link_link

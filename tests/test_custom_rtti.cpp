@@ -7,7 +7,7 @@
 
 using namespace yorel::yomm2;
 
-namespace projection {
+namespace type_hash {
 
 struct Animal {
     const char* name;
@@ -61,7 +61,7 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy : default_static_policy::copy<test_policy>::replace<
+struct test_policy : policy::default_static::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti> {};
 
 #undef YOMM2_DEFAULT_POLICY
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_simple_projection) {
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
-} // namespace projection
+} // namespace type_hash
 
 namespace no_projection {
 
@@ -153,9 +153,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+struct test_policy : policy::default_static::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -176,7 +176,7 @@ void call_kick(Animal& a, std::ostream& os) {
     return kick(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
-// mov     rcx, qword ptr [rip + generic_domain<test_policy>::context+24]
+// mov     rcx, qword ptr [rip + basic_domain<test_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
 // mov     rcx, qword ptr [rip + method<test_policy, kick, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
@@ -304,14 +304,14 @@ struct custom_rtti : policy::rtti {
     }
 
     template<typename Derived, typename Base>
-    static Derived dynamic_cast_(Base&& obj) {
+    static Derived dynamic_cast_ref(Base&& obj) {
         return custom_dynamic_cast<Derived>(obj);
     }
 };
 
-struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+struct test_policy : policy::default_static::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -332,7 +332,7 @@ void call_kick(Animal& a, std::ostream& os) {
     return kick(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
-// mov     rcx, qword ptr [rip + generic_domain<test_policy>::context+24]
+// mov     rcx, qword ptr [rip + basic_domain<test_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
 // mov     rcx, qword ptr [rip + method<test_policy, kick, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
@@ -449,9 +449,9 @@ struct custom_rtti : policy::deferred_static_rtti {
     }
 };
 
-struct test_policy
-    : default_static_policy::copy<test_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::projection> {};
+struct test_policy : policy::default_static::rebind<test_policy>::replace<
+                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
+};
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy

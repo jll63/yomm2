@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -236,6 +236,45 @@ static_assert(
         >
 >);
 
+static_assert(
+    std::is_same_v<
+        use_classes<Animal, Dog, Bulldog, Cat, Dolphin>,
+        std::tuple<
+            class_declaration_aux<default_policy, types<Animal, Animal>>,
+            class_declaration_aux<default_policy, types<Dog, Animal, Dog>>,
+            class_declaration_aux<default_policy, types<Bulldog, Animal, Dog, Bulldog>>,
+            class_declaration_aux<default_policy, types<Cat, Animal, Cat>>,
+            class_declaration_aux<default_policy, types<Dolphin, Animal, Dolphin>>
+        >
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, default_policy>,
+        std::tuple<
+            class_declaration_aux<default_policy, types<Animal, Animal>>
+        >
+>);
+
+struct my_policy : policy::abstract_policy {};
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, my_policy, default_policy>,
+        std::tuple<
+            class_declaration_aux<my_policy, types<Animal, Animal>>
+        >
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, my_policy>,
+        std::tuple<
+            class_declaration_aux<my_policy, types<Animal, Animal>>
+        >
+>);
+
+
 } // namespace test_use_classes
 
 namespace facets {
@@ -247,30 +286,30 @@ struct key2;
 struct alt_rtti {};
 
 static_assert(std::is_same_v<
-    copy_facet<key2, generic_domain<key1>>::type,
-    generic_domain<key2>
+    rebind_facet<key2, basic_domain<key1>>::type,
+    basic_domain<key2>
 >);
 
-// yorel::yomm2::policy::generic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
-// yorel::yomm2::policy::generic_policy<yorel::yomm2::policy::generic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
+// yorel::yomm2::policy::basic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
+// yorel::yomm2::policy::basic_policy<yorel::yomm2::policy::basic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
 
-struct policy1 : generic_policy<policy1, generic_domain<policy1>, std_rtti> {};
-struct policy2 : policy1::copy<policy2> {};
-struct policy3 : policy1::copy<policy3>::replace<std_rtti, alt_rtti> {};
+struct policy1 : basic_policy<policy1, std_rtti> {};
+struct policy2 : policy1::rebind<policy2> {};
+struct policy3 : policy1::rebind<policy3>::replace<std_rtti, alt_rtti> {};
 
 static_assert(std::is_same_v<
     policy2::facets,
-    types<generic_domain<policy2>, std_rtti>
+    types<std_rtti>
 >);
 
 static_assert(std::is_same_v<
     policy3::facets,
-    types<generic_domain<policy3>, alt_rtti>
+    types<alt_rtti>
 >);
 
 // static_assert(std::is_same_v<
-//     generic_policy<generic_domain<key1>, std_rtti>::replace<std_rtti, alt_rtti>,
-//     generic_policy<generic_domain<key1>, alt_rtti>
+//     basic_policy<basic_domain<key1>, std_rtti>::replace<std_rtti, alt_rtti>,
+//     basic_policy<basic_domain<key1>, alt_rtti>
 // >);
 
 }

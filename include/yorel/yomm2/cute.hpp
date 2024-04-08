@@ -15,6 +15,7 @@
 #define declare_static_method YOMM2_STATIC_DECLARE
 #define define_method YOMM2_DEFINE
 #define define_method_inline YOMM2_DEFINE_INLINE
+#define method_class YOMM2_METHOD_CLASS
 
 #define method_container YOMM2_DECLARE_METHOD_CONTAINER
 #define friend_method YOMM2_FRIEND

@@ -2,20 +2,23 @@
 
 import contextlib
 from pathlib import Path
-import re
+import os
 import sys
 
 import mdgen
 
 out_path = Path(sys.argv[2]).absolute()
 
+source = os.path.abspath(sys.argv[1]).replace(os.path.abspath(mdgen.repository), "")
+
+with open(sys.argv[1]) as rh:
+    text = rh.read()
+
 with contextlib.suppress(FileNotFoundError):
     out_path.chmod(0o600)
 
-
-with open(sys.argv[1]) as rh, open(out_path, "w") as wh:
-    for text in rh.readlines():
-        text = mdgen.replace_md(text)
-        print(text, file=wh, end="")
+with open(out_path, "w") as wh:
+    text = mdgen.replace_md(text, source=source)
+    print(text, file=wh, end="")
 
 out_path.chmod(0o400)

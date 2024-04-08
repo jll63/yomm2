@@ -57,7 +57,8 @@ define_method(std::string, fight, (Warrior & x, Dragon& y, Axe& z)) {
 }
 
 define_method(std::string, fight, (Character & x, Dragon& y, Hands& z)) {
-    return "Congratulations! You have just vainquished a dragon with your bare hands"
+    return "Congratulations! You have just vainquished a dragon with your bare "
+           "hands"
            " (unbelievable, isn't it?)";
 }
 

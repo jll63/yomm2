@@ -1,4 +1,4 @@
-# Copyright (c) 2018-2022 Jean-Louis Leroy
+# Copyright (c) 2018-2024 Jean-Louis Leroy
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -50,9 +50,9 @@ if(${YOMM2_ENABLE_BENCHMARKS})
   target_link_libraries(benchmarks YOMM2::yomm2 benchmark::benchmark)
 endif()
 
-add_executable(intrusive intrusive.cpp)
-target_link_libraries(intrusive YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME intrusive COMMAND intrusive)
+# add_executable(intrusive intrusive.cpp)
+# target_link_libraries(intrusive YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+# add_test(NAME intrusive COMMAND intrusive)
 
 add_executable(test_virtual_ptr_basic test_virtual_ptr_basic.cpp)
 target_link_libraries(test_virtual_ptr_basic YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})

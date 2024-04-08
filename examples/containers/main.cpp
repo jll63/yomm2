@@ -13,8 +13,8 @@
 #include "geometries.hpp"
 #include "painter.hpp"
 
-using yorel::yomm2::virtual_;
 using std::cout;
+using yorel::yomm2::virtual_;
 
 int main() {
     yorel::yomm2::update();

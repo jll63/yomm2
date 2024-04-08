@@ -38,7 +38,7 @@ BraceWrapping:
   BeforeCatch:     false
   BeforeElse:      false
   IndentBraces:    false
-  SplitEmptyFunction: true
+  SplitEmptyFunction: false
   SplitEmptyRecord: true
   SplitEmptyNamespace: true
 BreakBeforeBinaryOperators: None
@@ -81,7 +81,7 @@ IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
 IndentCaseLabels: false
 IndentGotoLabels: true
-IndentPPDirectives: BeforeHash
+#IndentPPDirectives: true
 IndentWidth:     4
 IndentWrappedFunctionNames: false
 JavaScriptQuotes: Leave
@@ -104,7 +104,7 @@ PenaltyBreakTemplateDeclaration: 10
 PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Left
-ReflowComments:  true
+ReflowComments:  false
 SortIncludes:    false
 SortUsingDeclarations: true
 SpaceAfterCStyleCast: false
@@ -134,4 +134,3 @@ TabWidth:        8
 UseCRLF:         false
 UseTab:          Never
 ...
-

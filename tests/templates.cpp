@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -20,9 +20,9 @@ struct n;
 
 static_assert(
     std::is_same_v<
-        product< 
-            types<n<1>, n<2> >, 
-            types< n<3>, n<4>, n<5> > 
+        product<
+            types<n<1>, n<2> >,
+            types< n<3>, n<4>, n<5> >
         >,
         types<
             types<n<1>, n<3>>,
@@ -41,8 +41,8 @@ static_assert(
     std::is_same_v<
         apply_product<
             templates<bin1, bin2>,
-            types<n<1>, n<2>>, 
-            types<n<3>, n<4>, n<5>> 
+            types<n<1>, n<2>>,
+            types<n<3>, n<4>, n<5>>
         >,
         types<
             bin1<n<1>, n<3>>,

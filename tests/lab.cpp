@@ -9,8 +9,8 @@
 #include <memory>
 #include <string>
 
-using yorel::yomm2::virtual_;
 using std::cout;
+using yorel::yomm2::virtual_;
 
 // register_class(classes);
 

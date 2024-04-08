@@ -1,11 +1,11 @@
-# Copyright (c) 2018-2022 Jean-Louis Leroy
+# Copyright (c) 2018-2024 Jean-Louis Leroy
 # Distributed under the Boost Software License, Version 1.0.
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0057 NEW)
-project(YOMM2 VERSION 1.4.0)
+project(YOMM2 VERSION 1.5.0)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 17)
@@ -18,7 +18,7 @@ include(cmake/find_or_download_package.cmake)
 find_or_download_package(Boost INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
-if(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
   add_compile_options(-save-temps -fverbose-asm -masm=intel)
 endif()
 
@@ -63,7 +63,7 @@ option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
 option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 
 set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
-set(readme_cpp "${CMAKE_SOURCE_DIR}/tutorials/readme.cpp")
+set(readme_cpp "${CMAKE_SOURCE_DIR}/examples/README.cpp")
 
 if(${YOMM2_ENABLE_DOC})
   message(STATUS "Documentation generation enabled")
@@ -74,8 +74,8 @@ if(${YOMM2_ENABLE_DOC})
     DEPENDS "${readme_cpp}")
 endif()
 
-add_subdirectory(reference.in)
-add_subdirectory(tutorials)
+
+add_subdirectory(docs.in)
 
 ## Install instruction
 # Create version file for cmake package

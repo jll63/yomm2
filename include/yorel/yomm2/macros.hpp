@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2022 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 
 #ifndef YOREL_YOMM2_MACROS_INCLUDED
 #define YOREL_YOMM2_MACROS_INCLUDED
@@ -20,7 +20,7 @@
 #include <yorel/yomm2/symbols.hpp>
 
 #ifndef YOMM2_DEFAULT_POLICY
-    #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
+#define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
 #define yOMM2_PLIST(N, I, A)                                                   \
@@ -46,71 +46,70 @@
 
 #define yOMM2_SELECTOR(ID) ID##_yOMM2_selector_
 
-#define yOMM2_method(POLICY, R, ID, ARGS)                                      \
-    ::yorel::yomm2::method<POLICY, YOMM2_SYMBOL(ID), R ARGS>
+#define yOMM2_method(R, ID, ARGS, POLICY)                                      \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(ID), R ARGS, POLICY>
 
 #if !BOOST_PP_VARIADICS_MSVC
-    #define YOMM2_DECLARE(...)                                                 \
-        BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)                         \
-        (__VA_ARGS__)
-    #define YOMM2_STATIC_DECLARE(...)                                          \
-        BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)                  \
-        (__VA_ARGS__)
+#define YOMM2_DECLARE(...)                                                     \
+    BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)                             \
+    (__VA_ARGS__)
+#define YOMM2_STATIC_DECLARE(...)                                              \
+    BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)                      \
+    (__VA_ARGS__)
 #else
-    #define YOMM2_DECLARE(...)                                                 \
-        BOOST_PP_CAT(                                                          \
-            BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__),       \
-            BOOST_PP_EMPTY())
-    #define YOMM2_STATIC_DECLARE(...)                                          \
-        BOOST_PP_CAT(                                                          \
-            BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)(             \
-                __VA_ARGS__),                                                  \
-            BOOST_PP_EMPTY())
+#define YOMM2_DECLARE(...)                                                     \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DECLARE_, __VA_ARGS__)(__VA_ARGS__),           \
+        BOOST_PP_EMPTY())
+#define YOMM2_STATIC_DECLARE(...)                                              \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_STATIC_DECLARE_, __VA_ARGS__)(__VA_ARGS__),    \
+        BOOST_PP_EMPTY())
 #endif
 
 #define YOMM2_DECLARE_3(R, ID, ARGS)                                           \
-    yOMM2_DECLARE(YOMM2_DEFAULT_POLICY, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC)
+    yOMM2_DECLARE(R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_NOT_STATIC)
 
-#define YOMM2_DECLARE_4(POLICY, R, ID, ARGS)                                   \
-    yOMM2_DECLARE(POLICY, R, ID, ARGS, yOMM2_WHEN_NOT_STATIC)
+#define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                   \
+    yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_NOT_STATIC)
 
 #define YOMM2_STATIC_DECLARE_3(R, ID, ARGS)                                    \
-    yOMM2_DECLARE(YOMM2_DEFAULT_POLICY, R, ID, ARGS, yOMM2_WHEN_STATIC)
+    yOMM2_DECLARE(R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_STATIC)
 
-#define YOMM2_STATIC_DECLARE_4(POLICY, R, ID, ARGS)                            \
-    yOMM2_DECLARE(POLICY, R, ID, ARGS, yOMM2_WHEN_STATIC)
+#define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY)                            \
+    yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_STATIC)
 
-#define yOMM2_DECLARE(POLICY, R, ID, ARGS, IF_STATIC)                          \
+#define yOMM2_DECLARE(R, ID, ARGS, POLICY, IF_STATIC)                          \
     struct YOMM2_SYMBOL(ID);                                                   \
     IF_STATIC(static, )                                                        \
-    yOMM2_method(POLICY, R, ID, ARGS) yOMM2_SELECTOR(ID)(                      \
+    yOMM2_method(R, ID, ARGS, POLICY) yOMM2_SELECTOR(ID)(                      \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));        \
     IF_STATIC(static, )                                                        \
     inline const char* yOMM2_SELECTOR(ID)(                                     \
-        const yOMM2_method(POLICY, R, ID, ARGS)&) {                            \
+        const yOMM2_method(R, ID, ARGS, POLICY)&) {                            \
         return #R " " #ID #ARGS;                                               \
     }                                                                          \
     IF_STATIC(static, )                                                        \
     inline R ID(                                                               \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
-        return yOMM2_method(POLICY, R, ID, ARGS)::fn(                          \
+        return yOMM2_method(R, ID, ARGS, POLICY)::fn(                          \
             BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));    \
     }
 
 #if defined(YOMM2_ENABLE_TRACE) && (YOMM2_ENABLE_TRACE & 1) || !defined(NDEBUG)
-    #define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) HUMAN_READABLE
+#define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) HUMAN_READABLE
 #else
-    #define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) FROM_TYPEID
+#define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) FROM_TYPEID
 #endif
 
 #if !BOOST_PP_VARIADICS_MSVC
-    #define YOMM2_DEFINE(...)                                                  \
-        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__)
+#define YOMM2_DEFINE(...)                                                      \
+    BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__)
 #else
-    #define YOMM2_DEFINE(...)                                                  \
-        BOOST_PP_CAT(                                                          \
-            BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__),        \
-            BOOST_PP_EMPTY())
+#define YOMM2_DEFINE(...)                                                      \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__),            \
+        BOOST_PP_EMPTY())
 #endif
 
 #define YOMM2_DEFINE_3(RETURN_T, ID, ARGS)                                     \
@@ -137,25 +136,21 @@
     struct _yOMM2_spec {                                                       \
         static NS::_yOMM2_method::return_type yOMM2_body ARGS;                 \
     };                                                                         \
-    _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(         \
-        &next,                                                                 \
-        yOMM2_NAME(                                                            \
-            ::yorel::yomm2::detail::default_definition_name<_yOMM2_spec>(),    \
-            #ARGS));                                                           \
+    _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(&next);  \
     }                                                                          \
     }                                                                          \
     NS::_yOMM2_method::return_type NS::_yOMM2_spec::yOMM2_body ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
-    #define YOMM2_DECLARE_METHOD_CONTAINER(...)                                \
-        BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)        \
-        (__VA_ARGS__)
+#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                    \
+    BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)            \
+    (__VA_ARGS__)
 #else
-    #define YOMM2_DECLARE_METHOD_CONTAINER(...)                                \
-        BOOST_PP_CAT(                                                          \
-            BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)(   \
-                __VA_ARGS__),                                                  \
-            BOOST_PP_EMPTY())
+#define YOMM2_DECLARE_METHOD_CONTAINER(...)                                    \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_DECLARE_METHOD_CONTAINER_, __VA_ARGS__)(       \
+            __VA_ARGS__),                                                      \
+        BOOST_PP_EMPTY())
 #endif
 
 #define YOMM2_DECLARE_METHOD_CONTAINER_1(CONTAINER)                            \
@@ -193,21 +188,19 @@
     namespace {                                                                \
     namespace NS {                                                             \
     INLINE _yOMM2_method::add_function<CONTAINER<RETURN_T ARGS>::fn>           \
-        YOMM2_GENSYM(                                                          \
-            &CONTAINER<RETURN_T ARGS>::next,                                   \
-            yOMM2_NAME(typeid(CONTAINER<RETURN_T ARGS>).name(), #ARGS));       \
+        YOMM2_GENSYM(&CONTAINER<RETURN_T ARGS>::next);                         \
     }                                                                          \
     }                                                                          \
     INLINE NS::_yOMM2_method::return_type CONTAINER<RETURN_T ARGS>::fn ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
-    #define YOMM2_FRIEND(...)                                                  \
-        BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__)
+#define YOMM2_FRIEND(...)                                                      \
+    BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__)
 #else
-    #define YOMM2_FRIEND(...)                                                  \
-        BOOST_PP_CAT(                                                          \
-            BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__),        \
-            BOOST_PP_EMPTY())
+#define YOMM2_FRIEND(...)                                                      \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_FRIEND_, __VA_ARGS__)(__VA_ARGS__),            \
+        BOOST_PP_EMPTY())
 #endif
 
 #define YOMM2_FRIEND_1(CONTAINER)                                              \
@@ -224,7 +217,23 @@
 
 #define YOMM2_CLASSES(...)                                                     \
     static ::yorel::yomm2::detail::use_classes_macro<                          \
-        YOMM2_DEFAULT_POLICY, __VA_ARGS__>                                     \
+        __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
         YOMM2_GENSYM;
+
+#if !BOOST_PP_VARIADICS_MSVC
+#define YOMM2_METHOD_CLASS(...)                                                \
+    BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__)
+#else
+#define YOMM2_METHOD_CLASS(...)                                                \
+    BOOST_PP_CAT(                                                              \
+        BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__),      \
+        BOOST_PP_EMPTY())
+#endif
+
+#define YOMM2_METHOD_CLASS_3(RETURN_TYPE, NAME, ARGS)                          \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS>
+
+#define YOMM2_METHOD_CLASS_4(RETURN_TYPE, NAME, ARGS, POLICY)                  \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS, POLICY>
 
 #endif

@@ -6,22 +6,23 @@
 namespace interfaces {
 class Animal {
   public:
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
-}
+} // namespace interfaces
 
 namespace canis {
-class Dog     : public interfaces::Animal {};
+class Dog : public interfaces::Animal {};
 class Bulldog : public Dog {};
-}
+} // namespace canis
 
 namespace felis {
-class Cat     : public interfaces::Animal {};
-}
+class Cat : public interfaces::Animal {};
+} // namespace felis
 
 namespace delphinus {
 class Dolphin : public interfaces::Animal {};
-}
+} // namespace delphinus
 
 #include <string>
 
@@ -30,25 +31,23 @@ class Dolphin : public interfaces::Animal {};
 using yorel::yomm2::virtual_;
 
 register_classes(
-  interfaces::Animal,
-  canis::Dog, canis::Bulldog,
-  felis::Cat,
-  delphinus::Dolphin);
+    interfaces::Animal, canis::Dog, canis::Bulldog, felis::Cat,
+    delphinus::Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
 declare_method(std::string, kick, (virtual_<interfaces::Animal&>));
 
 namespace canis {
 // implement 'kick' for dogs
-define_method(std::string, kick, (Dog& dog)) {
-  return "bark";
+define_method(std::string, kick, (Dog & dog)) {
+    return "bark";
 }
 
 // implement 'kick' for bulldogs
-define_method(std::string, kick, (Bulldog& dog)) {
+define_method(std::string, kick, (Bulldog & dog)) {
     return next(dog) + " and bite";
 }
-}
+} // namespace canis
 
 // multi-method
 declare_method(
@@ -57,19 +56,19 @@ declare_method(
 
 // 'meet' catch-all implementation
 define_method(std::string, meet, (interfaces::Animal&, interfaces::Animal&)) {
-  return "ignore";
+    return "ignore";
 }
 
-define_method(std::string, meet, (canis::Dog& dog1, canis::Dog& dog2)) {
-  return "wag tail";
+define_method(std::string, meet, (canis::Dog & dog1, canis::Dog& dog2)) {
+    return "wag tail";
 }
 
-define_method(std::string, meet, (canis::Dog& dog, felis::Cat& cat)) {
-  return "chase";
+define_method(std::string, meet, (canis::Dog & dog, felis::Cat& cat)) {
+    return "chase";
 }
 
-define_method(std::string, meet, (felis::Cat& cat, canis::Dog& dog)) {
-  return "run";
+define_method(std::string, meet, (felis::Cat & cat, canis::Dog& dog)) {
+    return "run";
 }
 
 // -----------------------------------------------------------------------------
@@ -78,13 +77,12 @@ define_method(std::string, meet, (felis::Cat& cat, canis::Dog& dog)) {
 #include <iostream>
 #include <memory>
 
-int main()
-{
+int main() {
     yorel::yomm2::update();
 
-    std::unique_ptr<interfaces::Animal>
-        hector = std::make_unique<canis::Bulldog>(),
-        snoopy = std::make_unique<canis::Dog>();
+    std::unique_ptr<interfaces::Animal> hector =
+                                            std::make_unique<canis::Bulldog>(),
+                                        snoopy = std::make_unique<canis::Dog>();
 
     std::cout << "kick snoopy: " << kick(*snoopy) << "\n"; // bark
     std::cout << "kick hector: " << kick(*hector) << "\n"; // bark and bite
@@ -93,8 +91,12 @@ int main()
         sylvester = std::make_unique<felis::Cat>(),
         flipper = std::make_unique<delphinus::Dolphin>();
 
-  std::cout << "hector meets sylvester: " << meet(*hector, *sylvester) << "\n"; // chase
-  std::cout << "sylvester meets hector: " << meet(*sylvester, *hector) << "\n"; // run
-  std::cout << "hector meets snoopy: " << meet(*hector, *snoopy) << "\n"; // wag tail
-  std::cout << "hector meets flipper: " << meet(*hector, *flipper) << "\n"; // ignore
+    std::cout << "hector meets sylvester: " << meet(*hector, *sylvester)
+              << "\n"; // chase
+    std::cout << "sylvester meets hector: " << meet(*sylvester, *hector)
+              << "\n"; // run
+    std::cout << "hector meets snoopy: " << meet(*hector, *snoopy)
+              << "\n"; // wag tail
+    std::cout << "hector meets flipper: " << meet(*hector, *flipper)
+              << "\n"; // ignore
 }

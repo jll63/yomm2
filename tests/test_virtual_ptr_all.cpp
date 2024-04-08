@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr, Policy, policy_types<__COUNTER__>) {
     using namespace detail;
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
-    using kick = method<Policy, void, std::string(virtual_ptr<Player, Policy>)>;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
+    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
     static typename kick::template add_function<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
@@ -79,18 +79,15 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     auto virtual_player = vptr_player::final(player);
     BOOST_TEST(&*virtual_player == &player);
     BOOST_TEST(
-        (virtual_player._method_table() ==
-         Policy::template method_table<Player>));
+        (virtual_player._vptr() == Policy::template static_vptr<Player>));
 
     Bear bear;
     BOOST_TEST((&*vptr_cat::final(bear)) == &bear);
     BOOST_TEST(
-        (vptr_cat::final(bear)._method_table() ==
-         Policy::template method_table<Bear>));
+        (vptr_cat::final(bear)._vptr() == Policy::template static_vptr<Bear>));
 
     BOOST_TEST(
-        (vptr_player(bear)._method_table() ==
-         Policy::template method_table<Bear>));
+        (vptr_player(bear)._vptr() == Policy::template static_vptr<Bear>));
 
     vptr_cat virtual_cat_ptr(bear);
     vptr_player virtual_player_ptr = virtual_cat_ptr;
@@ -102,18 +99,17 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     upcast::fn(virtual_cat_ptr);
 
-    auto data = Policy::context.gv.data();
+    auto data = Policy::dispatch_data.data();
 
-    while (data == Policy::context.gv.data()) {
-        Policy::context.gv.resize(2 * Policy::context.gv.size());
+    while (data == Policy::dispatch_data.data()) {
+        Policy::dispatch_data.resize(2 * Policy::dispatch_data.size());
     }
 
     update<Policy>();
 
     BOOST_TEST(
-        (virtual_cat_ptr._method_table() ==
-         Policy::template method_table<Bear>) ==
-        Policy::use_indirect_method_pointers);
+        (virtual_cat_ptr._vptr() == Policy::template static_vptr<Bear>) ==
+        Policy::template has_facet<policy::indirect_vptr>);
 }
 } // namespace YOMM2_GENSYM
 
@@ -122,18 +118,19 @@ namespace test_virtual_ptr_dispatch {
 BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr_dispatch, Policy, policy_types<__COUNTER__>) {
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
-    using kick = method<Policy, void, std::string(virtual_ptr<Player, Policy>)>;
+    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
     static typename kick::template add_function<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        Policy, void,
+        void,
         std::string(
             virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
-            virtual_ptr<Player, Policy>)>;
+            virtual_ptr<Player, Policy>),
+        Policy>;
     static typename fight::template add_function<fight_bear<
         virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
         virtual_ptr<Player, Policy>>>
@@ -169,21 +166,22 @@ namespace test_virtual_shared_ptr_dispatch {
 BOOST_AUTO_TEST_CASE_TEMPLATE(
     test_virtual_ptr_dispatch, Policy, policy_types<__COUNTER__>) {
 
-    static use_classes<Policy, Player, Warrior, Object, Axe, Bear> YOMM2_GENSYM;
+    static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
     using kick =
-        method<Policy, void, std::string(virtual_shared_ptr<Player, Policy>)>;
+        method<void, std::string(virtual_shared_ptr<Player, Policy>), Policy>;
 
     static typename kick::template add_function<
         kick_bear<virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        Policy, void,
+        void,
         std::string(
             virtual_shared_ptr<Player, Policy>,
             virtual_shared_ptr<Object, Policy>,
-            virtual_shared_ptr<Player, Policy>)>;
+            virtual_shared_ptr<Player, Policy>),
+        Policy>;
 
     static typename fight::template add_function<fight_bear<
         virtual_shared_ptr<Player, Policy>, virtual_shared_ptr<Object, Policy>,

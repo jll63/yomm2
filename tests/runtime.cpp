@@ -93,12 +93,12 @@ struct Human : Carnivore, Herbivore {};
 using whole_hierarchy = test_policy_<__COUNTER__>;
 using incremental = test_policy_<__COUNTER__>;
 
-use_classes<whole_hierarchy, Animal, Herbivore, Carnivore, Cow, Wolf, Human>
+use_classes<Animal, Herbivore, Carnivore, Cow, Wolf, Human, whole_hierarchy>
     YOMM2_GENSYM;
 
-use_classes<incremental, Animal, Herbivore, Cow> YOMM2_GENSYM;
-use_classes<incremental, Animal, Carnivore, Wolf> YOMM2_GENSYM;
-use_classes<incremental, Herbivore, Carnivore, Human> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Animal, Herbivore, Cow, incremental>);
+YOMM2_STATIC(use_classes<Animal, Carnivore, Wolf, incremental>);
+YOMM2_STATIC(use_classes<Herbivore, Carnivore, Human, incremental>);
 
 using policies = std::tuple<whole_hierarchy, incremental>;
 
@@ -153,10 +153,10 @@ struct Jet : Expense {};
 using test_policy = test_policy_<__COUNTER__>;
 // any type from this namespace would work.
 
-use_classes<test_policy, Role, Employee, Manager, Founder, Expense>
+use_classes<Role, Employee, Manager, Founder, Expense, test_policy>
     YOMM2_GENSYM;
 
-use_classes<test_policy, Expense, Public, Bus, Metro, Taxi, Jet> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Expense, Public, Bus, Metro, Taxi, Jet, test_policy>);
 
 #undef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY test_policy
@@ -351,17 +351,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST(expected == approve_method.slots);
     }
 
-    BOOST_TEST_REQUIRE(role->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(employee->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(manager->mtbl.size() == 2);
-    BOOST_TEST_REQUIRE(founder->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(role->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(employee->vtbl.size() == 2);
+    BOOST_TEST_REQUIRE(manager->vtbl.size() == 2);
+    BOOST_TEST_REQUIRE(founder->vtbl.size() == 1);
 
-    BOOST_TEST_REQUIRE(expense->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(public_->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(bus->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(metro->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(taxi->mtbl.size() == 1);
-    BOOST_TEST_REQUIRE(jet->mtbl.size() == 1);
+    BOOST_TEST_REQUIRE(expense->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(public_->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(bus->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(metro->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(taxi->vtbl.size() == 1);
+    BOOST_TEST_REQUIRE(jet->vtbl.size() == 1);
 
     auto pay_method_iter = pay_method.specs.begin();
     auto pay_Employee = pay_method_iter++;
@@ -400,8 +400,12 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
-        BOOST_TEST(pay_method.dispatch_table[0] == pay_Employee->info->pf);
-        BOOST_TEST(pay_method.dispatch_table[1] == pay_Manager->info->pf);
+        BOOST_TEST(
+            pay_method.dispatch_table[0] ==
+            reinterpret_cast<std::uintptr_t>(pay_Employee->info->pf));
+        BOOST_TEST(
+            pay_method.dispatch_table[1] ==
+            reinterpret_cast<std::uintptr_t>(pay_Manager->info->pf));
     }
 
     {
@@ -412,90 +416,121 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(approve_method.strides[0] == 4);
 
         auto dp_iter = approve_method.dispatch_table.begin();
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Employee_public->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Role_Expense->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Manager_Taxi->info->pf);
-        BOOST_TEST(*dp_iter++ == approve_Founder_Expense->info->pf);
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Employee_public->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Employee_public->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(approve_Manager_Taxi->info->pf));
+        BOOST_TEST(
+            *dp_iter++ ==
+            reinterpret_cast<std::uintptr_t>(
+                approve_Founder_Expense->info->pf));
     }
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == role->mtbl);
+        BOOST_TEST(expected == role->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1, 0};
-        BOOST_TEST(expected == employee->mtbl);
+        BOOST_TEST(expected == employee->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {2, 1};
-        BOOST_TEST(expected == manager->mtbl);
+        BOOST_TEST(expected == manager->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {3};
-        BOOST_TEST(expected == founder->mtbl);
+        BOOST_TEST(expected == founder->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == expense->mtbl);
+        BOOST_TEST(expected == expense->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == public_->mtbl);
+        BOOST_TEST(expected == public_->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == bus->mtbl);
+        BOOST_TEST(expected == bus->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {1};
-        BOOST_TEST(expected == metro->mtbl);
+        BOOST_TEST(expected == metro->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {2};
-        BOOST_TEST(expected == taxi->mtbl);
+        BOOST_TEST(expected == taxi->vtbl);
     }
 
     {
         const std::vector<size_t> expected = {0};
-        BOOST_TEST(expected == jet->mtbl);
+        BOOST_TEST(expected == jet->vtbl);
     }
 
     BOOST_TEST_REQUIRE(pay_Employee->info->next != nullptr);
     BOOST_TEST_REQUIRE(pay_Manager->info->next != nullptr);
     BOOST_TEST(*pay_Manager->info->next == pay_Employee->info->pf);
 
-    const auto buckets = rt.find_hash_function(rt.classes, rt.metrics);
-    rt.install_gv(buckets);
+    rt.install_gv();
 
     {
         // pay
         BOOST_TEST_REQUIRE(
-            test_policy::context.gv.size() ==
+            test_policy::dispatch_data.size() ==
             +12        // approve: 3 slots and 12 cells for dispatch table
-                + 12); // 3 mtbl of 2 cells for Roles + 6 mtbl of 1 cells for
+                + 12); // 3 vtbl of 2 cells for Roles + 6 vtbl of 1 cells for
                        // Expenses
-        BOOST_TEST_REQUIRE(test_policy::context.mptrs.size() == buckets);
+        BOOST_TEST_REQUIRE(
+            test_policy::vptrs.size() <=
+            (1 << (std::numeric_limits<size_t>::digits - test_policy::shift)));
 #ifndef NDEBUG
-        BOOST_TEST_REQUIRE(test_policy::control.size() == buckets);
+        BOOST_TEST_REQUIRE(
+            test_policy::control.size() == test_policy::vptrs.size());
 #endif
 
-        auto gv_iter = test_policy::context.gv.data();
+        auto gv_iter = test_policy::dispatch_data.data();
         // no slots nor fun* for 1-method
 
         // approve
@@ -503,8 +538,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         auto approve_dispatch_table = gv_iter;
         BOOST_TEST(std::equal(
             approve_method.dispatch_table.begin(),
-            approve_method.dispatch_table.end(), gv_iter,
-            [](const void* pf, word w) { return w.pf == pf; }));
+            approve_method.dispatch_table.end(), gv_iter));
         gv_iter += approve_method.dispatch_table.size();
 
         // auto opt_iter = gv_iter;
@@ -560,23 +594,23 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // // Plane
         // BOOST_TEST(opt_iter++->i == 0); // approve/1
 
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Role)) == role->mptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Role)) == role->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Employee)) == employee->mptr);
+        //     vptr(test_policy::context, &typeid(Employee)) == employee->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Manager)) == manager->mptr);
+        //     vptr(test_policy::context, &typeid(Manager)) == manager->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Founder)) == founder->mptr);
+        //     vptr(test_policy::context, &typeid(Founder)) == founder->vptr);
 
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Expense)) == expense->mptr);
+        //     vptr(test_policy::context, &typeid(Expense)) == expense->vptr);
         // BOOST_TEST(
-        //     mptr(test_policy::context, &typeid(Public)) == public_->mptr);
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Bus)) == bus->mptr);
-        // BOOST_TEST(mptr(test_policy::context, &typeid(Metro)) ==
-        // metro->mptr); BOOST_TEST(mptr(test_policy::context, &typeid(Taxi)) ==
-        // taxi->mptr); BOOST_TEST(mptr(test_policy::context, &typeid(Jet)) ==
-        // jet->mptr);
+        //     vptr(test_policy::context, &typeid(Public)) == public_->vptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Bus)) == bus->vptr);
+        // BOOST_TEST(vptr(test_policy::context, &typeid(Metro)) ==
+        // metro->vptr); BOOST_TEST(vptr(test_policy::context, &typeid(Taxi)) ==
+        // taxi->vptr); BOOST_TEST(vptr(test_policy::context, &typeid(Jet)) ==
+        // jet->vptr);
 
         {
             const Role& role = Role();
@@ -594,22 +628,17 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
             const auto& pay_method =
                 decltype(yOMM2_SELECTOR(pay)(Employee()))::fn;
             BOOST_TEST(pay_method.arity == 1);
-            BOOST_TEST(
-                pay_method.resolve<virtual_<const Employee&>>(employee) ==
-                pay_Employee->info->pf);
+            BOOST_TEST(pay_method.resolve(employee) == pay_Employee->info->pf);
             BOOST_TEST(&typeid(manager) == &typeid(Manager));
-            BOOST_TEST(
-                pay_method.resolve<virtual_<const Employee&>>(manager) ==
-                pay_Manager->info->pf);
+            BOOST_TEST(pay_method.resolve(manager) == pay_Manager->info->pf);
 
             using approve_method =
                 decltype(yOMM2_SELECTOR(approve)(Role(), Expense(), 0.));
             BOOST_TEST(approve_method::fn.arity == 2);
 
             BOOST_TEST(
-                (approve_method::fn.resolve<
-                    virtual_<const Role&>, virtual_<const Expense&>, double>(
-                    role, expense, 0.)) == approve_Role_Expense->info->pf);
+                (approve_method::fn.resolve(role, expense, 0.)) ==
+                approve_Role_Expense->info->pf);
 
             {
                 std::vector<const Role*> Roles = {
@@ -636,9 +665,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                             ? approve_Employee_public
                             : approve_Role_Expense;
                         BOOST_TEST(
-                            (approve_method::fn.resolve<
-                                virtual_<const Role&>, virtual_<const Expense&>,
-                                double>(*r, *e, 0.)) == expected->info->pf);
+                            (approve_method::fn.resolve(*r, *e, 0.)) ==
+                            expected->info->pf);
                         ++j;
                     }
                     ++i;
@@ -680,7 +708,7 @@ struct E : D {};
 
 using test_policy = test_policy_<__COUNTER__>;
 
-use_classes<test_policy, A, B, AB, C, D, E> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<A, B, AB, C, D, E, test_policy>);
 
 BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
     std::vector<rt_class*> actual, expected;
@@ -733,11 +761,11 @@ BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
 }
 
 struct key;
-auto& m_a = method<test_policy, key, void(virtual_<A&>)>::fn;
-auto& m_b = method<test_policy, key, void(virtual_<B&>)>::fn;
-auto& m_ab = method<test_policy, key, void(virtual_<A&>, virtual_<B&>)>::fn;
-auto& m_c = method<test_policy, key, void(virtual_<C&>)>::fn;
-auto& m_d = method<test_policy, key, void(virtual_<D&>)>::fn;
+auto& m_a = method<key, void(virtual_<A&>), test_policy>::fn;
+auto& m_b = method<key, void(virtual_<B&>), test_policy>::fn;
+auto& m_ab = method<key, void(virtual_<A&>, virtual_<B&>), test_policy>::fn;
+auto& m_c = method<key, void(virtual_<C&>), test_policy>::fn;
+auto& m_d = method<key, void(virtual_<D&>), test_policy>::fn;
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
     runtime<test_policy> rt;

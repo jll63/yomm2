@@ -12,9 +12,12 @@ using std::string;
 
 using yorel::yomm2::virtual_;
 
-struct A { virtual ~A() {} };
-struct B : A { };
-struct C : A { };
+struct A {
+    virtual ~A() {
+    }
+};
+struct B : A {};
+struct C : A {};
 struct D : B, C {};
 
 register_class(A);
@@ -35,8 +38,7 @@ define_method(string, foobar, (C&)) {
 #include <iostream>
 #include <memory>
 
-int main()
-{
+int main() {
     yorel::yomm2::update();
 
     D d;

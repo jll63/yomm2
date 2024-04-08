@@ -12,31 +12,27 @@
 
 using yorel::yomm2::virtual_;
 
-class Animal
-{
-public:
-    virtual ~Animal() {}
+class Animal {
+  public:
+    virtual ~Animal() {
+    }
 };
 
-class Dog : public Animal
-{
-};
+class Dog : public Animal {};
 
 register_class(Animal);
 register_class(Dog, Animal);
 
-declare_method(std::string, kick, (virtual_<Animal &>));
+declare_method(std::string, kick, (virtual_<Animal&>));
 
-define_method(std::string, kick, (Dog & dog))
-{
+define_method(std::string, kick, (Dog & dog)) {
     return "bark";
 }
 
-BOOST_AUTO_TEST_CASE(noadl)
-{
+BOOST_AUTO_TEST_CASE(noadl) {
     yorel::yomm2::update();
     auto stimulus = &kick;
     Dog snoopy;
-    Animal &animal = snoopy;
+    Animal& animal = snoopy;
     BOOST_TEST(stimulus(snoopy) == "bark");
 }

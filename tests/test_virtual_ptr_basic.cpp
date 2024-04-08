@@ -39,7 +39,7 @@ void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
 }
 
 using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
-static kick::add_function<kick_dog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
     yorel::yomm2::update();
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         // Using  deduction guide.
         boost::test_tools::output_test_stream os;
         Animal&& animal = Dog();
-        auto vptr = virtual_ptr(animal);
+        auto vptr = virtual_ptr(animal); // GLOP
         kick::fn(vptr, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         virtual_ptr<Animal>::final(animal);
     } catch (const method_table_error& error) {
         set_error_handler(prev_handler);
-        BOOST_TEST(error.ti == reinterpret_cast<type_id>(&typeid(Dog)));
+        BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(Dog)));
         threw = true;
     } catch (...) {
         set_error_handler(prev_handler);
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         return;
     }
 
-    if constexpr (default_policy::runtime_checks) {
+    if constexpr (default_policy::has_facet<policy::runtime_checks>) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }
@@ -114,7 +114,7 @@ void kick_dog(virtual_shared_ptr<Dog>, std::ostream& os) {
 }
 
 using kick = method<void, void(virtual_shared_ptr<Animal>, std::ostream&)>;
-static kick::add_function<kick_dog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
     yorel::yomm2::update();
@@ -136,7 +136,7 @@ void kick_dog(const virtual_shared_ptr<Dog>&, std::ostream& os) {
 
 using kick =
     method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)>;
-static kick::add_function<kick_dog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
     yorel::yomm2::update();
@@ -164,7 +164,7 @@ void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
 }
 
 using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
-static kick::add_function<kick_dog> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {
     yorel::yomm2::update();

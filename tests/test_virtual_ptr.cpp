@@ -88,8 +88,14 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_basic) {
             virtual_shared_ptr<const Animal> upcast_copy(p);
         }
 
-        { auto p = virtual_shared_ptr<const Dog>(std::make_shared<const Dog>()); }
+        {
+            auto p =
+                virtual_shared_ptr<const Dog>(std::make_shared<const Dog>());
+        }
 
-        { auto p = virtual_shared_ptr<const Animal>(std::make_shared<const Dog>()); }
+        {
+            auto p =
+                virtual_shared_ptr<const Animal>(std::make_shared<const Dog>());
+        }
     }
 }

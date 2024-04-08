@@ -46,7 +46,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: VERBOSE=1 cmake --build build
       - name: Unit Tests
@@ -76,7 +76,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: VERBOSE=1 cmake --build build
       - name: Unit Tests

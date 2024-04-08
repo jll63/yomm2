@@ -22,7 +22,7 @@ struct Dog {
 //     return "bark";
 // }
 
-use_classes<Dog> YOMM2_GENSYM;
+YOMM2_STATIC(use_classes<Dog>);
 
 struct kick_;
 using kick = method<kick_, const char*(virtual_<Dog&>)>;
@@ -31,7 +31,7 @@ const char* bark(Dog&) {
     return "bark";
 }
 
-kick::add_function<bark> YOMM2_GENSYM;
+YOMM2_STATIC(kick::add_function<bark>);
 
 auto call_kick(Dog& obj) {
     return kick::fn(obj);
@@ -49,7 +49,7 @@ auto call_kick(Dog& obj) {
 }
 
 auto call_kick_manual(Dog& obj) {
-    const auto hash_table = default_policy::context.mptrs.data();
+    const auto hash_table = default_policy::vptrs.data();
     const auto mult = default_policy::mult;
     const auto shift = default_policy::shift;
     const auto index = kick::fn.slots_strides[0];
@@ -66,10 +66,10 @@ auto call_kick_manual(Dog& obj) {
     const auto h2 = h1 >> shift;
 	// shrq	    %cl, %rdx
 
-    const auto method_table = hash_table[h2];
+    const auto static_vptr = hash_table[h2];
 	// movq	    (%r8,%rdx,8), %rax
 
-    const auto fptr = method_table[index].pw;
+    auto fptr = static_vptr[index];
     return ((const char*(*)(Dog&)) fptr)(obj);
 	// jmpq	    *(%rax,%rsi,8)                  # TAILCALL
 }

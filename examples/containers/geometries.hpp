@@ -11,29 +11,23 @@
 
 namespace geometries {
 
-class Geometry
-{
-public:
-    virtual ~Geometry() {}
+class Geometry {
+  public:
+    virtual ~Geometry() {
+    }
 };
 
-class Line: public Geometry {
-};
+class Line : public Geometry {};
 
-class Arc : public Line {
-};
+class Arc : public Line {};
 
-class Segment : public Line {
-};
+class Segment : public Line {};
 
-class Shape : public Geometry {
-};
+class Shape : public Geometry {};
 
-class Square : public Shape {
-};
+class Square : public Shape {};
 
-class Circle : public Shape {
-};
+class Circle : public Shape {};
 
 } // namespace geometries
 
