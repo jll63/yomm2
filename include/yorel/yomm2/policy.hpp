@@ -697,6 +697,7 @@ extern template class __declspec(dllimport) basic_policy<
     backward_compatible_error_handler<debug_shared>>;
 #endif
 
+#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
 struct yOMM2_API_gcc debug_shared
     : basic_policy<
           debug_shared, std_rtti, checked_perfect_hash<debug_shared>,
@@ -704,8 +705,15 @@ struct yOMM2_API_gcc debug_shared
           basic_trace_output<debug_shared>,
           backward_compatible_error_handler<debug_shared>> {};
 
-struct yOMM2_API_gcc release_shared
-    : debug_shared::replace<type_hash, fast_perfect_hash<debug_shared>> {};
+struct yOMM2_API_gcc release_shared : debug_shared {
+    template<class Class>
+    static const std::uintptr_t* dynamic_vptr(const Class& arg) {
+        auto index = dynamic_type(arg);
+        index = fast_perfect_hash<debug_shared>::hash_type_id(index);
+        return vptrs[index];
+    }
+};
+#endif
 
 #ifdef NDEBUG
 using default_static = policy::release;
