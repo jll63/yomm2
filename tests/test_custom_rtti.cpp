@@ -64,12 +64,9 @@ struct custom_rtti : policy::rtti {
 struct test_policy : policy::default_static::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti> {};
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY test_policy
+register_classes(Animal, Dog, Cat, test_policy);
 
-register_classes(Animal, Dog, Cat);
-
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
@@ -157,12 +154,9 @@ struct test_policy : policy::default_static::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti>::remove<policy::type_hash> {
 };
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY test_policy
+register_classes(Animal, Dog, Cat, test_policy);
 
-register_classes(Animal, Dog, Cat);
-
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
@@ -208,7 +202,7 @@ namespace using_vptr {
 template<class C>
 using vptr = virtual_ptr<C, test_policy>;
 
-declare_method(void, kick, (vptr<Animal>, std::ostream&));
+declare_method(void, kick, (vptr<Animal>, std::ostream&), test_policy);
 
 define_method(void, kick, (vptr<Dog> dog, std::ostream& os)) {
     os << dog->name << " barks.";
@@ -313,12 +307,9 @@ struct test_policy : policy::default_static::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti>::remove<policy::type_hash> {
 };
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY test_policy
+register_classes(Animal, Dog, Cat, test_policy);
 
-register_classes(Animal, Dog, Cat);
-
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
@@ -364,7 +355,7 @@ namespace using_vptr {
 template<class C>
 using vptr = virtual_ptr<C, test_policy>;
 
-declare_method(void, kick, (vptr<Animal>, std::ostream&));
+declare_method(void, kick, (vptr<Animal>, std::ostream&), test_policy);
 
 define_method(void, kick, (vptr<Dog> dog, std::ostream& os)) {
     os << dog->name << " barks.";
@@ -453,12 +444,9 @@ struct test_policy : policy::default_static::rebind<test_policy>::replace<
                          policy::rtti, custom_rtti>::remove<policy::type_hash> {
 };
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY test_policy
+register_classes(Animal, Dog, Cat, test_policy);
 
-register_classes(Animal, Dog, Cat);
-
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
 
 define_method(void, kick, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";

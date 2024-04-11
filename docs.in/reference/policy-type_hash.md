@@ -1,8 +1,11 @@
 entry: policy::type_hash
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+refs: type_hash
+
 ```
 struct type_hash {};
 ```
+
 The `type_hash` facet projects a sparse range of ->`type_id`s to a dense range.
 
 ### Requirements for implementations of `type_hash`

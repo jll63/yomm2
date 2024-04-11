@@ -12,17 +12,37 @@
 namespace yorel {
 namespace yomm2 {
 
-// -----------------------------------------------------------------------------
-// Policies
+#ifdef YOMM2_DEFAULT_POLICY
+using default_policy = YOMM2_DEFAULT_POLICY;
+#else
+#if defined(YOMM2_SHARED)
+#ifdef NDEBUG
+using default_policy = policy::release_shared;
+#else
+using default_policy = policy::debug_shared;
+#endif
+#else
+using default_policy = policy::default_static;
+#endif
+#endif
 
-} // namespace yomm2
-} // namespace yorel
+namespace detail {
 
-// -----------------------------------------------------------------------------
-// details
+template<typename... Classes>
+using get_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_back<types<Classes...>>, default_policy>;
 
-namespace yorel {
-namespace yomm2 {
+template<typename... Classes>
+using remove_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
+
+template<class... Ts>
+using virtual_ptr_policy = std::conditional_t<
+    sizeof...(Ts) == 2, boost::mp11::mp_first<detail::types<Ts...>>,
+    default_policy>;
+} // namespace detail
 
 // -----------------------------------------------------------------------------
 // Method

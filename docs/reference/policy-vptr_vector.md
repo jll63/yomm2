@@ -21,11 +21,12 @@ function call.
 
 **Policy** - the policy containing the facet.
 
-## static member functions
-|                                   |                                                    |
-| --------------------------------- | -------------------------------------------------- |
-| [dynamic_vptr](#dynamic_vptr)     | return the address of the v-table for an object    |
-| [register_vptrs](#register_vptrs) | store the vptrs, initialize `type_hash` if present |
+## Static member functions
+
+|                                 |                                                    |
+| ------------------------------- | -------------------------------------------------- |
+| [dynamic_vptr](#dynamic_vptr)   | return the address of the v-table for an object    |
+| [publish_vptrs](#publish_vptrs) | store the vptrs, initialize `type_hash` if present |
 
 ### dynamic_vptr
 
@@ -41,12 +42,12 @@ Call `Policy::dynamic_type` for `object`. If `Policy` contains a `type_hash`
 facet, use it to convert the resulting `type_id` to an index; otherwise, use the
 `type_id` as the index.
 
-### register_vptrs
+### publish_vptrs
 
 ```c++
 template<class Policy>
 template<typename ForwardIterator>
-void vptr_vector<Policy>::register_vptrs(ForwardIterator first, ForwardIterator last);
+void vptr_vector<Policy>::publish_vptrs(ForwardIterator first, ForwardIterator last);
 ```
 
 If `Policy` contains a `type_hash` facet, call its `hash_initialize`

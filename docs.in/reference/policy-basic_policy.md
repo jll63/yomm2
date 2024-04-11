@@ -159,8 +159,7 @@ The stock policies consist of the following facets:
   The member function and variables are declared as external in the headers, and
   explicitly instantiated in the shared library.
 
-* **release_shared**: same as debug_shared, but checked_perfect_hash is replaced
-  by fast_perfect_hash.
+* **release_shared**: same as debug_shared, but checkeds are bypassed.
 
 
 ## Example

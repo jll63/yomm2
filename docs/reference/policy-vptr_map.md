@@ -21,10 +21,10 @@ function that is not suitable for perfect _and_ minimal hashing. Using
 **Policy** - the policy containing the facet.
 
 ## static member functions
-|                                   |                                                 |
-| --------------------------------- | ----------------------------------------------- |
-| [dynamic_vptr](#dynamic_vptr)     | return the address of the v-table for an object |
-| [register_vptrs](#register_vptrs) | store the vptrs                                 |
+|                                 |                                                 |
+| ------------------------------- | ----------------------------------------------- |
+| [dynamic_vptr](#dynamic_vptr)   | return the address of the v-table for an object |
+| [publish_vptrs](#publish_vptrs) | store the vptrs                                 |
 
 ### dynamic_vptr
 
@@ -39,12 +39,12 @@ Return a pointer to the v-table for `object`.
 Call `Policy::dynamic_type` for `object`. Return the vptr associated to the
 resulting [`type_id`](/yomm2/reference/type_id.html).
 
-### register_vptrs
+### publish_vptrs
 
 ```c++
 template<class Policy>
 template<typename ForwardIterator>
-void vptr_map<Policy>::register_vptrs(ForwardIterator first, ForwardIterator last);
+void vptr_map<Policy>::publish_vptrs(ForwardIterator first, ForwardIterator last);
 ```
 
 Store the pointers to the v-tables.

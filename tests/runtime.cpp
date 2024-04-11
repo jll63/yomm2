@@ -158,12 +158,11 @@ use_classes<Role, Employee, Manager, Founder, Expense, test_policy>
 
 YOMM2_STATIC(use_classes<Expense, Public, Bus, Metro, Taxi, Jet, test_policy>);
 
-#undef YOMM2_DEFAULT_POLICY
-#define YOMM2_DEFAULT_POLICY test_policy
-YOMM2_DECLARE(double, pay, (virtual_<const Employee&>));
+YOMM2_DECLARE(double, pay, (virtual_<const Employee&>), test_policy);
 
 YOMM2_DECLARE(
-    bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double));
+    bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double),
+    test_policy);
 
 YOMM2_DEFINE(double, pay, (const Employee&)) {
     return 3000;

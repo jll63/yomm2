@@ -39,7 +39,7 @@ struct rt_arg {
 
 struct rt_class {
     bool is_abstract{false};
-    std::vector<type_id> ti_ptrs;
+    std::vector<type_id> type_ids;
     std::vector<rt_class*> transitive_bases;
     std::vector<rt_class*> direct_bases;
     std::vector<rt_class*> direct_derived;
@@ -52,6 +52,22 @@ struct rt_class {
     size_t weight{0}; // number of proper direct or indirect bases
     std::vector<size_t> vtbl;
     std::uintptr_t** static_vptr;
+
+    const std::uintptr_t* vptr() const {
+        return *static_vptr;
+    }
+
+    const std::uintptr_t* const* indirect_vptr() const {
+        return static_vptr;
+    }
+
+    auto type_id_begin() const {
+        return type_ids.begin();
+    }
+
+    auto type_id_end() const {
+        return type_ids.end();
+    }
 };
 
 struct rt_spec {
@@ -273,7 +289,7 @@ struct runtime {
 
         trace_type& operator<<(const rt_class& cls) {
             if constexpr (trace_enabled) {
-                *this << type_name(cls.ti_ptrs[0]);
+                *this << type_name(cls.type_ids[0]);
             }
 
             return *this;
@@ -396,9 +412,9 @@ void runtime<Policy>::augment_classes() {
             // unordered_set because, again, this situation is highly
             // unlikely, and, were it to occur, the number of distinct ti*s
             // would probably be small.
-            if (std::find(rtc->ti_ptrs.begin(), rtc->ti_ptrs.end(), cr.ti) ==
-                rtc->ti_ptrs.end()) {
-                rtc->ti_ptrs.push_back(cr.ti);
+            if (std::find(rtc->type_ids.begin(), rtc->type_ids.end(), cr.ti) ==
+                rtc->type_ids.end()) {
+                rtc->type_ids.push_back(cr.ti);
             }
         }
     }
@@ -839,7 +855,7 @@ void runtime<Policy>::build_dispatch_tables() {
                     indent YOMM2_GENSYM(trace);
                     for (auto cls : type_range{
                              group.classes.begin(), group.classes.end()}) {
-                        ++trace << cls->ti_ptrs[0] << "\n";
+                        ++trace << cls->type_ids[0] << "\n";
                     }
                 }
                 ++group_num;
@@ -946,7 +962,7 @@ void runtime<Policy>::build_dispatch_table(
             indent YOMM2_GENSYM(trace);
             for (auto cls :
                  type_range{group.classes.begin(), group.classes.end()}) {
-                ++trace << cls->ti_ptrs[0] << "\n";
+                ++trace << cls->type_ids[0] << "\n";
             }
         }
 
@@ -1087,17 +1103,7 @@ void runtime<Policy>::install_gv() {
 
             if constexpr (has_facet<Policy, external_vptr>) {
                 if (pass) {
-                    std::vector<
-                        std::pair<type_id, const std::uintptr_t* const*>>
-                        vptrs;
-
-                    for (auto& cls : classes) {
-                        for (auto type : cls.ti_ptrs) {
-                            vptrs.emplace_back(type, cls.static_vptr);
-                        }
-                    }
-
-                    Policy::register_vptrs(vptrs.begin(), vptrs.end());
+                    Policy::publish_vptrs(classes.begin(), classes.end());
                 }
             }
         }

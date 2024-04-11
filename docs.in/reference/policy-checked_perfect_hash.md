@@ -1,8 +1,3 @@
-#define BOOST_TEST_MODULE checked_perfect_hash
-#include <boost/test/included/unit_test.hpp>
-
-/***
-
 entry: policy::checked_perfect_hash
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 ```
@@ -79,37 +74,3 @@ None.
 * `error_handler` - to report error conditions.
 * `error_output` - for diagnostics.
 * `trace_output` - for trace.
-
-### Example
-
-***/
-
-//***
-#include <yorel/yomm2/policy.hpp>
-
-// for brevity
-using namespace yorel::yomm2;
-using namespace yorel::yomm2::policy;
-
-// Create a policy that contains 'checked_perfect_hash' and `throw_error`.
-struct checked_policy
-    : basic_policy<
-          checked_policy, checked_perfect_hash<checked_policy>,
-          throw_error> {};
-
-BOOST_AUTO_TEST_CASE(ref_check_checked_perfect_hash) {
-    std::vector<type_id> ids = {42, 1963, 602701};
-    checked_policy::hash_initialize(ids.begin(), ids.end());
-    bool caught = false;
-
-    try {
-        // 'fast_perfect_hash' would return a bogus result...
-        checked_policy::hash_type_id(666);
-    } catch (unknown_class_error& error) {
-        // ...but 'checked_perfect_hash' catches it.
-        caught = true;
-    }
-
-    BOOST_TEST(caught);
-}
-//***

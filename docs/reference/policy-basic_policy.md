@@ -128,7 +128,7 @@ implementation for each category. They are summed up in the following table.
 | *[external_vptr](/yomm2/reference/policy-vptr_placement.html)*        | store vptr outside the object     | [vptr_vector](/yomm2/reference/policy-vptr_vector.html) (D) (R), [vptr_map](/yomm2/reference/policy-vptr_map.html)                                  |
 | [rtti](/yomm2/reference/policy-rtti.html)                   | provide type information          | [std_rtti](/yomm2/reference/policy-std_rtti.html) (D) (R), [minimal_rtti](/yomm2/reference/policy-minimal_rtti.html)                                  |
 | *[deferred_static_rtti](/yomm2/reference/policy-deferred_static_rtti.html)* | as `rtti`, but avoid static ctors |                                                                                  |
-| [type_hash](/yomm2/reference/policy-type_hash.html)              | map type info to integer index    | [fast_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html) (R), [checked_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html) (D)                |
+| [type_hash](/yomm2/reference/policy-type_hash.html)              | map type info to integer index    | [fast_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html) (R), [checked_perfect_hash](/yomm2/reference/policy-checked_perfect_hash.html) (D)                |
 | [error_handler](/yomm2/reference/policy-error_handler.html)          | report errors                     | [vectored_error](/yomm2/reference/policy-vectored_error.html), [throw_error](/yomm2/reference/policy-throw_error.html), backward_compatible_error_handler |
 | [error_output](/yomm2/reference/policy-error_output.html)           | print diagnostics                 | [basic_error_output](/yomm2/reference/policy-basic_error_output.html) (D)                                                  |
 | [trace_output](/yomm2/reference/policy-trace_output.html)           | trace                             | [basic_trace_output](/yomm2/reference/policy-basic_trace_output.html) (D)                                                  |
@@ -156,8 +156,7 @@ The stock policies consist of the following facets:
   The member function and variables are declared as external in the headers, and
   explicitly instantiated in the shared library.
 
-* **release_shared**: same as debug_shared, but checked_perfect_hash is replaced
-  by fast_perfect_hash.
+* **release_shared**: same as debug_shared, but checkeds are bypassed.
 
 
 ## Example

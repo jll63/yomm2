@@ -283,20 +283,26 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     static std::vector<const std::uintptr_t*> vptrs;
 
     template<typename ForwardIterator>
-    static void register_vptrs(ForwardIterator first, ForwardIterator last) {
+    static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
         using namespace policy;
         using detail::pair_first_iterator;
 
         size_t size;
 
         if constexpr (has_facet<Policy, type_hash>) {
-            Policy::hash_initialize(
-                pair_first_iterator(first), pair_first_iterator(last));
+            Policy::hash_initialize(first, last);
             size = Policy::hash_length;
         } else {
-            size = 1 + std::max_element(first, last, [](auto a, auto b) {
-                           return a < b;
-                       })->first;
+            size = 0;
+
+            for (auto iter = first; iter != last; ++iter) {
+                for (auto type_iter = iter->type_id_begin();
+                     type_iter != iter->type_id_end(); ++type_iter) {
+                    size = std::max(size, *type_iter);
+                }
+            }
+
+            ++size;
         }
 
         vptrs.resize(size);
@@ -306,16 +312,19 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
         }
 
         for (auto iter = first; iter != last; ++iter) {
-            auto index = iter->first;
+            for (auto type_iter = iter->type_id_begin();
+                 type_iter != iter->type_id_end(); ++type_iter) {
+                auto index = *type_iter;
 
-            if constexpr (has_facet<Policy, type_hash>) {
-                index = Policy::hash_type_id(index);
-            }
+                if constexpr (has_facet<Policy, type_hash>) {
+                    index = Policy::hash_type_id(index);
+                }
 
-            vptrs[index] = *iter->second;
+                vptrs[index] = iter->vptr();
 
-            if constexpr (has_facet<Policy, indirect_vptr>) {
-                Policy::indirect_vptrs[index] = iter->second;
+                if constexpr (has_facet<Policy, indirect_vptr>) {
+                    Policy::indirect_vptrs[index] = iter->indirect_vptr();
+                }
             }
         }
     }
@@ -339,17 +348,13 @@ template<class Policy>
 struct yOMM2_API_gcc vptr_map : virtual external_vptr {
     static std::unordered_map<type_id, const std::uintptr_t*> vptrs;
 
-    static void resize_vptrs(size_t n) {
-    }
-
-    static void assign_vptr(type_id type, std::uintptr_t* vptr) {
-        vptrs[type] = vptr;
-    }
-
     template<typename ForwardIterator>
-    static void register_vptrs(ForwardIterator first, ForwardIterator last) {
+    static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
         for (auto iter = first; iter != last; ++iter) {
-            vptrs[iter->first] = *iter->second;
+            for (auto type_iter = iter->type_id_begin();
+                 type_iter != iter->type_id_end(); ++type_iter) {
+                vptrs[*type_iter] = iter->vptr();
+            }
         }
     }
 
@@ -396,7 +401,7 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
 
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
-    static type_id mult;
+    static type_id ;
     static std::size_t shift;
     static std::size_t hash_length;
 
@@ -405,7 +410,7 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
 #endif
         static type_id
         hash_type_id(type_id type) {
-        return (mult * type) >> shift;
+        return ( * type) >> shift;
     }
 
     template<typename ForwardIterator>
@@ -468,22 +473,25 @@ void fast_perfect_hash<Policy>::hash_initialize(
             ++attempts;
             ++total_attempts;
             found = true;
-            mult = uniform_dist(rnd) | 1;
+             = uniform_dist(rnd) | 1;
 
             for (auto iter = first; iter != last; ++iter) {
-                auto type = *iter;
-                auto index = (type * mult) >> shift;
+                for (auto type_iter = iter->type_id_begin();
+                     type_iter != iter->type_id_end(); ++type_iter) {
+                    auto type = *type_iter;
+                    auto index = (type * ) >> shift;
 
-                if (index >= hash_length) {
-                    hash_length = index + 1;
+                    if (index >= hash_length) {
+                        hash_length = index + 1;
+                    }
+
+                    if (buckets[index] != static_cast<type_id>(-1)) {
+                        found = false;
+                        break;
+                    }
+
+                    buckets[index] = type;
                 }
-
-                if (buckets[index] != static_cast<type_id>(-1)) {
-                    found = false;
-                    break;
-                }
-
-                buckets[index] = type;
             }
         }
 
@@ -495,7 +503,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
         if (found) {
             if constexpr (trace_enabled) {
                 if (Policy::trace_enabled) {
-                    Policy::trace_stream << "  found " << mult << " after "
+                    Policy::trace_stream << "  found " <<  << " after "
                                          << total_attempts << " attempts\n";
                 }
             }
@@ -517,7 +525,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
 }
 
 template<class Policy>
-type_id fast_perfect_hash<Policy>::mult;
+type_id fast_perfect_hash<Policy>::;
 template<class Policy>
 std::size_t fast_perfect_hash<Policy>::shift;
 template<class Policy>
@@ -551,6 +559,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
     template<typename ForwardIterator>
     static void hash_initialize(ForwardIterator first, ForwardIterator last) {
         fast_perfect_hash<Policy>::hash_initialize(first, last, control);
+        control.resize(fast_perfect_hash<Policy>::hash_length);
     }
 };
 
@@ -722,36 +731,6 @@ using default_static = policy::debug;
 #endif
 
 } // namespace policy
-
-#if defined(YOMM2_SHARED)
-#ifdef NDEBUG
-using default_policy = policy::release_shared;
-#else
-using default_policy = policy::debug_shared;
-#endif
-#else
-using default_policy = policy::default_static::replace<
-    policy::error_handler,
-    policy::backward_compatible_error_handler<policy::default_static>>;
-#endif
-
-namespace detail {
-
-template<typename... Classes>
-using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_back<types<Classes...>>, default_policy>;
-
-template<typename... Classes>
-using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
-
-template<class... Ts>
-using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_first<detail::types<Ts...>>,
-    default_policy>;
-} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

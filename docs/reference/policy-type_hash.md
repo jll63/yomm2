@@ -1,8 +1,11 @@
 yorel::yomm2::policy::**type_hash**
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+refs: type_hash
+
 ```
 struct type_hash {};
 ```
+
 The `type_hash` facet projects a sparse range of [`type_id`](/yomm2/reference/type_id.html)s to a dense range.
 
 ### Requirements for implementations of `type_hash`
@@ -19,7 +22,7 @@ An implementation of `type_hash` must provide the following static functions:
 |                               |                                                               |
 | ----------------------------- | ------------------------------------------------------------- |
 | [fast_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html)    | use a fast, perfect, but not minimal integer hash             |
-| [checked_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html) | like `fast_perfect_hash`, also check for unregistered classes |
+| [checked_perfect_hash](/yomm2/reference/policy-checked_perfect_hash.html) | like `fast_perfect_hash`, also check for unregistered classes |
 
 
 ### hash_initialize

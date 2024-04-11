@@ -142,7 +142,7 @@ This was the recommended header before version 1.3.0. Includes
 ## Linking
 
 YOMM2 can be used as a header-only library. This is the recommended way. The
-runtime adds ~56K (~36K after stripping) when compiled with clang++ for the
+runtime adds ~56K (~36K after stripping) when compiled with clang++-16 for the
 x86-64 architecture.
 
 YOMM2 can also be installed as a shared library, by setting the cmake variable

@@ -1,5 +1,6 @@
 yorel::yomm2::policy::**vptr_placement**<br/>yorel::yomm2::policy::**external_vptr**
 
+
 <sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
 ```
 struct vptr_placement;
@@ -27,54 +28,49 @@ to organize an entire program around the "final" constructs; thus, the `vptr_pla
 facet is optional.
 
 `external_vptr` is a sub-category of `facet`. If present, it provides a
-`register_vptrs` function, called by `update`.
+`publish_vptrs` function, called by `update`.
 
 ### Requirements for implementations of `vptr_placement`
 
 An implementation of `vptr_placement` must provide the following static function template:
 
-|                               |                                                 |
+| Name                          | Description                                     |
 | ----------------------------- | ----------------------------------------------- |
 | [dynamic_vptr](#dynamic_vptr) | return the address of the v-table for an object |
 
 
 ### dynamic_vptr
+
 ```c++
-struct vptr_facet { template<class Class> static const std::uintptr_t*
-    dynamic_vptr(const Class& arg);
-};
+template<class Class>
+static const std::uintptr_t* dynamic_vptr(const Class& arg);
 ```
 
-### Requirements for implementations of `external_vptr`
+## Requirements for implementations of `external_vptr`
 
 In addition to the requirements for `vptr_placement`, an implementation of `external_vptr`
 must provide the following static function template:
 
-|                                   |                |
-| --------------------------------- | -------------- |
-| [register_vptrs](#register_vptrs) | initialization |
+| Name                            | Description    |
+| ------------------------------- | -------------- |
+| [publish_vptrs](#publish_vptrs) | initialization |
+
+### publish_vptrs
+
+```c++
+template<typename ForwardIterator>
+static void publish_vptrs(ForwardIterator first, ForwardIterator last);
+```
+
+Called by `update` with a range of [`RuntimeClass`](/yomm2/reference/RuntimeClass.html) objects, after the v-tables
+have been set up.
 
 ### Implementations of `external_vptr`
 
-|               |                                           |
-| ------------- | ----------------------------------------- |
+| Name                              | Description                                                |
+| -------------------- | ----------------------------------------- |
 | [vptr_map](/yomm2/reference/policy-vptr_map.html)    | store the vptrs in a `std::unordered_map` |
 | [vptr_vector](/yomm2/reference/policy-vptr_vector.html) | store the vptrs in a `std::vector`        |
-
-### register_vptrs
-
-```c++
-struct external_vptr_facet {
-    template<typename ForwardIterator>
-    static void register_vptrs(ForwardIterator first, ForwardIterator last);
-};
-```
-
-This function is called by `update`, after the v-tables have been set up, with a
-range of pairs. The first member is a [`type_id`](/yomm2/reference/type_id.html) of a registered class; the
-second member is a pointer to a pointer to the v-table for that class. The vptrs
-(`**iter.second`) change after a call to `update`, as the v-tables are rebuilt.
-However, the pointers to the vptrs (`*iter.second`) are stable across updates.
 
 ## Example
 
@@ -142,7 +138,6 @@ struct number_aware_policy : default_static::replace<vptr_placement, vptr_page> 
 // Make it the default policy.
 #define YOMM2_DEFAULT_POLICY number_aware_policy
 #include <yorel/yomm2/keywords.hpp>
-#include <yorel/yomm2/runtime.hpp>
 ```
 
  Here is a bare-bone implementation of the page allocator:
