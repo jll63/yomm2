@@ -1,7 +1,8 @@
-yorel::yomm2::**YOMM2_METHOD_CLASS**
 
-# method_class
-<sub>defined in <yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>method_class</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/keywords.hpp></sub><br/>
+<span style="font-size:xx-large;"><strong>YOMM2_METHOD_CLASS</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/macros.hpp></sub><br/>
 
 ```c++
 #define method_class(RETURN_TYPE, NAME, ARGS [, POLICY])

@@ -1,5 +1,5 @@
-yorel::yomm2::**types**
-<sub>defined in <yorel/yomm2/core.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>types</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp></sub><br/>
 ```
 template<typename... T>
 struct types;

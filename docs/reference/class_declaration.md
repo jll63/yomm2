@@ -1,5 +1,5 @@
-yorel::yomm2::**class_declaration**
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>class_declaration</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 template<typename ClassList, typename... Unspecified>

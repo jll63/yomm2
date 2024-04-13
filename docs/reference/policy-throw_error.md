@@ -1,6 +1,5 @@
 
-
-# yorel::yomm2::policy::**throw_error**
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>throw_error</strong></span><br/>
 <sub>defined in yorel::yomm2::policy by <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub>
 
 

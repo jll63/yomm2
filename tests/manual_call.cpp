@@ -50,8 +50,8 @@ auto call_kick(Dog& obj) {
 
 auto call_kick_manual(Dog& obj) {
     const auto hash_table = default_policy::vptrs.data();
-    const auto mult = default_policy::mult;
-    const auto shift = default_policy::shift;
+    const auto mult = default_policy::hash_mult;
+    const auto shift = default_policy::hash_shift;
     const auto index = kick::fn.slots_strides[0];
     const auto vptr = *(void***) &obj; // typeid 1
 	// movq	    context+24(%rip), %r8

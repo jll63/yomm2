@@ -1,5 +1,5 @@
 /***
-# yorel::yomm2::policy::**throw_error**
+entry: policy::throw_error
 location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     struct throw_error;

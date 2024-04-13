@@ -1,5 +1,4 @@
-
-# RestrictedOutputStream
+<span style="font-size:xx-large;"><strong>RestrictedOutputStream</strong><br/></span><br/>
 
     Stream& operator<<(Stream& os, const std::string_view& view);
     Stream& operator<<(Stream& os, const void* value);

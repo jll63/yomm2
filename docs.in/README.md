@@ -99,14 +99,22 @@ The main constructs are:
 The header itself does not define any macros, except for its include guard
 (`YOREL_YOMM2_CORE_INCLUDED`).
 
-The header consumes two macros:
+The header consumes three macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
 * `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
+* ->`YOMM2_DEFAULT_POLICY`: if defined, overrides the default policy.
 
 The header defines the following macros:
 * an include guard (`YOREL_YOMM2_CORE_INCLUDED`).
 * *iff* `YOMM2_SHARED` is defined, a `yOMM2_API` macro, for internal use.
+
+### `<yorel/yomm2/policy.hpp>`
+
+Contains the policy namespace, and the associated mechanisms. It is included by
+`<yorel/yomm2/core.hpp>`. It can also be included directly to create a new
+policy, to be used as the default policy, before including the core header. See
+->`YOMM2_DEFAULT_POLICY` for more details.
 
 ### `<yorel/yomm2/symbols.hpp>`
 
@@ -213,6 +221,7 @@ for the shared runtime to be used.
 | ->YOMM2_DECLARE                  | macro             | same as `declare_method`                                                 |
 | ->YOMM2_DECLARE_METHOD_CONTAINER | macro             | same as `method_container`                                               |
 | ->YOMM2_DEFINE                   | macro             | same as `define_method`                                                  |
+| ->YOMM2_DEFAULT_POLICY           | macro             | global default policy override                                           |
 | ->YOMM2_DEFINE_INLINE            | macro             | same as `define_method_inline`                                           |
 | ->YOMM2_DEFINITION               | macro             | same as `method_definition`                                              |
 | ->YOMM2_FRIEND                   | macro             | same as `friend_method`                                                  |

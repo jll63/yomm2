@@ -1,4 +1,4 @@
-# RestrictedOutputStream
+macro: RestrictedOutputStream
 
     Stream& operator<<(Stream& os, const std::string_view& view);
     Stream& operator<<(Stream& os, const void* value);

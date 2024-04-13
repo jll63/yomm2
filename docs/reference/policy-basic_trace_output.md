@@ -1,9 +1,10 @@
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>**basic_trace_output**</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
 
-# yorel::yomm2::policy::**basic_trace_output**
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
-
+```c++
     template<class Policy, typename Stream = /*unspecified*/>
     struct basic_trace_output;
+```
 
 `basic_trace_output` implements the [`trace_output`](/yomm2/reference/policy-trace_output.html) facet.
 

@@ -1,4 +1,4 @@
-# yorel::yomm2::policy::**vptr_map**
+entry: policy::vptr_map
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ```c++

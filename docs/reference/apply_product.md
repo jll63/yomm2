@@ -1,8 +1,7 @@
 
 
-
 **yorel::yomm2::apply_product** <small>(experimental)</small><br>
-<sub>defined in <yorel/yomm2/templates.hpp></sub>
+<sub>defined in <yorel/yomm2/templates.hpp></sub><br/>
 ```
 template<typename TemplateList, typename... TypeLists>
 using apply_product = /*unspecified*/;

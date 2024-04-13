@@ -1,7 +1,6 @@
 
-
-# yorel::yomm2::policy::minimal_rtti
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>minimal_rtti</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 struct minimal_rtti;

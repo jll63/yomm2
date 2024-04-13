@@ -1,8 +1,7 @@
-
-# RuntimeClass
+<span style="font-size:xx-large;"><strong>RuntimeClass</strong><br/></span><br/>
 
 This concept specifies the operations available on the objects in the range
-passed to [`publish_vptrs`](/yomm2/reference/policy-vptr_placement.html) function of facet [`vptr_vector`](/yomm2/reference/policy-vptr_vector.html), and the
+passed to `publish_vptrs` function of facet [`vptr_vector`](/yomm2/reference/policy-vptr_vector.html), and the
 `hash_initialize` function of facet [`type_hash`](/yomm2/reference/policy-type_hash.html).
 
 

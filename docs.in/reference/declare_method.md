@@ -1,5 +1,5 @@
 hrefs: YOMM2_DECLARE
-entry: declare_method
+macro: declare_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 ```
 #define declare_method(return-type, method, (types)) /*unspecified*/

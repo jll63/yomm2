@@ -1,3 +1,4 @@
+from dominate import tags
 import html
 import glob
 import json
@@ -34,7 +35,7 @@ for ref in in_files:
     hrefs[str(ref.with_suffix("")).replace("::", "-")] = f"/yomm2/reference/{md_path}"
     with open(in_path / ref) as rh:
         for text in rh.readlines():
-            if m := re.match(r"^entry: *(.*)", text):
+            if m := re.match(r"^(?:entry|macro): *(.*)", text):
                 for symbol in split_list(m[1]):
                     symbol = (
                         symbol.strip()
@@ -67,25 +68,43 @@ def replace_links(text: str, source: str):
     return re.sub(r"->(`?)([/:\w_\-]+)(`?)", sub, text)
 
 
-def format_entry(symbol: str):
+HEADER_FONT_SIZE = "150%"
+
+
+def format_entry(text: str):
+    return f"<strong>{text}</strong>"
+
+
+# , cls="heading-element"
+
+
+def format_cpp_entry(symbol: str):
     parts = ["yorel", "yomm2", *symbol.replace("yorel::yomm2::", "").split("::")]
     leaf = parts.pop()
-    return "::".join([*parts, f"**{leaf}**"])
+    return "{}::<strong>{}</strong>".format("::".join([*parts]), leaf)
 
 
 def replace_md(text: str, source: str = "n/a", trail: list[str] = None):
-    entries = [
-        f"yorel::yomm2::{entry.strip()}"
-        for entry_line in re.findall(r"^entry:(.*)", text, flags=re.MULTILINE)
-        for entry in entry_line.split(",")
-    ]
+    def replace_entries(m):
+        return '<span style="font-size:xx-large;">{}</span><br/>'.format(
+            "<br/>\n".join([format_cpp_entry(symbol) for symbol in split_list(m[1])])
+        )
+
     text = re.sub(
-        r"^entry: *(.*)\n",
-        "",
+        r"^entry: *(.*)",
+        replace_entries,
         text,
         flags=re.MULTILINE,
     )
-    text = "{}\n{}".format("<br/>".join(map(format_entry, entries)), text)
+
+    text = re.sub(
+        r"^macro: *(.*)",
+        lambda m: '<span style="font-size:xx-large;">{}</span><br/>'.format(
+            "".join([f"{format_entry(macro)}<br/>" for macro in split_list(m[1])])
+        ),
+        text,
+        flags=re.MULTILINE,
+    )
 
     text = re.sub(
         r"^experimental: *(.*)",
@@ -101,16 +120,10 @@ def replace_md(text: str, source: str = "n/a", trail: list[str] = None):
         segments = [f"defined in <{first}>"]
 
         if len(others) > 0:
-            segments.append(", also provided by")
+            segments.append(", also provided by ")
             segments.append(", ".join([f"<{header}>" for header in others]))
 
-        return "".join(
-            (
-                "<sub>",
-                *segments,
-                "</sub>",
-            )
-        )
+        return "".join(("<sub>", *segments, "</sub>", "<br/>"))
 
     text = re.sub(
         r"^headers: *(.*)",

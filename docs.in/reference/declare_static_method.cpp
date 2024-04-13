@@ -1,6 +1,6 @@
 #ifdef YOMM2_MD
 
-entry: declare_static_method
+macro: declare_static_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 hrefs: YOMM2_STATIC_DECLARE
 ```

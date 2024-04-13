@@ -1,7 +1,7 @@
-yorel::yomm2::**aggregate**
 
 
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>aggregate</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 ```
 template<typename... T> struct aggregate;
 ```An instance of `aggregate<T...>` contains one `T` sub-object for each

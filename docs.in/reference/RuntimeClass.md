@@ -1,7 +1,7 @@
-# RuntimeClass
+macro: RuntimeClass
 
 This concept specifies the operations available on the objects in the range
-passed to ->`publish_vptrs` function of facet ->`policy-vptr_vector`, and the
+passed to `publish_vptrs` function of facet ->`policy-vptr_vector`, and the
 `hash_initialize` function of facet ->`policy-type_hash`.
 
 

@@ -1,6 +1,5 @@
-
 # YOMM2_STATIC
-<sub>defined in <yorel/yomm2/symbols.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<sub>defined in <yorel/yomm2/symbols.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 #define YOMM2_STATIC(...) static __VA_ARGS__ YOMM2_GENSYM

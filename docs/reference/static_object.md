@@ -1,4 +1,3 @@
-
 # YOMM2 static objects
 
 

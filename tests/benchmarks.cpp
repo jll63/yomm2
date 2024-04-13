@@ -686,9 +686,9 @@ void call_project_1(leaf& obj) {
         use_basic_policy, ordinary_inheritance>::method1::fn(obj);
     // mov	rax, qword ptr [rdi + 8]
     // add	rdi, 8
-    // mov	rdx, qword ptr [rip + fast_perfect_hash<policy>::mult]
+    // mov	rdx, qword ptr [rip + fast_perfect_hash<policy>::hash_mult]
     // imul	rdx, qword ptr [rax - 8]
-    // movzx	ecx, byte ptr [rip + fast_perfect_hash<policy>::shift]
+    // movzx	ecx, byte ptr [rip + fast_perfect_hash<policy>::hash_shift]
     // shr	rdx, cl
     // mov	rax, qword ptr [rip + vptr_vector<policy>::vptrs]
     // mov	rax, qword ptr [rax + 8*rdx]

@@ -1,9 +1,9 @@
-yorel::yomm2::**define_method**
 
 
 
 
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub></sub>
+<span style="font-size:xx-large;"><strong>define_method</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub></sub><br/>
 ```
 #define_method(/*unspecified*/) /*unspecified*/
 ```

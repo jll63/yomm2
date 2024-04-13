@@ -1,4 +1,4 @@
-# yorel::yomm2::policy::**vptr_vector**
+entry: policy::vptr_vector
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ```c++

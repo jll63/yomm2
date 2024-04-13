@@ -2,7 +2,7 @@
 
 hrefs: YOMM2_DECLARE_METHOD_CONTAINER
 
-entry: method_container
+macro: method_container
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 
 ```

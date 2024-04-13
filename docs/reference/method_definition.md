@@ -1,7 +1,7 @@
-yorel::yomm2::**method_definition**
 
 
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>method_definition</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 ```
 #define method_definition(CONTAINER, RETURN_TYPE, FUNCTION_PARAMETER_LIST)
 ```Retrieve a method definition with a given return type and signature from a

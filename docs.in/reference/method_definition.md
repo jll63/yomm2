@@ -1,6 +1,6 @@
 hrefs: YOMM2_DEFINITION
 
-entry: method_definition
+macro: method_definition
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 ```
 #define method_definition(CONTAINER, RETURN_TYPE, FUNCTION_PARAMETER_LIST)

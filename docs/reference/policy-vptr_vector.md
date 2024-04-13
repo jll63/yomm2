@@ -1,6 +1,5 @@
-
-# yorel::yomm2::policy::**vptr_vector**
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>vptr_vector</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 template<class Policy>

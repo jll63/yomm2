@@ -1,7 +1,7 @@
-yorel::yomm2::**YOMM2_SYMBOL**
 
 
-<sub>defined in <yorel/yomm2/symbols.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>YOMM2_SYMBOL</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/symbols.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 ```
 #define YOMM2_SYMBOL(seed) /*unspecified*/
 ```Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely

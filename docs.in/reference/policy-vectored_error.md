@@ -1,4 +1,4 @@
-# yorel::yomm2::policy::**vectored_error**
+entry: policy::vectored_error
 headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
 ```c++

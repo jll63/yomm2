@@ -1,12 +1,15 @@
-yorel::yomm2::yomm2::**use_classes**<br/>yorel::yomm2::**register_classes**<br/>yorel::yomm2::**YOMM2_CLASSES**<br/>yorel::yomm2::**YOMM2_CLASSES**
 
 
-<sub>defined in <yorel/yomm2/core.hpp></sub>
-<br>
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<<yorel/yomm2/keywords.hpp></sub>
-<br>
-<sub>defined in <yorel/yomm2/macros.hpp>, also provided by<yorel/yomm2/yomm2.hpp></sub>
-```
+<span style="font-size:xx-large;">yorel::yomm2::<strong>use_classes</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp></sub><br/>
+
+<span style="font-size:xx-large;"><strong>register_classes</strong><br/><strong>YOMM2_CLASSES</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
+
+<span style="font-size:xx-large;"><strong>YOMM2_CLASSES</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/macros.hpp>, also provided by <yorel/yomm2/yomm2.hpp></sub><br/>
+
+```c++
 template<class... Class> struct use_classes;
 template<class... Class, class Policy> struct use_classes;
 ```
@@ -71,7 +74,6 @@ struct Wolf : Omnivore {};
 struct Sheep : Herbivore {};
 ```
 
-
 All the classes can be registered with a single static object:
 
 ```c++
@@ -82,14 +84,12 @@ use_classes<
 > YOMM2_GENSYM;
 ```
 
-
 Or, using either macro:
 
 ```c++
 register_classes(Animal, Herbivore, Carnivore, Omnivore, Human, Wolf, Sheep);
 YOMM2_CLASSES(Animal, Herbivore, Carnivore, Omnivore, Human, Wolf, Sheep);
 ```
-
 
 Classes can also be registered incrementally:
 
@@ -98,7 +98,6 @@ YOMM2_STATIC(use_classes<Animal, Herbivore, Carnivore>);
 YOMM2_STATIC(use_classes<Omnivore, Human, Wolf>);
 YOMM2_STATIC(use_classes<Sheep, Herbivore>);
 ```
-
 
 
 The following is **wrong**, because `use_classes` cannot infer that `Human`
@@ -110,7 +109,6 @@ YOMM2_STATIC(use_classes<Animal, Herbivore, Carnivore, Omnivore>);
 YOMM2_STATIC(use_classes<Human, Wolf>);      // wrong!
 YOMM2_STATIC(use_classes<Sheep, Herbivore>); // ok
 ```
-
 
 
 ## See also

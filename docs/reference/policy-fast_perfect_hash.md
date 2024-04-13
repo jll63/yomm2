@@ -1,4 +1,5 @@
-yorel::yomm2::policy::**fast_perfect_hash**<br/>yorel::yomm2::policy::**checked_perfect_hash headers:**
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>fast_perfect_hash</strong><br/>
+yorel::yomm2::policy::<strong>checked_perfect_hash headers:</strong></span><br/>
 yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 ```
 template<class Policy> struct fast_perfect_hash;

@@ -1,9 +1,9 @@
-yorel::yomm2::**method_container**
 
 
 
 
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>method_container</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```
 #define method_container(container)

@@ -1,9 +1,12 @@
-hrefs: YOMM2_DEFINE_INLINE
-entry: define_method_inline
+macro: define_method_inline
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+hrefs: YOMM2_DEFINE_INLINE
+
 ```
 #define define_method_inline(container, return-type, name, (function-parameter-list)) /*unspecified*/
-```Add an definition to a method, inside a container, and make it inline.
+```
+
+Add an definition to a method, inside a container, and make it inline.
 
 Like ->define_method, but the definition has the `inline` storage class, and
 thus can be placed in a header file and is a potential candidate for inlining.

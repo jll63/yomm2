@@ -1,4 +1,4 @@
-# yorel::yomm2::policy::**basic_error_output**
+entry: policy::basic_error_output
 headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
 ```c++

@@ -1,5 +1,4 @@
-entry: error,error_type, error_handler_type
-entry: unknown_class_error, hash_search_error, method_table_error, resolution_error,
+entry: error, error_type, error_handler_type, unknown_class_error, hash_search_error, method_table_error, resolution_error
 headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
 ```c++

@@ -1,7 +1,7 @@
-yorel::yomm2::**virtual_**
 
 
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>virtual_</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub><br/>
 ```
 template<class C>
 struct virtual_;

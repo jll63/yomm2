@@ -1,6 +1,6 @@
 entry: update_methods
 headers:yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
-Initialise the data used during method dispatch.
+Initialize the data used during method dispatch.
 
 This function must be called before any method is called (typically in `main`).
 It must also be called after a shared library is dynamically loaded or unloaded,

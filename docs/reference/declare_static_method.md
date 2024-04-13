@@ -1,7 +1,7 @@
-yorel::yomm2::**declare_static_method**
 
 
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>declare_static_method</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```
 #define declare_static_method(return-type, name, (types)) /*unspecified*/

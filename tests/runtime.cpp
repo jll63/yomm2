@@ -523,7 +523,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                        // Expenses
         BOOST_TEST_REQUIRE(
             test_policy::vptrs.size() <=
-            (1 << (std::numeric_limits<size_t>::digits - test_policy::shift)));
+            (1 << (std::numeric_limits<size_t>::digits - test_policy::hash_shift)));
 #ifndef NDEBUG
         BOOST_TEST_REQUIRE(
             test_policy::control.size() == test_policy::vptrs.size());

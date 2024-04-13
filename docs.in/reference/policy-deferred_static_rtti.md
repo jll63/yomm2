@@ -1,6 +1,8 @@
-yorel::yomm2::policy::deferred_static_rtti
+entry: policy::deferred_static_rtti
 
-    struct deferred_static_rtti : virtual rtti {};
+```c++
+struct deferred_static_rtti : virtual rtti {};
+```
 
 The `deferred_static_rtti` facet, derived from `rtti`, directs YOMM2 to defer
 collection of static type information until `update` is called. This makes it

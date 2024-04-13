@@ -1,6 +1,5 @@
 
-
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub><br/>
 ```
 error_handler_type set_error_handler(error_handler_type handler);
 ```All errors are reported via an indirect call to a handler, passing it a

@@ -401,8 +401,8 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
 
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
-    static type_id ;
-    static std::size_t shift;
+    static type_id hash_mult;
+    static std::size_t hash_shift;
     static std::size_t hash_length;
 
 #ifdef _MSC_VER
@@ -410,7 +410,7 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
 #endif
         static type_id
         hash_type_id(type_id type) {
-        return ( * type) >> shift;
+        return (hash_mult * type) >> hash_shift;
     }
 
     template<typename ForwardIterator>
@@ -453,7 +453,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
     std::uniform_int_distribution<type_id> uniform_dist;
 
     for (size_t pass = 0; pass < 4; ++pass, ++M) {
-        shift = 8 * sizeof(type_id) - M;
+        hash_shift = 8 * sizeof(type_id) - M;
         auto hash_size = 1 << M;
 
         if constexpr (trace_enabled) {
@@ -473,13 +473,13 @@ void fast_perfect_hash<Policy>::hash_initialize(
             ++attempts;
             ++total_attempts;
             found = true;
-             = uniform_dist(rnd) | 1;
+            hash_mult = uniform_dist(rnd) | 1;
 
             for (auto iter = first; iter != last; ++iter) {
                 for (auto type_iter = iter->type_id_begin();
                      type_iter != iter->type_id_end(); ++type_iter) {
                     auto type = *type_iter;
-                    auto index = (type * ) >> shift;
+                    auto index = (type * hash_mult) >> hash_shift;
 
                     if (index >= hash_length) {
                         hash_length = index + 1;
@@ -503,7 +503,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
         if (found) {
             if constexpr (trace_enabled) {
                 if (Policy::trace_enabled) {
-                    Policy::trace_stream << "  found " <<  << " after "
+                    Policy::trace_stream << "  found " << hash_mult << " after "
                                          << total_attempts << " attempts\n";
                 }
             }
@@ -525,9 +525,9 @@ void fast_perfect_hash<Policy>::hash_initialize(
 }
 
 template<class Policy>
-type_id fast_perfect_hash<Policy>::;
+type_id fast_perfect_hash<Policy>::hash_mult;
 template<class Policy>
-std::size_t fast_perfect_hash<Policy>::shift;
+std::size_t fast_perfect_hash<Policy>::hash_shift;
 template<class Policy>
 std::size_t fast_perfect_hash<Policy>::hash_length;
 

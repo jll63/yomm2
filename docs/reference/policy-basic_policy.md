@@ -1,5 +1,12 @@
-yorel::yomm2::**policy**<br/>yorel::yomm2::policy::**basic_policy**<br/>yorel::yomm2::policy::**debug**<br/>yorel::yomm2::policy::**release**<br/>yorel::yomm2::policy::**debug_shared**<br/>yorel::yomm2::policy::**release_shared**<br/>yorel::yomm2::**default_policy**
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>policy</strong><br/>
+yorel::yomm2::policy::<strong>basic_policy</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>debug</strong><br/>
+yorel::yomm2::policy::<strong>release</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>debug_shared</strong><br/>
+yorel::yomm2::policy::<strong>release_shared</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>default_policy</strong></span><br/>
+<span style="font-size:xx-large;"><strong>YOMM2_DEFAULT_POLICY</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 namespace policy {
@@ -126,8 +133,8 @@ implementation for each category. They are summed up in the following table.
 | ------------------------------- | --------------------------------- | -------------------------------------------------------------------------------- |
 | [vptr_placement](/yomm2/reference/policy-vptr_placement.html)         | fetch vptr for virtual argument   |                                                                                  |
 | *[external_vptr](/yomm2/reference/policy-vptr_placement.html)*        | store vptr outside the object     | [vptr_vector](/yomm2/reference/policy-vptr_vector.html) (D) (R), [vptr_map](/yomm2/reference/policy-vptr_map.html)                                  |
-| [rtti](/yomm2/reference/policy-rtti.html)                   | provide type information          | [std_rtti](/yomm2/reference/policy-std_rtti.html) (D) (R), [minimal_rtti](/yomm2/reference/policy-minimal_rtti.html)                                  |
-| *[deferred_static_rtti](/yomm2/reference/policy-deferred_static_rtti.html)* | as `rtti`, but avoid static ctors |                                                                                  |
+| [rtti](/yomm2/reference/policy-rtti.html)                   | provide type information          | [std_rtti](/yomm2/reference/policy-std_rtti.html) (D) (R), [minimal_rtti](/yomm2/reference/policy-minimal_rtti.html)                                 |
+| *[deferred_static_rtti](/yomm2/reference/policy-rtti.html)* | as `rtti`, but avoid static ctors |                                                                                  |
 | [type_hash](/yomm2/reference/policy-type_hash.html)              | map type info to integer index    | [fast_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html) (R), [checked_perfect_hash](/yomm2/reference/policy-checked_perfect_hash.html) (D)                |
 | [error_handler](/yomm2/reference/policy-error_handler.html)          | report errors                     | [vectored_error](/yomm2/reference/policy-vectored_error.html), [throw_error](/yomm2/reference/policy-throw_error.html), backward_compatible_error_handler |
 | [error_output](/yomm2/reference/policy-error_output.html)           | print diagnostics                 | [basic_error_output](/yomm2/reference/policy-basic_error_output.html) (D)                                                  |
@@ -158,6 +165,24 @@ The stock policies consist of the following facets:
 
 * **release_shared**: same as debug_shared, but checkeds are bypassed.
 
+## Overriding the default policy
+
+`yorel::yomm2::default_policy` is an alias to one of these four policies,
+depending on the value of preprocessor symbols `NDEBUG` and `YOMM2_SHARED`. It
+is used as the default value for the Policy template parameter in `use_classes`,
+`method`, `virtual_ptr` (and its associated helper functions). This can be
+overriden by defining `YOMM2_DEFAULT_POLICY` _before_ including
+`<yorel/yomm2/core.hpp>`. If the policy is not a stock policy, header
+`<yorel/yomm2/policy.hpp>` can be included to access the policy and facet
+mechanisms.
+
+**Use with caution**, this can easily cause ODR violations. Overriding should be
+done from a single header, which should be included in place of any YOMM2
+header, by all the source files in all the programs and libraries in a project.
+A reasonable example would be a header to be used in UnReal programs and
+libraries, to use custom RTTI.
+
+See [`vptr_placement`](/yomm2/reference/policy-vptr_placement.html) for an example.
 
 ## Example
 

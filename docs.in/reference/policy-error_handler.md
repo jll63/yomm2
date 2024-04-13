@@ -1,7 +1,9 @@
-# yorel::yomm2::policy::**error_handler**
+entry: policy::error_handler
 headers: yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
-    struct error_handler;
+```c+
+struct error_handler;
+```
 
 The `error_handler` is used by YOMM2 to handle error conditions. If it is
 present, its static member `error` is called with a variant describing the

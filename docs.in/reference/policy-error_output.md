@@ -1,4 +1,4 @@
-## yorel::yomm2::policy::**error_output**
+entry: policy::error_output
 headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     struct error_output;

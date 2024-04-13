@@ -1,7 +1,7 @@
-yorel::yomm2::policy::**vptr_placement**<br/>yorel::yomm2::policy::**external_vptr**
 
-
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>vptr_placement</strong><br/>
+yorel::yomm2::policy::<strong>external_vptr</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 ```
 struct vptr_placement;
 struct external_vptr;

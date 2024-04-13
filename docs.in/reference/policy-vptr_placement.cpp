@@ -2,9 +2,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 /***
-entry: policy::vptr_placement
-entry: policy::external_vptr
-hrefs: publish_vptrs
+entry: policy::vptr_placement, policy::external_vptr
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
 ```
 struct vptr_placement;

@@ -1,7 +1,8 @@
 /***
-# method_class
-entry: YOMM2_METHOD_CLASS
+macro: method_class
 headers: yorel/yomm2/keywords.hpp
+macro: YOMM2_METHOD_CLASS
+headers: yorel/yomm2/macros.hpp
 
 ```c++
 #define method_class(RETURN_TYPE, NAME, ARGS [, POLICY])

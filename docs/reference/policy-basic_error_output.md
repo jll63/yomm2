@@ -1,6 +1,5 @@
-
-# yorel::yomm2::policy::**basic_error_output**
-<sub>defined in <yorel/yomm2/policy.hpp>, also provided by<yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>basic_error_output</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 template<class Policy, typename Stream = /*unspecified*/>

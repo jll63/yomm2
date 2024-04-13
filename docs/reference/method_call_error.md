@@ -1,5 +1,7 @@
-yorel::yomm2::**method_call_error**<br/>yorel::yomm2::**method_call_error_handler**<br/>yorel::yomm2::**set_method_call_error_handler**
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>method_call_error</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>method_call_error_handler</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>set_method_call_error_handler</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 ```
 struct method_call_error {
     enum type { not_implemented = 0, ambiguous = 1 } code;

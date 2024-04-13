@@ -1,6 +1,5 @@
-
 **yorel::yomm2::not_defined** <small>(experimental)</small><br>
-<sub>defined in <yorel/yomm2/template.hpp></sub>
+<sub>defined in <yorel/yomm2/template.hpp></sub><br/>
 
 ```c++
 struct not_defined {};

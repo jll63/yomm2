@@ -1,7 +1,8 @@
-yorel::yomm2::**friend_method**<br/>yorel::yomm2::**YOMM2_FRIEND**
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;"><strong>friend_method</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
-<sub>defined in <yorel/yomm2/macros.hpp>, also provided by<yorel/yomm2.hpp></sub>
+<span style="font-size:xx-large;"><strong>YOMM2_FRIEND</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/macros.hpp>, also provided by <yorel/yomm2.hpp></sub><br/>
 ```
 #define friend_method(container) /*unspecified*/
 #define friend_method(container, return_type, name, (function-parameter-list)) /*unspecified*/

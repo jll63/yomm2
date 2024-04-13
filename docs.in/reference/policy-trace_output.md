@@ -1,4 +1,4 @@
-## yorel::yomm2::policy::**trace_output**
+entry: policy::trace_output
 headers: yorel/yomm2/policy.hpp,yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
 
     struct trace_output;

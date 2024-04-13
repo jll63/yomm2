@@ -1,6 +1,5 @@
-
 **yorel::yomm2::templates** <small>(experimental)</small><br>
-<sub>defined in <yorel/yomm2/core.hpp></sub>
+<sub>defined in <yorel/yomm2/core.hpp></sub><br/>
 <!-- -->```
 template<template<typename...> typename... Templates>
 using templates = types<template_<Templates>...>;

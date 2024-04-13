@@ -1,7 +1,7 @@
-entry: friend_method
+macro: friend_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 
-entry: YOMM2_FRIEND
+macro: YOMM2_FRIEND
 headers: yorel/yomm2/macros.hpp, yorel/yomm2.hpp
 ```
 #define friend_method(container) /*unspecified*/

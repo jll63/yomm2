@@ -1,4 +1,3 @@
-
 # Reference
 
 ## Introduction
@@ -100,14 +99,22 @@ The main constructs are:
 The header itself does not define any macros, except for its include guard
 (`YOREL_YOMM2_CORE_INCLUDED`).
 
-The header consumes two macros:
+The header consumes three macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
 * `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
+* [`YOMM2_DEFAULT_POLICY`](/yomm2/reference/policy-basic_policy.html): if defined, overrides the default policy.
 
 The header defines the following macros:
 * an include guard (`YOREL_YOMM2_CORE_INCLUDED`).
 * *iff* `YOMM2_SHARED` is defined, a `yOMM2_API` macro, for internal use.
+
+### `<yorel/yomm2/policy.hpp>`
+
+Contains the policy namespace, and the associated mechanisms. It is included by
+`<yorel/yomm2/core.hpp>`. It can also be included directly to create a new
+policy, to be used as the default policy, before including the core header. See
+[`YOMM2_DEFAULT_POLICY`](/yomm2/reference/policy-basic_policy.html) for more details.
 
 ### `<yorel/yomm2/symbols.hpp>`
 
@@ -177,9 +184,9 @@ for the shared runtime to be used.
 | [basic_error_output](/yomm2/reference/policy-basic_error_output.html)      | class template    | generic implementation of `error_output`                                 |
 | [basic_policy](/yomm2/reference/policy-basic_policy.html)            | class template    | create a policy                                                          |
 | [basic_trace_output](/yomm2/reference/policy-basic_trace_output.html)      | class template    | generic implementation of `trace_output`                                 |
-| [checked_perfect_hash](/yomm2/reference/policy-fast_perfect_hash.html)    | class template    | implementation of type_hash using a perfect hash, with runtime checks    |
+| [checked_perfect_hash](/yomm2/reference/policy-checked_perfect_hash.html)    | class template    | implementation of type_hash using a perfect hash, with runtime checks    |
 | [debug](/yomm2/reference/policy-basic_policy.html)                   | class             | most versatile policy, with runtime checks                               |
-| [deferred_static_rtti](/yomm2/reference/policy-deferred_static_rtti.html)    | class             | facet sub-category: do not collect type ids at static contstruction time |
+| [deferred_static_rtti](/yomm2/reference/policy-rtti.html)    | class             | facet sub-category: do not collect type ids at static contstruction time |
 | [error_handler](/yomm2/reference/policy-error_handler.html)           | class             | facet responsible for handling errors                                    |
 | [error_output](/yomm2/reference/policy-error_output.html)            | class             | facet responsible for printing errors                                    |
 | [external_vptr](/yomm2/reference/policy-vptr_placement.html)           | class             | sub-category of `vptr_placement`; vptrs are stored out of objects        |
@@ -214,6 +221,7 @@ for the shared runtime to be used.
 | [YOMM2_DECLARE](/yomm2/reference/declare_method.html)                  | macro             | same as `declare_method`                                                 |
 | [YOMM2_DECLARE_METHOD_CONTAINER](/yomm2/reference/method_container.html) | macro             | same as `method_container`                                               |
 | [YOMM2_DEFINE](/yomm2/reference/define_method.html)                   | macro             | same as `define_method`                                                  |
+| [YOMM2_DEFAULT_POLICY](/yomm2/reference/policy-basic_policy.html)           | macro             | global default policy override                                           |
 | [YOMM2_DEFINE_INLINE](/yomm2/reference/define_method_inline.html)            | macro             | same as `define_method_inline`                                           |
 | [YOMM2_DEFINITION](/yomm2/reference/method_definition.html)               | macro             | same as `method_definition`                                              |
 | [YOMM2_FRIEND](/yomm2/reference/friend_method.html)                   | macro             | same as `friend_method`                                                  |

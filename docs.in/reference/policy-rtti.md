@@ -1,4 +1,4 @@
-# yorel::yomm2::policy::rtti, yorel::yomm2::policy::deferred_static_rtti
+entry: policy::rtti, policy::deferred_static_rtti
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 

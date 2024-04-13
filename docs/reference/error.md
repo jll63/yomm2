@@ -1,5 +1,11 @@
-yorel::yomm2::**error**<br/>yorel::yomm2::**error_type**<br/>yorel::yomm2::**error_handler_type**<br/>yorel::yomm2::**unknown_class_error**<br/>yorel::yomm2::**hash_search_error**<br/>yorel::yomm2::**method_table_error**<br/>yorel::yomm2::**resolution_error**<br/>yorel::yomm2::****
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>error</strong><br/>
+yorel::yomm2::<strong>error_type</strong><br/>
+yorel::yomm2::<strong>error_handler_type</strong><br/>
+yorel::yomm2::<strong>unknown_class_error</strong><br/>
+yorel::yomm2::<strong>hash_search_error</strong><br/>
+yorel::yomm2::<strong>method_table_error</strong><br/>
+yorel::yomm2::<strong>resolution_error</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
 ```c++
 struct error {

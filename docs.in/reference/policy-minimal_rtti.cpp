@@ -1,5 +1,5 @@
 /***
-# yorel::yomm2::policy::minimal_rtti
+entry: policy::minimal_rtti
 headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
 
 ```c++

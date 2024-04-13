@@ -1,8 +1,7 @@
 
 
-
 **use_definitions** <small>(experimental)</small><br>
-<sub>defined in <yorel/yomm2/templates.hpp></sub>
+<sub>defined in <yorel/yomm2/templates.hpp></sub><br/>
 
 ```c++
 template<template<typename...> typename Definition, typename LoL>
@@ -81,7 +80,6 @@ BOOST_AUTO_TEST_CASE(ref_use_definitions) {
     BOOST_TEST(same_type::fn(sparse, square) == false);
 }
 ```
-
 
 
 1. By default, return `false`. This definition will be called if it is not

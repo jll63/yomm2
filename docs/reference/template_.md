@@ -1,5 +1,4 @@
 
-
 **yorel::yomm2::template_** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/templates.hpp></sub>
 <!-- -->```

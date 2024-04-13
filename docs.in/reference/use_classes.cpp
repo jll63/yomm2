@@ -1,14 +1,15 @@
 #ifdef YOMM2_MD
 
-entry:yomm2::use_classes
+entry: use_classes
 headers: yorel/yomm2/core.hpp
-<br>
-entry: register_classes, YOMM2_CLASSES
-headers: yorel/yomm2/cute.hpp, <yorel/yomm2/keywords.hpp
-<br>
-entry:YOMM2_CLASSES
+
+macro: register_classes, YOMM2_CLASSES
+headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+
+macro: YOMM2_CLASSES
 headers: yorel/yomm2/macros.hpp, yorel/yomm2/yomm2.hpp
-```
+
+```c++
 template<class... Class> struct use_classes;
 template<class... Class, class Policy> struct use_classes;
 ```

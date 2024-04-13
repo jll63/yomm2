@@ -1,9 +1,12 @@
-yorel::yomm2::**define_method_inline**
+<span style="font-size:xx-large;"><strong>define_method_inline</strong><br/></span><br/>
+<sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
 
-<sub>defined in <yorel/yomm2/cute.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
+
 ```
 #define define_method_inline(container, return-type, name, (function-parameter-list)) /*unspecified*/
-```Add an definition to a method, inside a container, and make it inline.
+```
+
+Add an definition to a method, inside a container, and make it inline.
 
 Like [define_method](/yomm2/reference/define_method.html), but the definition has the `inline` storage class, and
 thus can be placed in a header file and is a potential candidate for inlining.

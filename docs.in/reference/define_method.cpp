@@ -2,7 +2,7 @@
 
 hrefs: YOMM2_DEFINE
 
-entry: define_method
+macro: define_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp></sub
 ```
 #define_method(/*unspecified*/) /*unspecified*/

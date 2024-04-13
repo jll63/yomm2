@@ -1,7 +1,9 @@
-yorel::yomm2::**virtual_ptr**<br/>yorel::yomm2::**virtual_shared_ptr**<br/>yorel::yomm2::**make_virtual_shared**
 
+<span style="font-size:xx-large;">yorel::yomm2::<strong>virtual_ptr</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>virtual_shared_ptr</strong></span><br/>
+<span style="font-size:xx-large;">yorel::yomm2::<strong>make_virtual_shared</strong></span><br/>
 
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp```c++></sub>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp```c++></sub><br/>
 
 template<class Class /*, unspecified */>
 class virtual_ptr;
@@ -246,7 +248,6 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
 ```
 
 
-
 A call to `kick` compiles to three instructions and two memory reads:
 
 ```asm
@@ -359,7 +360,6 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final) {
 ```
 
 
-
 For non-polymorphic types, YOMM2 cannot detect misuses of `final`. At best, it
 will result in a missing definition error, at worst the wrong definition will be
 selected, as in the following example.
@@ -382,7 +382,6 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final_incorrect) {
     BOOST_CHECK(os.is_equal("wrong call"));
 }
 ```
-
 
 
 # Virtual shared pointers
@@ -492,7 +491,6 @@ BOOST_AUTO_TEST_CASE(ref_make_virtual_shared) {
     }
 }
 ```
-
 
 
 [^1]: The only reason why `virtual_ptr` is not called `virtual_ref` is to save

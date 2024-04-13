@@ -1,6 +1,6 @@
-yorel::yomm2::**update_methods**
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by<yorel/yomm2/keywords.hpp></sub>
-Initialise the data used during method dispatch.
+<span style="font-size:xx-large;">yorel::yomm2::<strong>update_methods</strong></span><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
+Initialize the data used during method dispatch.
 
 This function must be called before any method is called (typically in `main`).
 It must also be called after a shared library is dynamically loaded or unloaded,
