@@ -3,7 +3,9 @@
 
 ```c++
 struct not_defined {};
-```Classes derived from `not_defined` are discarded by [use_classes](/yomm2/reference/use_classes.html).
+```
+
+Classes derived from `not_defined` are discarded by [use_classes](/yomm2/reference/use_classes.html).
 
 ## Example
 

@@ -3,7 +3,9 @@ headers: yorel/yomm2/template.hpp
 
 ```c++
 struct not_defined {};
-```Classes derived from `not_defined` are discarded by ->use_classes.
+```
+
+Classes derived from `not_defined` are discarded by ->use_classes.
 
 ## Example
 

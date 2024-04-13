@@ -8,7 +8,7 @@ way that it is unlikely to clash with user-defined symbols.
 `YOMM2_GENSYM` provides a convenient way of allocating [static
 objects](static_object.md) for registering classes, methods, or definitions.
 
-### Examplexxx
+### Example
 
 ```c++
 int YOMM2_GENSYM;

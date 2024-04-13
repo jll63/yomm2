@@ -2,9 +2,12 @@
 
 <span style="font-size:xx-large;"><strong>method_definition</strong><br/></span><br/>
 <sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
-```
+
+```c++
 #define method_definition(CONTAINER, RETURN_TYPE, FUNCTION_PARAMETER_LIST)
-```Retrieve a method definition with a given return type and signature from a
+```
+
+Retrieve a method definition with a given return type and signature from a
 container.
 
 The resulting method can be used as a normal function reference. It can be
@@ -22,4 +25,4 @@ declaration is open.
 YOMM2_DEFINITION, defined in <yorel/yomm2/macros.hpp>, also provided by <yorel/yomm2.hpp>.
 
 ## Example
-See the [containers](https://github.com/jll63/yomm2/examples/containers) example.
+See the [containers](https://github.com/jll63/yomm2/tree/master/examples/containers) example.

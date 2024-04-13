@@ -2,11 +2,13 @@
 
 <span style="font-size:xx-large;"><strong>YOMM2_SYMBOL</strong><br/></span><br/>
 <sub>defined in <yorel/yomm2/symbols.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub><br/>
-```
-#define YOMM2_SYMBOL(seed) /*unspecified*/
-```Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely
-to clash with other names in scope.
 
+```c++
+#define YOMM2_SYMBOL(seed) /*unspecified*/
+```
+
+Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely
+to clash with other names in scope.
 
 ## Example
 

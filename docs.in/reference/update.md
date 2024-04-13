@@ -7,8 +7,9 @@ It must also be called after a shared library is dynamically loaded or unloaded,
 if the library adds method declarations, method definitions, or classes derived
 from classes that are used as virtual arguments.
 
-### Example```c++
+### Example
 
+```c++
 int main() {
     yorel::yomm2::update();
     // call methods

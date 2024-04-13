@@ -1,5 +1,6 @@
 entry: update_methods
 headers:yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+
 Initialize the data used during method dispatch.
 
 This function must be called before any method is called (typically in `main`).
@@ -7,8 +8,9 @@ It must also be called after a shared library is dynamically loaded or unloaded,
 if the library adds method declarations, method definitions, or classes derived
 from classes that are used as virtual arguments.
 
-### Example```c++
+### Example
 
+```c++
 int main() {
     yorel::yomm2::update_methods();
     // call methods

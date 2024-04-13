@@ -3,9 +3,12 @@
 macro: declare_static_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
 hrefs: YOMM2_STATIC_DECLARE
-```
+
+```c++
 #define declare_static_method(return-type, name, (types)) /*unspecified*/
-```Declare a method as a static member in a `struct` or `class`. Otherwise, the
+```
+
+Declare a method as a static member in a `struct` or `class`. Otherwise, the
 macro does exactly the same things as ->declare_method.
 
 This macro can be used when Argument Dependent Lookup is considered Evil. Note

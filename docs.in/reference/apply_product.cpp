@@ -2,10 +2,13 @@
 
 experimental: yorel::yomm2::apply_product
 headers: yorel/yomm2/templates.hpp
-```
+
+```c++
 template<typename TemplateList, typename... TypeLists>
 using apply_product = /*unspecified*/;
-````apply_product` takes a ->templates list and list of ->types lists, and
+```
+
+`apply_product` takes a ->templates list and list of ->types lists, and
 evaluates to a `types` list consisting of the application of each template to
 the n-fold Cartesian product of the input `types` lists.
 

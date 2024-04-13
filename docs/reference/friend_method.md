@@ -10,4 +10,4 @@
 a specific method. See [containers](examples/containers) for an example.
 
 ## Example
-See the [containers](https://github.com/jll63/yomm2/examples/containers) example.
+See the [containers](https://github.com/jll63/yomm2/tree/master/examples/containers) example.

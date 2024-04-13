@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ref_example) {
 
 ## See also
 
-The [containers example](https://github.com/jll63/yomm2/examples/containers) uses
+The [containers example](https://github.com/jll63/yomm2/tree/master/examples/containers) uses
 multiple containers across multiple namespaces and source files.
 
 

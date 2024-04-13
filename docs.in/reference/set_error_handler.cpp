@@ -1,8 +1,11 @@
 #ifdef YOMM2_MD
 headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
-```
+
+```c++
 error_handler_type set_error_handler(error_handler_type handler);
-```All errors are reported via an indirect call to a handler, passing it a
+```
+
+All errors are reported via an indirect call to a handler, passing it a
 `std::variant` that identifies the specific error. The handler can be set to
 a user-defined function with `set_error_handler`. The library calls `abort()`
 immediately after calling the handler, but the handler can prevent program

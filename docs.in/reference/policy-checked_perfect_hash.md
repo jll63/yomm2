@@ -5,8 +5,9 @@ template<class Policy>
 struct checked_perfect_hash;
 ```
 
-`checked_perfect_hash` is a subclass of ->`policy-fast_perfect_hash`. It checks that
-the id passed to `hash_type_index` is valid, i.e. was in the set of ids
+
+`checked_perfect_hash` is a subclass of ->`policy-fast_perfect_hash`. It checks
+that the id passed to `hash_type_index` is valid, i.e. was in the set of ids
 registered via `hash_initialize`.
 
 ## Template parameters
@@ -14,7 +15,8 @@ registered via `hash_initialize`.
 **Policy** - the policy containing the facet.
 
 ## Static member functions
-|                                     |                              |
+
+| Name                                            | Description                           |
 | ----------------------------------- | ---------------------------- |
 | [hash_initialize](#hash_initialize) | finds a hash function        |
 | [hash_type_id](#hash_type_id)       | returns the hashed `type_id` |

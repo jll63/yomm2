@@ -4,10 +4,13 @@
 
 <span style="font-size:xx-large;"><strong>define_method</strong><br/></span><br/>
 <sub>defined in <yorel/yomm2/cute.hpp>, also provided by <yorel/yomm2/keywords.hpp></sub></sub><br/>
-```
+
+```c++
 #define_method(/*unspecified*/) /*unspecified*/
 ```
+
 ### Usage
+
 ```
 define_method(return-type, name, (method-parameter-list)) {
     ...
@@ -16,7 +19,9 @@ define_method(return-type, name, (method-parameter-list)) {
 define_method(container, return-type, name, (method-parameter-list)) {
     ...
 }
-```Add a definition to a method.
+```
+
+Add a definition to a method.
 
 Locate a method with the same name, with a signature compatible with
 `method-parameter-list`, and add the definition to the method's list of

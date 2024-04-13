@@ -2,11 +2,13 @@
 
 macro: YOMM2_SYMBOL
 headers: yorel/yomm2/symbols.hpp, yorel/yomm2/keywords.hpp
-```
-#define YOMM2_SYMBOL(seed) /*unspecified*/
-```Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely
-to clash with other names in scope.
 
+```c++
+#define YOMM2_SYMBOL(seed) /*unspecified*/
+```
+
+Macro `YOMM2_SYMBOL` expands to an obfuscated symbol, unlikely
+to clash with other names in scope.
 
 ## Example
 

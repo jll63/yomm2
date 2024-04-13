@@ -1,14 +1,15 @@
 
 **yorel::yomm2::template_** <small>(experimental)</small><br>
-<sub>defined in <yorel/yomm2/templates.hpp></sub>
-<!-- -->```
+<sub>defined in <<yorel/yomm2/templates.hpp>></sub><br/>
+
+```c++
 template<template<typename...> typename Template>
 struct template_ {
     template<typename... Ts>
     using fn = /*unspecified*/;
 };
 ```
-<!-- -->
+
 `template_` wraps a template in a type, making it possible to appear in
 [types](/yomm2/reference/types.html) lists. Nested template `fn<Ts...>` evaluates to the instantiation of
 the template with the specified types.

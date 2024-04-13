@@ -1,15 +1,20 @@
 hrefs: YOMM2_DECLARE
 macro: declare_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
-```
+
+```c++
 #define declare_method(return-type, method, (types)) /*unspecified*/
 ```
+
 ### Usage
+
 ```
 declare_method(return-type, method, (types)) {
     ...
 }
-```Declare a method.
+```
+
+Declare a method.
 
 Create an inline function `method` that returns `return-type` and takes a
 parameter list consisting of `types`. At least one of `types` (but not

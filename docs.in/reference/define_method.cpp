@@ -4,10 +4,13 @@ hrefs: YOMM2_DEFINE
 
 macro: define_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp></sub
-```
+
+```c++
 #define_method(/*unspecified*/) /*unspecified*/
 ```
+
 ### Usage
+
 ```
 define_method(return-type, name, (method-parameter-list)) {
     ...
@@ -16,7 +19,9 @@ define_method(return-type, name, (method-parameter-list)) {
 define_method(container, return-type, name, (method-parameter-list)) {
     ...
 }
-```Add a definition to a method.
+```
+
+Add a definition to a method.
 
 Locate a method with the same name, with a signature compatible with
 `method-parameter-list`, and add the definition to the method's list of

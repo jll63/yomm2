@@ -1,7 +1,7 @@
-<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>fast_perfect_hash</strong><br/>
-yorel::yomm2::policy::<strong>checked_perfect_hash headers:</strong></span><br/>
-yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
-```
+<span style="font-size:xx-large;">yorel::yomm2::policy::<strong>fast_perfect_hash</strong></span><br/>
+<sub>defined in <yorel/yomm2/policy.hpp>, also provided by <yorel/yomm2/core.hpp>, <yorel/yomm2/keywords.hpp></sub><br/>
+
+```c++
 template<class Policy> struct fast_perfect_hash;
 template<class Policy> struct checked_perfect_hash;
 ```
@@ -41,12 +41,14 @@ missing class registrations.
 **Policy** - the policy containing the facet.
 
 ## Static member functions
+
 |                                     |                              |
 | ----------------------------------- | ---------------------------- |
 | [hash_initialize](#hash_initialize) | finds a hash function        |
 | [hash_type_id](#hash_type_id)       | returns the hashed `type_id` |
 
 ## Static member variables
+
 |                             |                               |
 | --------------------------- | ----------------------------- |
 | [hash_length](#hash_length) | length of the result interval |

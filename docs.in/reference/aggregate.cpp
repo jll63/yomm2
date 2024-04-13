@@ -2,9 +2,12 @@
 
 entry: aggregate
 headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
-```
+
+```c++
 template<typename... T> struct aggregate;
-```An instance of `aggregate<T...>` contains one `T` sub-object for each
+```
+
+An instance of `aggregate<T...>` contains one `T` sub-object for each
 specified `T`, just like a `std::tuple`.
 `aggregate` provides a convenient way to instantiate a collection of [YOMM2
 registration objects](static_object.md). Typically, the name of the variable
