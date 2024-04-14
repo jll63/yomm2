@@ -1,3 +1,7 @@
+#!/bin/bash
+
+set -e
+
 user=$1
 shift
 uid=$1
@@ -17,7 +21,7 @@ apt-get install -y tzdata
 ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime
 dpkg-reconfigure --frontend noninteractive tzdata
 
-apt-get install -y cmake git g++ sudo
+apt-get install -y cmake git clang++-15 g++15 sudo
 
 groupadd -g $gid $group
 useradd -g $gid -m $user
