@@ -1,14 +1,21 @@
 # YOMM2 on Compiler Explorer
 
-The following examples compare open methods with the equivalent (closed)
-virtual function based approaches.
+YOMM2 is available on Compiler Explorer. Make sure that you also select Boost
+version 1.74 or above, and you probably want to add the `-O3 -DNDEBUG` compiler
+switches.
 
-| OOP                   |     | YOMM2                                 | CE link                         |
-| --------------------- | --- | ------------------------------------- | ------------------------------- |
-| virtual function call | vs  | uni-method call via plain reference   | https://godbolt.org/z/exv73b9db |
-| virtual function call | vs  | uni-method call via virtual_ptr       | https://godbolt.org/z/zKMqcMfx8 |
-| double dispatch       | vs  | multi-method call via plain reference | https://godbolt.org/z/a1j3Exhbo |
-| double dispatch       | vs  | multi-method call via virtual_ptr     | https://godbolt.org/z/PT9P7q6M6 |
+The following examples are available:
+
+* The [Abstract Syntax Tree](https://jll63.github.io/yomm2/ce/ast.html) from the presentation.
+* The matrix example from the GitHub langing page.
+
+The following examples use the diff mode to compare open methods with the
+equivalent (closed) virtual function based approaches.
+
+* [virtual function call vs uni-method call via plain reference](https://jll63.github.io/yomm2/ce/vf-vs-1m-ref.html)
+* [virtual function call vs uni-method call via virtual_ptr  ](https://jll63.github.io/yomm2/ce/vf-vs-1m-vptr.html)
+* [double dispatch    vs multi-method call via plain reference](https://jll63.github.io/yomm2/ce/2d-vs-2m-ref.html)
+* [double dispatch    vs multi-method call via virtual_ptr ](https://jll63.github.io/yomm2/ce/2d-vs-2m-vptr.html)
 
 YOMM2 can also [add polymorphic operations to non-polymorphic
-classes](https://godbolt.org/z/YTeWcs9bo).
+classes](https://jll63.github.io/yomm2/ce/vptr-final.html).

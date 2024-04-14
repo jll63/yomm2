@@ -67,13 +67,12 @@ set(readme_cpp "${CMAKE_SOURCE_DIR}/examples/README.cpp")
 
 if(${YOMM2_ENABLE_DOC})
   message(STATUS "Documentation generation enabled")
-  add_custom_target(README ALL DEPENDS "${readme_md}")
+  add_custom_target(README_md ALL DEPENDS "${readme_md}")
   add_custom_command(
     OUTPUT "${readme_md}"
     COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
     DEPENDS "${readme_cpp}")
 endif()
-
 
 add_subdirectory(docs.in)
 

@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+
 #include <yorel/yomm2/keywords.hpp>
 
 struct Animal {
@@ -19,6 +20,7 @@ struct Cat : Animal {
 register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_ptr;
+using yorel::yomm2::final_virtual_ptr;
 
 declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
 
@@ -43,8 +45,8 @@ int main() {
     Dog hector{"Hector"}, snoopy{"Snoopy"};
     Cat felix{"Felix"}, sylvester{"Sylvester"};
     std::vector<virtual_ptr<Animal>> animals = {
-        virtual_ptr<Dog>::final(hector), virtual_ptr<Cat>::final(felix),
-        virtual_ptr<Cat>::final(sylvester), virtual_ptr<Dog>::final(snoopy)};
+        final_virtual_ptr(hector), virtual_ptr<Cat>::final(felix),
+        final_virtual_ptr(sylvester), virtual_ptr<Dog>::final(snoopy)};
 
     kick_animals(animals, std::cout);
 }

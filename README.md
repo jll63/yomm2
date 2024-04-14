@@ -87,6 +87,7 @@ struct diagonal_matrix : matrix { /* ... */
 // -----------------------------------------------------------------------------
 // application code
 
+#include <memory>
 #include <yorel/yomm2/keywords.hpp>
 
 register_classes(matrix, dense_matrix, diagonal_matrix);
@@ -151,29 +152,28 @@ Methods can have more than one virtual argument. This is handy in certain
 situations, for example to implement binary operations on matrices:
 
 ```c++
-
 // -----------------------------------------------------------------------------
 // matrix * matrix
 
 declare_method(
-    shared_ptr<const matrix>,
+    std::shared_ptr<const matrix>,
     times,
-    (virtual_<shared_ptr<const matrix>>, virtual_<shared_ptr<const matrix>>));
+    (virtual_<std::shared_ptr<const matrix>>, virtual_<std::shared_ptr<const matrix>>));
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
-    shared_ptr<const matrix>,
+    std::shared_ptr<const matrix>,
     times,
-    (shared_ptr<const matrix> a, shared_ptr<const matrix> b)) {
-    return make_shared<dense_matrix>();
+    (std::shared_ptr<const matrix> a, std::shared_ptr<const matrix> b)) {
+    return std::make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
-    shared_ptr<const matrix>,
+    std::shared_ptr<const matrix>,
     times,
-    (shared_ptr<const diagonal_matrix> a, shared_ptr<const diagonal_matrix> b)) {
-    return make_shared<diagonal_matrix>();
+    (std::shared_ptr<const diagonal_matrix> a, std::shared_ptr<const diagonal_matrix> b)) {
+    return std::make_shared<diagonal_matrix>();
 }
 ```
 
@@ -333,7 +333,7 @@ in the future. No promises, no time table.
 * Make error handler a `std::function`.
 * Get closer to Stroustrup et al's papers (version 2.0):
   * use compatible return types for disambiguation
-  * move support for `shared_ptr` and `unique_ptr` to an optional header
+  * move support for `std::shared_ptr` and `unique_ptr` to an optional header
 
 If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 would appreciate it if you take the time to send me a description of your use

@@ -3,6 +3,10 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+add_executable(README README.cpp)
+target_link_libraries(README YOMM2::yomm2)
+add_test(NAME README COMMAND README)
+
 add_executable(synopsis synopsis.cpp)
 target_link_libraries(synopsis YOMM2::yomm2)
 add_test(NAME synopsis COMMAND synopsis)
