@@ -12,10 +12,12 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(YOMM2_AUTO_INSTALL_DEPENDENCIES "Set to ON to build missing dependencies from source" OFF)
+
 # Find Boost dependency
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cmake/find_or_download_package.cmake)
-find_or_download_package(Boost INSTALL_WITH_YOMM)
+find_or_download_package(Boost "${YOMM2_AUTO_INSTALL_DEPENDENCIES}" INSTALL_WITH_YOMM)
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
@@ -45,7 +47,7 @@ if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
   if(${YOMM2_ENABLE_BENCHMARKS})
     message(STATUS "Benchmarks enabled")
-    find_or_download_package(benchmark)
+    find_or_download_package(benchmark "${YOMM2_AUTO_INSTALL_DEPENDENCIES}")
   endif()
   include(CTest)
   enable_testing()

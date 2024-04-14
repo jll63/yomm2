@@ -1,4 +1,4 @@
-macro(find_or_download_package PACKAGE)
+macro(find_or_download_package PACKAGE INSTALL_DEPENDENCIES)
   set(options INSTALL_WITH_YOMM)
   set(oneValueArgs DL_SCRIPT_DIR)
   cmake_parse_arguments(ARGS
@@ -9,7 +9,7 @@ macro(find_or_download_package PACKAGE)
     ${PACKAGE} QUIET
     HINTS ${DEPENDENCY_INSTALL_PREFIX} ${CMAKE_INSTALL_PREFIX}
   )
-  if(NOT ${${PACKAGE}_FOUND})
+  if(NOT ${${PACKAGE}_FOUND} AND ${INSTALL_DEPENDENCIES})
     message(STATUS "Package \"${PACKAGE}\" not found in system.")
     message(STATUS
       "Downloading dependency \"${PACKAGE}\" and building from source."
