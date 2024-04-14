@@ -5,16 +5,19 @@
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
-#ifdef YOMM2_MD
+/***
 entry: virtual_ptr
 entry: virtual_shared_ptr
 entry: make_virtual_shared
 hrefs: virtual_ptr-final
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp```c++
+headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
 
-template<class Class /*, unspecified */>
+```c++
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr;
-````virtual_ptr` is a fat pointer that consists of a pointer to an object, and a
+```
+
+`virtual_ptr` is a fat pointer that consists of a pointer to an object, and a
 pointer to its associated method table. It can be used in ->`declare_method`, in
 place of the ->`virtual_`, for virtual method parameters.
 
@@ -31,10 +34,12 @@ specializations below.
 ### Template parameters
 
 `Class` - The type of the object.
+`pOLICY` - The type of the object.
+
 ### Specializations
 
 ```
-template<class Class /*, unspecified */>
+template<class Class, class Policy = default_policy>
 class virtual_ptr<std::shared_ptr<Class>>;
 ```
 
@@ -171,11 +176,11 @@ Calling `update` invalidates all the existing `virtual_ptr`s.
 
 ## Example
 
-#endif
+***/
 
 namespace ref_virtual_ptr {
 
-#ifdef YOMM2_CODE
+//***
 
 using yorel::yomm2::virtual_ptr;
 
@@ -257,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
     }
 }
 
-#endif
+//***
 
 void call_kick(virtual_ptr<Animal> animal, std::ostream& os) {
     kick(animal, os);
@@ -269,26 +274,26 @@ void call_meet(virtual_ptr<Animal> a, virtual_ptr<Animal> b, std::ostream& os) {
 
 } // namespace direct_intrusive
 
-#ifdef YOMM2_MD
+/***
 
 A call to `kick` compiles to three instructions and two memory reads:
 
 ```asm
-	mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
-	mov	rax, qword ptr [rsi + 8*rax]
-	jmp	rax
+mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
+mov	rax, qword ptr [rsi + 8*rax]
+jmp	rax
 ```
 
 A call to `meet` compiles to:
 
 ```asm
-	mov	rax, qword ptr [rip + method<meet, ...>::fn+96]
-	mov	r8, qword ptr [rsi + 8*rax]
-	mov	rax, qword ptr [rip + method<meet, ...>::fn+104]
-	mov	rax, qword ptr [rcx + 8*rax]
-	imul	rax, qword ptr [rip + method<meet, ...>::fn+112]
-	mov	rax, qword ptr [r8 + 8*rax]
-	jmp	rax
+mov	rax, qword ptr [rip + method<meet, ...>::fn+96]
+mov	r8, qword ptr [rsi + 8*rax]
+mov	rax, qword ptr [rip + method<meet, ...>::fn+104]
+mov	rax, qword ptr [rcx + 8*rax]
+imul	rax, qword ptr [rip + method<meet, ...>::fn+112]
+mov	rax, qword ptr [r8 + 8*rax]
+jmp	rax
 ```
 
 # Non-polymorphic classes
@@ -300,11 +305,11 @@ is, indeed, its exact type.
 
 ## Example
 
-#endif
+***/
 
 namespace ref_virtual_ptr_final {
 
-#ifdef YOMM2_CODE
+//***
 
 class Animal {
     // note: no virtual functions
@@ -385,17 +390,17 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final) {
     }
 }
 
-#endif
+//***
 
-#ifdef YOMM2_MD
+/***
 
 For non-polymorphic types, YOMM2 cannot detect misuses of `final`. At best, it
 will result in a missing definition error, at worst the wrong definition will be
 selected, as in the following example.
 
-#endif
+***/
 
-#ifdef YOMM2_CODE
+//***
 
 define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
     os << "wrong call";
@@ -413,11 +418,11 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final_incorrect) {
     BOOST_CHECK(os.is_equal("wrong call"));
 }
 
-#endif
+//***
 
 }
 
-#ifdef YOMM2_MD
+/***
 
 # Virtual shared pointers
 
@@ -436,11 +441,11 @@ safe to use for non-polymorphic types.
 
 ## Example
 
-#endif
+***/
 
 namespace YOMM2_GENSYM {
 
-#ifdef YOMM2_CODE
+//***
 
 class Animal {
     // it does not matter if the class has virtual functions
@@ -530,12 +535,12 @@ BOOST_AUTO_TEST_CASE(ref_make_virtual_shared) {
     }
 }
 
-#endif
+//***
 }
 
-#ifdef YOMM2_MD
+/***
 
 [^1]: The only reason why `virtual_ptr` is not called `virtual_ref` is to save
     the name for the time when C++ supports a user-defined dot operator.
 
-#endif
+***/

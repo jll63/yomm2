@@ -3,11 +3,14 @@
 <span style="font-size:xx-large;">yorel::yomm2::<strong>virtual_shared_ptr</strong></span><br/>
 <span style="font-size:xx-large;">yorel::yomm2::<strong>make_virtual_shared</strong></span><br/>
 
-<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp```c++></sub><br/>
+<sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub><br/>
 
-template<class Class /*, unspecified */>
+```c++
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr;
-````virtual_ptr` is a fat pointer that consists of a pointer to an object, and a
+```
+
+`virtual_ptr` is a fat pointer that consists of a pointer to an object, and a
 pointer to its associated method table. It can be used in [`declare_method`](/yomm2/reference/declare_method.html), in
 place of the [`virtual_`](/yomm2/reference/virtual_.html), for virtual method parameters.
 
@@ -24,10 +27,12 @@ specializations below.
 ### Template parameters
 
 `Class` - The type of the object.
+`pOLICY` - The type of the object.
+
 ### Specializations
 
 ```
-template<class Class /*, unspecified */>
+template<class Class, class Policy = default_policy>
 class virtual_ptr<std::shared_ptr<Class>>;
 ```
 
@@ -251,21 +256,21 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
 A call to `kick` compiles to three instructions and two memory reads:
 
 ```asm
-	mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
-	mov	rax, qword ptr [rsi + 8*rax]
-	jmp	rax
+mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
+mov	rax, qword ptr [rsi + 8*rax]
+jmp	rax
 ```
 
 A call to `meet` compiles to:
 
 ```asm
-	mov	rax, qword ptr [rip + method<meet, ...>::fn+96]
-	mov	r8, qword ptr [rsi + 8*rax]
-	mov	rax, qword ptr [rip + method<meet, ...>::fn+104]
-	mov	rax, qword ptr [rcx + 8*rax]
-	imul	rax, qword ptr [rip + method<meet, ...>::fn+112]
-	mov	rax, qword ptr [r8 + 8*rax]
-	jmp	rax
+mov	rax, qword ptr [rip + method<meet, ...>::fn+96]
+mov	r8, qword ptr [rsi + 8*rax]
+mov	rax, qword ptr [rip + method<meet, ...>::fn+104]
+mov	rax, qword ptr [rcx + 8*rax]
+imul	rax, qword ptr [rip + method<meet, ...>::fn+112]
+mov	rax, qword ptr [r8 + 8*rax]
+jmp	rax
 ```
 
 # Non-polymorphic classes
