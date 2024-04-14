@@ -1,4 +1,3 @@
-# 
 
 
 # YOMM2
@@ -114,7 +113,6 @@ int main() {
     return 0;
 }
 ```
-# 
 
 
 `<yorel/yomm2/keywords.hpp>` is the library's main entry point. It declares a
