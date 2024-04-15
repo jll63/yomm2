@@ -1,5 +1,4 @@
 
-
 # YOMM2
 
 This library implements fast, open, multi-methods for C++17. It is strongly
@@ -157,22 +156,19 @@ situations, for example to implement binary operations on matrices:
 
 declare_method(
     std::shared_ptr<const matrix>,
-    times,
-    (virtual_<std::shared_ptr<const matrix>>, virtual_<std::shared_ptr<const matrix>>));
+    times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
     std::shared_ptr<const matrix>,
-    times,
-    (std::shared_ptr<const matrix> a, std::shared_ptr<const matrix> b)) {
+    times, (const matrix& a, const matrix& b)) {
     return std::make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
     std::shared_ptr<const matrix>,
-    times,
-    (std::shared_ptr<const diagonal_matrix> a, std::shared_ptr<const diagonal_matrix> b)) {
+    times, (const diagonal_matrix& a, const diagonal_matrix& b)) {
     return std::make_shared<diagonal_matrix>();
 }
 ```

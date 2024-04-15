@@ -162,22 +162,19 @@ situations, for example to implement binary operations on matrices:
 
 declare_method(
     std::shared_ptr<const matrix>,
-    times,
-    (virtual_<std::shared_ptr<const matrix>>, virtual_<std::shared_ptr<const matrix>>));
+    times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
     std::shared_ptr<const matrix>,
-    times,
-    (std::shared_ptr<const matrix> a, std::shared_ptr<const matrix> b)) {
+    times, (const matrix& a, const matrix& b)) {
     return std::make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
     std::shared_ptr<const matrix>,
-    times,
-    (std::shared_ptr<const diagonal_matrix> a, std::shared_ptr<const diagonal_matrix> b)) {
+    times, (const diagonal_matrix& a, const diagonal_matrix& b)) {
     return std::make_shared<diagonal_matrix>();
 }
 //***
@@ -193,8 +190,7 @@ base, which requires a dynamic cast). It does not involve branching or
 looping, only a few memory reads (which the CPU can be parallelize), a
 multiplication, a bit shift, a final memory read, then an indirect call. If
 the body of the method does any amount of work, the difference is
-unnoticeable. See the implementation notes for benchmarks and assembly
-listings.
+unnoticeable. See the [Compiler Explorer links]()
 
 [`virtual_ptr`](https://jll63.github.io/yomm2/reference/virtual_ptr.md), a fat
 pointer class, can be used to make method dispatch even faster - three
