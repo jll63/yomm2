@@ -183,12 +183,13 @@ base, which requires a dynamic cast). It does not involve branching or
 looping, only a few memory reads (which the CPU can be parallelize), a
 multiplication, a bit shift, a final memory read, then an indirect call. If
 the body of the method does any amount of work, the difference is
-unnoticeable. See the implementation notes for benchmarks and assembly
-listings.
+unnoticeable.
 
 [`virtual_ptr`](https://jll63.github.io/yomm2/reference/virtual_ptr.md), a fat
 pointer class, can be used to make method dispatch even faster - three
 instructions and two memory reads -, without sacrificing orthogonality.
+
+[Examples](ce/README.md) are available on Compiler Explorer.
 
 ## Building and Installing
 

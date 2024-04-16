@@ -7,6 +7,10 @@ add_executable(README README.cpp)
 target_link_libraries(README YOMM2::yomm2)
 add_test(NAME README COMMAND README)
 
+add_executable(slides slides.cpp)
+target_link_libraries(slides YOMM2::yomm2)
+add_test(NAME slides COMMAND slides)
+
 add_executable(synopsis synopsis.cpp)
 target_link_libraries(synopsis YOMM2::yomm2)
 add_test(NAME synopsis COMMAND synopsis)
