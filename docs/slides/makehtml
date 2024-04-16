@@ -1,3 +1,0 @@
-pandoc -t revealjs --slide-level 2 -s -o index.html yomm2.md \
-       -V revealjs-url=https://unpkg.com/reveal.js@3.9.2/ \
-       -V center=false -V theme=beige "$@"
