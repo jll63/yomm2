@@ -99,16 +99,14 @@ define_method(int, value, (Plus& expr)) {
 
 
 
-## Performance
 
-<section style="text-align: left;">
+## Performance
 
 * 15-30% slower than equivalent native virtual function call (but see `virtual_ptr`)
 
 * [Optimizing Away C++ Virtual Functions May Be
   Pointless](https://www.youtube.com/watch?v=i5MAXAxp_Tw)  - Shachar Shemesh -
   CppCon 2023
-</section>
 
 ```asm
 	mov	  rax, qword ptr [rdi]

@@ -20,7 +20,7 @@ struct Number : Node {
 
 struct Plus : Node {
   Plus(const Node& left, const Node& right) : left(left), right(right) { }
-  int value() const override { return left.value() + right.value();}
+  int value() const override { return left.value() + right.value(); }
   const Node& left; const Node& right;
 };
 
@@ -35,7 +35,7 @@ struct Times : Node {
 
 ## AST
 
-<br/><br/>
+<br/>
 
 ```C++
 int main() {
@@ -48,6 +48,11 @@ int main() {
 
   return 0;
 }
+```
+
+Output:
+```
+14
 ```
 
 
@@ -79,7 +84,7 @@ struct Node {
 
 struct Number : Node {
   // as before
-  string to_rpn() const override { return to_string(val);}
+  string to_rpn() const override { return to_string(val); }
 };
 
 struct Plus : Node {

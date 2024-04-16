@@ -16,15 +16,15 @@
         <ul>
           <li class="fragment">submit to Boost</li>
           <li class="fragment">talk about it (CppCon 2018...)</li>
+          <li class="fragment">2018-2020: only bug fixes, cleanup...</li>
         </ul>
       </li>
     </ul>
   </li>
   <li class="fragment">results:
     <ul>
-      <li class="fragment">Boost community: not interested</li>
-      <li class="fragment">standard committee: not interested</li>
-      <li class="fragment">2018-2020: bug fixes, cleanup...</li>
+      <li class="fragment">Boost community: no interest</li>
+      <li class="fragment">standard committee: no interest</li>
     </ul>
   </li>
 </ul>
