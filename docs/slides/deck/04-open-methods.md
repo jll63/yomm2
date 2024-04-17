@@ -128,7 +128,7 @@ define_method(int, value, (Plus& expr)) {
 
 ## Multiple Dispatch
 
-Sometimes useful.
+sometimes useful
 
 ```text
 add(Matrix, Matrix)                 -> Matrix

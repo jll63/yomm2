@@ -129,7 +129,7 @@ YoMm2_gS_10::_yOMM2_spec::yOMM2_body(const Employee&) {
 
 ## update
 
-Uses the class and method info registered by static ctors.
+uses the class and method info registered by static ctors
 
 * build representation of class hierarchies
 
