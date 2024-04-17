@@ -399,12 +399,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
-        BOOST_TEST(
-            pay_method.dispatch_table[0] ==
-            reinterpret_cast<std::uintptr_t>(pay_Employee->info->pf));
-        BOOST_TEST(
-            pay_method.dispatch_table[1] ==
-            reinterpret_cast<std::uintptr_t>(pay_Manager->info->pf));
+        BOOST_TEST(pay_method.dispatch_table[0]->pf == pay_Employee->pf);
+        BOOST_TEST(pay_method.dispatch_table[1]->pf == pay_Manager->pf);
     }
 
     {
@@ -415,47 +411,18 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         BOOST_TEST_REQUIRE(approve_method.strides[0] == 4);
 
         auto dp_iter = approve_method.dispatch_table.begin();
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(
-                approve_Founder_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(
-                approve_Employee_public->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(
-                approve_Employee_public->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(
-                approve_Founder_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Role_Expense->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(approve_Manager_Taxi->info->pf));
-        BOOST_TEST(
-            *dp_iter++ ==
-            reinterpret_cast<std::uintptr_t>(
-                approve_Founder_Expense->info->pf));
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Founder_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Employee_public->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Employee_public->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Founder_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Role_Expense->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Manager_Taxi->pf);
+        BOOST_TEST((*dp_iter++)->pf == approve_Founder_Expense->pf);
     }
 
     {
@@ -523,7 +490,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
                        // Expenses
         BOOST_TEST_REQUIRE(
             test_policy::vptrs.size() <=
-            (1 << (std::numeric_limits<size_t>::digits - test_policy::hash_shift)));
+            (1
+             << (std::numeric_limits<size_t>::digits -
+                 test_policy::hash_shift)));
 #ifndef NDEBUG
         BOOST_TEST_REQUIRE(
             test_policy::control.size() == test_policy::vptrs.size());
@@ -537,7 +506,8 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         auto approve_dispatch_table = gv_iter;
         BOOST_TEST(std::equal(
             approve_method.dispatch_table.begin(),
-            approve_method.dispatch_table.end(), gv_iter));
+            approve_method.dispatch_table.end(), gv_iter,
+            [](auto a, auto b) { return a->pf == b; }));
         gv_iter += approve_method.dispatch_table.size();
 
         // auto opt_iter = gv_iter;
