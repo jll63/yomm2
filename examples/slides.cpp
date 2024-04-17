@@ -1,5 +1,6 @@
 // clang-format off
 
+#include <functional>
 #include <iostream>
 #include <string>
 #include <typeindex>
@@ -150,6 +151,56 @@ define_method(int, value, (const Times& expr)) {
 }
 }
 
+namespace virtual_ptr_demo {
+
+using namespace yorel::yomm2;
+
+declare_method(int, value, (virtual_ptr<const Node>));
+
+int call_via_vptr(virtual_ptr<const Node> node) {
+  return value(node);
+}
+
+define_method(int, value, (virtual_ptr<const Plus> expr)) {
+  return value(expr->left) + value(expr->right);
+}
+
+auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
+    return virtual_ptr(node);
+}
+
+auto make_final_node_ptr(Node& node, virtual_ptr<Node>& p) {
+    return final_virtual_ptr(node);
+}
+
+}
+
+namespace core_api {
+
+using namespace yorel::yomm2;
+
+use_classes<Node, Number, Plus, Times> use_animal_classes;
+
+struct value_id;
+using value = method<value_id, int(virtual_<const Node&>)>;
+
+int number_value(const Number& node) {
+  return node.val;
+}
+value::add_function<number_value> add_number_value;
+
+template<class NodeClass, class Op>
+struct binary_value {
+  static int fn(const NodeClass& expr) {
+    return Op()(value::fn(expr.left), value::fn(expr.right));
+  }
+};
+
+YOMM2_STATIC(value::add_definition<binary_value<Plus, std::plus<int>>>);
+YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
+
+}
+
 int main() {
   Number n2(2), n3(3), n4(4);
   Plus sum(n3, n4);
@@ -166,19 +217,7 @@ int main() {
   yorel::yomm2::update();
   cout << openmethods::to_rpn(expr) << " = " << expr.value() << "\n";
 
+  cout << core_api::value::fn(expr) << "\n";
+
   return 0;
-}
-
-namespace virtual_ptr_demo {
-
-using namespace yorel::yomm2;
-
-auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return virtual_ptr(node);
-}
-
-auto make_final_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return final_virtual_ptr(node);
-}
-
 }
