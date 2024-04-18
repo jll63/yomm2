@@ -333,7 +333,7 @@ mtbls[ H(&typeid(bill)) ]        // method table for bill
 
 ## yomm2 vs PSS
 
-* Solodkyi's  papers on open methods etc:
+* Solodkyi's  papers on open methods etc.:
     * [Open Multi-Methods for C++](http://www.stroustrup.com/multimethods.pdf)
     * [Design and Evaluation of C++ Open Multi-Methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
     * [Simplifying the Analysis of C++ Programs](http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf)
