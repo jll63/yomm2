@@ -146,7 +146,7 @@ struct Number : Node {
 struct Plus : Node {
   void visit(Visitor& viz) override { viz.accept(*this); }
 };
-// etc
+// etc.
 ```
 
 
