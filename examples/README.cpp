@@ -11,7 +11,7 @@ Stroustrup.
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
     - [Multiple Dispatch](#multiple-dispatch)
   - [Performance](#performance)
-  - [Building and Installing](#building-and-installing)
+  - [Installation](#installation)
   - [Going Further](#going-further)
   - [Roadmap](#roadmap)
 
@@ -194,46 +194,40 @@ unnoticeable.
 
 [`virtual_ptr`](https://jll63.github.io/yomm2/reference/virtual_ptr.md), a fat
 pointer class, can be used to make method dispatch even faster - three
-instructions and two memory reads -, without sacrificing orthogonality.
+instructions and two memory reads.
 
 [Examples](ce/README.md) are available on Compiler Explorer.
 
-## Building and Installing
+## Installation
 
-Make sure that you have the following dependencies:
+YOMM2 is available as a `vcpkg` package. This is the easiest way of integrating
+it in your project. Just add `yomm2` as a dependency in your `vcpkg.json` - see
+[this example](`examples/vcpkg`).
 
-* a C++17 capable compiler
+YOMM2 can also be built and installed from the sources, using straight `cmake`.
 
-* cmake version 3.20 or above
-
-Clone the repository:
+First clone the repository:
 
 ```
 git clone https://github.com/jll63/yomm2.git
-cd yomm2
 ```
 
-Create a build directory and run cmake then make:
+Run cmake:
 
 ```
-mkdir build
-cd build
-cmake ..
-make
+cmake -S yomm2 -B build.yomm2
 ```
 
 If you want to run the tests, specify it when running `cmake`:
 
 ```
-cmake .. -DYOMM2_ENABLE_TESTS=1
-make && ctest
+cmake -S yomm2 -B build.yomm2 -DYOMM2_ENABLE_TESTS=1
+ctest --test-dir build.yomm2
 ```
 
 YOMM2 uses several Boost libraries:
-
-1. Preprocessor, DynamicBitset, TypeTraits: included by YOMM2 headers
-
-2. Boost.Test: only used to run the test suite
+* Preprocessor, DynamicBitset, TypeTraits: included by YOMM2 headers
+* Boost.Test: only used to run the test suite
 
 If these libraries are already available on your machine, and they can be
 found by `cmake`, they will be used. In this case, make sure that the
@@ -241,24 +235,26 @@ pre-installed libraries are at version 1.74 or above. If Boost is not found,
 the latest version will be downloaded, and the Boost headers mentioned in
 section (1) will be installed along YOMM2 (if you decide to `make install`).
 
-If you also want to run the benchmarks (and in this case you really want a
-release build):
+If you want to run the benchmarks (and in this case you really want a release
+build):
 
 ```
-cmake .. -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
-make && tests/benchmarks
+cmake -S yomm2 -B build.yomm2 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DCMAKE_BUILD_TYPE=Release
+./build.yomm2/tests/benchmarks
 ```
-This will automatically download the dependency
-[benchmark](https://github.com/google/benchmark), build it and finally install
-it to `./extern` within the root directory of yomm2.
+The benchmarks use the [Google benchmark](https://github.com/google/benchmark)
+library. Again, if it is not found, it will be built from its source.
 
-If you like YOMM2, and you want to install it:
+If you like YOMM2, and you want to install it, either system-wide:
 
 ```
-# either:
-sudo make install
-# or:
-make install DESTDIR=/path/to/my/libs
+sudo cmake --install build.yomm2
+```
+
+...or to a specific directory:
+
+```
+DESTDIR=/path/to/my/libs cmake --install build.yomm2
 ```
 
 This will install the headers and a CMake package configuration. By default,
