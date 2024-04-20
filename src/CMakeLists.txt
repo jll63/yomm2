@@ -40,7 +40,6 @@ else()
     yomm2 INTERFACE
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    $<INSTALL_INTERFACE:Boost::yomm2>
   )
   target_link_libraries(yomm2 INTERFACE Boost::headers)
 endif()
@@ -49,6 +48,7 @@ install(TARGETS yomm2
   EXPORT YOMM2Targets
   LIBRARY DESTINATION lib
   ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
 )
 
 add_library(YOMM2::yomm2 ALIAS yomm2)

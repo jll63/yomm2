@@ -6,7 +6,7 @@ switches.
 
 The following examples are available:
 
-* The [Abstract Syntax Tree](https://jll63.github.io/yomm2/ce/ast.html) from the presentation.
+* The [examples](https://jll63.github.io/yomm2/ce/slides.html) from the slides.
 * The matrix example from the GitHub langing page.
 
 The following examples use the diff mode to compare open methods with the
