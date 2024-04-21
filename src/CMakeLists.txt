@@ -15,7 +15,7 @@ if(YOMM2_SHARED)
   if(NOT WIN32)
     target_compile_options(yomm2 PRIVATE -fvisibility=hidden)
   endif()
-  target_compile_definitions(yomm2 PUBLIC -DYOMM2_SHARED=1)
+  target_compile_definitions(yomm2 PUBLIC YOMM2_SHARED=1)
   target_include_directories(
     yomm2 PUBLIC
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
