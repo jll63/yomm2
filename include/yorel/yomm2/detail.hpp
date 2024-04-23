@@ -311,7 +311,8 @@ struct requires_dynamic_cast_refaux<
     : std::false_type {};
 
 template<class B, class D>
-constexpr bool requires_dynamic_cast = requires_dynamic_cast_refaux<B, D>::value;
+constexpr bool requires_dynamic_cast =
+    requires_dynamic_cast_refaux<B, D>::value;
 
 template<class Policy, class D, class B>
 decltype(auto) optimal_cast(B&& obj) {
@@ -755,6 +756,20 @@ inline ostdstream& operator<<(ostdstream& os, size_t value) {
 }
 
 struct empty_base {};
+
+// -----------------------------------------------------------------------------
+// static_slots
+
+template<class Method>
+struct static_offsets;
+
+template<class Method, typename = void>
+struct has_static_offsets : std::false_type {};
+
+template<class Method>
+struct has_static_offsets<
+    Method, std::void_t<decltype(static_offsets<Method>::slots)>>
+    : std::true_type {};
 
 } // namespace detail
 } // namespace yomm2

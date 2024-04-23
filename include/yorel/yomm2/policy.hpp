@@ -89,9 +89,17 @@ struct method_table_error : error {
     type_id type;
 };
 
+struct static_offset_error : error {
+    type_id method;
+    int actual, expected;
+};
+
+struct static_slot_error : static_offset_error {};
+struct static_stride_error : static_offset_error {};
+
 using error_type = std::variant<
     error, resolution_error, unknown_class_error, hash_search_error,
-    method_table_error>;
+    method_table_error, static_slot_error, static_stride_error>;
 
 using error_handler_type = std::function<void(const error_type& error)>;
 

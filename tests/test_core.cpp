@@ -320,3 +320,43 @@ static_assert(std::is_same_v<
     parameter_type_list_t<decltype(f)>,
     types<char, int>
 >);
+
+// -----------------------------------------------------------------------------
+// static_slots
+
+namespace test_static_slots {
+struct Animal;
+}
+
+namespace yorel {
+namespace yomm2 {
+namespace detail {
+
+template<>
+struct static_offsets<
+    method<
+        void,
+        void (
+            virtual_<test_static_slots::Animal&>,
+            virtual_<test_static_slots::Animal&>)>
+> {
+    static constexpr size_t slots[] = { 0, 1 };
+};
+
+}
+}
+}
+
+namespace test_static_slots {
+
+struct Animal {
+    virtual ~Animal() {}
+};
+
+using kick = method<void, void (virtual_<Animal&>)>;
+static_assert(!has_static_offsets<kick>::value);
+
+using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
+static_assert(has_static_offsets<meet>::value);
+
+}

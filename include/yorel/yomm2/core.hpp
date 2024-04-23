@@ -89,6 +89,9 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     template<typename ArgType>
     const std::uintptr_t* vptr(const ArgType& arg) const;
 
+    template<class Error>
+    void check_static_offset(size_t actual, size_t expected) const;
+
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     std::uintptr_t
     resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
@@ -452,8 +455,8 @@ template<typename Key, typename R, class Policy, typename... A>
 typename method<Key, R(A...), Policy>::return_type inline method<
     Key, R(A...), Policy>::operator()(detail::remove_virtual<A>... args) const {
     using namespace detail;
-    return resolve(argument_traits<Policy, A>::rarg(args)...)(
-        std::forward<remove_virtual<A>>(args)...);
+    auto pf = resolve(argument_traits<Policy, A>::rarg(args)...);
+    return pf(std::forward<remove_virtual<A>>(args)...);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
@@ -487,6 +490,25 @@ method<Key, R(A...), Policy>::vptr(const ArgType& arg) const {
 }
 
 template<typename Key, typename R, class Policy, typename... A>
+template<class Error>
+inline void method<Key, R(A...), Policy>::check_static_offset(
+    size_t actual, size_t expected) const {
+    using namespace detail;
+
+    if (actual != expected) {
+        if (Policy::template has_facet<policy::error_handler>) {
+            Error error;
+            error.method = Policy::template static_type<method>();
+            error.expected = slots_strides[0];
+            error.actual = actual;
+            Policy::error(error_type(std::move(error)));
+
+            abort();
+        }
+    }
+}
+
+template<typename Key, typename R, class Policy, typename... A>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
@@ -503,7 +525,15 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
             vtbl = vptr<ArgType>(arg);
         }
 
-        return vtbl[this->slots_strides[0]];
+        if constexpr (has_static_offsets<method>::value) {
+            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+                check_static_offset<static_slot_error>(
+                    static_offsets<method>::slots[0], this->slots_strides[0]);
+            }
+            return vtbl[static_offsets<method>::slots[0]];
+        } else {
+            return vtbl[this->slots_strides[0]];
+        }
     } else {
         return resolve_uni<mp_rest<MethodArgList>>(more_args...);
     }
@@ -528,7 +558,17 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
             vtbl = vptr<ArgType>(arg);
         }
 
-        auto slot = slots_strides[0];
+        size_t slot;
+
+        if constexpr (has_static_offsets<method>::value) {
+            slot = static_offsets<method>::slots[0];
+            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+                check_static_offset<static_slot_error>(
+                    static_offsets<method>::slots[0], slots_strides[0]);
+            }
+        } else {
+            slot = slots_strides[0];
+        }
 
         // The first virtual parameter is special.  Since its stride is
         // 1, there is no need to store it. Also, the method table
@@ -563,8 +603,24 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
             vtbl = vptr<ArgType>(arg);
         }
 
-        auto slot = this->slots_strides[2 * VirtualArg - 1];
-        auto stride = this->slots_strides[2 * VirtualArg];
+        size_t slot, stride;
+
+        if constexpr (has_static_offsets<method>::value) {
+            slot = static_offsets<method>::slots[VirtualArg];
+            stride = static_offsets<method>::strides[VirtualArg - 1];
+            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+                check_static_offset<static_stride_error>(
+                    static_offsets<method>::strides[VirtualArg - 1],
+                    this->slots_strides[2 * VirtualArg]);
+                check_static_offset<static_slot_error>(
+                    static_offsets<method>::slots[VirtualArg],
+                    this->slots_strides[2 * VirtualArg - 1]);
+            }
+        } else {
+            slot = this->slots_strides[2 * VirtualArg - 1];
+            stride = this->slots_strides[2 * VirtualArg];
+        }
+
         dispatch = dispatch + vtbl[slot] * stride;
     }
 

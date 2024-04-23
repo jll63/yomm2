@@ -73,6 +73,7 @@ struct rt_class {
 struct rt_spec {
     const definition_info* info;
     std::vector<rt_class*> vp;
+    std::uintptr_t pf;
 };
 
 using bitvec = boost::dynamic_bitset<>;
@@ -101,7 +102,11 @@ struct rt_method {
     std::vector<rt_spec> specs;
     std::vector<size_t> slots;
     std::vector<size_t> strides;
-    std::vector<std::uintptr_t> dispatch_table;
+    std::vector<const rt_spec*> dispatch_table;
+    // following two are dummies, when converting to a function pointer, we will
+    // get the corresponding pointer from method_info
+    rt_spec not_implemented;
+    rt_spec ambiguous;
     const std::uintptr_t* gv_dispatch_table{nullptr};
     auto arity() const {
         return vp.size();
@@ -586,6 +591,12 @@ void runtime<Policy>::augment_methods() {
             meth_iter->vp.push_back(rt_class);
         }
 
+        // initialize the function pointer in the dummy specs
+        meth_iter->ambiguous.pf =
+            reinterpret_cast<uintptr_t>(meth_iter->info->ambiguous);
+        meth_iter->not_implemented.pf =
+            reinterpret_cast<uintptr_t>(meth_iter->info->not_implemented);
+
         meth_iter->specs.resize(meth_info.specs.size());
         auto spec_iter = meth_iter->specs.rbegin();
         // reverse the reversed order from 'chain'
@@ -613,6 +624,8 @@ void runtime<Policy>::augment_methods() {
 
                     abort();
                 }
+                spec_iter->pf =
+                    reinterpret_cast<uintptr_t>(spec_iter->info->pf);
                 spec_iter->vp.push_back(rt_class);
                 ++param_index;
             }
@@ -991,8 +1004,7 @@ void runtime<Policy>::build_dispatch_table(
             if (specs.size() > 1) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "ambiguous\n";
-                m.dispatch_table.push_back(
-                    reinterpret_cast<std::uintptr_t>(m.info->ambiguous));
+                m.dispatch_table.push_back(&m.ambiguous);
                 ++m.stats.ambiguous;
                 if (concrete) {
                     ++m.stats.concrete_ambiguous;
@@ -1000,15 +1012,13 @@ void runtime<Policy>::build_dispatch_table(
             } else if (specs.empty()) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "not implemented\n";
-                m.dispatch_table.push_back(
-                    reinterpret_cast<std::uintptr_t>(m.info->not_implemented));
+                m.dispatch_table.push_back(&m.not_implemented);
                 ++m.stats.not_implemented;
                 if (concrete) {
                     ++m.stats.concrete_not_implemented;
                 }
             } else {
-                m.dispatch_table.push_back(
-                    reinterpret_cast<std::uintptr_t>(specs[0]->info->pf));
+                m.dispatch_table.push_back(specs[0]);
                 ++trace << "-> " << type_name(specs[0]->info->type)
                         << " pf = " << specs[0]->info->pf << "\n";
             }
@@ -1074,9 +1084,10 @@ void runtime<Policy>::install_gv() {
 
             m.gv_dispatch_table =
                 Policy::dispatch_data.data() + Policy::dispatch_data.size();
-            std::copy(
+            std::transform(
                 m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(Policy::dispatch_data));
+                std::back_inserter(Policy::dispatch_data),
+                [](auto spec) { return spec->pf; });
         }
 
         for (auto& cls : classes) {
@@ -1088,6 +1099,7 @@ void runtime<Policy>::install_gv() {
                 *cls.static_vptr = Policy::dispatch_data.data() +
                     Policy::dispatch_data.size() - cls.first_used_slot;
             }
+
             if constexpr (trace_enabled) {
                 if (pass) {
                     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
@@ -1125,7 +1137,7 @@ void runtime<Policy>::optimize() {
 
         if (m.arity() == 1) {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pf = m.dispatch_table[(*cls->static_vptr)[slot]];
+                auto pf = m.dispatch_table[(*cls->static_vptr)[slot]]->pf;
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " vtbl[" << slot << "] = " << pf
                             << " (function)"
