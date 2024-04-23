@@ -165,12 +165,12 @@ define_method(int, value, (virtual_ptr<const Plus> expr)) {
   return value(expr->left) + value(expr->right);
 }
 
-auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return virtual_ptr(node);
+auto make_node_ptr(const Node& node) {
+  return virtual_ptr(node);
 }
 
-auto make_final_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return final_virtual_ptr(node);
+auto make_final_node_ptr(const Plus& node) {
+  return final_virtual_ptr(node);
 }
 
 }

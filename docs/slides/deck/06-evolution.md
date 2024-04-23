@@ -73,8 +73,8 @@ jmp	rax
 ## virtual_ptr
 
 ```c++
-auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return virtual_ptr<Node>(node);
+auto make_node_ptr(const Node& node) {
+  return virtual_ptr(node);
 }
 ```
 
@@ -104,8 +104,8 @@ auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
 ## virtual_ptr
 
 ```c++
-auto make_final_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return final_virtual_ptr(node);
+auto make_final_node_ptr(const Plus& node) {
+  return final_virtual_ptr(node);
 }
 ```
 
@@ -115,7 +115,7 @@ classes need not be polymorphic
 
 ```asm
 mov	rax, rdi
-mov	rdx, qword ptr [rip + method_tables<release>::static_vptr<Node>]
+mov	rdx, qword ptr [rip + method_tables<release>::static_vptr<Plus>]
 ret
 ```
 
