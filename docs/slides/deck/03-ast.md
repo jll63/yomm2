@@ -169,7 +169,7 @@ struct RPNVisitor : Node::Visitor {
   string result;
 };
 
-string to_rpn(Node& node) {
+string to_rpn(const Node& node) {
   RPNVisitor viz;
   node.visit(viz);
   return viz.result;
