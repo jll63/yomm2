@@ -15,11 +15,11 @@
 
 
 
-## Open Methods
+## YOMM2 Open Methods
 
 ```c++
 struct Node {
-  virtual string to_rpn(/*const Node* this*/) const = 0;
+  virtual string to_rpn(/* const Node* */) const = 0;
 };
 ```
 
@@ -33,7 +33,7 @@ declare_method(string, to_rpn, (virtual_<const Node&>));
 
 ```c++
 struct Plus : Node {
-  string to_rpn(/*const Node* this*/) const override {
+  string to_rpn(/* const Node* this */) const override {
     return left.to_rpn() + " " + right.to_rpn() + " +";
   }
 };
@@ -54,8 +54,6 @@ define_method(string, to_rpn, (const Plus& expr)) {
 ```C++
 #include <yorel/yomm2/keywords.hpp>
 
-register_classes(Node, Number, Plus, Times);
-
 declare_method(string, to_rpn, (virtual_<const Node&>));
 
 define_method(string, to_rpn, (const Number& expr)) {
@@ -69,6 +67,8 @@ define_method(string, to_rpn, (const Plus& expr)) {
 define_method(string, to_rpn, (const Times& expr)) {
   return to_rpn(expr.left) + " " + to_rpn(expr.right) + " *";
 }
+
+register_classes(Node, Number, Plus, Times);
 
 int main() {
   yorel::yomm2::update();
@@ -102,12 +102,6 @@ define_method(int, value, (Plus& expr)) {
 
 ## Performance
 
-* 15-30% slower than equivalent native virtual function call (but see `virtual_ptr`)
-
-* [Optimizing Away C++ Virtual Functions May Be
-  Pointless](https://www.youtube.com/watch?v=i5MAXAxp_Tw)  - Shachar Shemesh -
-  CppCon 2023
-
 ```asm
 	mov	  rax, qword ptr [rdi]
 	mov	  rdx, qword ptr [rip+fast_perfect_hash<release>::mult]
@@ -123,6 +117,12 @@ define_method(int, value, (Plus& expr)) {
 
 	jmp	  qword ptr [rax+8*rcx]
 ```
+
+* 15-30% slower than equivalent native virtual function call (but see `virtual_ptr`)
+
+* [Optimizing Away C++ Virtual Functions May Be
+  Pointless](https://www.youtube.com/watch?v=i5MAXAxp_Tw)  - Shachar Shemesh -
+  CppCon 2023
 
 
 

@@ -50,12 +50,6 @@
 <br/>
 
 ```c++
-declare_method(int, value, (virtual_ptr<Node>));
-```
-
-<br/>
-
-```c++
 int call_via_vptr(virtual_ptr<const Node> node) {
   return value(node);
 }
@@ -65,6 +59,12 @@ int call_via_vptr(virtual_ptr<const Node> node) {
 mov	rax, qword ptr [rip + method<value, int (virtual_ptr<Node>)::fn+80]
 mov	rax, qword ptr [rsi + 8*rax]
 jmp	rax
+```
+
+<br/>
+
+```c++
+declare_method(int, value, (virtual_ptr<Node>));
 ```
 
 
@@ -177,7 +177,7 @@ YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
 <ul>
   <li class="fragment">goals:
     <ul>
-      <li class="fragment">beat virtual function speed</li>
+      <li class="fragment">match (beat?) virtual function speed</li>
       <li class="fragment">pre-calculate dispatch tables</li>
       <li class="fragment">malloc-free operation</li>
       <li class="fragment">C++20</li>
