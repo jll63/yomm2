@@ -1,9 +1,11 @@
+.hrefs
 .rtags
 build/
 **/#*#
 dependencies/*
 extern/*
 tests/benchmarks_parameters.hpp
+**/vcpkg_installed
 
 # ides
 .vscode/
