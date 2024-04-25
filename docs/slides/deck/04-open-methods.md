@@ -118,7 +118,8 @@ define_method(int, value, (Plus& expr)) {
 	jmp	  qword ptr [rax+8*rcx]
 ```
 
-* 15-30% slower than equivalent native virtual function call (but see `virtual_ptr`)
+* 15-30% slower than equivalent native virtual function call (using perfect
+  integer hash; but see `virtual_ptr`)
 
 * [Optimizing Away C++ Virtual Functions May Be
   Pointless](https://www.youtube.com/watch?v=i5MAXAxp_Tw)  - Shachar Shemesh -

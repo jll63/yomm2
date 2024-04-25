@@ -12,7 +12,7 @@
 <ul>
   <li class="fragment">goals:
     <ul>
-      <li class="fragment">help promote adoption in the standard
+      <li class="fragment">help promote adoption in the language
         <ul>
           <li class="fragment">submit to Boost</li>
           <li class="fragment">talk about it (CppCon 2018...)</li>
@@ -124,13 +124,15 @@ ret
 ## Core API
 
 ```c++
-use_classes<Node, Number, Plus, Times> use_ast_classes;
-
 struct value_id;
 using value = method<value_id, int(virtual_<const Node&>)>;
+```
 
+```c++
 auto result = value::fn(expr);
+```
 
+```c++
 int number_value(const Number& node) {
   return node.val;
 }
@@ -145,6 +147,8 @@ struct binary_value {
 
 YOMM2_STATIC(value::add_definition<binary_value<Plus, std::plus<int>>>);
 YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
+
+YOMM2_STATIC(use_classes<Node, Number, Plus, Times>);
 ```
 
 
@@ -157,10 +161,10 @@ YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
   <li>virtual_ptr</li>
   <li>core API</li>
   <li class="fragment">template interop toolkit</li>
-  <li class="fragment">header only (+ Compiler Explorer)</li>
+  <li class="fragment">header only (Compiler Explorer)</li>
   <li class="fragment">friendship</li>
   <li class="fragment">member methods</li>
-  <li class="fragment">policies and facets
+  <li class="fragment">policies and facets (latest release)
     <ul>
       <li class="fragment">custom RTTI</li>
       <li class="fragment">custom error handling, trace, vptr placement...</li>
@@ -180,6 +184,8 @@ YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
       <li class="fragment">match (beat?) virtual function speed</li>
       <li class="fragment">pre-calculate dispatch tables</li>
       <li class="fragment">malloc-free operation</li>
+      <li class="fragment">dispatch on std::any</li>
+      <li class="fragment">(feature complete)</li>
       <li class="fragment">C++20</li>
     </ul>
   </li>
