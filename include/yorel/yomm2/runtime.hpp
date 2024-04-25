@@ -211,17 +211,17 @@ struct runtime {
                 auto pad = rf.width;
                 auto remain = rf.value;
 
-                do {
-                    remain /= 10;
-                    --pad;
+                int digits = 1;
+                auto tmp = rf.value / 10;
 
-                    if (pad < 0) {
-                        return *this;
-                    }
-                } while (remain);
+                while (tmp) {
+                    ++digits;
+                     tmp /= 10;
+                }
 
-                while (pad--) {
+                while (digits < rf.width) {
                     *this << " ";
+                    ++digits;
                 }
 
                 *this << rf.value;
