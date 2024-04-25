@@ -226,7 +226,7 @@ ctest --test-dir build.yomm2
 ```
 
 YOMM2 uses several Boost libraries:
-* Preprocessor, DynamicBitset, TypeTraits: included by YOMM2 headers
+* Preprocessor, DynamicBitset: included by YOMM2 headers
 * Boost.Test: only used to run the test suite
 
 If these libraries are already available on your machine, and they can be
