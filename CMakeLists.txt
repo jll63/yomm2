@@ -15,7 +15,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find Boost dependency
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 include(cmake/find_or_download_package.cmake)
-find_or_download_package(Boost INSTALL_WITH_YOMM)
+find_package(Boost 1.74 QUIET)
+if(NOT TARGET Boost::headers)
+  find_or_download_package(Boost INSTALL_WITH_YOMM)
+endif()
 message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
 
 if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
