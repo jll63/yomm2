@@ -26,7 +26,7 @@ if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR
 endif()
 
 if(MSVC)
-  add_compile_definitions(-D_SCL_SECURE_NO_WARNINGS -D_CRT_SECURE_NO_WARNINGS)
+  add_compile_definitions(_SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS)
   add_compile_options(/EHsc /FAs)
 endif()
 
@@ -95,7 +95,7 @@ install(EXPORT YOMM2Targets
 )
 # Configure package config (tells using code about dependencies)
 configure_package_config_file(
-  cmake/Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
+  cmake/YOMM2Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
   INSTALL_DESTINATION lib/cmake/YOMM2
 )
 # Copy config files to install directory
