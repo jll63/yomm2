@@ -90,7 +90,7 @@ if(${YOMM2_ENABLE_DOC})
     DEPENDS "${readme_cpp}")
 endif()
 
-if(${YOMM2_ENABLE_TESTS} OR YOMM2_ENABLE_DOC)
+if(YOMM2_ENABLE_TESTS OR YOMM2_ENABLE_DOC)
   add_subdirectory(docs.in)
 endif()
 
