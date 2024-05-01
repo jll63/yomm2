@@ -211,17 +211,17 @@ struct runtime {
                 auto pad = rf.width;
                 auto remain = rf.value;
 
-                do {
-                    remain /= 10;
-                    --pad;
+                int digits = 1;
+                auto tmp = rf.value / 10;
 
-                    if (pad < 0) {
-                        return *this;
-                    }
-                } while (remain);
+                while (tmp) {
+                    ++digits;
+                     tmp /= 10;
+                }
 
-                while (pad--) {
+                while (digits < rf.width) {
                     *this << " ";
+                    ++digits;
                 }
 
                 *this << rf.value;
@@ -1112,13 +1112,11 @@ void runtime<Policy>::install_gv() {
                     cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end(),
                     std::back_inserter(Policy::dispatch_data));
             }
-
-            if constexpr (has_facet<Policy, external_vptr>) {
-                if (pass) {
-                    Policy::publish_vptrs(classes.begin(), classes.end());
-                }
-            }
         }
+    }
+
+    if constexpr (has_facet<Policy, external_vptr>) {
+        Policy::publish_vptrs(classes.begin(), classes.end());
     }
 
     ++trace << rflush(4, Policy::dispatch_data.size()) << " "

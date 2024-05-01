@@ -146,7 +146,7 @@ struct Number : Node {
 struct Plus : Node {
   void visit(Visitor& viz) override { viz.accept(*this); }
 };
-// etc
+// etc.
 ```
 
 
@@ -156,20 +156,20 @@ struct Plus : Node {
 
 ```C++
 struct RPNVisitor : Node::Visitor {
-  string result;
-  void accept(Number& expr) {
+  void accept(const Number& expr) {
     result = to_string(expr.val);
   }
-  void accept(Plus& expr) {
+  void accept(const Plus& expr) {
     expr.left.visit(*this);
     string l = result;
     expr.right.visit(*this);
     result = l + " " + result + " +";
   }
-  void accept(Times& expr) { ... }
+  void accept(const Times& expr) { ... }
+  string result;
 };
 
-string to_rpn(Node& node) {
+string to_rpn(const Node& node) {
   RPNVisitor viz;
   node.visit(viz);
   return viz.result;

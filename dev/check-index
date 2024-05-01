@@ -1,0 +1,16 @@
+#!/usr/bin/python3
+
+import mdgen
+
+from pathlib import Path
+
+refs = set("home reference static_object virtual_ptr-final".split())
+
+with open(mdgen.repository.joinpath("docs.in", "README.md")) as ref:
+    for line in ref.readlines():
+        if line.startswith("| ->"):
+            refs.add(line.split()[1].replace("->", ""))
+
+for ref in mdgen.hrefs:
+    if ref not in refs:
+        print(ref)

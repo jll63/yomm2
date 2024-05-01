@@ -12,7 +12,7 @@
 <ul>
   <li class="fragment">goals:
     <ul>
-      <li class="fragment">help promote adoption in the standard
+      <li class="fragment">help promote adoption in the language
         <ul>
           <li class="fragment">submit to Boost</li>
           <li class="fragment">talk about it (CppCon 2018...)</li>
@@ -37,21 +37,8 @@
 <br/>
 
 <ul>
-  <li class="fragment">2020: gave up on adoption in the standard</li>
+  <li class="fragment">2020: give up on adoption in the standard</li>
   <li class="fragment">new developments
-    <ul>
-      <li class="fragment">virtual_ptr</li>
-      <li class="fragment">header only (+ Compiler Explorer)</li>
-      <li class="fragment">core API</li>
-      <li class="fragment">interoperate with templates</li>
-      <li class="fragment">member methods</li>
-      <li class="fragment">policies and facets
-        <ul>
-          <li class="fragment">custom RTTI</li>
-          <li class="fragment">custom error handling, trace, vptr placement...</li>
-        </ul>
-      </li>
-    </ul>
   </li>
 </ul>
 
@@ -63,7 +50,9 @@
 <br/>
 
 ```c++
-declare_method(int, value, (virtual_ptr<Node>));
+int call_via_vptr(virtual_ptr<const Node> node) {
+  return value(node);
+}
 ```
 
 ```asm
@@ -72,14 +61,20 @@ mov	rax, qword ptr [rsi + 8*rax]
 jmp	rax
 ```
 
+<br/>
+
+```c++
+declare_method(int, value, (virtual_ptr<Node>));
+```
+
 
 
 
 ## virtual_ptr
 
 ```c++
-auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return virtual_ptr<Node>(node);
+auto make_node_ptr(const Node& node) {
+  return virtual_ptr(node);
 }
 ```
 
@@ -109,8 +104,8 @@ auto make_node_ptr(Node& node, virtual_ptr<Node>& p) {
 ## virtual_ptr
 
 ```c++
-auto make_final_node_ptr(Node& node, virtual_ptr<Node>& p) {
-    return final_virtual_ptr(node);
+auto make_final_node_ptr(const Plus& node) {
+  return final_virtual_ptr(node);
 }
 ```
 
@@ -120,9 +115,62 @@ classes need not be polymorphic
 
 ```asm
 mov	rax, rdi
-mov	rdx, qword ptr [rip + method_tables<release>::static_vptr<Node>]
+mov	rdx, qword ptr [rip + method_tables<release>::static_vptr<Plus>]
 ret
 ```
+
+
+
+## Core API
+
+```c++
+struct value_id;
+using value = method<value_id, int(virtual_<const Node&>)>;
+```
+
+```c++
+auto result = value::fn(expr);
+```
+
+```c++
+int number_value(const Number& node) {
+  return node.val;
+}
+value::add_function<number_value> add_number_value;
+
+template<class NodeClass, class Op>
+struct binary_value {
+  static int fn(const NodeClass& expr) {
+    return Op()(value::fn(expr.left), value::fn(expr.right));
+  }
+};
+
+YOMM2_STATIC(value::add_definition<binary_value<Plus, std::plus<int>>>);
+YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
+
+YOMM2_STATIC(use_classes<Node, Number, Plus, Times>);
+```
+
+
+
+## Present
+
+<br/>
+
+<ul>
+  <li>virtual_ptr</li>
+  <li>core API</li>
+  <li class="fragment">template interop toolkit</li>
+  <li class="fragment">header only (Compiler Explorer)</li>
+  <li class="fragment">friendship</li>
+  <li class="fragment">member methods</li>
+  <li class="fragment">policies and facets (latest release)
+    <ul>
+      <li class="fragment">custom RTTI</li>
+      <li class="fragment">custom error handling, trace, vptr placement...</li>
+    </ul>
+  </li>
+</ul>
 
 
 
@@ -133,9 +181,11 @@ ret
 <ul>
   <li class="fragment">goals:
     <ul>
-      <li class="fragment">match (maybe beat) virtual function speed</li>
+      <li class="fragment">match (beat?) virtual function speed</li>
       <li class="fragment">pre-calculate dispatch tables</li>
       <li class="fragment">malloc-free operation</li>
+      <li class="fragment">dispatch on std::any</li>
+      <li class="fragment">(feature complete)</li>
       <li class="fragment">C++20</li>
     </ul>
   </li>
