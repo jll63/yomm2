@@ -65,7 +65,7 @@ There are several reasons why this is not possible.
 
 # Using the YOMM2 API
 YOMM2 can be used without macros, as explained in the [API
-tutorial](api.md). If you have not read it yet, I suggest you do now,
+tutorial](api.html). If you have not read it yet, I suggest you do now,
 before going any further in this tutorial.
 
 We are going to implement two libraries, both inspired by linear algebra. The
