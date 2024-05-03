@@ -19,8 +19,8 @@ Stroustrup.
 
 If you are familiar with the concept of open multi-methods, or if you prefer
 to learn by reading code, go directly to [the
-synopsis](examples/synopsis.cpp). The [reference is
-here](https://jll63.github.io/yomm2/reference)
+synopsis](examples/synopsis.cpp). The [documentation is
+here](https://jll63.github.io/yomm2)
 
 ## Open Methods in a Nutshell
 
