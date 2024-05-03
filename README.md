@@ -226,7 +226,7 @@ YOMM2 uses the following Boost libraries:
 If these libraries are already available on your machine, and they can be found
 by `cmake`, they will be used. In this case, make sure that the pre-installed
 libraries are at version 1.74 or above. You can also tell the cmake script to
-attempt to download an dbuild the dependencies by setting
+attempt to download and build the dependencies by setting
 `YOMM2_DOWNLOAD_DEPENDENCIES` to `ON`.
 
 If you want to run the benchmarks (and in this case you really want a release
