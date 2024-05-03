@@ -1,5 +1,3 @@
-# Reference
-
 ## Introduction
 
 YOMM2 is a library that implements open multi-methods for C++17. The semantics

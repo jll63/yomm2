@@ -292,12 +292,14 @@ to yomm2.
 
 ## Going Further
 
-The Reference is [here](https://jll63.github.io/yomm2/reference). Since version
-1.3.0, some of the internals are documented, which make it possible to use the
-library without using macros - see [the API tutorial](tutorials/api.md).
+The documentation is [here](https://jll63.github.io/yomm2). Since version 1.3.0,
+some of the internals are documented, which make it possible to use the library
+without using macros - see [the API
+tutorial](https://jll63.github.io/yomm2/tutorials/api.html).
 
 YOMM2 has *experimental* support for writing templatized methods and definitions
-- see [the templates tutorial](tutorials/templates_tutorial.md).
+- see [the templates
+  tutorial](https://jll63.github.io/yomm2/tutorials/templates_tutorial.html).
 
 The library comes with a series of examples:
 
