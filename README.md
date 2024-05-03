@@ -208,12 +208,14 @@ Run cmake:
 
 ```
 cmake -S yomm2 -B build.yomm2
+cmake --build build.yomm2
 ```
 
 If you want to run the tests, specify it when running `cmake`:
 
 ```
 cmake -S yomm2 -B build.yomm2 -DYOMM2_ENABLE_TESTS=1
+cmake --build build.yomm2
 ctest --test-dir build.yomm2
 ```
 
