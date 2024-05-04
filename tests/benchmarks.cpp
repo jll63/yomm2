@@ -17,6 +17,11 @@ int main() {
 #include <sstream>
 #include <utility>
 
+#if __has_include(<boost/unordered/unordered_flat_map.hpp>)
+#include <boost/unordered/unordered_flat_map.hpp>
+#define UNORDERED_FLAT_MAP_AVAILABLE __has_include(<boost/unordered/unordered_flat_map.hpp>)
+#endif
+
 #include <benchmark/benchmark.h>
 
 #include <yorel/yomm2/keywords.hpp>
@@ -116,7 +121,9 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct use_basic_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy> {};
+    struct policy
+        : default_static::rebind<policy>::remove<yomm2::policy::trace_output>,
+          yomm2::policy::basic_trace_output<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -124,7 +131,7 @@ struct use_basic_policy : virtual_by_reference {
     };
 };
 
-struct compact_map_policy : virtual_by_reference {
+struct std_map_policy : virtual_by_reference {
     struct policy : default_static::rebind<policy>::
                         remove<yomm2::policy::type_hash>::replace<
                             yomm2::policy::external_vptr,
@@ -132,9 +139,26 @@ struct compact_map_policy : virtual_by_reference {
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
-        return "compact_map_policy";
+        return "std_map_policy";
     };
 };
+
+#if UNORDERED_FLAT_MAP_AVAILABLE
+struct flat_map_policy : virtual_by_reference {
+    struct policy : default_static::rebind<policy>::
+                        remove<yomm2::policy::type_hash>::replace<
+                            yomm2::policy::external_vptr,
+                            yomm2::policy::vptr_map<
+                                policy,
+                                boost::unordered_flat_map<
+                                    type_id, const std::uintptr_t*>>> {};
+    template<typename Inheritance>
+    using base_type = orthogonal_base<Inheritance>;
+    static std::string name() {
+        return "flat_map_policy";
+    };
+};
+#endif
 
 struct direct_intrusive_dispatch : virtual_by_reference {
     struct policy
@@ -188,9 +212,12 @@ struct indirect_virtual_ptr_dispatch {
 };
 
 using method_dispatch_types = std::tuple<
-    use_basic_policy, compact_map_policy, direct_virtual_ptr_dispatch,
-    indirect_virtual_ptr_dispatch, direct_intrusive_dispatch,
-    indirect_intrusive_dispatch>;
+    use_basic_policy, std_map_policy,
+#if UNORDERED_FLAT_MAP_AVAILABLE
+    flat_map_policy,
+#endif
+    direct_virtual_ptr_dispatch, indirect_virtual_ptr_dispatch,
+    direct_intrusive_dispatch, indirect_intrusive_dispatch>;
 
 using dispatch_types = mp_append<
     std::tuple<no_dispatch, virtual_dispatch, direct_virtual_ptr_dispatch>,
@@ -635,10 +662,9 @@ int main(int argc, char** argv) {
         direct_virtual_ptr_dispatch, arity_1, ordinary_inheritance>()();
 
 #if !defined(NDEBUG)
-
     mp_for_each<dispatch_types>([](auto D_value) {
         using Dispatch = decltype(D_value);
-        if constexpr (!std::is_same_v<Dispatch, no_dispatch>) {
+        if constexpr (true ||!std::is_same_v<Dispatch, no_dispatch>) {
             mp_for_each<arity_types>([](auto A_value) {
                 using Arity = decltype(A_value);
                 mp_for_each<inheritance_types>([](auto I_value) {
@@ -681,7 +707,7 @@ using _0 = std::integral_constant<size_t, 0>;
 using leaf = population<_0>::leaf0<_0>;
 
 void call_project_1(leaf& obj) {
-    //pop.dispatcher<compact_map_policy, arity_1, ordinary_inheritance>()();
+    //pop.dispatcher<std_map_policy, arity_1, ordinary_inheritance>()();
     population<_0>::ref_methods<
         use_basic_policy, ordinary_inheritance>::method1::fn(obj);
     // mov	rax, qword ptr [rdi + 8]
@@ -697,9 +723,9 @@ void call_project_1(leaf& obj) {
 }
 
 void call_unordered_map_1(leaf& obj) {
-    //pop.dispatcher<compact_map_policy, arity_1, ordinary_inheritance>()();
+    //pop.dispatcher<std_map_policy, arity_1, ordinary_inheritance>()();
     population<_0>::ref_methods<
-        compact_map_policy, ordinary_inheritance>::method1::fn(obj);
+        std_map_policy, ordinary_inheritance>::method1::fn(obj);
 
     // 	mov	rax, qword ptr [rdi + 8]
     // 	add	rdi, 8

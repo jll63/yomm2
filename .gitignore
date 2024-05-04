@@ -6,6 +6,7 @@ dependencies/*
 extern/*
 tests/benchmarks_parameters.hpp
 **/vcpkg_installed
+.venv/
 
 # ides
 .vscode/

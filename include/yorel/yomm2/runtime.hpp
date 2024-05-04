@@ -1115,13 +1115,13 @@ void runtime<Policy>::install_gv() {
         }
     }
 
-    if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::publish_vptrs(classes.begin(), classes.end());
-    }
-
     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
             << Policy::dispatch_data.data() + Policy::dispatch_data.size()
             << " end\n";
+
+    if constexpr (has_facet<Policy, external_vptr>) {
+        Policy::publish_vptrs(classes.begin(), classes.end());
+    }
 }
 
 template<class Policy>
