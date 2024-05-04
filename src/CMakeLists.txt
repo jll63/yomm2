@@ -15,7 +15,7 @@ if(YOMM2_SHARED)
   if(NOT WIN32)
     target_compile_options(yomm2 PRIVATE -fvisibility=hidden)
   endif()
-  target_compile_definitions(yomm2 PUBLIC -DYOMM2_SHARED=1)
+  target_compile_definitions(yomm2 PUBLIC YOMM2_SHARED=1)
   target_include_directories(
     yomm2 PUBLIC
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
@@ -23,6 +23,7 @@ if(YOMM2_SHARED)
     PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
   )
   target_link_libraries(yomm2 PUBLIC Boost::headers)
+  target_compile_features(yomm2 PUBLIC cxx_std_17)
   if (${YOMM2_CHECK_ABI_COMPATIBILITY})
     message(STATUS "type: ${CMAKE_BUILD_TYPE} FLAGS: ${CMAKE_CXX_FLAGS_RELEASE}")
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -42,6 +43,7 @@ else()
     $<INSTALL_INTERFACE:include>
   )
   target_link_libraries(yomm2 INTERFACE Boost::headers)
+  target_compile_features(yomm2 INTERFACE cxx_std_17)
 endif()
 
 install(TARGETS yomm2
