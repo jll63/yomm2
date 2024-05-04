@@ -1,0 +1,11 @@
+#!/bin/bash
+
+prog=$1
+count=$2
+
+for i in $(seq $count); do
+    for dispatch in $(seq 4); do
+        $prog $dispatch
+    done
+    echo
+done
