@@ -16,7 +16,7 @@ jobs:
         standard: [17, 20]
         config: [Debug, Release]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure
         run: |
           mkdir build
@@ -41,7 +41,7 @@ jobs:
         compiler: [clang++-16, g++-13]
         check_abi_compatibility: [OFF, ON]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure
         run: |
           mkdir build
@@ -66,7 +66,7 @@ jobs:
       matrix:
         compiler: [clang++-16, g++-13]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Add git, remove Boost and Google Benchmarks
         run: |
           apt-get update
@@ -95,7 +95,7 @@ jobs:
         config: [Debug, Release]
         standard: [17, 20]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           vsversion: 2022
@@ -120,7 +120,7 @@ jobs:
         check_abi_compatibility: [OFF, ON]
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
         with:
           vsversion: 2022
@@ -147,7 +147,7 @@ jobs:
         # config: [Debug, Release, ReleaseDebug, DebugRelease]
         config: [Debug, Release]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Configure
         run: |
           brew install boost
