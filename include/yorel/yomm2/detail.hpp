@@ -260,13 +260,28 @@ struct definition_info : static_chain<definition_info>::static_link {
     void* pf;
 };
 
+template<typename... Ts>
+constexpr auto arity =
+    boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
+
+template<size_t Arity>
+struct slots_strides_base {
+    size_t slots_strides[2 * Arity - 1];
+    // For 1-method: the offset of the method in the method table, which
+    // contains a pointer to a function.
+    // For multi-methods: the offset of the first virtual argument in the
+    // method table, which contains a pointer to the corresponding cell in
+    // the dispatch table, followed by the offset of the second argument and
+    // the stride in the second dimension, etc.
+};
+
 struct yOMM2_API method_info : static_chain<method_info>::static_link {
+    size_t* slots_strides_p;
     std::string_view name;
     type_id *vp_begin, *vp_end;
     static_chain<definition_info> specs;
     void* ambiguous;
     void* not_implemented;
-    size_t* slots_strides_p;
 
     auto arity() const {
         return std::distance(vp_begin, vp_end);
