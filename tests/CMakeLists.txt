@@ -46,15 +46,13 @@ target_link_libraries(pointer_to_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME pointer_to_method COMMAND pointer_to_method)
 
 if(YOMM2_ENABLE_BENCHMARKS)
-  find_file(BARRIER_H msr.h HINTS "/usr/src")
-  message(STATUS, "GLOP: ${BARRIER_H}")
   add_executable(benchmarks benchmarks.cpp)
-  target_link_libraries(benchmarks YOMM2::yomm2 benchmark::benchmark)
-endif()
+  target_link_libraries(
+    benchmarks YOMM2::yomm2 benchmark::benchmark  ${CMAKE_THREAD_LIBS_INIT})
 
-# add_executable(intrusive intrusive.cpp)
-# target_link_libraries(intrusive YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-# add_test(NAME intrusive COMMAND intrusive)
+  add_executable(rdtsc-benchmark rdtsc-benchmark.cpp)
+  target_link_libraries(rdtsc-benchmark YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+endif()
 
 add_executable(test_virtual_ptr_basic test_virtual_ptr_basic.cpp)
 target_link_libraries(test_virtual_ptr_basic YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})

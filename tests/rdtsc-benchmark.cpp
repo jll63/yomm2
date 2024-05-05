@@ -18,40 +18,28 @@ class Animal {
     virtual ~Animal() {
     }
 
-    virtual void kick() = 0;
+    virtual void pet() = 0;
 };
 
-class Dog : public Animal {
-    void kick() override{};
+class Cat : public Animal {
+    void pet() override{/*purr*/};
 };
 
-register_classes(Animal, Dog);
+register_classes(Animal, Cat);
 
-declare_method(void, kick, (virtual_<Animal&>));
+declare_method(void, pet, (virtual_<Animal&>));
 
-// Implement 'kick' for dogs.
-define_method(void, kick, (Dog & dog)) {
+// Implement 'pet' for Cats.
+define_method(void, pet, (Cat & Cat)) {
+    // purr
 }
 
-declare_method(void, kick_vp, (virtual_ptr<Animal>));
+declare_method(void, pet_vp, (virtual_ptr<Animal>));
 
-// Implement 'kick' for dogs.
-define_method(void, kick_vp, (virtual_ptr<Dog> dog)) {
+// Implement 'pet' for Cats.
+define_method(void, pet_vp, (virtual_ptr<Cat> Cat)) {
+    // purr
 }
-
-#define BENCHMARK_N(expr, N)                                                   \
-    {                                                                          \
-        unsigned int dummy;                                                    \
-        _mm_mfence();                                                          \
-        _mm_lfence();                                                          \
-        auto start = __rdtsc();                                                \
-        for (auto i = N; i--;) {                                               \
-            expr;                                                              \
-        }                                                                      \
-        auto end = __rdtscp(&dummy);                                           \
-        _mm_lfence();                                                          \
-        cout << setw(6) << (end - start);                                      \
-    }
 
 #define BENCHMARK(expr)                                                        \
     unsigned int dummy;                                                        \
@@ -66,82 +54,57 @@ define_method(void, kick_vp, (virtual_ptr<Dog> dog)) {
 __attribute__((noinline)) void clear_cache(Animal& a) {
     _mm_clflush(&a);
     _mm_clflush(*(void**)&a);
-    _mm_clflush(default_policy::static_vptr<Dog>);
-    _mm_clflush(&default_policy::static_vptr<Dog>);
+    _mm_clflush(default_policy::static_vptr<Cat>);
+    _mm_clflush(&default_policy::static_vptr<Cat>);
     _mm_clflush(default_policy::vptrs.data());
     _mm_clflush(&default_policy::vptrs);
     _mm_clflush(&default_policy::hash_mult);
     _mm_clflush(&default_policy::hash_shift);
+    _mm_clflush(method_class(void, pet, (virtual_<Animal&>))::fn.slots_strides);
     _mm_clflush(
-        method_class(void, kick, (virtual_<Animal&>))::fn.slots_strides_p);
-    _mm_clflush(
-        &method_class(void, kick, (virtual_<Animal&>))::fn.slots_strides_p);
-    _mm_clflush(
-        method_class(void, kick_vp, (virtual_ptr<Animal>))::fn.slots_strides_p);
-    _mm_clflush(&method_class(
-                     void, kick_vp, (virtual_ptr<Animal>))::fn.slots_strides_p);
+        method_class(void, pet_vp, (virtual_ptr<Animal>))::fn.slots_strides);
 }
 
 __attribute__((noinline)) auto overhead() {
-    BENCHMARK(0);
+    BENCHMARK({});
 }
 
-__attribute__((noinline)) auto
-virtual_function(Animal& a) {
-    BENCHMARK(a.kick());
+__attribute__((noinline)) auto virtual_function(Animal& a) {
+    BENCHMARK(a.pet());
 }
 
-__attribute__((noinline)) auto
-method_via_vptr(virtual_ptr<Animal> ap) {
-    BENCHMARK(kick_vp(ap));
+__attribute__((noinline)) auto method_via_vptr(virtual_ptr<Animal> ap) {
+    BENCHMARK(pet_vp(ap));
 }
 
-__attribute__((noinline)) auto
-method_via_ref(Animal& a) {
-    BENCHMARK(kick(a));
+__attribute__((noinline)) auto method_via_ref(Animal& a) {
+    BENCHMARK(pet(a));
 }
 
-void test(int dispatch, Animal& a, virtual_ptr<Animal> ap) {
+void test(
+    std::string dispatch, std::string cache_temp, Animal& a,
+    virtual_ptr<Animal> ap) {
     clear_cache(a);
 
-    switch (dispatch) {
-    case 0:
-        cout << "\n";
-        break;
-    case 1:
+    if (dispatch == "none") {
         cout << setw(6) << overhead();
-        break;
-    case 2:
+    } else if (dispatch == "virtual") {
         cout << setw(6) << virtual_function(a);
-        break;
-    case 3:
+    } else if (dispatch == "method_ref") {
         cout << setw(6) << method_via_ref(a);
-        break;
-    case 4:
+    } else if (dispatch == "method_vptr") {
         cout << setw(6) << method_via_vptr(ap);
-        break;
-    case 5:
-        BENCHMARK_N(0, 100);
-        break;
-    case 6:
-        BENCHMARK_N(a.kick(), 100);
-        break;
-    case 7:
-        BENCHMARK_N(kick(a), 100);
-        break;
-    case 8:
-        BENCHMARK_N(kick_vp(ap), 100);
-        break;
-    default:
-        std::cerr << "invalid\n";
+    } else {
+        std::cerr << "invalid dispatch value\n";
         exit(1);
     }
 }
 
 int main(int, char** argv) {
     yorel::yomm2::update();
-    Dog dog;
-    test(atoi(argv[1]), dog, virtual_ptr(dog));
+
+    Cat Cat;
+    test(argv[1], argv[2] ? argv[2] : "", Cat, virtual_ptr(Cat));
 
     return 0;
 }
