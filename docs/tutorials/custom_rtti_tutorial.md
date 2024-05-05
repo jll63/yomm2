@@ -1,6 +1,5 @@
 
 
-
 # Using Custom RTTI
 
 ## RTTI, policies and facets
