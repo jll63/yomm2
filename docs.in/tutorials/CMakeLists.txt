@@ -44,7 +44,7 @@ if(${YOMM2_ENABLE_DOC})
         add_custom_command(
             OUTPUT "${md}"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs.in/tutorials"
-            COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md}"
+            COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md}"
             DEPENDS "${CMAKE_SOURCE_DIR}/docs.in/tutorials/${cpp}")
         list(APPEND tutorials "${md}")
     endforeach()

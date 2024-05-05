@@ -51,7 +51,8 @@ template<typename Key, typename Signature, class Policy = default_policy>
 struct method;
 
 template<typename Key, typename R, class Policy, typename... A>
-struct method<Key, R(A...), Policy> : detail::method_info {
+struct method<Key, R(A...), Policy>
+    : detail::slots_strides_base<detail::arity<A...>>, detail::method_info {
     using self_type = method;
     using policy_type = Policy;
     using declared_argument_types = detail::types<A...>;
@@ -64,17 +65,8 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     using function_pointer_type = R (*)(detail::remove_virtual<A>...);
     using next_type = function_pointer_type;
 
-    static constexpr auto arity = boost::mp11::mp_count_if<
-        declared_argument_types, detail::is_virtual>::value;
+    static constexpr auto arity = detail::arity<A...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
-
-    size_t slots_strides[arity == 1 ? 1 : 2 * arity - 1];
-    // For 1-method: the offset of the method in the method table, which
-    // contains a pointer to a function.
-    // For multi-methods: the offset of the first virtual argument in the
-    // method table, which contains a pointer to the corresponding cell in
-    // the dispatch table, followed by the offset of the second argument and
-    // the stride in the second dimension, etc.
 
     static method fn;
     static function_pointer_type fake_definition;
@@ -433,7 +425,7 @@ inline auto final_virtual_ptr(Class& obj) {
 template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::method() {
     this->name = detail::default_method_name<method>();
-    this->slots_strides_p = slots_strides;
+    this->slots_strides_p = this->slots_strides;
     using virtual_type_ids = detail::type_id_list<
         Policy,
         boost::mp11::mp_transform_q<
@@ -499,7 +491,7 @@ inline void method<Key, R(A...), Policy>::check_static_offset(
         if (Policy::template has_facet<policy::error_handler>) {
             Error error;
             error.method = Policy::template static_type<method>();
-            error.expected = slots_strides[0];
+            error.expected = this->slots_strides[0];
             error.actual = actual;
             Policy::error(error_type(std::move(error)));
 
@@ -564,10 +556,10 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
             slot = static_offsets<method>::slots[0];
             if constexpr (Policy::template has_facet<policy::runtime_checks>) {
                 check_static_offset<static_slot_error>(
-                    static_offsets<method>::slots[0], slots_strides[0]);
+                    static_offsets<method>::slots[0], this->slots_strides[0]);
             }
         } else {
-            slot = slots_strides[0];
+            slot = this->slots_strides[0];
         }
 
         // The first virtual parameter is special.  Since its stride is

@@ -1,6 +1,5 @@
 
 
-
 # Using YOMM2 without macros
 
 YOMM2 provides a public interface that does not require using macros. This
@@ -29,7 +28,6 @@ use_classes<Animal, Dog, Bulldog> use_animal_classes;
 ```
 
 
-
 The new `use_classes` template takes any number of
 classes, and infers the inheritance relationships they may have between them.
 Instantiating a `use_classes` object registers the
@@ -41,7 +39,6 @@ invocations of `register_class`.
 struct kick_key;
 using kick_method = method<kick_key, std::string(virtual_<Animal&>)>;
 ```
-
 
 
 A YOMM2 method is implemented as a singleton of an instance of the `method`
@@ -56,7 +53,6 @@ the same signature. Consider a more animal-friendly method:
 struct feed_key;
 using feed_method = method<feed_key, std::string(virtual_<Animal&>)>;
 ```
-
 
 
 In the absence of the first parameter, `kick` and `feed` would be the same
@@ -80,7 +76,6 @@ kick_method::add_function<kick_dog> add_kick_dog;
 ```
 
 
-
 Note that the name of the function serving as a method definition must be
 unique; in presence of overloads, we would have no means of picking the
 appropriate function. Function templates and explicit specialization can also
@@ -102,7 +97,6 @@ kick_method::add_function<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
 ```
 
 
-
 We can now call the method. The class contains a static function object named
 `fn`, whose `operator()` has the signature specified in the method
 declaration, minus the `virtual_<>` decorators.
@@ -119,7 +113,6 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     BOOST_TEST(kick_method::fn(*hector) == "bark and bite back");
 }
 ```
-
 
 
 ## A peek inside the two main YOMM2 macros
@@ -164,7 +157,6 @@ These macros are defined by header file `yorel/yomm2/symbols.hpp`.
 
 
 
-
 ## Trimming verbosity
 
 The "synopsis" example is quite verbose. Many of the names used in it are
@@ -175,7 +167,6 @@ not allow that, or only by ruse and abuse.
 
 Let's rewrite the example, this time using the symbol-generation macros, and
 a helper.
-
 
 
 
@@ -195,7 +186,6 @@ struct YOMM2_SYMBOL(kick);
 
 using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
 ```
-
 
 
 `add_function` is a workhorse that is intended to be used directly only by
@@ -218,7 +208,6 @@ YOMM2_STATIC(kick_method::add_definition<kick_dog>);
 ```
 
 
-
 This may not seem like a huge improvement, until we need a `next` function.
 If the container has a static member variable called `next`, and it is of the
 appropriate type, `add_definition` will pick it up for `update` to
@@ -236,7 +225,6 @@ struct kick_bulldog : kick_method::next<kick_bulldog> {
 
 YOMM2_STATIC(kick_method::add_definition<kick_bulldog>);
 ```
-
 
 
 Do you have doubts about the value of definition containers? Here are two
