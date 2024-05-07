@@ -6,13 +6,17 @@
 
 #include "test_helpers.hpp"
 
-#define BOOST_TEST_MODULE runtime
+#define BOOST_TEST_MODULE compiler
 #include <boost/test/included/unit_test.hpp>
 
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
-std::ostream& operator<<(std::ostream& os, const rt_class* cls) {
+using class_ = compiler_base::class_;
+using cc_method = compiler_base::method;
+using definition = compiler_base::definition;
+
+std::ostream& operator<<(std::ostream& os, const class_* cls) {
     return os << reinterpret_cast<const std::type_info*>(cls)->name();
 }
 
@@ -45,7 +49,7 @@ auto str(T... args) {
 
 template<typename... Ts>
 auto sstr(Ts... args) {
-    std::vector<rt_class*> vec{args...};
+    std::vector<class_*> vec{args...};
     std::sort(vec.begin(), vec.end());
     return str(vec);
 }
@@ -72,9 +76,9 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
     return os;
 }
 
-template<typename T, typename Runtime>
-auto get_class(const Runtime& rt) {
-    return rt.class_map.at(typeid(T));
+template<typename T, typename Compiler>
+auto get_class(const Compiler& comp) {
+    return comp.class_map.at(typeid(T));
 }
 
 namespace ns_use_classes {
@@ -103,15 +107,16 @@ YOMM2_STATIC(use_classes<Herbivore, Carnivore, Human, incremental>);
 using policies = std::tuple<whole_hierarchy, incremental>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(test_use_classes, Key, policies) {
-    runtime<Key> rt;
-    rt.update();
+    compiler<Key> comp;
+    comp.compile();
+    comp.install_global_tables();
 
-    auto animal = get_class<Animal>(rt);
-    auto herbivore = get_class<Herbivore>(rt);
-    auto carnivore = get_class<Carnivore>(rt);
-    auto cow = get_class<Cow>(rt);
-    auto wolf = get_class<Wolf>(rt);
-    auto human = get_class<Human>(rt);
+    auto animal = get_class<Animal>(comp);
+    auto herbivore = get_class<Herbivore>(comp);
+    auto carnivore = get_class<Carnivore>(comp);
+    auto cow = get_class<Cow>(comp);
+    auto wolf = get_class<Wolf>(comp);
+    auto human = get_class<Human>(comp);
 
     BOOST_TEST(animal->direct_bases.empty());
     BOOST_TEST(sstr(animal->direct_derived) == sstr(herbivore, carnivore));
@@ -192,76 +197,76 @@ YOMM2_DEFINE(
 
 BOOST_AUTO_TEST_CASE(runtime_test) {
 
-    runtime<test_policy> rt;
+    compiler<test_policy> comp;
 
-    rt.augment_classes();
+    comp.augment_classes();
 
-    auto role = get_class<Role>(rt);
-    auto employee = get_class<Employee>(rt);
-    auto manager = get_class<Manager>(rt);
-    auto founder = get_class<Founder>(rt);
-    auto expense = get_class<Expense>(rt);
-    auto public_ = get_class<Public>(rt);
-    auto bus = get_class<Bus>(rt);
-    auto metro = get_class<Metro>(rt);
-    auto taxi = get_class<Taxi>(rt);
-    auto jet = get_class<Jet>(rt);
+    auto role = get_class<Role>(comp);
+    auto employee = get_class<Employee>(comp);
+    auto manager = get_class<Manager>(comp);
+    auto founder = get_class<Founder>(comp);
+    auto expense = get_class<Expense>(comp);
+    auto public_ = get_class<Public>(comp);
+    auto bus = get_class<Bus>(comp);
+    auto metro = get_class<Metro>(comp);
+    auto taxi = get_class<Taxi>(comp);
+    auto jet = get_class<Jet>(comp);
 
     BOOST_TEST(sstr(role->direct_bases) == empty);
     BOOST_TEST(sstr(employee->direct_bases) == sstr(role));
 
     {
-        std::vector<rt_class*> expected = {employee};
+        std::vector<class_*> expected = {employee};
         BOOST_TEST(manager->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {role};
+        std::vector<class_*> expected = {role};
         BOOST_TEST(founder->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {expense};
+        std::vector<class_*> expected = {expense};
         BOOST_TEST(public_->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {public_};
+        std::vector<class_*> expected = {public_};
         BOOST_TEST(bus->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {public_};
+        std::vector<class_*> expected = {public_};
         BOOST_TEST(metro->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {expense};
+        std::vector<class_*> expected = {expense};
         BOOST_TEST(taxi->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {expense};
+        std::vector<class_*> expected = {expense};
         BOOST_TEST(jet->direct_bases == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {employee, founder};
+        std::vector<class_*> expected = {employee, founder};
         BOOST_TEST(sstr(role->direct_derived) == sstr(expected));
     }
 
     {
-        std::vector<rt_class*> expected = {manager};
+        std::vector<class_*> expected = {manager};
         BOOST_TEST(sstr(employee->direct_derived) == sstr(expected));
     }
 
     {
-        std::vector<rt_class*> expected = {public_, taxi, jet};
+        std::vector<class_*> expected = {public_, taxi, jet};
         BOOST_TEST(sstr(expense->direct_derived) == sstr(expected));
     }
 
     {
-        std::vector<rt_class*> expected = {bus, metro};
+        std::vector<class_*> expected = {bus, metro};
         BOOST_TEST(sstr(public_->direct_derived) == sstr(expected));
     }
 
@@ -279,24 +284,24 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         sstr(expense, public_, taxi, jet, bus, metro));
     BOOST_TEST(sstr(public_->compatible_classes) == sstr(public_, bus, metro));
 
-    rt.augment_methods();
+    comp.augment_methods();
 
-    BOOST_TEST_REQUIRE(rt.methods.size() == 2);
-    auto method_iter = rt.methods.begin();
-    rt_method& pay_method = *method_iter++;
+    BOOST_TEST_REQUIRE(comp.methods.size() == 2);
+    auto method_iter = comp.methods.begin();
+    cc_method& pay_method = *method_iter++;
     BOOST_TEST_REQUIRE(pay_method.vp.size() == 1);
-    rt_method& approve_method = *method_iter++;
+    cc_method& approve_method = *method_iter++;
     BOOST_TEST_REQUIRE(approve_method.vp.size() == 2);
 
     {
-        std::vector<rt_class*> expected = {employee};
+        std::vector<class_*> expected = {employee};
         BOOST_TEST_INFO("result   = " + sstr(pay_method.vp));
         BOOST_TEST_INFO("expected = " + sstr(expected));
         BOOST_TEST(pay_method.vp == expected);
     }
 
     {
-        std::vector<rt_class*> expected = {role, expense};
+        std::vector<class_*> expected = {role, expense};
         BOOST_TEST_INFO("result   = " << sstr(approve_method.vp));
         BOOST_TEST_INFO("expected = " << sstr(expected));
         BOOST_TEST(approve_method.vp == expected);
@@ -304,9 +309,9 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
 
     {
         auto c_iter = test_policy::catalog.methods.begin();
-        auto r_iter = rt.methods.rbegin();
+        auto r_iter = comp.methods.rbegin();
 
-        for (int i = 0; i < rt.methods.size(); ++i) {
+        for (int i = 0; i < comp.methods.size(); ++i) {
             BOOST_TEST_INFO("i = " << i);
             auto& c_meth = *c_iter++;
             auto& r_meth = *r_iter++;
@@ -338,7 +343,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST(expense->used_by_vp[0].method == &approve_method);
     BOOST_TEST(expense->used_by_vp[0].param == 1);
 
-    rt.allocate_slots();
+    comp.allocate_slots();
 
     {
         const std::vector<size_t> expected = {1};
@@ -373,29 +378,29 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     auto approve_Founder_Expense = spec_iter++;
 
     {
-        BOOST_TEST(runtime<test_policy>::is_more_specific(
+        BOOST_TEST(compiler<test_policy>::is_more_specific(
             &*approve_Founder_Expense, &*approve_Role_Expense));
-        BOOST_TEST(runtime<test_policy>::is_more_specific(
+        BOOST_TEST(compiler<test_policy>::is_more_specific(
             &*approve_Manager_Taxi, &*approve_Role_Expense));
-        BOOST_TEST(!runtime<test_policy>::is_more_specific(
+        BOOST_TEST(!compiler<test_policy>::is_more_specific(
             &*approve_Role_Expense, &*approve_Role_Expense));
 
         {
-            std::vector<const rt_spec*> expected = {&*approve_Manager_Taxi};
-            std::vector<const rt_spec*> specs = {
+            std::vector<const definition*> expected = {&*approve_Manager_Taxi};
+            std::vector<const definition*> specs = {
                 &*approve_Role_Expense, &*approve_Manager_Taxi};
-            BOOST_TEST(expected == runtime<test_policy>::best(specs));
+            BOOST_TEST(expected == compiler<test_policy>::best(specs));
         }
     }
 
     {
-        BOOST_TEST(runtime<test_policy>::is_base(
+        BOOST_TEST(compiler<test_policy>::is_base(
             &*approve_Role_Expense, &*approve_Founder_Expense));
-        BOOST_TEST(!runtime<test_policy>::is_base(
+        BOOST_TEST(!compiler<test_policy>::is_base(
             &*approve_Role_Expense, &*approve_Role_Expense));
     }
 
-    rt.build_dispatch_tables();
+    comp.build_dispatch_tables();
 
     {
         BOOST_TEST_REQUIRE(pay_method.dispatch_table.size() == 2);
@@ -479,7 +484,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     BOOST_TEST_REQUIRE(pay_Manager->info->next != nullptr);
     BOOST_TEST(*pay_Manager->info->next == pay_Employee->info->pf);
 
-    rt.install_gv();
+    comp.install_gv();
 
     {
         // pay
@@ -535,7 +540,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
         // // Plane
         // BOOST_TEST(gv_iter++->i == 0); // approve/1
 
-        rt.optimize();
+        comp.optimize();
 
         // // Role
         // BOOST_TEST(opt_iter++->pw == 0 + approve_dispatch_table); //
@@ -680,17 +685,17 @@ using test_policy = test_policy_<__COUNTER__>;
 YOMM2_STATIC(use_classes<A, B, AB, C, D, E, test_policy>);
 
 BOOST_AUTO_TEST_CASE(test_use_classes_mi) {
-    std::vector<rt_class*> actual, expected;
+    std::vector<class_*> actual, expected;
 
-    runtime<test_policy> rt;
-    rt.augment_classes();
+    compiler<test_policy> comp;
+    comp.augment_classes();
 
-    auto a = get_class<A>(rt);
-    auto b = get_class<B>(rt);
-    auto ab = get_class<AB>(rt);
-    auto c = get_class<C>(rt);
-    auto d = get_class<D>(rt);
-    auto e = get_class<E>(rt);
+    auto a = get_class<A>(comp);
+    auto b = get_class<B>(comp);
+    auto ab = get_class<AB>(comp);
+    auto c = get_class<C>(comp);
+    auto d = get_class<D>(comp);
+    auto e = get_class<E>(comp);
 
     // -----------------------------------------------------------------------
     // A
@@ -737,12 +742,12 @@ auto& m_c = method<key, void(virtual_<C&>), test_policy>::fn;
 auto& m_d = method<key, void(virtual_<D&>), test_policy>::fn;
 
 BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
-    runtime<test_policy> rt;
-    rt.augment_classes();
-    rt.augment_methods();
-    rt.allocate_slots();
+    compiler<test_policy> comp;
+    comp.augment_classes();
+    comp.augment_methods();
+    comp.allocate_slots();
 
-    auto m_iter = rt.methods.begin();
+    auto m_iter = comp.methods.begin();
     auto m_a = m_iter++;
     auto m_b = m_iter++;
     auto m_ab = m_iter++;

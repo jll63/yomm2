@@ -31,44 +31,44 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<class Policy>
-template<typename Stream>
-void runtime<Policy>::generate(Stream& os) {
-    for (auto& cls : classes) {
-        os << boost::core::demangle(
-                  reinterpret_cast<const std::type_info*>(cls.type_ids[0])
-                      ->name())
-           << "\n";
-        for (auto slot : cls.vtbl) {
-            os << "  " << slot << "\n";
-        }
-        os << "\n";
-    }
+// template<class Policy>
+// template<typename Stream>
+// void runtime<Policy>::generate(Stream& os) {
+//     for (auto& cls : classes) {
+//         os << boost::core::demangle(
+//                   reinterpret_cast<const std::type_info*>(cls.type_ids[0])
+//                       ->name())
+//            << "\n";
+//         for (auto slot : cls.vtbl) {
+//             os << "  " << slot << "\n";
+//         }
+//         os << "\n";
+//     }
 
-    //std::vector
+//     //std::vector
 
-    for (auto& m : methods) {
-        auto slot = m.slots[0];
+//     for (auto& m : methods) {
+//         auto slot = m.slots[0];
 
-        if (m.arity() == 1) {
-            for (auto cls : m.vp[0]->compatible_classes) {
-                auto def = m.dispatch_table[cls->vtbl[slot]];
-                auto x = m.dispatch_table;
-                auto y = x[cls->vtbl[slot]];
-                auto name = def == &m.ambiguous ? "ambiguous"
-                    : def == &m.not_implemented
-                    ? "not_implemented"
-                    : boost::core::demangle(
-                          reinterpret_cast<const std::type_info*>(
-                              def->info->type)
-                              ->name());
-                os << boost::core::demangle(std::string(m.info->name).c_str())
-                   << " slot: " << slot << ", offset: " << cls->vtbl[slot]
-                   << ": " << name << "\n";
-            }
-        }
-    }
-}
+//         if (m.arity() == 1) {
+//             for (auto cls : m.vp[0]->compatible_classes) {
+//                 auto def = m.dispatch_table[cls->vtbl[slot]];
+//                 auto x = m.dispatch_table;
+//                 auto y = x[cls->vtbl[slot]];
+//                 auto name = def == &m.ambiguous ? "ambiguous"
+//                     : def == &m.not_implemented
+//                     ? "not_implemented"
+//                     : boost::core::demangle(
+//                           reinterpret_cast<const std::type_info*>(
+//                               def->info->type)
+//                               ->name());
+//                 os << boost::core::demangle(std::string(m.info->name).c_str())
+//                    << " slot: " << slot << ", offset: " << cls->vtbl[slot]
+//                    << ": " << name << "\n";
+//             }
+//         }
+//     }
+// }
 
 template<>
 struct static_offsets<method<YOMM2_SYMBOL(kick), int(virtual_ptr<Animal>)>> {
@@ -138,9 +138,9 @@ int main() {
     std::cout << call_meet(snoopy, snoopy) << "\n";
 
     default_policy::trace_enabled = true;
-    detail::runtime<default_policy> rt;
-    rt.compile();
-    rt.generate(std::cout);
+    compiler<default_policy> comp;
+    comp.compile();
+    //compiler.generate(std::cout);
 
     // initialize();
     // std::cout << call_kick(snoopy) << "\n";

@@ -28,151 +28,146 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace detail {
 
-struct rt_method;
+struct compiler_base {
 
-struct rt_arg {
-    rt_method* method;
-    size_t param;
-};
+    struct method;
 
-struct rt_class {
-    bool is_abstract{false};
-    std::vector<type_id> type_ids;
-    std::vector<rt_class*> transitive_bases;
-    std::vector<rt_class*> direct_bases;
-    std::vector<rt_class*> direct_derived;
-    std::unordered_set<rt_class*> compatible_classes;
-    std::vector<rt_arg> used_by_vp;
-    int next_slot{0};
-    int first_used_slot{-1};
-    int layer{0};
-    size_t mark{0};   // temporary mark to detect cycles
-    size_t weight{0}; // number of proper direct or indirect bases
-    std::vector<size_t> vtbl;
-    std::uintptr_t** static_vptr;
+    struct parameter {
+        struct method* method;
+        size_t param;
+    };
 
-    const std::uintptr_t* vptr() const {
-        return *static_vptr;
-    }
+    struct class_ {
+        bool is_abstract{false};
+        std::vector<type_id> type_ids;
+        std::vector<class_*> transitive_bases;
+        std::vector<class_*> direct_bases;
+        std::vector<class_*> direct_derived;
+        std::unordered_set<class_*> compatible_classes;
+        std::vector<parameter> used_by_vp;
+        int next_slot{0};
+        int first_used_slot{-1};
+        int layer{0};
+        size_t mark{0};   // temporary mark to detect cycles
+        size_t weight{0}; // number of proper direct or indirect bases
+        std::vector<size_t> vtbl;
+        std::uintptr_t** static_vptr;
 
-    const std::uintptr_t* const* indirect_vptr() const {
-        return static_vptr;
-    }
+        const std::uintptr_t* vptr() const {
+            return *static_vptr;
+        }
 
-    auto type_id_begin() const {
-        return type_ids.begin();
-    }
+        const std::uintptr_t* const* indirect_vptr() const {
+            return static_vptr;
+        }
 
-    auto type_id_end() const {
-        return type_ids.end();
-    }
-};
+        auto type_id_begin() const {
+            return type_ids.begin();
+        }
 
-struct rt_spec {
-    const definition_info* info;
-    std::vector<rt_class*> vp;
-    std::uintptr_t pf;
-};
+        auto type_id_end() const {
+            return type_ids.end();
+        }
+    };
 
-using bitvec = boost::dynamic_bitset<>;
+    struct definition {
+        const detail::definition_info* info;
+        std::vector<class_*> vp;
+        std::uintptr_t pf;
+    };
 
-struct group {
-    std::vector<rt_class*> classes;
-    bool has_concrete_classes{false};
-};
+    using bitvec = boost::dynamic_bitset<>;
 
-using group_map = std::map<bitvec, group>;
+    struct group {
+        std::vector<class_*> classes;
+        bool has_concrete_classes{false};
+    };
 
-struct dispatch_stats_t {
-    size_t cells{0};
-    size_t concrete_cells{0};
-    size_t not_implemented{0};
-    size_t concrete_not_implemented{0};
-    size_t ambiguous{0};
-    size_t concrete_ambiguous{0};
+    using group_map = std::map<bitvec, group>;
 
-    void accumulate(const dispatch_stats_t& other);
-};
+    struct dispatch_stats_t {
+        size_t cells{0};
+        size_t concrete_cells{0};
+        size_t not_implemented{0};
+        size_t concrete_not_implemented{0};
+        size_t ambiguous{0};
+        size_t concrete_ambiguous{0};
 
-struct rt_method {
-    method_info* info;
-    std::vector<rt_class*> vp;
-    std::vector<rt_spec> specs;
-    std::vector<size_t> slots;
-    std::vector<size_t> strides;
-    std::vector<const rt_spec*> dispatch_table;
-    // following two are dummies, when converting to a function pointer, we will
-    // get the corresponding pointer from method_info
-    rt_spec not_implemented;
-    rt_spec ambiguous;
-    const std::uintptr_t* gv_dispatch_table{nullptr};
-    auto arity() const {
-        return vp.size();
-    }
-    dispatch_stats_t stats;
-};
+        void accumulate(const dispatch_stats_t& other);
+    };
 
-struct metrics_t : dispatch_stats_t {
-    size_t method_table_size, dispatch_table_size;
-    size_t hash_search_attempts;
-};
+    struct method {
+        detail::method_info* info;
+        std::vector<class_*> vp;
+        std::vector<definition> specs;
+        std::vector<size_t> slots;
+        std::vector<size_t> strides;
+        std::vector<const definition*> dispatch_table;
+        // following two are dummies, when converting to a function pointer, we will
+        // get the corresponding pointer from method_info
+        definition not_implemented;
+        definition ambiguous;
+        const std::uintptr_t* gv_dispatch_table{nullptr};
+        auto arity() const {
+            return vp.size();
+        }
+        dispatch_stats_t stats;
+    };
 
-inline std::ostream* log_on(std::ostream* os) {
-    auto prev = logs;
-    logs = os;
-    return prev;
-}
+    struct metrics_t : dispatch_stats_t {
+        size_t method_table_size, dispatch_table_size;
+        size_t hash_search_attempts;
+    };
 
-inline std::ostream* log_off() {
-    auto prev = logs;
-    logs = nullptr;
-    return prev;
-}
+    struct type_name {
+        type_name(type_id type) : type(type) {
+        }
+        type_id type;
+    };
 
-struct type_name {
-    type_name(type_id type) : type(type) {
-    }
-    type_id type;
+    std::deque<class_> classes;
+    std::vector<method> methods;
+    size_t class_visit = 0;
+    metrics_t metrics;
+    bool compilation_done = false;
 };
 
 template<class Policy>
-struct runtime {
+struct compiler : compiler_base {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
     static constexpr bool trace_enabled =
         Policy::template has_facet<policy::trace_output>;
 
-    std::unordered_map<type_index_type, rt_class*> class_map;
-    std::deque<rt_class> classes;
-    std::vector<rt_method> methods;
-    size_t class_visit{0};
-    metrics_t metrics;
+    std::unordered_map<type_index_type, class_*> class_map;
 
-    runtime();
+    compiler();
 
-    void update();
+    void compile();
+    void install_global_tables();
+    template<typename Stream>
+    void generate_forward_declarations(Stream& os) const;
 
     void resolve_static_type_ids();
     void augment_classes();
-    void calculate_compatible_classes(rt_class& cls);
+    void calculate_compatible_classes(class_& cls);
     void augment_methods();
-    std::vector<rt_class*> layer_classes();
+    std::vector<class_*> layer_classes();
     void allocate_slots();
-    void allocate_slot_down(rt_class* cls, size_t slot);
-    void allocate_slot_up(rt_class* cls, size_t slot);
+    void allocate_slot_down(class_* cls, size_t slot);
+    void allocate_slot_up(class_* cls, size_t slot);
     void build_dispatch_tables();
     void build_dispatch_table(
-        rt_method& m, size_t dim, std::vector<group_map>::const_iterator group,
+        method& m, size_t dim, std::vector<group_map>::const_iterator group,
         const bitvec& candidates, bool concrete);
     void install_gv();
     void optimize();
     void print(const dispatch_stats_t& stats);
-    static std::vector<const rt_spec*>
-    best(std::vector<const rt_spec*>& candidates);
-    static bool is_more_specific(const rt_spec* a, const rt_spec* b);
-    static bool is_base(const rt_spec* a, const rt_spec* b);
+    static std::vector<const definition*>
+    best(std::vector<const definition*>& candidates);
+    static bool is_more_specific(const definition* a, const definition* b);
+    static bool is_base(const definition* a, const definition* b);
 
     static type_id static_type(type_id type) {
         if constexpr (std::is_base_of_v<
@@ -216,7 +211,7 @@ struct runtime {
 
                 while (tmp) {
                     ++digits;
-                     tmp /= 10;
+                    tmp /= 10;
                 }
 
                 while (digits < rf.width) {
@@ -253,7 +248,7 @@ struct runtime {
             return *this;
         }
 
-        trace_type& operator<<(type_range<type_id*> tips) {
+        trace_type& operator<<(detail::type_range<type_id*> tips) {
             if constexpr (trace_enabled) {
                 *this << "(";
                 const char* sep = "";
@@ -269,7 +264,7 @@ struct runtime {
         }
 
         template<template<typename...> typename Container, typename... T>
-        trace_type& operator<<(Container<rt_class*, T...>& classes) {
+        trace_type& operator<<(Container<class_*, T...>& classes) {
             if constexpr (trace_enabled) {
                 *this << "(";
                 const char* sep = "";
@@ -292,7 +287,7 @@ struct runtime {
             return *this;
         }
 
-        trace_type& operator<<(const rt_class& cls) {
+        trace_type& operator<<(const class_& cls) {
             if constexpr (trace_enabled) {
                 *this << type_name(cls.type_ids[0]);
             }
@@ -318,26 +313,35 @@ struct runtime {
 };
 
 template<class Policy>
-void runtime<Policy>::update() {
+void compiler<Policy>::install_global_tables() {
+    if (!compilation_done) {
+        abort();
+    }
+
+    install_gv();
+    optimize();
+
+    print(metrics);
+    ++trace << "Finished\n";
+}
+
+template<class Policy>
+void compiler<Policy>::compile() {
     resolve_static_type_ids();
     augment_classes();
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    install_gv();
-    optimize();
 
-    print(metrics);
-
-    ++trace << "Finished\n";
+    compilation_done = true;
 }
 
 template<class Policy>
-runtime<Policy>::runtime() {
+compiler<Policy>::compiler() {
 }
 
 template<class Policy>
-void runtime<Policy>::resolve_static_type_ids() {
+void compiler<Policy>::resolve_static_type_ids() {
     auto resolve = [](type_id* p) {
         auto pf = reinterpret_cast<type_id (*)()>(*p);
         *p = pf();
@@ -385,7 +389,9 @@ void runtime<Policy>::resolve_static_type_ids() {
 }
 
 template<class Policy>
-void runtime<Policy>::augment_classes() {
+void compiler<Policy>::augment_classes() {
+    using namespace detail;
+
     // scope
     {
         ++trace << "Static class info:\n";
@@ -424,7 +430,7 @@ void runtime<Policy>::augment_classes() {
         }
     }
 
-    // All known classes now have exactly one associated rt_class* in the
+    // All known classes now have exactly one associated class_* in the
     // map. Collect the bases.
 
     for (auto& cr : Policy::catalog.classes) {
@@ -529,7 +535,7 @@ void runtime<Policy>::augment_classes() {
 }
 
 template<class Policy>
-void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
+void compiler<Policy>::calculate_compatible_classes(class_& cls) {
     if (!cls.compatible_classes.empty()) {
         return;
     }
@@ -550,8 +556,9 @@ void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
 }
 
 template<class Policy>
-void runtime<Policy>::augment_methods() {
+void compiler<Policy>::augment_methods() {
     using namespace policy;
+    using namespace detail;
 
     methods.resize(Policy::catalog.methods.size());
 
@@ -574,8 +581,8 @@ void runtime<Policy>::augment_methods() {
         size_t param_index = 0;
 
         for (auto ti : type_range{meth_info.vp_begin, meth_info.vp_end}) {
-            auto rt_class = class_map[Policy::type_index(ti)];
-            if (!rt_class) {
+            auto class_ = class_map[Policy::type_index(ti)];
+            if (!class_) {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
@@ -587,8 +594,8 @@ void runtime<Policy>::augment_methods() {
 
                 abort();
             }
-            rt_arg param = {&*meth_iter, param_index++};
-            meth_iter->vp.push_back(rt_class);
+            parameter param = {&*meth_iter, param_index++};
+            meth_iter->vp.push_back(class_);
         }
 
         // initialize the function pointer in the dummy specs
@@ -611,8 +618,8 @@ void runtime<Policy>::augment_methods() {
             for (auto type :
                  type_range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
-                auto rt_class = class_map[Policy::type_index(type)];
-                if (!rt_class) {
+                auto class_ = class_map[Policy::type_index(type)];
+                if (!class_) {
                     ++trace << "error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
@@ -626,7 +633,7 @@ void runtime<Policy>::augment_methods() {
                 }
                 spec_iter->pf =
                     reinterpret_cast<uintptr_t>(spec_iter->info->pf);
-                spec_iter->vp.push_back(rt_class);
+                spec_iter->vp.push_back(class_);
                 ++param_index;
             }
             ++spec_iter;
@@ -645,16 +652,16 @@ void runtime<Policy>::augment_methods() {
 }
 
 template<class Policy>
-std::vector<rt_class*> runtime<Policy>::layer_classes() {
+std::vector<compiler_base::class_*> compiler<Policy>::layer_classes() {
     ++trace << "Layering classes...\n";
 
-    std::vector<rt_class*> input;
+    std::vector<class_*> input;
     input.reserve(classes.size());
     std::transform(
         classes.begin(), classes.end(), std::back_inserter(input),
-        [](rt_class& cls) { return &cls; });
+        [](class_& cls) { return &cls; });
 
-    std::vector<rt_class*> layered;
+    std::vector<class_*> layered;
     layered.reserve(classes.size());
 
     for (int layer = 1; !input.empty(); ++layer) {
@@ -698,7 +705,7 @@ std::vector<rt_class*> runtime<Policy>::layer_classes() {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slots() {
+void compiler<Policy>::allocate_slots() {
     auto layered = layer_classes();
 
     ++trace << "Allocating slots...\n";
@@ -739,7 +746,7 @@ void runtime<Policy>::allocate_slots() {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slot_down(rt_class* cls, size_t slot) {
+void compiler<Policy>::allocate_slot_down(class_* cls, size_t slot) {
 
     if (cls->mark == class_visit)
         return;
@@ -766,7 +773,7 @@ void runtime<Policy>::allocate_slot_down(rt_class* cls, size_t slot) {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slot_up(rt_class* cls, size_t slot) {
+void compiler<Policy>::allocate_slot_up(class_* cls, size_t slot) {
 
     if (cls->mark == class_visit)
         return;
@@ -792,7 +799,9 @@ void runtime<Policy>::allocate_slot_up(rt_class* cls, size_t slot) {
 }
 
 template<class Policy>
-void runtime<Policy>::build_dispatch_tables() {
+void compiler<Policy>::build_dispatch_tables() {
+    using namespace detail;
+
     for (auto& m : methods) {
         ++trace << "Building dispatch table for " << m.info->name << "\n";
         indent YOMM2_GENSYM(trace);
@@ -911,18 +920,18 @@ void runtime<Policy>::build_dispatch_tables() {
             metrics.accumulate(m.stats);
             ++trace << "assigning next\n";
 
-            std::vector<const rt_spec*> specs;
+            std::vector<const definition*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(), std::back_inserter(specs),
-                [](const rt_spec& spec) { return &spec; });
+                [](const definition& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << type_name(spec.info->type) << ":\n";
-                std::vector<const rt_spec*> candidates;
+                std::vector<const definition*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
-                    [spec](const rt_spec* other) {
+                    [spec](const definition* other) {
                         return is_base(other, &spec);
                     });
 
@@ -960,9 +969,11 @@ void runtime<Policy>::build_dispatch_tables() {
 }
 
 template<class Policy>
-void runtime<Policy>::build_dispatch_table(
-    rt_method& m, size_t dim, std::vector<group_map>::const_iterator group_iter,
+void compiler<Policy>::build_dispatch_table(
+    method& m, size_t dim, std::vector<group_map>::const_iterator group_iter,
     const bitvec& candidates, bool concrete) {
+    using namespace detail;
+
     indent YOMM2_GENSYM(trace);
     size_t group_index = 0;
 
@@ -980,7 +991,7 @@ void runtime<Policy>::build_dispatch_table(
         }
 
         if (dim == 0) {
-            std::vector<const rt_spec*> applicable;
+            std::vector<const definition*> applicable;
             size_t i = 0;
 
             for (const auto& spec : m.specs) {
@@ -1031,7 +1042,7 @@ void runtime<Policy>::build_dispatch_table(
     }
 }
 
-inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
+inline void compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
     concrete_cells += other.concrete_cells;
     not_implemented += other.not_implemented;
@@ -1041,7 +1052,7 @@ inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
 }
 
 template<class Policy>
-void runtime<Policy>::install_gv() {
+void compiler<Policy>::install_gv() {
     using namespace policy;
 
     for (size_t pass = 0; pass != 2; ++pass) {
@@ -1125,7 +1136,7 @@ void runtime<Policy>::install_gv() {
 }
 
 template<class Policy>
-void runtime<Policy>::optimize() {
+void compiler<Policy>::optimize() {
     ++trace << "Optimizing\n";
 
     for (auto& m : methods) {
@@ -1160,12 +1171,12 @@ void runtime<Policy>::optimize() {
 }
 
 template<class Policy>
-std::vector<const rt_spec*>
-runtime<Policy>::best(std::vector<const rt_spec*>& candidates) {
-    std::vector<const rt_spec*> best;
+std::vector<const compiler_base::definition*>
+compiler<Policy>::best(std::vector<const definition*>& candidates) {
+    std::vector<const definition*> best;
 
     for (auto spec : candidates) {
-        const rt_spec* candidate = spec;
+        const definition* candidate = spec;
 
         for (auto iter = best.begin(); iter != best.end();) {
             if (is_more_specific(spec, *iter)) {
@@ -1187,7 +1198,7 @@ runtime<Policy>::best(std::vector<const rt_spec*>& candidates) {
 }
 
 template<class Policy>
-bool runtime<Policy>::is_more_specific(const rt_spec* a, const rt_spec* b) {
+bool compiler<Policy>::is_more_specific(const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1209,7 +1220,7 @@ bool runtime<Policy>::is_more_specific(const rt_spec* a, const rt_spec* b) {
 }
 
 template<class Policy>
-bool runtime<Policy>::is_base(const rt_spec* a, const rt_spec* b) {
+bool compiler<Policy>::is_base(const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1229,7 +1240,7 @@ bool runtime<Policy>::is_base(const rt_spec* a, const rt_spec* b) {
 }
 
 template<class Policy>
-void runtime<Policy>::print(const dispatch_stats_t& stats) {
+void compiler<Policy>::print(const dispatch_stats_t& stats) {
     ++trace;
     if (stats.cells) {
         // only for multi-methods, uni-methods don't have dispatch tables
@@ -1244,12 +1255,11 @@ void runtime<Policy>::print(const dispatch_stats_t& stats) {
     trace << stats.concrete_ambiguous << "\n";
 }
 
-} // namespace detail
-
 template<class Policy>
 void update() {
-    detail::runtime<Policy> rt;
-    rt.update();
+    compiler<Policy> comp;
+    comp.compile();
+    comp.install_global_tables();
 }
 
 } // namespace yomm2
