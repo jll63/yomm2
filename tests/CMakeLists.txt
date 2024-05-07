@@ -15,9 +15,9 @@ add_executable(templates templates.cpp)
 target_link_libraries(templates YOMM2::yomm2)
 add_test(NAME templates COMMAND templates)
 
-add_executable(runtime runtime.cpp)
-target_link_libraries(runtime YOMM2::yomm2)
-add_test(NAME runtime COMMAND runtime)
+add_executable(compiler compiler.cpp)
+target_link_libraries(compiler YOMM2::yomm2)
+add_test(NAME compiler COMMAND compiler)
 
 add_executable(blackbox blackbox.cpp)
 target_link_libraries(blackbox YOMM2::yomm2)

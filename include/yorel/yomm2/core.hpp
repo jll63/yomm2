@@ -715,7 +715,7 @@ set_method_call_error_handler(method_call_error_handler handler) {
 } // namespace yomm2
 } // namespace yorel
 
-#include <yorel/yomm2/runtime.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 #pragma pop_macro("max")
 
