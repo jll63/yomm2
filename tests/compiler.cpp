@@ -2,10 +2,11 @@
 #include <type_traits>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 #include "test_helpers.hpp"
 
-#define BOOST_TEST_MODULE compiler
+#define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 
 using namespace yorel::yomm2;

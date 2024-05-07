@@ -25,7 +25,7 @@ int main() {
 #include <benchmark/benchmark.h>
 
 #include <yorel/yomm2/keywords.hpp>
-#include <yorel/yomm2/runtime.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "benchmarks_parameters.hpp"
