@@ -19,8 +19,8 @@ Stroustrup.
 
 If you are familiar with the concept of open multi-methods, or if you prefer
 to learn by reading code, go directly to [the
-synopsis](examples/synopsis.cpp). The [reference is
-here](https://jll63.github.io/yomm2/reference)
+synopsis](examples/synopsis.cpp). The [documentation is
+here](https://jll63.github.io/yomm2)
 
 ## Open Methods in a Nutshell
 
@@ -208,12 +208,14 @@ Run cmake:
 
 ```
 cmake -S yomm2 -B build.yomm2
+cmake --build build.yomm2
 ```
 
 If you want to run the tests, specify it when running `cmake`:
 
 ```
 cmake -S yomm2 -B build.yomm2 -DYOMM2_ENABLE_TESTS=1
+cmake --build build.yomm2
 ctest --test-dir build.yomm2
 ```
 
@@ -224,7 +226,7 @@ YOMM2 uses the following Boost libraries:
 If these libraries are already available on your machine, and they can be found
 by `cmake`, they will be used. In this case, make sure that the pre-installed
 libraries are at version 1.74 or above. You can also tell the cmake script to
-attempt to download an dbuild the dependencies by setting
+attempt to download and build the dependencies by setting
 `YOMM2_DOWNLOAD_DEPENDENCIES` to `ON`.
 
 If you want to run the benchmarks (and in this case you really want a release
@@ -283,12 +285,14 @@ to yomm2.
 
 ## Going Further
 
-The Reference is [here](https://jll63.github.io/yomm2/reference). Since version
-1.3.0, some of the internals are documented, which make it possible to use the
-library without using macros - see [the API tutorial](tutorials/api.md).
+The documentation is [here](https://jll63.github.io/yomm2). Since version 1.3.0,
+some of the internals are documented, which make it possible to use the library
+without using macros - see [the API
+tutorial](https://jll63.github.io/yomm2/tutorials/api.html).
 
 YOMM2 has *experimental* support for writing templatized methods and definitions
-- see [the templates tutorial](tutorials/templates_tutorial.md).
+- see [the templates
+  tutorial](https://jll63.github.io/yomm2/tutorials/templates_tutorial.html).
 
 The library comes with a series of examples:
 

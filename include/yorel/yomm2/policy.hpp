@@ -17,6 +17,8 @@
 #include <typeinfo>
 #endif
 
+#pragma push_macro("min")
+#undef min
 #pragma push_macro("max")
 #undef max
 
@@ -352,9 +354,11 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
 template<class Policy>
 std::vector<const std::uintptr_t*> vptr_vector<Policy>::vptrs;
 
-template<class Policy>
+template<
+    class Policy,
+    class Map = std::unordered_map<type_id, const std::uintptr_t*>>
 struct yOMM2_API_gcc vptr_map : virtual external_vptr {
-    static std::unordered_map<type_id, const std::uintptr_t*> vptrs;
+    static Map vptrs;
 
     template<typename ForwardIterator>
     static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
@@ -372,8 +376,8 @@ struct yOMM2_API_gcc vptr_map : virtual external_vptr {
     }
 };
 
-template<class Policy>
-std::unordered_map<type_id, const std::uintptr_t*> vptr_map<Policy>::vptrs;
+template<class Policy, class Map>
+Map vptr_map<Policy, Map>::vptrs;
 
 template<class Policy>
 struct yOMM2_API_gcc basic_indirect_vptr : virtual indirect_vptr {
@@ -412,6 +416,8 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
     static type_id hash_mult;
     static std::size_t hash_shift;
     static std::size_t hash_length;
+    static std::size_t hash_min;
+    static std::size_t hash_max;
 
 #ifdef _MSC_VER
     __forceinline
@@ -488,10 +494,8 @@ void fast_perfect_hash<Policy>::hash_initialize(
                      type_iter != iter->type_id_end(); ++type_iter) {
                     auto type = *type_iter;
                     auto index = (type * hash_mult) >> hash_shift;
-
-                    if (index >= hash_length) {
-                        hash_length = index + 1;
-                    }
+                    hash_min = std::min(hash_min, index);
+                    hash_max = std::max(hash_max, index);
 
                     if (buckets[index] != static_cast<type_id>(-1)) {
                         found = false;
@@ -509,10 +513,14 @@ void fast_perfect_hash<Policy>::hash_initialize(
         // metrics.hash_table_size = hash_size;
 
         if (found) {
+            hash_length = hash_max + 1;
+
             if constexpr (trace_enabled) {
                 if (Policy::trace_enabled) {
                     Policy::trace_stream << "  found " << hash_mult << " after "
-                                         << total_attempts << " attempts\n";
+                                         << total_attempts
+                                         << " attempts; min = " << hash_min
+                                         << ", max = " << hash_max << "\n";
                 }
             }
 
@@ -538,6 +546,10 @@ template<class Policy>
 std::size_t fast_perfect_hash<Policy>::hash_shift;
 template<class Policy>
 std::size_t fast_perfect_hash<Policy>::hash_length;
+template<class Policy>
+std::size_t fast_perfect_hash<Policy>::hash_min;
+template<class Policy>
+std::size_t fast_perfect_hash<Policy>::hash_max;
 
 template<class Policy>
 struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
@@ -743,6 +755,7 @@ using default_static = policy::debug;
 } // namespace yomm2
 } // namespace yorel
 
+#pragma pop_macro("min")
 #pragma pop_macro("max")
 
 #endif

@@ -15,7 +15,7 @@ foreach(cpp ${cpps})
         string(REPLACE "docs.in" "docs" md_out "${md}")
         add_custom_command(
             OUTPUT "${md_out}"
-            COMMAND ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md_out}"
+            COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md_out}"
             DEPENDS "${cpp};${code_deps}")
         list(APPEND entries "${md_out}")
     endif()
@@ -35,7 +35,7 @@ if(${YOMM2_ENABLE_DOC})
         string(REPLACE "docs.in" "docs" MD_out "${MD}")
         add_custom_command(
             OUTPUT "${MD_out}"
-            COMMAND ${CMAKE_SOURCE_DIR}/dev/md2md "${MD}" "${MD_out}"
+            COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/md2md "${MD}" "${MD_out}"
             DEPENDS "${MD};${code_deps}")
         list(APPEND entries "${MD_out}")
         endforeach()

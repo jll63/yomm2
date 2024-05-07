@@ -15,7 +15,6 @@
 #endif
 
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/runtime.hpp>
 
 namespace yorel {
 namespace yomm2 {

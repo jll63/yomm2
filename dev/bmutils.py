@@ -13,7 +13,8 @@ axes = dict(
     dispatch=(
         "virtual_function",
         "basic_policy",
-        "compact_map_policy",
+        "std_map_policy",
+        "flat_map_policy",
         "direct_intrusive",
         "indirect_intrusive",
         "direct_virtual_ptr",
