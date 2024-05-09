@@ -203,10 +203,10 @@ struct class_declaration<detail::types<Classes...>>
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
-template<typename First, class... Rest>
+template<class... Classes>
 using use_classes = typename detail::use_classes_aux<
-    detail::get_policy<First, Rest...>,
-    detail::remove_policy<First, Rest...>>::type;
+    detail::get_policy<Classes...>,
+    detail::remove_policy<Classes...>>::type;
 
 // -----------------------------------------------------------------------------
 // virtual_ptr
