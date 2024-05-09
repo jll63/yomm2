@@ -10,7 +10,7 @@ cache_state=$2
 prog=${YOMM2_BENCHMARK-$(dirname $0)/../build/tests/rdtsc-benchmark}
 
 for i in $(seq $count); do
-    for dispatch in 'ovh' 'vf' 'ref' 'vp' 'iptr' 'sum' 'fum'; do
+    for dispatch in  'ovh' 'vf' 'ref' 'vp' 'iptr' 'sum' 'fum' 'stat_ref' 'stat_vp' 'stat_iptr' 'stat_sum' 'stat_fum'; do
         $prog $dispatch $cache_state
     done
     echo

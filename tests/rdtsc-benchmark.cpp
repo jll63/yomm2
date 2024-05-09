@@ -23,6 +23,27 @@ struct intrusive : default_policy::rebind<intrusive>::remove<
     }
 };
 
+struct using_unordered_map
+    : default_policy::rebind<using_unordered_map>::replace<
+          external_vptr, vptr_map<using_unordered_map>>::remove<type_hash> {};
+
+#if __has_include(<boost/unordered/unordered_flat_map.hpp>)
+
+#include <boost/unordered/unordered_flat_map.hpp>
+#define FLAT_MAP_AVAILABLE
+
+struct flat_unordered_map
+    : default_policy::rebind<flat_unordered_map>::replace<
+          external_vptr,
+          vptr_map<
+              flat_unordered_map,
+              boost::unordered_flat_map<type_id, const std::uintptr_t*>>>::
+          remove<type_hash> {};
+
+#endif
+
+namespace stat {
+
 struct Animal {
     virtual ~Animal() {
     }
@@ -40,28 +61,88 @@ struct Cat : Animal {
     void pet_vf() override{/*purr*/};
 };
 
+struct YOMM2_SYMBOL(pet_ref);
+struct YOMM2_SYMBOL(pet_vp);
+struct YOMM2_SYMBOL(pet_iptr);
+
+} // namespace stat
+namespace yorel {
+namespace yomm2 {
+namespace detail {
+template<>
+struct static_offsets<yorel::yomm2::method<
+    stat::YoMm2_S_pet_ref, void(yorel::yomm2::virtual_<stat::Animal&>),
+    yorel::yomm2::policy::release>> {
+    static constexpr size_t slots[] = {0};
+};
+template<>
+struct static_offsets<yorel::yomm2::method<
+    stat::YoMm2_S_pet_vp,
+    void(
+        yorel::yomm2::virtual_ptr<stat::Animal, yorel::yomm2::policy::release>),
+    yorel::yomm2::policy::release>> {
+    static constexpr size_t slots[] = {1};
+};
+template<>
+struct static_offsets<yorel::yomm2::method<
+    stat::YoMm2_S_pet_iptr, void(yorel::yomm2::virtual_<stat::Animal&>),
+    intrusive>> {
+    static constexpr size_t slots[] = {0};
+};
+} // namespace detail
+} // namespace yomm2
+} // namespace yorel
+namespace dyn {
+
+struct Animal {
+    virtual ~Animal() {
+    }
+
+    virtual void pet_vf() = 0;
+
+    const std::uintptr_t* yomm2_vptr = 0;
+};
+
+struct Cat : Animal {
+    Cat() {
+        yomm2_vptr = intrusive::static_vptr<Cat>;
+    }
+
+    void pet_vf() override{/*purr*/};
+};
+
+} // namespace dyn
+
 template<class Policy>
 struct use_policy {
     use_policy() {
-        YOMM2_STATIC(use_classes<Animal, Cat, Policy>);
+        YOMM2_STATIC(use_classes<
+                     dyn::Animal, dyn::Cat, stat::Animal, stat::Cat, Policy>);
         update<Policy>();
     }
 };
 
-std::vector<
-    std::pair<std::string, unsigned (*)(Animal& r, virtual_ptr<Animal> vp)>>
+std::vector<std::pair<
+    std::string,
+    unsigned (*)(
+        dyn::Animal&, virtual_ptr<dyn::Animal>, stat::Animal&,
+        virtual_ptr<stat::Animal>)>>
     benchmarks;
 
 struct register_benchmark {
     explicit register_benchmark(
-        std::string name, unsigned (*fun)(Animal& r, virtual_ptr<Animal> vp)) {
+        std::string name,
+        unsigned (*fun)(
+            dyn::Animal&, virtual_ptr<dyn::Animal>, stat::Animal&,
+            virtual_ptr<stat::Animal>)) {
         benchmarks.emplace_back(name, fun);
     }
 };
 
 #define BENCHMARK(NAME, EXPR)                                                  \
     __attribute__((noinline)) unsigned NAME(                                   \
-        Animal& r, virtual_ptr<Animal> vp) {                                   \
+        dyn::Animal& dyn_ref, virtual_ptr<dyn::Animal> dyn_vp,                 \
+        stat::Animal& stat_ref, virtual_ptr<stat::Animal> stat_vp) {           \
         unsigned int dummy;                                                    \
         _mm_sfence();                                                          \
         _mm_lfence();                                                          \
@@ -82,7 +163,12 @@ BENCHMARK(ovh, {});
 // -----------------------------------------------------------------------------
 // virtual function
 
-BENCHMARK(vf, r.pet_vf());
+BENCHMARK(vf, dyn_ref.pet_vf());
+
+// -----------------------------------------------------------------------------
+// others
+
+namespace dyn {
 
 // -----------------------------------------------------------------------------
 // method, argument passed by reference
@@ -94,7 +180,7 @@ define_method(void, pet_ref, (Cat & Cat)) {
     // purr
 }
 
-BENCHMARK(ref, pet_ref(r));
+BENCHMARK(ref, pet_ref(dyn_ref));
 
 // -----------------------------------------------------------------------------
 // method, argument passed by virtual_ptr
@@ -106,7 +192,7 @@ define_method(void, pet_vp, (virtual_ptr<Cat> cat)) {
     // purr
 }
 
-BENCHMARK(vp, pet_vp(vp));
+BENCHMARK(vp, pet_vp(dyn_vp));
 
 // ref and vp
 YOMM2_STATIC(use_policy<default_policy>);
@@ -122,14 +208,10 @@ define_method(void, pet_iptr, (Cat & Cat)) {
 }
 
 YOMM2_STATIC(use_policy<intrusive>);
-BENCHMARK(iptr, pet_iptr(r));
+BENCHMARK(iptr, pet_iptr(dyn_ref));
 
 // -----------------------------------------------------------------------------
 // std::unordered_map
-
-struct using_unordered_map
-    : default_policy::rebind<using_unordered_map>::replace<
-          external_vptr, vptr_map<using_unordered_map>>::remove<type_hash> {};
 
 declare_method(void, pet_sum, (virtual_<Animal&>), using_unordered_map);
 
@@ -139,22 +221,12 @@ define_method(void, pet_sum, (Cat & Cat)) {
 }
 
 YOMM2_STATIC(use_policy<using_unordered_map>);
-BENCHMARK(sum, pet_sum(r));
+BENCHMARK(sum, pet_sum(dyn_ref));
 
 // -----------------------------------------------------------------------------
 // boost::flat_unordered_map
 
-#if __has_include(<boost/unordered/unordered_flat_map.hpp>)
-
-#include <boost/unordered/unordered_flat_map.hpp>
-
-struct flat_unordered_map
-    : default_policy::rebind<flat_unordered_map>::replace<
-          external_vptr,
-          vptr_map<
-              flat_unordered_map,
-              boost::unordered_flat_map<type_id, const std::uintptr_t*>>>::
-          remove<type_hash> {};
+#ifdef FLAT_MAP_AVAILABLE
 
 declare_method(void, pet_fum, (virtual_<Animal&>), flat_unordered_map);
 
@@ -164,9 +236,85 @@ define_method(void, pet_fum, (Cat & Cat)) {
 }
 
 YOMM2_STATIC(use_policy<flat_unordered_map>);
-BENCHMARK(fum, pet_fum(r));
+BENCHMARK(fum, pet_fum(dyn_ref));
 
 #endif
+
+} // namespace dyn
+
+namespace stat {
+
+// -----------------------------------------------------------------------------
+// method, argument passed by reference
+
+declare_method(void, pet_ref, (virtual_<Animal&>));
+
+// Implement 'pet_ref' for Cats.
+define_method(void, pet_ref, (Cat & Cat)) {
+    // purr
+}
+
+BENCHMARK(stat_ref, pet_ref(stat_ref));
+
+// -----------------------------------------------------------------------------
+// method, argument passed by virtual_ptr
+
+declare_method(void, pet_vp, (virtual_ptr<Animal>));
+
+// Implement 'pet_vp' for Cats.
+define_method(void, pet_vp, (virtual_ptr<Cat> cat)) {
+    // purr
+}
+
+BENCHMARK(stat_vp, pet_vp(stat_vp));
+
+// ref and vp
+YOMM2_STATIC(use_policy<default_policy>);
+
+// -----------------------------------------------------------------------------
+// intrusive
+
+declare_method(void, pet_iptr, (virtual_<Animal&>), intrusive);
+
+// Implement 'pet_iptr' for Cats.
+define_method(void, pet_iptr, (Cat & Cat)) {
+    // purr
+}
+
+YOMM2_STATIC(use_policy<intrusive>);
+BENCHMARK(stat_iptr, pet_iptr(stat_ref));
+
+// -----------------------------------------------------------------------------
+// std::unordered_map
+
+declare_method(void, pet_sum, (virtual_<Animal&>), using_unordered_map);
+
+// Implement 'pet_sum' for Cats.
+define_method(void, pet_sum, (Cat & Cat)) {
+    // purr
+}
+
+YOMM2_STATIC(use_policy<using_unordered_map>);
+BENCHMARK(stat_sum, pet_sum(stat_ref));
+
+// -----------------------------------------------------------------------------
+// boost::flat_unordered_map
+
+#ifdef FLAT_MAP_AVAILABLE
+
+declare_method(void, pet_fum, (virtual_<Animal&>), flat_unordered_map);
+
+// Implement 'pet_fum' for Cats.
+define_method(void, pet_fum, (Cat & Cat)) {
+    // purr
+}
+
+YOMM2_STATIC(use_policy<flat_unordered_map>);
+BENCHMARK(stat_fum, pet_fum(stat_ref));
+
+#endif
+
+} // namespace stat
 
 // -----------------------------------------------------------------------------
 // driver
@@ -185,12 +333,26 @@ __attribute__((noinline)) void flush_cache() {
 }
 
 int main(int argc, char** argv) {
-    Cat r;
-    auto vp = virtual_ptr(r);
+    dyn::Cat dyn_ref;
+    auto dyn_vp = virtual_ptr(dyn_ref);
+    stat::Cat stat_ref;
+    auto stat_vp = virtual_ptr(stat_ref);
+
+    // {
+    //     compiler<default_policy> comp;
+    //     comp.compile();
+    //     comp.generate_static_offsets(std::cout);
+    // }
+
+    // {
+    //     compiler<intrusive> comp;
+    //     comp.compile();
+    //     comp.generate_static_offsets(std::cout);
+    // }
 
     std::string what = "all";
     bool flush = true;
-    int count = 100;
+    int count = 10;
 
     auto arg = argv + 1;
 
@@ -208,13 +370,13 @@ int main(int argc, char** argv) {
 
     if (what == "all") {
         for (auto& benchmark : benchmarks) {
-            cout << setw(6) << benchmark.first;
+            cout << setw(10) << benchmark.first;
         }
         cout << "\n";
 
         if (!flush) {
             for (auto& benchmark : benchmarks) {
-                benchmark.second(r, vp);
+                benchmark.second(dyn_ref, dyn_vp, stat_ref, stat_vp);
             }
         }
 
@@ -224,7 +386,8 @@ int main(int argc, char** argv) {
                     flush_cache();
                 }
 
-                cout << setw(6) << benchmark.second(r, vp);
+                cout << setw(10)
+                     << benchmark.second(dyn_ref, dyn_vp, stat_ref, stat_vp);
             }
             cout << "\n";
         }
@@ -242,10 +405,11 @@ int main(int argc, char** argv) {
         if (flush) {
             flush_cache();
         } else {
-            benchmark->second(r, vp);
+            benchmark->second(dyn_ref, dyn_vp, stat_ref, stat_vp);
         }
 
-        cout << setw(6) << benchmark->second(r, vp);
+        cout << setw(10)
+             << benchmark->second(dyn_ref, dyn_vp, stat_ref, stat_vp);
     }
 
     return 0;
