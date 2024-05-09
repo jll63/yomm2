@@ -1319,7 +1319,7 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
 
         if (path->size() > nesting) {
             while (path->size() > nesting) {
-                os << "namespace " << (*path)[nesting] << " {\n";
+                os << "namespace " << (*path)[nesting - 1] << " {\n";
                 ++nesting;
             }
 
