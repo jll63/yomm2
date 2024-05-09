@@ -22,6 +22,7 @@
 #include <utility>       // for pair
 #include <vector>        // for vector, vector<>:...
 
+#include <boost/core/demangle.hpp>
 #include <boost/dynamic_bitset.hpp>
 
 #include <yorel/yomm2/core.hpp>
@@ -147,7 +148,7 @@ struct compiler : compiler_base {
     void compile();
     void install_global_tables();
     template<typename Stream>
-    void generate_forward_declarations(Stream& os) const;
+    void generate_static_offsets(Stream& os) const;
 
     void resolve_static_type_ids();
     void augment_classes();
@@ -1260,6 +1261,132 @@ void update() {
     compiler<Policy> comp;
     comp.compile();
     comp.install_global_tables();
+}
+
+template<class Policy>
+template<typename Stream>
+void compiler<Policy>::generate_static_offsets(Stream& os) const {
+    std::vector<std::string> names(
+        std::distance(classes.begin(), classes.end()) +
+        std::distance(methods.begin(), methods.end()));
+    auto out = std::transform(
+        classes.begin(), classes.end(), names.begin(), [](auto& cls) {
+            return boost::core::demangle(
+                reinterpret_cast<const std::type_info*>(cls.type_ids[0])
+                    ->name());
+        });
+    out = std::transform(methods.begin(), methods.end(), out, [](auto& method) {
+        auto name = boost::core::demangle(
+            reinterpret_cast<const std::type_info*>(method.info->method_type)
+                ->name());
+        auto left_angle_bracket = name.find("<");
+        auto comma = name.find(",");
+
+        return std::string(
+            name.begin() + left_angle_bracket + 1, name.begin() + comma);
+    });
+    std::sort(names.begin(), names.end());
+
+    std::vector<std::vector<std::string_view>> paths;
+    std::string_view scope("::");
+
+    for (auto& name : names) {
+        std::vector<std::string_view> components;
+        auto pos = 0;
+        auto next = name.find(scope);
+
+        while (true) {
+            if (next == std::string::npos) {
+                components.emplace_back(name.data() + pos, name.length() - pos);
+                break;
+            } else {
+                components.emplace_back(name.data() + pos, next - pos);
+                pos = next + scope.length();
+                next = name.find(scope, pos);
+            }
+        }
+
+        paths.push_back(std::move(components));
+    }
+
+    //const std::string* prev;
+    size_t current_depth = 0;
+
+    for (auto path : paths) {
+        //auto depth = std::count(path.begin(), path.end(), "::");
+        for (auto component : path) {
+            os << " :: " << component;
+        }
+
+        os << "\n";
+    }
+
+    size_t depth = 0;
+    auto current = paths.begin();
+    auto path = current;
+
+    for (auto path = paths.begin(); path != paths.end(); ++path) {
+        if (path->size() == current->size()) {
+            os << "struct " << path->back() << ";\n";
+            continue;
+        }
+
+        if (path->size() > current->size()) {
+            for (size_t depth = current->size() - 1; depth < path->size() - 1;
+                 ++depth) {
+                os << "namespace " << (*path)[depth] << " {\n";
+            }
+
+            os << "struct " << path->back() << ";\n";
+            current = path;
+            continue;
+        }
+
+        while (path->size() < current->size()) {
+            os << "}\n";
+            current = path;
+        }
+
+        current = path;
+    }
+
+    for (auto close = current->size(); close > 1; close--) {
+        os << "}\n";
+    }
+
+    os << "namespace yorel { namespace yomm2 { namespace detail {\n";
+
+    for (auto& method : methods) {
+        auto method_name = boost::core::demangle(
+            reinterpret_cast<const std::type_info*>(method.info->method_type)
+                ->name());
+        os << "template<> struct static_offsets<" << method_name
+           << "> {static constexpr size_t slots[] = {";
+
+        auto slots_iter = method.info->slots_strides_p;
+        auto strides_iter = slots_iter + 1;
+        const auto arity = method.info->arity();
+        auto comma = "";
+
+        for (auto arg = 0; arg != arity; ++arg, slots_iter += 2) {
+            os << comma << *slots_iter;
+            comma = ", ";
+        }
+
+        if (arity > 1) {
+            os << "}; static constexpr size_t strides[] = {";
+            comma = "";
+
+            for (auto arg = 1; arg != arity; ++arg, strides_iter += 2) {
+                os << comma << *strides_iter;
+                comma = ", ";
+            }
+        }
+
+        os << "}; };\n";
+    }
+
+    os << "} } }\n";
 }
 
 } // namespace yomm2
