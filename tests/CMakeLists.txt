@@ -33,6 +33,10 @@ add_executable(lab lab.cpp)
 target_link_libraries(lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME lab COMMAND lab)
 
+add_executable(static-offsets-lab static-offsets-lab.cpp)
+target_link_libraries(static-offsets-lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME static-offsets-lab COMMAND static-offsets-lab)
+
 add_executable(member_method member_method.cpp)
 target_link_libraries(member_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME member_method COMMAND member_method)

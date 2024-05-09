@@ -282,6 +282,7 @@ struct yOMM2_API method_info : static_chain<method_info>::static_link {
     static_chain<definition_info> specs;
     void* ambiguous;
     void* not_implemented;
+    type_id method_type;
 
     auto arity() const {
         return std::distance(vp_begin, vp_end);

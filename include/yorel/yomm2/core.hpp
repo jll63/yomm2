@@ -435,6 +435,7 @@ method<Key, R(A...), Policy>::method() {
     this->vp_end = virtual_type_ids::end;
     this->not_implemented = (void*)not_implemented_handler;
     this->ambiguous = (void*)ambiguous_handler;
+    this->method_type = Policy::template static_type<method>();
     Policy::catalog.methods.push_front(*this);
 }
 
@@ -601,12 +602,10 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
             slot = static_offsets<method>::slots[VirtualArg];
             stride = static_offsets<method>::strides[VirtualArg - 1];
             if constexpr (Policy::template has_facet<policy::runtime_checks>) {
-                check_static_offset<static_stride_error>(
-                    static_offsets<method>::strides[VirtualArg - 1],
-                    this->slots_strides[2 * VirtualArg]);
                 check_static_offset<static_slot_error>(
-                    static_offsets<method>::slots[VirtualArg],
-                    this->slots_strides[2 * VirtualArg - 1]);
+                    this->slots_strides[2 * VirtualArg - 1], slot);
+                check_static_offset<static_stride_error>(
+                    this->slots_strides[2 * VirtualArg], stride);
             }
         } else {
             slot = this->slots_strides[2 * VirtualArg - 1];
