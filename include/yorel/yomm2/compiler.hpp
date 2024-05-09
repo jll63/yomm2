@@ -1309,49 +1309,34 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
         paths.push_back(std::move(components));
     }
 
-    //const std::string* prev;
-    size_t current_depth = 0;
-
-    for (auto path : paths) {
-        //auto depth = std::count(path.begin(), path.end(), "::");
-        for (auto component : path) {
-            os << " :: " << component;
-        }
-
-        os << "\n";
-    }
-
-    size_t depth = 0;
-    auto current = paths.begin();
-    auto path = current;
+    size_t nesting = 1;
 
     for (auto path = paths.begin(); path != paths.end(); ++path) {
-        if (path->size() == current->size()) {
+        if (path->size() == nesting) {
             os << "struct " << path->back() << ";\n";
             continue;
         }
 
-        if (path->size() > current->size()) {
-            for (size_t depth = current->size() - 1; depth < path->size() - 1;
-                 ++depth) {
-                os << "namespace " << (*path)[depth] << " {\n";
+        if (path->size() > nesting) {
+            while (path->size() > nesting) {
+                os << "namespace " << (*path)[nesting] << " {\n";
+                ++nesting;
             }
 
             os << "struct " << path->back() << ";\n";
-            current = path;
+
             continue;
         }
 
-        while (path->size() < current->size()) {
+        while (path->size() < nesting) {
             os << "}\n";
-            current = path;
+            ++nesting;
         }
-
-        current = path;
     }
 
-    for (auto close = current->size(); close > 1; close--) {
+    while (nesting > 1) {
         os << "}\n";
+        --nesting;
     }
 
     os << "namespace yorel { namespace yomm2 { namespace detail {\n";
