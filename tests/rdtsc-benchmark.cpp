@@ -23,20 +23,20 @@ struct intrusive : default_policy::rebind<intrusive>::remove<
     }
 };
 
-struct using_unordered_map
-    : default_policy::rebind<using_unordered_map>::replace<
-          external_vptr, vptr_map<using_unordered_map>>::remove<type_hash> {};
+struct std_unordered_map
+    : default_policy::rebind<std_unordered_map>::replace<
+          external_vptr, vptr_map<std_unordered_map>>::remove<type_hash> {};
 
 #if __has_include(<boost/unordered/unordered_flat_map.hpp>)
 
 #include <boost/unordered/unordered_flat_map.hpp>
 #define FLAT_MAP_AVAILABLE
 
-struct flat_unordered_map
-    : default_policy::rebind<flat_unordered_map>::replace<
+struct flat_std_unordered_map
+    : default_policy::rebind<flat_std_unordered_map>::replace<
           external_vptr,
           vptr_map<
-              flat_unordered_map,
+              flat_std_unordered_map,
               boost::unordered_flat_map<type_id, const std::uintptr_t*>>>::
           remove<type_hash> {};
 
@@ -66,32 +66,7 @@ struct YOMM2_SYMBOL(pet_vp);
 struct YOMM2_SYMBOL(pet_iptr);
 
 } // namespace stat
-namespace yorel {
-namespace yomm2 {
-namespace detail {
-template<>
-struct static_offsets<yorel::yomm2::method<
-    stat::YoMm2_S_pet_ref, void(yorel::yomm2::virtual_<stat::Animal&>),
-    yorel::yomm2::policy::release>> {
-    static constexpr size_t slots[] = {0};
-};
-template<>
-struct static_offsets<yorel::yomm2::method<
-    stat::YoMm2_S_pet_vp,
-    void(
-        yorel::yomm2::virtual_ptr<stat::Animal, yorel::yomm2::policy::release>),
-    yorel::yomm2::policy::release>> {
-    static constexpr size_t slots[] = {1};
-};
-template<>
-struct static_offsets<yorel::yomm2::method<
-    stat::YoMm2_S_pet_iptr, void(yorel::yomm2::virtual_<stat::Animal&>),
-    intrusive>> {
-    static constexpr size_t slots[] = {0};
-};
-} // namespace detail
-} // namespace yomm2
-} // namespace yorel
+
 namespace dyn {
 
 struct Animal {
@@ -211,31 +186,31 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(iptr, pet_iptr(dyn_ref));
 
 // -----------------------------------------------------------------------------
-// std::unordered_map
+// std::std_unordered_map
 
-declare_method(void, pet_sum, (virtual_<Animal&>), using_unordered_map);
+declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 
 // Implement 'pet_sum' for Cats.
 define_method(void, pet_sum, (Cat & Cat)) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<using_unordered_map>);
+YOMM2_STATIC(use_policy<std_unordered_map>);
 BENCHMARK(sum, pet_sum(dyn_ref));
 
 // -----------------------------------------------------------------------------
-// boost::flat_unordered_map
+// boost::flat_std_unordered_map
 
 #ifdef FLAT_MAP_AVAILABLE
 
-declare_method(void, pet_fum, (virtual_<Animal&>), flat_unordered_map);
+declare_method(void, pet_fum, (virtual_<Animal&>), flat_std_unordered_map);
 
 // Implement 'pet_fum' for Cats.
 define_method(void, pet_fum, (Cat & Cat)) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<flat_unordered_map>);
+YOMM2_STATIC(use_policy<flat_std_unordered_map>);
 BENCHMARK(fum, pet_fum(dyn_ref));
 
 #endif
@@ -285,31 +260,31 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(stat_iptr, pet_iptr(stat_ref));
 
 // -----------------------------------------------------------------------------
-// std::unordered_map
+// std::std_unordered_map
 
-declare_method(void, pet_sum, (virtual_<Animal&>), using_unordered_map);
+declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 
 // Implement 'pet_sum' for Cats.
 define_method(void, pet_sum, (Cat & Cat)) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<using_unordered_map>);
+YOMM2_STATIC(use_policy<std_unordered_map>);
 BENCHMARK(stat_sum, pet_sum(stat_ref));
 
 // -----------------------------------------------------------------------------
-// boost::flat_unordered_map
+// boost::flat_std_unordered_map
 
 #ifdef FLAT_MAP_AVAILABLE
 
-declare_method(void, pet_fum, (virtual_<Animal&>), flat_unordered_map);
+declare_method(void, pet_fum, (virtual_<Animal&>), flat_std_unordered_map);
 
 // Implement 'pet_fum' for Cats.
 define_method(void, pet_fum, (Cat & Cat)) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<flat_unordered_map>);
+YOMM2_STATIC(use_policy<flat_std_unordered_map>);
 BENCHMARK(stat_fum, pet_fum(stat_ref));
 
 #endif
@@ -338,18 +313,6 @@ int main(int argc, char** argv) {
     stat::Cat stat_ref;
     auto stat_vp = virtual_ptr(stat_ref);
 
-    // {
-    //     compiler<default_policy> comp;
-    //     comp.compile();
-    //     comp.generate_static_offsets(std::cout);
-    // }
-
-    // {
-    //     compiler<intrusive> comp;
-    //     comp.compile();
-    //     comp.generate_static_offsets(std::cout);
-    // }
-
     std::string what = "all";
     bool flush = true;
     int count = 10;
@@ -358,6 +321,20 @@ int main(int argc, char** argv) {
 
     if (*arg) {
         what = *arg++;
+    }
+
+    if (what == "generate") {
+        boost::mp11::mp_for_each<detail::types<
+            default_policy, intrusive, std_unordered_map,
+            flat_std_unordered_map>>([](auto Policy) {
+            {
+                compiler<decltype(Policy)> comp;
+                comp.compile();
+                comp.generate_static_offsets(std::cout);
+            }
+        });
+
+        return 0;
     }
 
     if (*arg) {
