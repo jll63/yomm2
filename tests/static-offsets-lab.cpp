@@ -9,66 +9,17 @@
 #include <memory>
 #include <string>
 
-struct Asteroid;
-struct Object;
-struct Rocket;
-namespace animals {
-struct Animal;
-struct YoMm2_S_kick;
-struct YoMm2_S_meet;
-namespace pets {
-struct Cat;
-struct Dog;
-} // namespace pets
-} // namespace animals
-namespace yorel {
-namespace yomm2 {
-namespace detail {
-template<>
-struct static_offsets<yorel::yomm2::method<
-    animals::YoMm2_S_kick,
-    int(yorel::yomm2::virtual_ptr<
-        animals::Animal, yorel::yomm2::policy::debug_shared>),
-    yorel::yomm2::policy::debug_shared>> {
-    static constexpr size_t slots[] = {0};
-};
-template<>
-struct static_offsets<yorel::yomm2::method<
-    animals::YoMm2_S_meet,
-    int(yorel::yomm2::virtual_ptr<
-            animals::Animal, yorel::yomm2::policy::debug_shared>,
-        yorel::yomm2::virtual_ptr<
-            animals::Animal, yorel::yomm2::policy::debug_shared>),
-    yorel::yomm2::policy::debug_shared>> {
-    static constexpr size_t slots[] = {1, 2};
-    static constexpr size_t strides[] = {2};
-};
-} // namespace detail
-} // namespace yomm2
-} // namespace yorel
-namespace yorel {
-namespace yomm2 {
-
-struct node {};
-
-using node_map = std::unordered_map<std::string, std::unique_ptr<node>>;
-
-struct namespace_ : node {
-    std::string name;
-    node_map children;
-};
-
-struct class_ : node {
-    std::string name;
-};
-
-} // namespace yomm2
-} // namespace yorel
-
 using std::cout;
 
 using namespace yorel::yomm2;
 using yorel::yomm2::virtual_ptr;
+
+struct Object {
+    virtual ~Object() {
+    }
+};
+
+register_classes(Object);
 
 namespace animals {
 struct Animal {
@@ -113,10 +64,6 @@ define_method(int, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b)) {
 }
 } // namespace animals
 
-struct Object {
-    virtual ~Object() {
-    }
-};
 struct Rocket : Object {};
 struct Asteroid : Object {};
 
