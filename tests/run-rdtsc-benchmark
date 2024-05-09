@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Copyright (c) 2018-2024 Jean-Louis Leroy
+# Distributed under the Boost Software License, Version 1.0.
+# See accompanying file LICENSE_1_0.txt
+# or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+count=$1
+cache_state=$2
+prog=${YOMM2_BENCHMARK-$(dirname $0)/../build/tests/rdtsc-benchmark}
+
+for i in $(seq $count); do
+    for dispatch in  'ovh' 'vf' 'ref' 'vp' 'iptr' 'sum' 'fum' 'stat_ref' 'stat_vp' 'stat_iptr' 'stat_sum' 'stat_fum'; do
+        $prog $dispatch $cache_state
+    done
+    echo
+done

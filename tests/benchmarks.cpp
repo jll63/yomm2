@@ -44,6 +44,10 @@ enum { NH = YOMM2_BENCHMARK_HIERARCHIES };
 enum { NH = 100 };
 #endif
 
+#define mb()	asm volatile("mfence":::"memory")
+#define rmb()	asm volatile("lfence":::"memory")
+#define wmb()	asm volatile("sfence" ::: "memory")
+
 const std::string yomm2_ = "yomm2_";
 
 auto OBJECTS() {
