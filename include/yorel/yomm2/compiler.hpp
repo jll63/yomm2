@@ -1341,7 +1341,7 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
     size_t nesting = 0;
 
     for (auto& ns : range(paths.begin()->begin(), paths.begin()->end() - 1)) {
-        os << "namespace " << ns << "{\n";
+        os << "namespace " << ns << " {\n";
     }
 
     os << "struct " << paths.front().back() << ";\n";
@@ -1361,12 +1361,12 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
         }
 
         while (i != n) {
-            os << "\n}";
+            os << "}\n";
             ++i;
         }
 
         while (j < m) {
-            os << "namespace " << cur[j] << "{\n";
+            os << "namespace " << cur[j] << " {\n";
             ++j;
         }
 
@@ -1376,7 +1376,7 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
     }
 
     for (auto close = paths.back().size() - 1; close; --close) {
-        os << "\n}";
+        os << "}\n";
     }
 }
 
