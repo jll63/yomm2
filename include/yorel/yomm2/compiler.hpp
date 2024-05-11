@@ -1290,24 +1290,9 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
         // would not have compiled. Let's extract ID.
 
         auto key_first = name.begin() + name.find("<") + 1;
-        auto key_iter = key_first + 1;
+        auto key_last = std::find(key_first, name.end(), ',');
 
-        for (size_t nesting = 1; nesting > 0; ++key_iter) {
-            switch (*key_iter) {
-            case '<':
-            case '[':
-            case '(':
-                ++nesting;
-                break;
-            case '>':
-            case ']':
-            case ')':
-                --nesting;
-                break;
-            }
-        }
-
-        return std::string(key_first, key_iter);
+        return std::string(key_first, key_last);
     });
 
     if (names.empty()) {
@@ -1350,6 +1335,11 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
 
     for (auto& cur : range(paths.begin() + 1, paths.end())) {
         auto& prev = *prev_iter;
+
+        if (prev == cur) {
+            continue;
+        }
+
         // Work with indices, not iterators. It makes debugging easier, and the
         // compiler will optimize anyway.
         size_t i = 0, n = prev.size() - 1;
