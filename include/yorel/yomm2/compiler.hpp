@@ -147,10 +147,13 @@ struct compiler : compiler_base {
 
     void compile();
     void install_global_tables();
+
     template<typename Stream>
     void generate_forward_declarations(Stream& os) const;
     template<typename Stream>
     void generate_static_offsets(Stream& os) const;
+    template<typename Stream>
+    void generate_header(Stream& os) const;
 
     void resolve_static_type_ids();
     void augment_classes();
@@ -1370,6 +1373,14 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
     }
 }
 
+
+template<class Policy>
+template<typename Stream>
+void compiler<Policy>::generate_header(Stream& os) const {
+    generate_forward_declarations(os);
+    generate_static_offsets(os);
+}
+
 template<class Policy>
 template<typename Stream>
 void compiler<Policy>::generate_static_offsets(Stream& os) const {
@@ -1380,13 +1391,11 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
         os << "template<> struct static_offsets<" << method_name
            << "> {static constexpr size_t slots[] = {";
 
-        auto slots_iter = method.info->slots_strides_p;
-        auto strides_iter = slots_iter + 1;
         const auto arity = method.info->arity();
         auto comma = "";
 
-        for (auto arg = 0; arg != arity; ++arg, slots_iter += 2) {
-            os << comma << *slots_iter;
+        for (auto slot : method.slots) {
+            os << comma << slot;
             comma = ", ";
         }
 
@@ -1394,8 +1403,8 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
             os << "}; static constexpr size_t strides[] = {";
             comma = "";
 
-            for (auto arg = 1; arg != arity; ++arg, strides_iter += 2) {
-                os << comma << *strides_iter;
+            for (auto stride : method.strides) {
+                os << comma << stride;
                 comma = ", ";
             }
         }

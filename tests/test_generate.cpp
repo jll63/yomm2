@@ -129,11 +129,13 @@ struct foo;
 
         std::ostringstream os;
         os << "\n";
-        comp.generate_forward_declarations(os);
-        comp.generate_static_offsets(os);
+        comp.generate_header(os);
         std::string_view expected = R"(
 struct foo;
 struct key;
+template<> struct static_offsets<yorel::yomm2::method<key, void (yorel::yomm2::virtual_<foo&>), test_policy_<9> >> {static constexpr size_t slots[] = {0}; };
+template<> struct static_offsets<yorel::yomm2::method<key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<9> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
+} } }
 )";
         BOOST_TEST(os.str() == expected);
     }
