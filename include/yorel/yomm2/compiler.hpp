@@ -148,6 +148,8 @@ struct compiler : compiler_base {
     void compile();
     void install_global_tables();
     template<typename Stream>
+    void generate_forward_declarations(Stream& os) const;
+    template<typename Stream>
     void generate_static_offsets(Stream& os) const;
 
     void resolve_static_type_ids();
@@ -249,7 +251,7 @@ struct compiler : compiler_base {
             return *this;
         }
 
-        trace_type& operator<<(detail::type_range<type_id*> tips) {
+        trace_type& operator<<(detail::range<type_id*> tips) {
             if constexpr (trace_enabled) {
                 *this << "(";
                 const char* sep = "";
@@ -355,7 +357,7 @@ void compiler<Policy>::resolve_static_type_ids() {
 
                 if (*ci.last_base == 0) {
                     for (auto& ti :
-                         detail::type_range{ci.first_base, ci.last_base}) {
+                         detail::range{ci.first_base, ci.last_base}) {
                         resolve(&ti);
                     }
 
@@ -365,8 +367,7 @@ void compiler<Policy>::resolve_static_type_ids() {
 
         if (!Policy::catalog.methods.empty())
             for (auto& method : Policy::catalog.methods) {
-                for (auto& ti :
-                     detail::type_range{method.vp_begin, method.vp_end}) {
+                for (auto& ti : detail::range{method.vp_begin, method.vp_end}) {
                     if (*method.vp_end == 0) {
                         resolve(&ti);
                         *method.vp_end = 1;
@@ -375,7 +376,7 @@ void compiler<Policy>::resolve_static_type_ids() {
                     if (!method.specs.empty())
                         for (auto& definition : method.specs) {
                             if (*definition.vp_end == 0) {
-                                for (auto& ti : detail::type_range{
+                                for (auto& ti : detail::range{
                                          definition.vp_begin,
                                          definition.vp_end}) {
                                     resolve(&ti);
@@ -405,7 +406,7 @@ void compiler<Policy>::augment_classes() {
                 {
                     indent YOMM2_GENSYM(trace);
                     ++trace << type_name(cr.ti) << ": "
-                            << type_range{cr.first_base, cr.last_base};
+                            << range{cr.first_base, cr.last_base};
 
                     ++trace << "\n";
                 }
@@ -572,7 +573,7 @@ void compiler<Policy>::augment_methods() {
     for (auto& meth_info : Policy::catalog.methods) {
         if constexpr (trace_enabled) {
             ++trace << meth_info.name << " "
-                    << type_range{meth_info.vp_begin, meth_info.vp_end} << "\n";
+                    << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
         }
 
         indent YOMM2_GENSYM(trace);
@@ -581,7 +582,7 @@ void compiler<Policy>::augment_methods() {
         meth_iter->vp.reserve(meth_info.arity());
         size_t param_index = 0;
 
-        for (auto ti : type_range{meth_info.vp_begin, meth_info.vp_end}) {
+        for (auto ti : range{meth_info.vp_begin, meth_info.vp_end}) {
             auto class_ = class_map[Policy::type_index(ti)];
             if (!class_) {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
@@ -617,7 +618,7 @@ void compiler<Policy>::augment_methods() {
             size_t param_index = 0;
 
             for (auto type :
-                 type_range{definition_info.vp_begin, definition_info.vp_end}) {
+                 range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
                 auto class_ = class_map[Policy::type_index(type)];
                 if (!class_) {
@@ -876,8 +877,8 @@ void compiler<Policy>::build_dispatch_tables() {
                     ++trace << "group " << dim << "/" << group_num << " mask "
                             << mask << "\n";
                     indent YOMM2_GENSYM(trace);
-                    for (auto cls : type_range{
-                             group.classes.begin(), group.classes.end()}) {
+                    for (auto cls :
+                         range{group.classes.begin(), group.classes.end()}) {
                         ++trace << cls->type_ids[0] << "\n";
                     }
                 }
@@ -985,8 +986,7 @@ void compiler<Policy>::build_dispatch_table(
             ++trace << "group " << dim << "/" << group_index << " mask " << mask
                     << "\n";
             indent YOMM2_GENSYM(trace);
-            for (auto cls :
-                 type_range{group.classes.begin(), group.classes.end()}) {
+            for (auto cls : range{group.classes.begin(), group.classes.end()}) {
                 ++trace << cls->type_ids[0] << "\n";
             }
         }
@@ -1043,7 +1043,8 @@ void compiler<Policy>::build_dispatch_table(
     }
 }
 
-inline void compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
+inline void
+compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
     concrete_cells += other.concrete_cells;
     not_implemented += other.not_implemented;
@@ -1199,7 +1200,8 @@ compiler<Policy>::best(std::vector<const definition*>& candidates) {
 }
 
 template<class Policy>
-bool compiler<Policy>::is_more_specific(const definition* a, const definition* b) {
+bool compiler<Policy>::is_more_specific(
+    const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1265,28 +1267,54 @@ void update() {
 
 template<class Policy>
 template<typename Stream>
-void compiler<Policy>::generate_static_offsets(Stream& os) const {
+void compiler<Policy>::generate_forward_declarations(Stream& os) const {
     std::vector<std::string> names(
         std::distance(classes.begin(), classes.end()) +
         std::distance(methods.begin(), methods.end()));
+
     auto out = std::transform(
         classes.begin(), classes.end(), names.begin(), [](auto& cls) {
             return boost::core::demangle(
                 reinterpret_cast<const std::type_info*>(cls.type_ids[0])
                     ->name());
         });
+
     out = std::transform(methods.begin(), methods.end(), out, [](auto& method) {
         auto name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
-        auto left_angle_bracket = name.find("<");
-        auto comma = name.find(",");
 
-        return std::string(
-            name.begin() + left_angle_bracket + 1, name.begin() + comma);
+        // By construction, 'name' is in the form 'method<ID, ...>'. ID can be a
+        // simple name, or not, if it is a template class - like
+        // 'test_policy_<int Key>'. But ID is well-formed, otherwise the program
+        // would not have compiled. Let's extract ID.
+
+        auto key_first = name.begin() + name.find("<") + 1;
+        auto key_iter = key_first + 1;
+
+        for (size_t nesting = 1; nesting > 0; ++key_iter) {
+            switch (*key_iter) {
+            case '<':
+            case '[':
+            case '(':
+                ++nesting;
+                break;
+            case '>':
+            case ']':
+            case ')':
+                --nesting;
+                break;
+            }
+        }
+
+        return std::string(key_first, key_iter);
     });
-    std::sort(names.begin(), names.end());
 
+    if (names.empty()) {
+        return;
+    }
+
+    std::sort(names.begin(), names.end());
     std::vector<std::vector<std::string_view>> paths;
     std::string_view scope("::");
 
@@ -1309,38 +1337,52 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
         paths.push_back(std::move(components));
     }
 
-    size_t nesting = 1;
+    using detail::range;
+    size_t nesting = 0;
 
-    for (auto path = paths.begin(); path != paths.end(); ++path) {
-        if (path->size() == nesting) {
-            os << "struct " << path->back() << ";\n";
-            continue;
-        }
-
-        if (path->size() > nesting) {
-            while (path->size() > nesting) {
-                os << "namespace " << (*path)[nesting] << " {\n";
-                ++nesting;
-            }
-
-            os << "struct " << path->back() << ";\n";
-
-            continue;
-        }
-
-        while (path->size() < nesting) {
-            os << "}\n";
-            ++nesting;
-        }
+    for (auto& ns : range(paths.begin()->begin(), paths.begin()->end() - 1)) {
+        os << "namespace " << ns << "{\n";
     }
 
-    while (nesting > 1) {
-        os << "}\n";
-        --nesting;
+    os << "struct " << paths.front().back() << ";\n";
+
+    auto prev_iter = paths.begin();
+
+    for (auto& cur : range(paths.begin() + 1, paths.end())) {
+        auto& prev = *prev_iter;
+        // Work with indices, not iterators. It makes debugging easier, and the
+        // compiler will optimize anyway.
+        size_t i = 0, n = prev.size() - 1;
+        size_t j = 0, m = cur.size() - 1;
+
+        while (i != n && j != m && prev[i] == cur[j]) {
+            ++i;
+            ++j;
+        }
+
+        while (i != n) {
+            os << "\n}";
+            ++i;
+        }
+
+        while (j < m) {
+            os << "namespace " << cur[j] << "{\n";
+            ++j;
+        }
+
+        os << "struct " << cur.back() << ";\n";
+
+        ++prev_iter;
     }
 
-    os << "namespace yorel { namespace yomm2 { namespace detail {\n";
+    for (auto close = paths.back().size() - 1; close; --close) {
+        os << "\n}";
+    }
+}
 
+template<class Policy>
+template<typename Stream>
+void compiler<Policy>::generate_static_offsets(Stream& os) const {
     for (auto& method : methods) {
         auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)

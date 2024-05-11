@@ -64,10 +64,11 @@ define_method(int, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b)) {
 }
 } // namespace animals
 
+namespace game {
 struct Rocket : Object {};
 struct Asteroid : Object {};
-
 register_classes(Object, Rocket, Asteroid);
+} // namespace game
 
 // namespace yorel {
 // namespace yomm2 {

@@ -54,18 +54,23 @@ struct type_id_list<Policy, types<>> {
 };
 
 template<typename Iterator>
-struct type_range {
+struct range {
+    range(Iterator first, Iterator last) : first(first), last(last) {
+    }
+
     Iterator first, last;
+
     Iterator begin() const {
         return first;
     }
+
     Iterator end() const {
         return last;
     }
 };
 
 template<typename Iterator>
-type_range(Iterator b, Iterator e) -> type_range<Iterator>;
+range(Iterator b, Iterator e) -> range<Iterator>;
 
 struct yomm2_end_of_dump {};
 
