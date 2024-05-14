@@ -82,6 +82,6 @@ endif()
 add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
 
 
-add_executable(test_generate test_generate.cpp)
-target_link_libraries(test_generate YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME test_generate COMMAND test_generate)
+add_executable(test_generator test_generator.cpp)
+target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_generator COMMAND test_generator)

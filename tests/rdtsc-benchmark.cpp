@@ -330,7 +330,7 @@ int main(int argc, char** argv) {
             {
                 compiler<decltype(Policy)> comp;
                 comp.compile();
-                comp.generate_static_offsets(std::cout);
+                comp.write_static_offsets(std::cout);
             }
         });
 

@@ -3,46 +3,91 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_COMPILER_GENERATE_INCLUDED
-#define YOREL_YOMM2_COMPILER_GENERATE_INCLUDED
-
-#include <fstream>
-#include <filesystem>
+#ifndef YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
+#define YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
 
 #include <yorel/yomm2/compiler.hpp>
+
+#include <iostream>
+#include <fstream>
+#include <filesystem>
 
 namespace yorel {
 namespace yomm2 {
 
 template<class Policy>
-template<typename Stream>
-void compiler<Policy>::generate_forward_declarations(Stream& os) const {
+class generator {
+  public:
+    explicit generator(
+        const compiler<Policy>& comp, std::filesystem::path file);
+    explicit generator(const compiler<Policy>& comp, std::ostream& os);
+
+    void write_forward_declarations() const;
+    void write_static_offsets() const;
+
+  private:
+    const compiler<Policy>& comp;
+    std::filesystem::path file;
+    std::ofstream ofs;
+    std::ostream& os;
+};
+
+template<class Policy>
+generator(const compiler<Policy>& comp, std::filesystem::path file)
+    -> generator<Policy>;
+
+template<class Policy>
+generator(const compiler<Policy>& comp, std::ostream& os) -> generator<Policy>;
+
+template<class Policy>
+generator<Policy>::generator(
+    const compiler<Policy>& comp, std::filesystem::path file)
+    : comp(comp), file(file), os(ofs) {
+    std::string temp_file(file.string() + ".tmp");
+    ofs.open(temp_file);
+}
+
+template<class Policy>
+generator<Policy>::generator(const compiler<Policy>& comp, std::ostream& os)
+    : comp(comp), os(os) {
+}
+
+template<class Policy>
+void generator<Policy>::write_forward_declarations() const {
     std::vector<std::string> names(
-        std::distance(classes.begin(), classes.end()) +
-        std::distance(methods.begin(), methods.end()));
+        std::distance(comp.classes.begin(), comp.classes.end()) +
+        std::distance(comp.methods.begin(), comp.methods.end()));
 
     auto out = std::transform(
-        classes.begin(), classes.end(), names.begin(), [](auto& cls) {
+        comp.classes.begin(), comp.classes.end(), names.begin(), [](auto& cls) {
             return boost::core::demangle(
                 reinterpret_cast<const std::type_info*>(cls.type_ids[0])
                     ->name());
         });
 
-    out = std::transform(methods.begin(), methods.end(), out, [](auto& method) {
-        auto name = boost::core::demangle(
+    out = std::transform(
+        comp.methods.begin(), comp.methods.end(), out, [](auto& method) {
+            auto name =
+                boost::core::demangle(reinterpret_cast<const std::type_info*>(
+                                          method.info->method_type)
+                                          ->name());
+
+            // By construction, 'name' is in the form 'method<ID, ...>'. ID can be a
+            // simple name, or not, if it is a template class - like
+            // 'test_policy_<int Key>'. But ID is well-formed, otherwise the program
+            // would not have compiled. Let's extract ID.
+
+            auto key_first = name.begin() + name.find("<") + 1;
+            auto key_last = std::find(key_first, name.end(), ',');
+
+            return std::string(key_first, key_last);
+        });
+
+    for (auto& method : comp.methods) {
+        auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
-
-        // By construction, 'name' is in the form 'method<ID, ...>'. ID can be a
-        // simple name, or not, if it is a template class - like
-        // 'test_policy_<int Key>'. But ID is well-formed, otherwise the program
-        // would not have compiled. Let's extract ID.
-
-        auto key_first = name.begin() + name.find("<") + 1;
-        auto key_last = std::find(key_first, name.end(), ',');
-
-        return std::string(key_first, key_last);
-    });
+    }
 
     if (names.empty()) {
         return;
@@ -120,14 +165,13 @@ void compiler<Policy>::generate_forward_declarations(Stream& os) const {
 }
 
 template<class Policy>
-template<typename Stream>
-void compiler<Policy>::generate_static_offsets(Stream& os) const {
-    for (auto& method : methods) {
+void generator<Policy>::write_static_offsets() const {
+    for (auto& method : comp.methods) {
         auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
-        os << "template<> struct static_offsets<" << method_name
-           << "> {static constexpr size_t slots[] = {";
+        os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
+           << method_name << "> {static constexpr size_t slots[] = {";
 
         const auto arity = method.info->arity();
         auto comma = "";
@@ -151,21 +195,6 @@ void compiler<Policy>::generate_static_offsets(Stream& os) const {
     }
 
     os << "} } }\n";
-}
-
-template<class Policy>
-template<typename Stream>
-void compiler<Policy>::generate_header(Stream& os) const {
-    generate_forward_declarations(os);
-    generate_static_offsets(os);
-}
-
-template<class Policy>
-void compiler<Policy>::generate_header(std::string_view str_path) const {
-    std::filesystem::path path(str_path);
-    std::string temp_path(path.string() + ".tmp");
-    std::ofstream temp(temp_path);
-    generate_header(temp);
 }
 
 } // namespace yomm2

@@ -4,6 +4,7 @@
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/generator.hpp>
 
 #include <iostream>
 #include <memory>
@@ -53,6 +54,11 @@ define_method(int, kick, (virtual_ptr<Dog> dog)) {
 
 declare_method(int, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>));
 
+template<int>
+struct X {};
+
+declare_method(int, test, (virtual_ptr<Animal>, X<42>&));
+
 define_method(int, meet, (virtual_ptr<Animal> a, virtual_ptr<Animal> b)) {
     std::cout << "ignore\n";
     return 1;
@@ -89,6 +95,12 @@ register_classes(Object, Rocket, Asteroid);
 // } // namespace yomm2
 // } // namespace yorel
 
+template<>
+struct ::yorel::yomm2::detail::static_offsets<
+    method<animals::YOMM2_SYMBOL(kick), int(virtual_ptr<animals::Animal>)>> {
+    static constexpr size_t slots[] = {0};
+};
+
 using namespace yorel::yomm2;
 
 // static_assert(detail::has_static_offsets<
@@ -102,7 +114,15 @@ using namespace yorel::yomm2;
 //     default_policy::static_vptr<Dog> = nullptr;
 // }
 
+template<typename>
+struct foo {};
+
+typedef foo<int> bar;
+
 int main() {
+    std::cout << boost::core::demangle(typeid(std::ostream).name()) << "\n";
+    std::cout << boost::core::demangle(typeid(bar).name()) << "\n";
+    return 0;
     update();
 
     using namespace animals;
@@ -113,7 +133,10 @@ int main() {
     compiler<default_policy> comp;
     comp.compile();
     comp.install_global_tables();
-    comp.generate_static_offsets(std::cout);
+
+    generator gen(comp, std::cout);
+    gen.write_forward_declarations();
+    gen.write_static_offsets();
 
     kick(snoopy);
     kick(felix);
