@@ -17,6 +17,9 @@ using namespace yorel::yomm2;
 
 struct foo {};
 
+template<typename>
+struct baz {};
+
 namespace ns1 {
 
 struct foo {};
@@ -40,7 +43,7 @@ struct foo {};
 
 namespace ns1_longer {
 struct foo {};
-}
+} // namespace ns1_longer
 
 BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
     using namespace detail;
@@ -130,8 +133,18 @@ class foo;
         std::ostringstream os;
         generator gen(os);
         gen.add<int>();
+        gen.add<unsigned>();
         gen.write_forward_declarations();
-        BOOST_TEST(os.str().empty());
+        BOOST_TEST(os.str() == "");
+    }
+
+    {
+        std::ostringstream os;
+        os << "\n";
+        generator gen(os);
+        gen.add<method<foo, void(virtual_<baz<foo>&>, std::ostream)>>();
+        gen.write_forward_declarations();
+        BOOST_TEST(os.str() == "\nclass foo;\n");
     }
 }
 

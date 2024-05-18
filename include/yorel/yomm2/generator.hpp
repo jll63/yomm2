@@ -65,7 +65,7 @@ class generator {
     explicit generator(std::filesystem::path file);
     explicit generator(std::ostream& os);
 
-    void add(std::string name);
+    void add(std::string_view name);
     void add(const std::type_info& type);
     template<class... T>
     void add();
@@ -90,7 +90,7 @@ inline generator::generator(std::ostream& os) : os(os) {
 
 namespace detail {
 
-inline bool starts_with(const std::string& name, const char* prefix) {
+inline bool starts_with(std::string_view name, const char* prefix) {
     // Assumes that prefix is not an empty string.
 
     for (auto c : name) {
@@ -108,12 +108,46 @@ inline bool starts_with(const std::string& name, const char* prefix) {
     return false;
 }
 
+inline std::unordered_set<std::string_view> built_in_types = {
+    "int", "unsigned", "void"};
+
 } // namespace detail
 
-inline void generator::add(std::string name) {
-    if (!detail::starts_with(name, "std::") &&
-        !detail::starts_with(name, "yorel::")) {
-        names.emplace(std::move(name));
+inline void generator::add(std::string_view type) {
+    using namespace detail;
+
+    auto iter = type.begin(), last = type.end();
+
+    while (true) {
+        auto name_first = std::find_if(
+            iter, last, [](char c) { return std::isalnum(c) || c == '_'; });
+
+        if (name_first == last) {
+            break;
+        }
+
+        auto name_last = std::find_if(name_first, last, [](char c) {
+            return !(std::isalnum(c) || c == '_' || c == ':');
+        });
+
+        iter = name_last;
+
+        if (iter != last && *iter == '<') {
+            ++iter;
+            continue;
+        }
+
+        std::string_view name(name_first, name_last - name_first);
+
+        if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
+            continue;
+        }
+
+        if (built_in_types.find(name) != built_in_types.end()) {
+            continue;
+        }
+
+        names.emplace(name);
     }
 }
 
