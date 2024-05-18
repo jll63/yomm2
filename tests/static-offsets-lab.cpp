@@ -96,7 +96,7 @@ register_classes(Object, Rocket, Asteroid);
 // } // namespace yorel
 
 template<>
-struct ::yorel::yomm2::detail::static_offsets<
+struct yorel::yomm2::detail::static_offsets<
     method<animals::YOMM2_SYMBOL(kick), int(virtual_ptr<animals::Animal>)>> {
     static constexpr size_t slots[] = {0};
 };
