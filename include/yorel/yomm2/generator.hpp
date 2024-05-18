@@ -9,11 +9,54 @@
 #include <yorel/yomm2/compiler.hpp>
 
 #include <iostream>
+#include <iterator>
 #include <fstream>
 #include <filesystem>
 
 namespace yorel {
 namespace yomm2 {
+
+namespace detail {
+
+template<typename Iter>
+Iter extract_type(Iter iter) {
+    auto depth = 0;
+
+    do {
+        switch (*iter) {
+        case '<':
+        case '[':
+        case '(':
+            ++depth;
+            break;
+
+        case '>':
+        case ']':
+        case ')':
+            if (--depth == 0) {
+                return iter;
+            }
+        }
+
+        ++iter;
+    } while (depth > 0);
+
+    return iter; // never reached - make compiler happy
+}
+template<typename Input, typename Output>
+Output extract_simple_types(Input first, Input last, Output out) {
+    auto iter = first;
+
+    while (std::isalnum(*iter) || *iter == '_' || *iter == ':') {
+        ++iter;
+    }
+
+    *out++ = std::string_view(first.operator(), iter - first);
+
+    return out;
+}
+
+} // namespace detail
 
 template<class Policy>
 class generator {
@@ -54,12 +97,11 @@ generator<Policy>::generator(const compiler<Policy>& comp, std::ostream& os)
 
 template<class Policy>
 void generator<Policy>::write_forward_declarations() const {
-    std::vector<std::string> names(
-        std::distance(comp.classes.begin(), comp.classes.end()) +
-        std::distance(comp.methods.begin(), comp.methods.end()));
+    std::vector<std::string> names;
 
     auto out = std::transform(
-        comp.classes.begin(), comp.classes.end(), names.begin(), [](auto& cls) {
+        comp.classes.begin(), comp.classes.end(),
+        std::back_insert_iterator(names), [](auto& cls) {
             return boost::core::demangle(
                 reinterpret_cast<const std::type_info*>(cls.type_ids[0])
                     ->name());
@@ -87,6 +129,13 @@ void generator<Policy>::write_forward_declarations() const {
         auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
+
+        auto iter = method_name.begin(), name_begin = method_name.end();
+
+        while (iter != method_name.end()) {
+            if (!(std::isalnum(*iter) || *iter == '_' || *iter == ':')) {
+            }
+        }
     }
 
     if (names.empty()) {
