@@ -12,6 +12,7 @@
 #include <iterator>
 #include <fstream>
 #include <filesystem>
+#include <set>
 
 namespace yorel {
 namespace yomm2 {
@@ -43,6 +44,7 @@ Iter extract_type(Iter iter) {
 
     return iter; // never reached - make compiler happy
 }
+
 template<typename Input, typename Output>
 Output extract_simple_types(Input first, Input last, Output out) {
     auto iter = first;
@@ -51,199 +53,184 @@ Output extract_simple_types(Input first, Input last, Output out) {
         ++iter;
     }
 
-    *out++ = std::string_view(first.operator(), iter - first);
+    *out++ = std::string_view(&*first, iter - first);
 
     return out;
 }
 
 } // namespace detail
 
-template<class Policy>
 class generator {
   public:
-    explicit generator(
-        const compiler<Policy>& comp, std::filesystem::path file);
-    explicit generator(const compiler<Policy>& comp, std::ostream& os);
+    explicit generator(std::filesystem::path file);
+    explicit generator(std::ostream& os);
+
+    void add(std::string name);
+    void add(const std::type_info& type);
+    template<class... T>
+    void add();
 
     void write_forward_declarations() const;
     void write_static_offsets() const;
 
   private:
-    const compiler<Policy>& comp;
     std::filesystem::path file;
     std::ofstream ofs;
     std::ostream& os;
+    std::set<std::string> names;
 };
 
-template<class Policy>
-generator(const compiler<Policy>& comp, std::filesystem::path file)
-    -> generator<Policy>;
-
-template<class Policy>
-generator(const compiler<Policy>& comp, std::ostream& os) -> generator<Policy>;
-
-template<class Policy>
-generator<Policy>::generator(
-    const compiler<Policy>& comp, std::filesystem::path file)
-    : comp(comp), file(file), os(ofs) {
+inline generator::generator(std::filesystem::path file) : file(file), os(ofs) {
     std::string temp_file(file.string() + ".tmp");
     ofs.open(temp_file);
 }
 
-template<class Policy>
-generator<Policy>::generator(const compiler<Policy>& comp, std::ostream& os)
-    : comp(comp), os(os) {
+inline generator::generator(std::ostream& os) : os(os) {
 }
 
-template<class Policy>
-void generator<Policy>::write_forward_declarations() const {
-    std::vector<std::string> names;
+namespace detail {
 
-    auto out = std::transform(
-        comp.classes.begin(), comp.classes.end(),
-        std::back_insert_iterator(names), [](auto& cls) {
-            return boost::core::demangle(
-                reinterpret_cast<const std::type_info*>(cls.type_ids[0])
-                    ->name());
-        });
+inline bool starts_with(const std::string& name, const char* prefix) {
+    // Assumes that prefix is not an empty string.
 
-    out = std::transform(
-        comp.methods.begin(), comp.methods.end(), out, [](auto& method) {
-            auto name =
-                boost::core::demangle(reinterpret_cast<const std::type_info*>(
-                                          method.info->method_type)
-                                          ->name());
+    for (auto c : name) {
+        if (c != *prefix) {
+            return false;
+        }
 
-            // By construction, 'name' is in the form 'method<ID, ...>'. ID can be a
-            // simple name, or not, if it is a template class - like
-            // 'test_policy_<int Key>'. But ID is well-formed, otherwise the program
-            // would not have compiled. Let's extract ID.
+        ++prefix;
 
-            auto key_first = name.begin() + name.find("<") + 1;
-            auto key_last = std::find(key_first, name.end(), ',');
-
-            return std::string(key_first, key_last);
-        });
-
-    for (auto& method : comp.methods) {
-        auto method_name = boost::core::demangle(
-            reinterpret_cast<const std::type_info*>(method.info->method_type)
-                ->name());
-
-        auto iter = method_name.begin(), name_begin = method_name.end();
-
-        while (iter != method_name.end()) {
-            if (!(std::isalnum(*iter) || *iter == '_' || *iter == ':')) {
-            }
+        if (!*prefix) {
+            return true;
         }
     }
 
-    if (names.empty()) {
-        return;
-    }
+    return false;
+}
 
-    std::sort(names.begin(), names.end());
-    std::vector<std::vector<std::string_view>> paths;
-    std::string_view scope("::");
+} // namespace detail
+
+inline void generator::add(std::string name) {
+    if (!detail::starts_with(name, "std::") &&
+        !detail::starts_with(name, "yorel::")) {
+        names.emplace(std::move(name));
+    }
+}
+
+inline void generator::add(const std::type_info& type) {
+    add(boost::core::demangle(type.name()));
+}
+
+template<class... T>
+void generator::add() {
+    (add(boost::core::demangle(typeid(T).name())), ...);
+}
+
+inline void generator::write_forward_declarations() const {
+    const std::string file_scope;
+    auto prev_ns_iter = file_scope.begin();
+    auto prev_ns_last = file_scope.begin();
 
     for (auto& name : names) {
-        std::vector<std::string_view> components;
-        auto pos = 0;
-        auto next = name.find(scope);
+        //           v=prev_ns_last
+        // foo::bar::x
+        // fx
+
+        //           v=prev_ns_last
+        // foo::bar::x
+        // foo::bx
+
+        // v=prev_ns_last
+        // x
+        // y
+
+        auto name_iter = name.begin();
+        auto ns_last = name_iter;
+
+        while (prev_ns_iter != prev_ns_last) {
+            if (name_iter == name.end() || *prev_ns_iter != *name_iter) {
+                while (prev_ns_iter != prev_ns_last) {
+                    if (*prev_ns_iter == ':') {
+                        os << "}\n";
+                        ++prev_ns_iter;
+                    }
+                    ++prev_ns_iter;
+                }
+
+                while (name_iter != name.begin() && name_iter[-1] != ':') {
+                    --name_iter;
+                }
+
+                ns_last = name_iter;
+
+                break;
+            }
+
+            ++prev_ns_iter;
+            ++name_iter;
+        }
+
+        prev_ns_iter = name.begin();
+        prev_ns_last = name_iter;
 
         while (true) {
-            if (next == std::string::npos) {
-                components.emplace_back(name.data() + pos, name.length() - pos);
+            auto scope_iter = std::find(name_iter, name.end(), ':');
+
+            if (scope_iter == name.end()) {
+                os << "class "
+                   << std::string_view(&*name_iter, scope_iter - name_iter)
+                   << ";\n";
                 break;
             } else {
-                components.emplace_back(name.data() + pos, next - pos);
-                pos = next + scope.length();
-                next = name.find(scope, pos);
+                os << "namespace "
+                   << std::string_view(&*name_iter, scope_iter - name_iter)
+                   << " {\n";
+                name_iter = scope_iter + 2;
+                prev_ns_last = name_iter;
             }
         }
-
-        paths.push_back(std::move(components));
     }
 
-    using detail::range;
-    size_t nesting = 0;
-
-    for (auto& ns : range(paths.begin()->begin(), paths.begin()->end() - 1)) {
-        os << "namespace " << ns << " {\n";
-    }
-
-    os << "struct " << paths.front().back() << ";\n";
-
-    auto prev_iter = paths.begin();
-
-    for (auto& cur : range(paths.begin() + 1, paths.end())) {
-        auto& prev = *prev_iter;
-
-        if (prev == cur) {
-            continue;
-        }
-
-        // Work with indices, not iterators. It makes debugging easier, and the
-        // compiler will optimize anyway.
-        size_t i = 0, n = prev.size() - 1;
-        size_t j = 0, m = cur.size() - 1;
-
-        while (i != n && j != m && prev[i] == cur[j]) {
-            ++i;
-            ++j;
-        }
-
-        while (i != n) {
+    while (prev_ns_iter != prev_ns_last) {
+        if (*prev_ns_iter == ':') {
             os << "}\n";
-            ++i;
+            ++prev_ns_iter;
         }
 
-        while (j < m) {
-            os << "namespace " << cur[j] << " {\n";
-            ++j;
-        }
-
-        os << "struct " << cur.back() << ";\n";
-
-        ++prev_iter;
-    }
-
-    for (auto close = paths.back().size() - 1; close; --close) {
-        os << "}\n";
+        ++prev_ns_iter;
     }
 }
 
-template<class Policy>
-void generator<Policy>::write_static_offsets() const {
-    for (auto& method : comp.methods) {
-        auto method_name = boost::core::demangle(
-            reinterpret_cast<const std::type_info*>(method.info->method_type)
-                ->name());
-        os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
-           << method_name << "> {static constexpr size_t slots[] = {";
+inline void generator::write_static_offsets() const {
+    // for (auto& method : comp.methods) {
+    //     auto method_name = boost::core::demangle(
+    //         reinterpret_cast<const std::type_info*>(method.info->method_type)
+    //             ->name());
+    //     os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
+    //        << method_name << "> {static constexpr size_t slots[] = {";
 
-        const auto arity = method.info->arity();
-        auto comma = "";
+    //     const auto arity = method.info->arity();
+    //     auto comma = "";
 
-        for (auto slot : method.slots) {
-            os << comma << slot;
-            comma = ", ";
-        }
+    //     for (auto slot : method.slots) {
+    //         os << comma << slot;
+    //         comma = ", ";
+    //     }
 
-        if (arity > 1) {
-            os << "}; static constexpr size_t strides[] = {";
-            comma = "";
+    //     if (arity > 1) {
+    //         os << "}; static constexpr size_t strides[] = {";
+    //         comma = "";
 
-            for (auto stride : method.strides) {
-                os << comma << stride;
-                comma = ", ";
-            }
-        }
+    //         for (auto stride : method.strides) {
+    //             os << comma << stride;
+    //             comma = ", ";
+    //         }
+    //     }
 
-        os << "}; };\n";
-    }
+    //     os << "}; };\n";
+    // }
 
-    os << "} } }\n";
+    // os << "} } }\n";
 }
 
 } // namespace yomm2

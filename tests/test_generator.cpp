@@ -15,58 +15,125 @@
 
 using namespace yorel::yomm2;
 
-BOOST_AUTO_TEST_CASE(test_generator_extract_type) {
+struct foo {};
+
+namespace ns1 {
+
+struct foo {};
+
+namespace ns11 {
+struct foo {};
+struct bar {};
+} // namespace ns11
+
+struct bar {};
+} // namespace ns1
+
+namespace ns2 {
+struct foo {};
+
+namespace ns21 {
+struct foo {};
+
+} // namespace ns21
+} // namespace ns2
+
+namespace ns1_longer {
+struct foo {};
+}
+
+BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
     using namespace detail;
 
     {
-        std::string input("<foo>");
-        BOOST_TEST((extract_type(input.begin()) == input.end() - 1));
+        std::ostringstream os;
+        generator gen(os);
+        gen.write_forward_declarations();
+        BOOST_TEST(os.str().empty());
     }
 
     {
-        std::string input("<(foo<int (*x)[10]>, foo<bar<int>>)>");
-        BOOST_TEST((extract_type(input.begin()) == input.end() - 1));
+        std::ostringstream os;
+        generator gen(os);
+        gen.add<foo>();
+        gen.write_forward_declarations();
+        BOOST_TEST(os.str() == "class foo;\n");
     }
-}
-
-BOOST_AUTO_TEST_CASE(test_generator_extract_simple_types) {
-    using namespace detail;
 
     {
-        std::string input("foo");
-        std::vector<std::string_view> actual, expected = {"foo"};
-        auto out = extract_simple_types(
-            input.begin(), input.end(), std::back_insert_iterator(actual));
-        BOOST_TEST(actual == expected);
+        std::ostringstream os;
+        os << "\n";
+        generator gen(os);
+        gen.add<ns1::foo>();
+        gen.write_forward_declarations();
+        std::string_view expected = R"(
+namespace ns1 {
+class foo;
+}
+)";
+        BOOST_TEST(os.str() == expected);
+    }
+
+    {
+        std::ostringstream os;
+        os << "\n";
+        generator gen(os);
+        gen.add<ns1::foo, ns1::ns11::bar, ns1::ns11::foo>();
+        gen.write_forward_declarations();
+        std::string_view expected = R"(
+namespace ns1 {
+class foo;
+namespace ns11 {
+class bar;
+class foo;
+}
+}
+)";
+        BOOST_TEST(os.str() == expected);
+    }
+
+    {
+        std::ostringstream os;
+        os << "\n";
+        generator gen(os);
+        gen.add<ns1::foo, ns2::foo>();
+        gen.write_forward_declarations();
+        std::string_view expected = R"(
+namespace ns1 {
+class foo;
+}
+namespace ns2 {
+class foo;
+}
+)";
+        BOOST_TEST(os.str() == expected);
+    }
+
+    {
+        std::ostringstream os;
+        os << "\n";
+        generator gen(os);
+        gen.add<ns1::foo, ns1_longer::foo>();
+        gen.write_forward_declarations();
+        std::string_view expected = R"(
+namespace ns1 {
+class foo;
+}
+namespace ns1_longer {
+class foo;
+}
+)";
+        BOOST_TEST(os.str() == expected);
+    }
+
+    {
+        std::ostringstream os;
+        generator gen(os);
+        gen.add<int>();
+        gen.write_forward_declarations();
+        BOOST_TEST(os.str().empty());
     }
 }
-
-// struct foo {};
-// struct baz_key;
-// struct file_scope_policy : test_policy_<__COUNTER__> {};
-
-// namespace ns1 {
-
-// struct policy : test_policy_<__COUNTER__> {};
-// struct foo {};
-
-// namespace ns11 {
-// struct policy : test_policy_<__COUNTER__> {};
-// struct foo {};
-// struct bar {};
-// } // namespace ns11
-
-// struct bar {};
-// } // namespace ns1
-
-// namespace ns2 {
-// struct policy : test_policy_<__COUNTER__> {};
-
-// namespace ns21 {
-// struct foo {};
-
-// } // namespace ns21
-// } // namespace ns2
 
 // void baz1_def(foo&, std::ostream&) {
 // }
