@@ -108,8 +108,10 @@ inline bool starts_with(std::string_view name, const char* prefix) {
     return false;
 }
 
-inline std::unordered_set<std::string_view> built_in_types = {
-    "int", "unsigned", "void"};
+inline std::unordered_set<std::string_view> fundamental_types = {
+    "void",   "bool",  "char", "int",    "float",
+    "double", "short", "long", "signed", "unsigned",
+};
 
 } // namespace detail
 
@@ -143,7 +145,7 @@ inline void generator::add(std::string_view type) {
             continue;
         }
 
-        if (built_in_types.find(name) != built_in_types.end()) {
+        if (fundamental_types.find(name) != fundamental_types.end()) {
             continue;
         }
 
