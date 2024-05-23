@@ -613,7 +613,7 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                 auto comma = "";
 
                 for (auto ti :
-                     type_range{error->types, error->types + error->arity}) {
+                     range{error->types, error->types + error->arity}) {
                     Policy::error_stream << comma;
                     Policy::type_name(ti, Policy::error_stream);
                     comma = ", ";
@@ -676,7 +676,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
                 << " for " << error.method_name << "(";
             auto comma = "";
 
-            for (auto ti : detail::type_range{ti_ptrs, ti_ptrs + arity}) {
+            for (auto ti : detail::range{ti_ptrs, ti_ptrs + arity}) {
                 Policy::error_stream << comma;
                 Policy::type_name(ti, Policy::error_stream);
                 comma = ", ";

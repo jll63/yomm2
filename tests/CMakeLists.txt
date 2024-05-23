@@ -80,3 +80,8 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
   set_target_properties(test_custom_rtti PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
 add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
+
+
+add_executable(test_generator test_generator.cpp)
+target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_generator COMMAND test_generator)

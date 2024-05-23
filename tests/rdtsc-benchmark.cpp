@@ -323,19 +323,19 @@ int main(int argc, char** argv) {
         what = *arg++;
     }
 
-    if (what == "generate") {
-        boost::mp11::mp_for_each<detail::types<
-            default_policy, intrusive, std_unordered_map,
-            flat_std_unordered_map>>([](auto Policy) {
-            {
-                compiler<decltype(Policy)> comp;
-                comp.compile();
-                comp.generate_static_offsets(std::cout);
-            }
-        });
+    // if (what == "generate") {
+    //     boost::mp11::mp_for_each<detail::types<
+    //         default_policy, intrusive, std_unordered_map,
+    //         flat_std_unordered_map>>([](auto Policy) {
+    //         {
+    //             compiler<decltype(Policy)> comp;
+    //             comp.compile();
+    //             comp.write_static_offsets(std::cout);
+    //         }
+    //     });
 
-        return 0;
-    }
+    //     return 0;
+    // }
 
     if (*arg) {
         count = std::stoi(*arg++);

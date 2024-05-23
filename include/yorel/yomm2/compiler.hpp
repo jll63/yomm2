@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_RUNTIME_INCLUDED
-#define YOREL_YOMM2_RUNTIME_INCLUDED
+#ifndef YOREL_YOMM2_COMPILER_INCLUDED
+#define YOREL_YOMM2_COMPILER_INCLUDED
 
 #include <algorithm> // for max, transform, copy
 #include <cassert>   // for assert
@@ -147,8 +147,6 @@ struct compiler : compiler_base {
 
     void compile();
     void install_global_tables();
-    template<typename Stream>
-    void generate_static_offsets(Stream& os) const;
 
     void resolve_static_type_ids();
     void augment_classes();
@@ -249,7 +247,7 @@ struct compiler : compiler_base {
             return *this;
         }
 
-        trace_type& operator<<(detail::type_range<type_id*> tips) {
+        trace_type& operator<<(detail::range<type_id*> tips) {
             if constexpr (trace_enabled) {
                 *this << "(";
                 const char* sep = "";
@@ -355,7 +353,7 @@ void compiler<Policy>::resolve_static_type_ids() {
 
                 if (*ci.last_base == 0) {
                     for (auto& ti :
-                         detail::type_range{ci.first_base, ci.last_base}) {
+                         detail::range{ci.first_base, ci.last_base}) {
                         resolve(&ti);
                     }
 
@@ -365,8 +363,7 @@ void compiler<Policy>::resolve_static_type_ids() {
 
         if (!Policy::catalog.methods.empty())
             for (auto& method : Policy::catalog.methods) {
-                for (auto& ti :
-                     detail::type_range{method.vp_begin, method.vp_end}) {
+                for (auto& ti : detail::range{method.vp_begin, method.vp_end}) {
                     if (*method.vp_end == 0) {
                         resolve(&ti);
                         *method.vp_end = 1;
@@ -375,7 +372,7 @@ void compiler<Policy>::resolve_static_type_ids() {
                     if (!method.specs.empty())
                         for (auto& definition : method.specs) {
                             if (*definition.vp_end == 0) {
-                                for (auto& ti : detail::type_range{
+                                for (auto& ti : detail::range{
                                          definition.vp_begin,
                                          definition.vp_end}) {
                                     resolve(&ti);
@@ -405,7 +402,7 @@ void compiler<Policy>::augment_classes() {
                 {
                     indent YOMM2_GENSYM(trace);
                     ++trace << type_name(cr.ti) << ": "
-                            << type_range{cr.first_base, cr.last_base};
+                            << range{cr.first_base, cr.last_base};
 
                     ++trace << "\n";
                 }
@@ -572,7 +569,7 @@ void compiler<Policy>::augment_methods() {
     for (auto& meth_info : Policy::catalog.methods) {
         if constexpr (trace_enabled) {
             ++trace << meth_info.name << " "
-                    << type_range{meth_info.vp_begin, meth_info.vp_end} << "\n";
+                    << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
         }
 
         indent YOMM2_GENSYM(trace);
@@ -581,7 +578,7 @@ void compiler<Policy>::augment_methods() {
         meth_iter->vp.reserve(meth_info.arity());
         size_t param_index = 0;
 
-        for (auto ti : type_range{meth_info.vp_begin, meth_info.vp_end}) {
+        for (auto ti : range{meth_info.vp_begin, meth_info.vp_end}) {
             auto class_ = class_map[Policy::type_index(ti)];
             if (!class_) {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
@@ -617,7 +614,7 @@ void compiler<Policy>::augment_methods() {
             size_t param_index = 0;
 
             for (auto type :
-                 type_range{definition_info.vp_begin, definition_info.vp_end}) {
+                 range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
                 auto class_ = class_map[Policy::type_index(type)];
                 if (!class_) {
@@ -876,8 +873,8 @@ void compiler<Policy>::build_dispatch_tables() {
                     ++trace << "group " << dim << "/" << group_num << " mask "
                             << mask << "\n";
                     indent YOMM2_GENSYM(trace);
-                    for (auto cls : type_range{
-                             group.classes.begin(), group.classes.end()}) {
+                    for (auto cls :
+                         range{group.classes.begin(), group.classes.end()}) {
                         ++trace << cls->type_ids[0] << "\n";
                     }
                 }
@@ -985,8 +982,7 @@ void compiler<Policy>::build_dispatch_table(
             ++trace << "group " << dim << "/" << group_index << " mask " << mask
                     << "\n";
             indent YOMM2_GENSYM(trace);
-            for (auto cls :
-                 type_range{group.classes.begin(), group.classes.end()}) {
+            for (auto cls : range{group.classes.begin(), group.classes.end()}) {
                 ++trace << cls->type_ids[0] << "\n";
             }
         }
@@ -1043,7 +1039,8 @@ void compiler<Policy>::build_dispatch_table(
     }
 }
 
-inline void compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
+inline void
+compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
     concrete_cells += other.concrete_cells;
     not_implemented += other.not_implemented;
@@ -1199,7 +1196,8 @@ compiler<Policy>::best(std::vector<const definition*>& candidates) {
 }
 
 template<class Policy>
-bool compiler<Policy>::is_more_specific(const definition* a, const definition* b) {
+bool compiler<Policy>::is_more_specific(
+    const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1261,117 +1259,6 @@ void update() {
     compiler<Policy> comp;
     comp.compile();
     comp.install_global_tables();
-}
-
-template<class Policy>
-template<typename Stream>
-void compiler<Policy>::generate_static_offsets(Stream& os) const {
-    std::vector<std::string> names(
-        std::distance(classes.begin(), classes.end()) +
-        std::distance(methods.begin(), methods.end()));
-    auto out = std::transform(
-        classes.begin(), classes.end(), names.begin(), [](auto& cls) {
-            return boost::core::demangle(
-                reinterpret_cast<const std::type_info*>(cls.type_ids[0])
-                    ->name());
-        });
-    out = std::transform(methods.begin(), methods.end(), out, [](auto& method) {
-        auto name = boost::core::demangle(
-            reinterpret_cast<const std::type_info*>(method.info->method_type)
-                ->name());
-        auto left_angle_bracket = name.find("<");
-        auto comma = name.find(",");
-
-        return std::string(
-            name.begin() + left_angle_bracket + 1, name.begin() + comma);
-    });
-    std::sort(names.begin(), names.end());
-
-    std::vector<std::vector<std::string_view>> paths;
-    std::string_view scope("::");
-
-    for (auto& name : names) {
-        std::vector<std::string_view> components;
-        auto pos = 0;
-        auto next = name.find(scope);
-
-        while (true) {
-            if (next == std::string::npos) {
-                components.emplace_back(name.data() + pos, name.length() - pos);
-                break;
-            } else {
-                components.emplace_back(name.data() + pos, next - pos);
-                pos = next + scope.length();
-                next = name.find(scope, pos);
-            }
-        }
-
-        paths.push_back(std::move(components));
-    }
-
-    size_t nesting = 1;
-
-    for (auto path = paths.begin(); path != paths.end(); ++path) {
-        if (path->size() == nesting) {
-            os << "struct " << path->back() << ";\n";
-            continue;
-        }
-
-        if (path->size() > nesting) {
-            while (path->size() > nesting) {
-                os << "namespace " << (*path)[nesting - 1] << " {\n";
-                ++nesting;
-            }
-
-            os << "struct " << path->back() << ";\n";
-
-            continue;
-        }
-
-        while (path->size() < nesting) {
-            os << "}\n";
-            ++nesting;
-        }
-    }
-
-    while (nesting > 1) {
-        os << "}\n";
-        --nesting;
-    }
-
-    os << "namespace yorel { namespace yomm2 { namespace detail {\n";
-
-    for (auto& method : methods) {
-        auto method_name = boost::core::demangle(
-            reinterpret_cast<const std::type_info*>(method.info->method_type)
-                ->name());
-        os << "template<> struct static_offsets<" << method_name
-           << "> {static constexpr size_t slots[] = {";
-
-        auto slots_iter = method.info->slots_strides_p;
-        auto strides_iter = slots_iter + 1;
-        const auto arity = method.info->arity();
-        auto comma = "";
-
-        for (auto arg = 0; arg != arity; ++arg, slots_iter += 2) {
-            os << comma << *slots_iter;
-            comma = ", ";
-        }
-
-        if (arity > 1) {
-            os << "}; static constexpr size_t strides[] = {";
-            comma = "";
-
-            for (auto arg = 1; arg != arity; ++arg, strides_iter += 2) {
-                os << comma << *strides_iter;
-                comma = ", ";
-            }
-        }
-
-        os << "}; };\n";
-    }
-
-    os << "} } }\n";
 }
 
 } // namespace yomm2
