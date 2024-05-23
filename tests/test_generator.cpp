@@ -48,16 +48,19 @@ struct foo {};
 BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
     using namespace detail;
 
+    compiler<default_policy> comp;
+    comp.compile();
+
     {
         std::ostringstream os;
-        generator gen(os);
+        generator gen(comp, os);
         gen.write_forward_declarations();
         BOOST_TEST(os.str().empty());
     }
 
     {
         std::ostringstream os;
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<foo>();
         gen.write_forward_declarations();
         BOOST_TEST(os.str() == "class foo;\n");
@@ -66,7 +69,7 @@ BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
     {
         std::ostringstream os;
         os << "\n";
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<ns1::foo>();
         gen.write_forward_declarations();
         std::string_view expected = R"(
@@ -80,7 +83,7 @@ class foo;
     {
         std::ostringstream os;
         os << "\n";
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<ns1::foo, ns1::ns11::bar, ns1::ns11::foo>();
         gen.write_forward_declarations();
         std::string_view expected = R"(
@@ -98,7 +101,7 @@ class foo;
     {
         std::ostringstream os;
         os << "\n";
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<ns1::foo, ns2::foo>();
         gen.write_forward_declarations();
         std::string_view expected = R"(
@@ -115,7 +118,7 @@ class foo;
     {
         std::ostringstream os;
         os << "\n";
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<ns1::foo, ns1_longer::foo>();
         gen.write_forward_declarations();
         std::string_view expected = R"(
@@ -131,7 +134,7 @@ class foo;
 
     {
         std::ostringstream os;
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<int>();
         gen.add<unsigned>();
         gen.write_forward_declarations();
@@ -141,7 +144,7 @@ class foo;
     {
         std::ostringstream os;
         os << "\n";
-        generator gen(os);
+        generator gen(comp, os);
         gen.add<method<foo, void(virtual_<baz<foo>&>, std::ostream)>>();
         gen.write_forward_declarations();
         BOOST_TEST(os.str() == "\nclass foo;\n");
@@ -208,39 +211,46 @@ class foo;
 //     BOOST_TEST(os.str() == expected);
 // }
 
-// BOOST_AUTO_TEST_CASE(test_generate_offsets) {
-//     {
-//         using policy = test_policy_<__COUNTER__>;
-//         YOMM2_STATIC(use_classes<foo, policy>);
+struct baz_key;
 
-//         using baz1 =
-//             method<baz_key, void(virtual_<foo&>, std::ostream&), policy>;
-//         YOMM2_STATIC(baz1::add_function<baz1_def>);
+void baz1_def(foo&, std::ostream&) {
+}
+void baz2_def(foo&, foo&) {
+}
 
-//         using baz2 =
-//             method<baz_key, void(virtual_<foo&>, virtual_<foo&>), policy>;
-//         YOMM2_STATIC(baz2::add_function<baz2_def>);
+BOOST_AUTO_TEST_CASE(test_generate_offsets) {
+    {
+        using policy = test_policy_<1>;
+        YOMM2_STATIC(use_classes<foo, policy>);
 
-//         compiler<policy> comp;
-//         comp.compile();
+        using baz1 =
+            method<baz_key, void(virtual_<foo&>, std::ostream&), policy>;
+        YOMM2_STATIC(baz1::add_function<baz1_def>);
 
-//         std::ostringstream os;
-//         os << "\n";
-//         generator gen(comp, os);
-//         gen.write_static_offsets();
-//         std::string_view expected = R"(
-// template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, std::ostream&), test_policy_<9> >> {static constexpr size_t slots[] = {0}; };
-// template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<9> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
-// } } }
-// )";
+        using baz2 =
+            method<baz_key, void(virtual_<foo&>, virtual_<foo&>), policy>;
+        YOMM2_STATIC(baz2::add_function<baz2_def>);
 
-//         BOOST_TEST(os.str() == expected);
+        compiler<policy> comp;
+        comp.compile();
 
-//         // auto cwd = std::filesystem::current_path();
-//         // auto header_path = cwd /= "test_generate_header.hpp";
+        std::ostringstream os;
+        os << "\n";
+        generator gen(comp, os);
+        gen.write_static_offsets();
+        std::string_view expected = R"(
+template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, std::ostream&), test_policy_<1> >> {static constexpr size_t slots[] = {0}; };
+template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
+} } }
+)";
 
-//         // std::filesystem::remove(header_path);
+        BOOST_TEST(os.str() == expected);
 
-//         // comp.generate_header(header_path.string());
-//     }
-// }
+        // auto cwd = std::filesystem::current_path();
+        // auto header_path = cwd /= "test_generate_header.hpp";
+
+        // std::filesystem::remove(header_path);
+
+        // comp.generate_header(header_path.string());
+    }
+}

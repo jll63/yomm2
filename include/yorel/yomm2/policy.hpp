@@ -146,11 +146,6 @@ struct release_shared;
 namespace yorel {
 namespace yomm2 {
 
-struct catalog {
-    detail::static_chain<detail::class_info> classes;
-    detail::static_chain<detail::method_info> methods;
-};
-
 namespace policy {
 
 template<class Key>
@@ -164,16 +159,23 @@ template<class Key>
 template<class Class>
 std::uintptr_t* method_tables<Key>::static_vptr;
 
+using class_catalog = detail::static_chain<detail::class_info>;
+using method_catalog = detail::static_chain<detail::method_info>;
+
 struct domain {};
 
 template<class Key>
 struct yOMM2_API_gcc basic_domain : domain, method_tables<Key> {
-    static struct catalog catalog;
+    static class_catalog classes;
+    static method_catalog methods;
     static std::vector<std::uintptr_t> dispatch_data;
 };
 
 template<class Key>
-catalog basic_domain<Key>::catalog;
+class_catalog basic_domain<Key>::classes;
+
+template<class Key>
+method_catalog basic_domain<Key>::methods;
 
 template<class Key>
 std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;

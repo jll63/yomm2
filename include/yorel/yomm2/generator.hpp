@@ -6,6 +6,7 @@
 #ifndef YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
 #define YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
 
+#include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 #include <iostream>
@@ -62,8 +63,9 @@ Output extract_simple_types(Input first, Input last, Output out) {
 
 class generator {
   public:
-    explicit generator(std::filesystem::path file);
-    explicit generator(std::ostream& os);
+    explicit generator(
+        const generic_compiler& compiler, std::filesystem::path file);
+    explicit generator(const generic_compiler& compiler, std::ostream& os);
 
     void add(std::string_view name);
     void add(const std::type_info& type);
@@ -74,18 +76,26 @@ class generator {
     void write_static_offsets() const;
 
   private:
+    void add_classes_from_methods();
+
+    const generic_compiler& compiler;
     std::filesystem::path file;
     std::ofstream ofs;
     std::ostream& os;
     std::set<std::string> names;
 };
 
-inline generator::generator(std::filesystem::path file) : file(file), os(ofs) {
+inline generator::generator(
+    const generic_compiler& compiler, std::filesystem::path file)
+    : compiler(compiler), file(file), os(ofs) {
+    add_classes_from_methods();
     std::string temp_file(file.string() + ".tmp");
     ofs.open(temp_file);
 }
 
-inline generator::generator(std::ostream& os) : os(os) {
+inline generator::generator(const generic_compiler& compiler, std::ostream& os)
+    : compiler(compiler), os(os) {
+    add_classes_from_methods();
 }
 
 namespace detail {
@@ -114,6 +124,12 @@ inline std::unordered_set<std::string_view> fundamental_types = {
 };
 
 } // namespace detail
+
+inline void generator::add_classes_from_methods() {
+    for (auto& method : compiler.methods) {
+        add(*reinterpret_cast<const std::type_info*>(method.info->method_type));
+    }
+}
 
 inline void generator::add(std::string_view type) {
     using namespace detail;
@@ -237,36 +253,36 @@ inline void generator::write_forward_declarations() const {
     }
 }
 
-inline void generator::write_static_offsets() const {
-    // for (auto& method : comp.methods) {
-    //     auto method_name = boost::core::demangle(
-    //         reinterpret_cast<const std::type_info*>(method.info->method_type)
-    //             ->name());
-    //     os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
-    //        << method_name << "> {static constexpr size_t slots[] = {";
+void generator::write_static_offsets() const {
+    for (auto& method : compiler.methods) {
+        auto method_name = boost::core::demangle(
+            reinterpret_cast<const std::type_info*>(method.info->method_type)
+                ->name());
+        os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
+           << method_name << "> {static constexpr size_t slots[] = {";
 
-    //     const auto arity = method.info->arity();
-    //     auto comma = "";
+        const auto arity = method.info->arity();
+        auto comma = "";
 
-    //     for (auto slot : method.slots) {
-    //         os << comma << slot;
-    //         comma = ", ";
-    //     }
+        for (auto slot : method.slots) {
+            os << comma << slot;
+            comma = ", ";
+        }
 
-    //     if (arity > 1) {
-    //         os << "}; static constexpr size_t strides[] = {";
-    //         comma = "";
+        if (arity > 1) {
+            os << "}; static constexpr size_t strides[] = {";
+            comma = "";
 
-    //         for (auto stride : method.strides) {
-    //             os << comma << stride;
-    //             comma = ", ";
-    //         }
-    //     }
+            for (auto stride : method.strides) {
+                os << comma << stride;
+                comma = ", ";
+            }
+        }
 
-    //     os << "}; };\n";
-    // }
+        os << "}; };\n";
+    }
 
-    // os << "} } }\n";
+    os << "} } }\n";
 }
 
 } // namespace yomm2

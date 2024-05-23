@@ -30,7 +30,7 @@
 namespace yorel {
 namespace yomm2 {
 
-struct compiler_base {
+struct generic_compiler {
 
     struct method;
 
@@ -135,7 +135,7 @@ struct compiler_base {
 };
 
 template<class Policy>
-struct compiler : compiler_base {
+struct compiler : generic_compiler {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
     static constexpr bool trace_enabled =
@@ -347,8 +347,8 @@ void compiler<Policy>::resolve_static_type_ids() {
     };
 
     if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
-        if (!Policy::catalog.classes.empty())
-            for (auto& ci : Policy::catalog.classes) {
+        if (!Policy::classes.empty())
+            for (auto& ci : Policy::classes) {
                 resolve(&ci.ti);
 
                 if (*ci.last_base == 0) {
@@ -361,8 +361,8 @@ void compiler<Policy>::resolve_static_type_ids() {
                 }
             }
 
-        if (!Policy::catalog.methods.empty())
-            for (auto& method : Policy::catalog.methods) {
+        if (!Policy::methods.empty())
+            for (auto& method : Policy::methods) {
                 for (auto& ti : detail::range{method.vp_begin, method.vp_end}) {
                     if (*method.vp_end == 0) {
                         resolve(&ti);
@@ -397,7 +397,7 @@ void compiler<Policy>::augment_classes() {
         // The standard does not guarantee that there is exactly one
         // type_info object per class. However, it guarantees that the
         // type_index for a class has a unique value.
-        for (auto& cr : Policy::catalog.classes) {
+        for (auto& cr : Policy::classes) {
             if constexpr (trace_enabled) {
                 {
                     indent YOMM2_GENSYM(trace);
@@ -431,7 +431,7 @@ void compiler<Policy>::augment_classes() {
     // All known classes now have exactly one associated class_* in the
     // map. Collect the bases.
 
-    for (auto& cr : Policy::catalog.classes) {
+    for (auto& cr : Policy::classes) {
         auto& rtc = class_map[Policy::type_index(cr.ti)];
 
         for (auto base_iter = cr.first_base; base_iter != cr.last_base;
@@ -558,7 +558,7 @@ void compiler<Policy>::augment_methods() {
     using namespace policy;
     using namespace detail;
 
-    methods.resize(Policy::catalog.methods.size());
+    methods.resize(Policy::methods.size());
 
     ++trace << "Methods:\n";
     indent YOMM2_GENSYM(trace);
@@ -566,7 +566,7 @@ void compiler<Policy>::augment_methods() {
     auto meth_iter = methods.rbegin();
     // reverse the registration order reversed by 'chain'.
 
-    for (auto& meth_info : Policy::catalog.methods) {
+    for (auto& meth_info : Policy::methods) {
         if constexpr (trace_enabled) {
             ++trace << meth_info.name << " "
                     << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
@@ -650,7 +650,7 @@ void compiler<Policy>::augment_methods() {
 }
 
 template<class Policy>
-std::vector<compiler_base::class_*> compiler<Policy>::layer_classes() {
+std::vector<generic_compiler::class_*> compiler<Policy>::layer_classes() {
     ++trace << "Layering classes...\n";
 
     std::vector<class_*> input;
@@ -1040,7 +1040,7 @@ void compiler<Policy>::build_dispatch_table(
 }
 
 inline void
-compiler_base::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
+generic_compiler::dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
     cells += other.cells;
     concrete_cells += other.concrete_cells;
     not_implemented += other.not_implemented;
@@ -1169,7 +1169,7 @@ void compiler<Policy>::optimize() {
 }
 
 template<class Policy>
-std::vector<const compiler_base::definition*>
+std::vector<const generic_compiler::definition*>
 compiler<Policy>::best(std::vector<const definition*>& candidates) {
     std::vector<const definition*> best;
 

@@ -436,12 +436,12 @@ method<Key, R(A...), Policy>::method() {
     this->not_implemented = (void*)not_implemented_handler;
     this->ambiguous = (void*)ambiguous_handler;
     this->method_type = Policy::template static_type<method>();
-    Policy::catalog.methods.push_front(*this);
+    Policy::methods.push_front(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::~method() {
-    Policy::catalog.methods.remove(*this);
+    Policy::methods.remove(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>

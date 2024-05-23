@@ -12,9 +12,9 @@
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
-using class_ = compiler_base::class_;
-using cc_method = compiler_base::method;
-using definition = compiler_base::definition;
+using class_ = generic_compiler::class_;
+using cc_method = generic_compiler::method;
+using definition = generic_compiler::definition;
 
 std::ostream& operator<<(std::ostream& os, const class_* cls) {
     return os << reinterpret_cast<const std::type_info*>(cls)->name();
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     {
-        auto c_iter = test_policy::catalog.methods.begin();
+        auto c_iter = test_policy::methods.begin();
         auto r_iter = comp.methods.rbegin();
 
         for (int i = 0; i < comp.methods.size(); ++i) {

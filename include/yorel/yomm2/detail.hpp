@@ -241,13 +241,13 @@ struct class_declaration_aux<Policy, detail::types<Class, Bases...>>
         this->ti = collect_static_type_id<Policy, Class>();
         this->first_base = type_id_list<Policy, types<Bases...>>::begin;
         this->last_base = type_id_list<Policy, types<Bases...>>::end;
-        Policy::catalog.classes.push_front(*this);
+        Policy::classes.push_front(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
     }
 
     ~class_declaration_aux() {
-        Policy::catalog.classes.remove(*this);
+        Policy::classes.remove(*this);
     }
 };
 

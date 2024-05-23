@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(runtime_test) {
     }
 
     {
-        auto c_iter = test_policy::catalog.methods.begin();
+        auto c_iter = test_policy::methods.begin();
         auto r_iter = rt.methods.rbegin();
 
         for (int i = 0; i < rt.methods.size(); ++i) {
