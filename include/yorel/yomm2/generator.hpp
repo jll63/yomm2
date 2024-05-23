@@ -137,7 +137,7 @@ inline void generator::add(std::string_view type) {
             continue;
         }
 
-        std::string_view name(name_first, name_last - name_first);
+        std::string_view name(&*name_first, name_last - name_first);
 
         if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
             continue;
