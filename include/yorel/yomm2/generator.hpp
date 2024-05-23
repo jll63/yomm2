@@ -78,6 +78,7 @@ class generator {
   private:
     void add_classes_from_methods();
 
+    static std::unordered_set<std::string_view> tokens;
     const generic_compiler& compiler;
     std::filesystem::path file;
     std::ofstream ofs;
@@ -118,12 +119,12 @@ inline bool starts_with(std::string_view name, const char* prefix) {
     return false;
 }
 
-inline std::unordered_set<std::string_view> fundamental_types = {
+} // namespace detail
+
+inline std::unordered_set<std::string_view> generator::tokens = {
     "void",   "bool",  "char", "int",    "float",
     "double", "short", "long", "signed", "unsigned",
 };
-
-} // namespace detail
 
 inline void generator::add_classes_from_methods() {
     for (auto& method : compiler.methods) {
@@ -138,7 +139,7 @@ inline void generator::add(std::string_view type) {
 
     while (true) {
         auto name_first = std::find_if(
-            iter, last, [](char c) { return std::isalnum(c) || c == '_'; });
+            iter, last, [](char c) { return std::isalpha(c) || c == '_'; });
 
         if (name_first == last) {
             break;
@@ -149,6 +150,10 @@ inline void generator::add(std::string_view type) {
         });
 
         iter = name_last;
+
+        if (std::isdigit(*name_first)) {
+            continue;
+        }
 
         if (iter != last && *iter == '<') {
             ++iter;
@@ -161,7 +166,7 @@ inline void generator::add(std::string_view type) {
             continue;
         }
 
-        if (fundamental_types.find(name) != fundamental_types.end()) {
+        if (tokens.find(name) != tokens.end()) {
             continue;
         }
 
