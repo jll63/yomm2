@@ -1,11 +1,17 @@
 /***
 # YOMM2
 
+[![CI](https://github.com/jll63/yomm2/actions/workflows/main.yml/badge.svg)](https://github.com/jll63/yomm2/actions/workflows/main.yml)
+[![ConanCenter package](https://repology.org/badge/version-for-repo/conancenter/yomm2.svg)](https://repology.org/project/yomm2/versions)
+[![Vcpkg package](https://repology.org/badge/version-for-repo/vcpkg/yomm2.svg)](https://repology.org/project/yomm2/versions)
+---
+
 This library implements fast, open, multi-methods for C++17. It is strongly
 inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
 
 - [YOMM2](#yomm2)
+  - [](#)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
