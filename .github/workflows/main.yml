@@ -97,8 +97,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          vsversion: 2022
       - name: Configure
         run: |
           mkdir build
@@ -106,6 +104,7 @@ jobs:
           cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
+          cl
           cd build
           nmake
       - name: Unit Tests

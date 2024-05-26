@@ -6,8 +6,8 @@
 
 #include <yorel/yomm2/policy.hpp>
 
-#pragma push_macro("max")
-#undef max
+#pragma push_macro("min")
+#undef min
 
 namespace yorel {
 namespace yomm2 {
@@ -638,7 +638,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::max(sizeof...(args), resolution_error::max_types),
+            types, std::min(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -659,7 +659,7 @@ method<Key, R(A...), Policy>::ambiguous_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::max(sizeof...(args), resolution_error::max_types),
+            types, std::min(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -716,6 +716,6 @@ set_method_call_error_handler(method_call_error_handler handler) {
 
 #include <yorel/yomm2/compiler.hpp>
 
-#pragma pop_macro("max")
+#pragma pop_macro("min")
 
 #endif

@@ -1,11 +1,17 @@
 
 # YOMM2
 
+[![CI](https://github.com/jll63/yomm2/actions/workflows/main.yml/badge.svg)](https://github.com/jll63/yomm2/actions/workflows/main.yml)
+[![ConanCenter package](https://repology.org/badge/version-for-repo/conancenter/yomm2.svg)](https://repology.org/project/yomm2/versions)
+[![Vcpkg package](https://repology.org/badge/version-for-repo/vcpkg/yomm2.svg)](https://repology.org/project/yomm2/versions)
+---
+
 This library implements fast, open, multi-methods for C++17. It is strongly
 inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
 
 - [YOMM2](#yomm2)
+  - [](#)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
@@ -192,9 +198,9 @@ instructions and two memory reads.
 
 ## Installation
 
-YOMM2 is available as a `vcpkg` package. This is the easiest way of integrating
-it in your project. Just add `yomm2` as a dependency in your `vcpkg.json` - see
-[this example](`examples/vcpkg`).
+YOMM2 is available on both major package managers. This is the easiest way of
+integrating it in your project, along with its dependencies. See [the vcpkg
+example](examples/vcpkg) and [the Conan2 example](examples/conan).
 
 YOMM2 can also be built and installed from the sources, using straight `cmake`.
 
@@ -318,12 +324,11 @@ YOMM2 has been stable (in the sense of being backward-compatible) for many
 years, but it is still evolving. Here are the items on which I intend to work in
 the future. No promises, no time table.
 
-* Dispatch on `std::any` and `std::variant`.
-* Tunable runtime.
+* Dispatch on `std::any`.
+* Static offsets (i.e. set at compile time).
 * Static linking of dispatch data.
 * *Minimal* perfect hash tables as an option.
 * Multi-threaded hash search.
-* Make error handler a `std::function`.
 * Get closer to Stroustrup et al's papers (version 2.0):
   * use compatible return types for disambiguation
   * move support for `std::shared_ptr` and `unique_ptr` to an optional header
