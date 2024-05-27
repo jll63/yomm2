@@ -145,6 +145,7 @@ jobs:
       matrix:
         # config: [Debug, Release, ReleaseDebug, DebugRelease]
         config: [Debug, Release]
+        shared: [OFF, ON]
     steps:
       - uses: actions/checkout@v4
       - name: Configure
@@ -152,7 +153,7 @@ jobs:
           brew install boost
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
+          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DYOMM2_SHARED=${{ matrix.shared }} -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
           cd build
