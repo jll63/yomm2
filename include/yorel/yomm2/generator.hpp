@@ -74,8 +74,10 @@ class generator {
     template<class... T>
     void add();
 
-    void write_forward_declarations() const;
-    void write_static_offsets() const;
+    void forward_declarations(
+        std::function<bool(std::string_view)> filter =
+            std::function<bool(std::string_view)>()) const;
+    void static_offsets() const;
 
   private:
     void add_classes_from_methods();
@@ -176,41 +178,6 @@ inline void generator::add(std::string_view type) {
     }
 }
 
-// inline void generator::add(std::string_view type) {
-//     using namespace detail;
-
-//     auto iter = type.begin(), last = type.end();
-
-//     while (true) {
-//         assert(std::isalpha(*iter) || *iter == '_');
-
-//         auto next = std::find_if(iter, last, [](char c) {
-//             return !(std::isalnum(c) || c == '_' || c == ':');
-//         });
-
-//         if (next == last) {
-
-//         }
-
-//         if (next != last && *iter == '<') {
-//             ++iter;
-//             continue;
-//         }
-
-//         std::string_view name(&*name_first, name_last - name_first);
-
-//         if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
-//             continue;
-//         }
-
-//         if (tokens.find(name) != tokens.end()) {
-//             continue;
-//         }
-
-//         names.emplace(name);
-//     }
-// }
-
 inline void generator::add(const std::type_info& type) {
     add(boost::core::demangle(type.name()));
 }
@@ -220,12 +187,17 @@ void generator::add() {
     (add(boost::core::demangle(typeid(T).name())), ...);
 }
 
-inline void generator::write_forward_declarations() const {
+inline void generator::forward_declarations(
+    std::function<bool(std::string_view)> filter) const {
     const std::string file_scope;
     auto prev_ns_iter = file_scope.begin();
     auto prev_ns_last = file_scope.begin();
 
     for (auto& name : names) {
+        if (filter && !filter(name)) {
+            continue;
+        }
+
         //           v=prev_ns_last
         // foo::bar::x
         // fx
@@ -295,7 +267,7 @@ inline void generator::write_forward_declarations() const {
     }
 }
 
-void generator::write_static_offsets() const {
+void generator::static_offsets() const {
     for (auto& method : compiler.methods) {
         auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)

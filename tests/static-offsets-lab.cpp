@@ -135,8 +135,8 @@ int main() {
     comp.install_global_tables();
 
     // generator gen(std::cout);
-    // gen.write_forward_declarations();
-    // gen.write_static_offsets();
+    // gen.forward_declarations();
+    // gen.static_offsets();
 
     kick(snoopy);
     kick(felix);
