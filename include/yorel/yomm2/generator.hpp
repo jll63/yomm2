@@ -9,10 +9,12 @@
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
+#include <cassert>
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <filesystem>
+#include <regex>
 #include <set>
 
 namespace yorel {
@@ -119,6 +121,12 @@ inline bool starts_with(std::string_view name, const char* prefix) {
     return false;
 }
 
+template<typename Iter>
+Iter name_end(Iter first, Iter last) {
+    return std::find_if(first, last, [](char c) {
+        return !(std::isalnum(c) || c == '_' || c == ':');
+    });
+}
 } // namespace detail
 
 inline std::unordered_set<std::string_view> generator::tokens = {
@@ -135,34 +143,24 @@ inline void generator::add_classes_from_methods() {
 inline void generator::add(std::string_view type) {
     using namespace detail;
 
-    auto iter = type.begin(), last = type.end();
+    std::regex name_regex(R"((\w+(?:::\w+)*)( *<)?)");
 
-    while (true) {
-        auto name_first = std::find_if(
-            iter, last, [](char c) { return std::isalpha(c) || c == '_'; });
+    auto iter = std::regex_iterator(type.begin(), type.end(), name_regex);
+    auto words_end = std::sregex_iterator();
 
-        if (name_first == last) {
-            break;
-        }
-
-        auto name_last = std::find_if(name_first, last, [](char c) {
-            return !(std::isalnum(c) || c == '_' || c == ':');
-        });
-
-        iter = name_last;
-
-        if (std::isdigit(*name_first)) {
+    for (decltype(iter) last; iter != last; ++iter) {
+        if ((*iter)[2].matched) {
             continue;
         }
 
-        if (iter != last && *iter == '<') {
-            ++iter;
+        auto match = (*iter)[1];
+        std::string_view name(match.first, match.length());
+
+        if (!match.matched) {
             continue;
         }
 
-        std::string_view name(&*name_first, name_last - name_first);
-
-        if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
+        if (!std::isalpha(*match.first)) {
             continue;
         }
 
@@ -170,9 +168,48 @@ inline void generator::add(std::string_view type) {
             continue;
         }
 
+        if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
+            continue;
+        }
+
         names.emplace(name);
     }
 }
+
+// inline void generator::add(std::string_view type) {
+//     using namespace detail;
+
+//     auto iter = type.begin(), last = type.end();
+
+//     while (true) {
+//         assert(std::isalpha(*iter) || *iter == '_');
+
+//         auto next = std::find_if(iter, last, [](char c) {
+//             return !(std::isalnum(c) || c == '_' || c == ':');
+//         });
+
+//         if (next == last) {
+
+//         }
+
+//         if (next != last && *iter == '<') {
+//             ++iter;
+//             continue;
+//         }
+
+//         std::string_view name(&*name_first, name_last - name_first);
+
+//         if (starts_with(name, "std::") || starts_with(name, "yorel::")) {
+//             continue;
+//         }
+
+//         if (tokens.find(name) != tokens.end()) {
+//             continue;
+//         }
+
+//         names.emplace(name);
+//     }
+// }
 
 inline void generator::add(const std::type_info& type) {
     add(boost::core::demangle(type.name()));
