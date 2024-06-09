@@ -65,10 +65,11 @@ Output extract_simple_types(Input first, Input last, Output out) {
 
 class generator {
   public:
-    explicit generator(
-        const generic_compiler& compiler, std::filesystem::path file);
-    explicit generator(const generic_compiler& compiler, std::ostream& os);
+    void open(std::filesystem::path file);
+    void open(std::ostream& os);
+    void close();
 
+    void add(const generic_compiler& compiler);
     void add(std::string_view name);
     void add(const std::type_info& type);
     template<class... T>
@@ -77,30 +78,32 @@ class generator {
     void forward_declarations(
         std::function<bool(std::string_view)> filter =
             std::function<bool(std::string_view)>()) const;
-    void static_offsets() const;
+    void static_offsets(const generic_compiler& compiler) const;
 
   private:
-    void add_classes_from_methods();
-
     static std::unordered_set<std::string_view> tokens;
-    const generic_compiler& compiler;
     std::filesystem::path file;
     std::ofstream ofs;
-    std::ostream& os;
+    std::ostream* os;
     std::set<std::string> names;
 };
 
-inline generator::generator(
-    const generic_compiler& compiler, std::filesystem::path file)
-    : compiler(compiler), file(file), os(ofs) {
-    add_classes_from_methods();
+inline void generator::open(std::filesystem::path file) {
+    this->file = file;
+    os = &ofs;
     std::string temp_file(file.string() + ".tmp");
     ofs.open(temp_file);
 }
 
-inline generator::generator(const generic_compiler& compiler, std::ostream& os)
-    : compiler(compiler), os(os) {
-    add_classes_from_methods();
+inline void generator::open(std::ostream& os) {
+    close();
+    this->os = &os;
+}
+
+inline void generator::close() {
+    if (os == &ofs) {
+        return;
+    }
 }
 
 namespace detail {
@@ -136,7 +139,7 @@ inline std::unordered_set<std::string_view> generator::tokens = {
     "double", "short", "long", "signed", "unsigned",
 };
 
-inline void generator::add_classes_from_methods() {
+inline void generator::add(const generic_compiler& compiler) {
     for (auto& method : compiler.methods) {
         add(*reinterpret_cast<const std::type_info*>(method.info->method_type));
     }
@@ -217,7 +220,7 @@ inline void generator::forward_declarations(
             if (name_iter == name.end() || *prev_ns_iter != *name_iter) {
                 while (prev_ns_iter != prev_ns_last) {
                     if (*prev_ns_iter == ':') {
-                        os << "}\n";
+                        *os << "}\n";
                         ++prev_ns_iter;
                     }
                     ++prev_ns_iter;
@@ -243,12 +246,12 @@ inline void generator::forward_declarations(
             auto scope_iter = std::find(name_iter, name.end(), ':');
 
             if (scope_iter == name.end()) {
-                os << "class "
+                *os << "class "
                    << std::string_view(&*name_iter, scope_iter - name_iter)
                    << ";\n";
                 break;
             } else {
-                os << "namespace "
+                *os << "namespace "
                    << std::string_view(&*name_iter, scope_iter - name_iter)
                    << " {\n";
                 name_iter = scope_iter + 2;
@@ -259,7 +262,7 @@ inline void generator::forward_declarations(
 
     while (prev_ns_iter != prev_ns_last) {
         if (*prev_ns_iter == ':') {
-            os << "}\n";
+            *os << "}\n";
             ++prev_ns_iter;
         }
 
@@ -267,36 +270,36 @@ inline void generator::forward_declarations(
     }
 }
 
-void generator::static_offsets() const {
+void generator::static_offsets(const generic_compiler& compiler) const {
     for (auto& method : compiler.methods) {
         auto method_name = boost::core::demangle(
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
-        os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
+        *os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
            << method_name << "> {static constexpr size_t slots[] = {";
 
         const auto arity = method.info->arity();
         auto comma = "";
 
         for (auto slot : method.slots) {
-            os << comma << slot;
+            *os << comma << slot;
             comma = ", ";
         }
 
         if (arity > 1) {
-            os << "}; static constexpr size_t strides[] = {";
+            *os << "}; static constexpr size_t strides[] = {";
             comma = "";
 
             for (auto stride : method.strides) {
-                os << comma << stride;
+                *os << comma << stride;
                 comma = ", ";
             }
         }
 
-        os << "}; };\n";
+        *os << "}; };\n";
     }
 
-    os << "} } }\n";
+    *os << "} } }\n";
 }
 
 } // namespace yomm2
