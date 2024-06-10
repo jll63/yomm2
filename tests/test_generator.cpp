@@ -255,9 +255,14 @@ template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<ba
 BOOST_AUTO_TEST_CASE(test_generator_write_only_if_changed) {
     using namespace detail;
 
-    auto path = std::filesystem::temp_directory_path();
-    std::ostringstream os;
+    namespace fs = std::filesystem;
+    auto path = fs::temp_directory_path() / "yomm2_generator_test.hpp";
+
+    fs::remove(path);
     generator gen;
-    gen.open(os);
+    gen.open(path);
     gen.forward_declarations();
+    gen.close();
+
+    BOOST_TEST(fs::exists(path));
 }

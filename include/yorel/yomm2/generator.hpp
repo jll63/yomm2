@@ -65,7 +65,7 @@ Output extract_simple_types(Input first, Input last, Output out) {
 
 class generator {
   public:
-    void open(std::filesystem::path file);
+    void open(std::filesystem::path path);
     void open(std::ostream& os);
     void close();
 
@@ -82,17 +82,20 @@ class generator {
 
   private:
     static std::unordered_set<std::string_view> tokens;
-    std::filesystem::path file;
-    std::ofstream ofs;
+    std::filesystem::path path;
+    std::fstream ofs;
     std::ostream* os;
     std::set<std::string> names;
+
+    static constexpr auto temp_ext = ".yomm2.tmp";
 };
 
-inline void generator::open(std::filesystem::path file) {
-    this->file = file;
+inline void generator::open(std::filesystem::path path) {
+    this->path = path;
     os = &ofs;
-    std::string temp_file(file.string() + ".tmp");
-    ofs.open(temp_file);
+    std::string temp = path;
+    temp += temp_ext;
+    ofs.open(temp);
 }
 
 inline void generator::open(std::ostream& os) {
@@ -102,8 +105,44 @@ inline void generator::open(std::ostream& os) {
 
 inline void generator::close() {
     if (os == &ofs) {
-        return;
+        namespace fs = std::filesystem;
+
+        std::string temp = path;
+        temp += temp_ext;
+
+        if (std::ifstream compare = path) {
+            ofs.seekp(0);
+            bool same = true;
+            std::string old, cur;
+
+            do {
+                if (!std::getline(compare, old)) {
+                    same = !std::getline(ofs, cur);
+                    break;
+                }
+
+                if (!std::getline(ofs, cur)) {
+                    same = false;
+                    break;
+                }
+
+                same = cur == old;
+            } while (same);
+
+            if (same) {
+                fs::remove(temp);
+            } else {
+                fs::rename(temp, path);
+            }
+        } else {
+            fs::rename(temp, path);
+        }
+
+        ofs.close();
     }
+
+    this->path.clear();
+    os = nullptr;
 }
 
 namespace detail {
@@ -247,13 +286,13 @@ inline void generator::forward_declarations(
 
             if (scope_iter == name.end()) {
                 *os << "class "
-                   << std::string_view(&*name_iter, scope_iter - name_iter)
-                   << ";\n";
+                    << std::string_view(&*name_iter, scope_iter - name_iter)
+                    << ";\n";
                 break;
             } else {
                 *os << "namespace "
-                   << std::string_view(&*name_iter, scope_iter - name_iter)
-                   << " {\n";
+                    << std::string_view(&*name_iter, scope_iter - name_iter)
+                    << " {\n";
                 name_iter = scope_iter + 2;
                 prev_ns_last = name_iter;
             }
@@ -276,7 +315,7 @@ void generator::static_offsets(const generic_compiler& compiler) const {
             reinterpret_cast<const std::type_info*>(method.info->method_type)
                 ->name());
         *os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
-           << method_name << "> {static constexpr size_t slots[] = {";
+            << method_name << "> {static constexpr size_t slots[] = {";
 
         const auto arity = method.info->arity();
         auto comma = "";
