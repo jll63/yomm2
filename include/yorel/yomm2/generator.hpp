@@ -75,19 +75,18 @@ class generator {
     template<class... T>
     void add();
 
-    void forward_declarations(
-        std::function<bool(std::string_view)> filter =
-            std::function<bool(std::string_view)>()) const;
+    void forward_declarations() const;
+    void static_offsets(const generic_compiler::method& method) const;
     void static_offsets(const generic_compiler& compiler) const;
+
+    static constexpr auto temp_ext = ".yomm2.tmp";
 
   private:
     static std::unordered_set<std::string_view> tokens;
     std::filesystem::path path;
-    std::fstream ofs;
+    std::ofstream ofs;
     std::ostream* os;
     std::set<std::string> names;
-
-    static constexpr auto temp_ext = ".yomm2.tmp";
 };
 
 inline void generator::open(std::filesystem::path path) {
@@ -109,19 +108,21 @@ inline void generator::close() {
 
         std::string temp = path;
         temp += temp_ext;
+        std::ifstream olds(path);
+        std::ifstream curs(temp);
 
-        if (std::ifstream compare = path) {
-            ofs.seekp(0);
+        if (olds && curs) {
+            ofs.close();
             bool same = true;
             std::string old, cur;
 
             do {
-                if (!std::getline(compare, old)) {
-                    same = !std::getline(ofs, cur);
+                if (!std::getline(olds, old)) {
+                    same = !std::getline(curs, cur);
                     break;
                 }
 
-                if (!std::getline(ofs, cur)) {
+                if (!std::getline(curs, cur)) {
                     same = false;
                     break;
                 }
@@ -136,9 +137,8 @@ inline void generator::close() {
             }
         } else {
             fs::rename(temp, path);
+            ofs.close();
         }
-
-        ofs.close();
     }
 
     this->path.clear();
@@ -229,17 +229,12 @@ void generator::add() {
     (add(boost::core::demangle(typeid(T).name())), ...);
 }
 
-inline void generator::forward_declarations(
-    std::function<bool(std::string_view)> filter) const {
+inline void generator::forward_declarations() const {
     const std::string file_scope;
     auto prev_ns_iter = file_scope.begin();
     auto prev_ns_last = file_scope.begin();
 
     for (auto& name : names) {
-        if (filter && !filter(name)) {
-            continue;
-        }
-
         //           v=prev_ns_last
         // foo::bar::x
         // fx
@@ -311,34 +306,36 @@ inline void generator::forward_declarations(
 
 void generator::static_offsets(const generic_compiler& compiler) const {
     for (auto& method : compiler.methods) {
-        auto method_name = boost::core::demangle(
-            reinterpret_cast<const std::type_info*>(method.info->method_type)
-                ->name());
-        *os << "template<> struct ::yorel::yomm2::detail::static_offsets<"
-            << method_name << "> {static constexpr size_t slots[] = {";
+        static_offsets(method);
+    }
+}
 
-        const auto arity = method.info->arity();
-        auto comma = "";
+void generator::static_offsets(const generic_compiler::method& method) const {
+    auto method_name = boost::core::demangle(
+        reinterpret_cast<const std::type_info*>(method.info->method_type)
+            ->name());
+    *os << "template<> struct yorel::yomm2::detail::static_offsets<"
+        << method_name << "> {static constexpr size_t slots[] = {";
 
-        for (auto slot : method.slots) {
-            *os << comma << slot;
-            comma = ", ";
-        }
+    const auto arity = method.info->arity();
+    auto comma = "";
 
-        if (arity > 1) {
-            *os << "}; static constexpr size_t strides[] = {";
-            comma = "";
-
-            for (auto stride : method.strides) {
-                *os << comma << stride;
-                comma = ", ";
-            }
-        }
-
-        *os << "}; };\n";
+    for (auto slot : method.slots) {
+        *os << comma << slot;
+        comma = ", ";
     }
 
-    *os << "} } }\n";
+    if (arity > 1) {
+        *os << "}; static constexpr size_t strides[] = {";
+        comma = "";
+
+        for (auto stride : method.strides) {
+            *os << comma << stride;
+            comma = ", ";
+        }
+    }
+
+    *os << "}; };\n";
 }
 
 } // namespace yomm2

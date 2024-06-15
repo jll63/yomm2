@@ -82,15 +82,6 @@ class foo;
 
     {
         std::ostringstream os;
-        generator gen;
-        gen.open(os);
-        gen.add<ns1::foo>();
-        gen.forward_declarations([](auto name) { return false; });
-        BOOST_TEST(os.str().empty());
-    }
-
-    {
-        std::ostringstream os;
         os << "\n";
         generator gen;
         gen.open(os);
@@ -243,9 +234,8 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
         std::string_view expected = R"(
 class baz_key;
 class foo;
-template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1> >> {static constexpr size_t slots[] = {0}; };
-template<> struct ::yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
-} } }
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1> >> {static constexpr size_t slots[] = {0}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
 )";
 
         BOOST_TEST(os.str() == expected);
@@ -257,12 +247,34 @@ BOOST_AUTO_TEST_CASE(test_generator_write_only_if_changed) {
 
     namespace fs = std::filesystem;
     auto path = fs::temp_directory_path() / "yomm2_generator_test.hpp";
-
+    auto temp = path;
+    temp += generator::temp_ext;
     fs::remove(path);
+    fs::remove(temp);
+
     generator gen;
+    gen.add<foo>();
     gen.open(path);
     gen.forward_declarations();
     gen.close();
 
     BOOST_TEST(fs::exists(path));
+
+    auto initial_time = fs::last_write_time(path);
+
+    sleep(1);
+    gen.open(path);
+    gen.forward_declarations();
+    gen.close();
+    BOOST_TEST((fs::last_write_time(path) == initial_time));
+
+    sleep(1);
+    gen.add<ns1::bar>();
+    gen.open(path);
+    gen.forward_declarations();
+    gen.close();
+    BOOST_TEST((fs::last_write_time(path) > initial_time));
+
+    fs::remove(path);
+    fs::remove(temp);
 }
