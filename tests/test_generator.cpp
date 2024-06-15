@@ -3,6 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <regex>
 #include <sstream>
 
 #include <yorel/yomm2.hpp>
@@ -234,11 +235,14 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
         std::string_view expected = R"(
 class baz_key;
 class foo;
-template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1> >> {static constexpr size_t slots[] = {0}; };
-template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1> >> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1>>> {static constexpr size_t slots[] = {0}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1>>> {static constexpr size_t slots[] = {1, 2}; static constexpr size_t strides[] = {1}; };
 )";
-
-        BOOST_TEST(os.str() == expected);
+        auto actual =
+            std::regex_replace(os.str(), std::basic_regex("> +>"), ">>");
+        // depending on platform, 'demangle' adds spaces between closing angle
+        // brackets, or not.
+        BOOST_TEST(actual == expected);
     }
 }
 

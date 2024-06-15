@@ -17,7 +17,8 @@ using cc_method = generic_compiler::method;
 using definition = generic_compiler::definition;
 
 std::ostream& operator<<(std::ostream& os, const class_* cls) {
-    return os << reinterpret_cast<const std::type_info*>(cls)->name();
+    return os
+        << reinterpret_cast<const std::type_info*>(cls->type_ids[0])->name();
 }
 
 std::string empty = "{}";

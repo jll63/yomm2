@@ -92,7 +92,8 @@ class generator {
 inline void generator::open(std::filesystem::path path) {
     this->path = path;
     os = &ofs;
-    std::string temp = path;
+
+    std::string temp(path.c_str());
     temp += temp_ext;
     ofs.open(temp);
 }
