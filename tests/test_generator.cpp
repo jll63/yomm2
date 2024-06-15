@@ -6,6 +6,9 @@
 #include <regex>
 #include <sstream>
 
+#include <thread>
+#include <chrono>
+
 #include <yorel/yomm2.hpp>
 #include <yorel/yomm2/generator.hpp>
 
@@ -266,13 +269,13 @@ BOOST_AUTO_TEST_CASE(test_generator_write_only_if_changed) {
 
     auto initial_time = fs::last_write_time(path);
 
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     gen.open(path);
     gen.forward_declarations();
     gen.close();
     BOOST_TEST((fs::last_write_time(path) == initial_time));
 
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     gen.add<ns1::bar>();
     gen.open(path);
     gen.forward_declarations();

@@ -93,7 +93,7 @@ inline void generator::open(std::filesystem::path path) {
     this->path = path;
     os = &ofs;
 
-    std::string temp(path.c_str());
+    std::filesystem::path temp = path;
     temp += temp_ext;
     ofs.open(temp);
 }
@@ -107,7 +107,7 @@ inline void generator::close() {
     if (os == &ofs) {
         namespace fs = std::filesystem;
 
-        std::string temp = path;
+        std::filesystem::path temp = path;
         temp += temp_ext;
         std::ifstream olds(path);
         std::ifstream curs(temp);
@@ -199,7 +199,7 @@ inline void generator::add(std::string_view type) {
         }
 
         auto match = (*iter)[1];
-        std::string_view name(match.first, match.length());
+        std::string_view name(&*match.first, match.length());
 
         if (!match.matched) {
             continue;
