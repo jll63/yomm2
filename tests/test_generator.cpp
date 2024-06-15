@@ -243,8 +243,8 @@ template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_
 )";
         auto actual =
             std::regex_replace(os.str(), std::basic_regex("> +>"), ">>");
-        // depending on platform, 'demangle' adds spaces between closing angle
-        // brackets, or not.
+        // On some compilers, 'demangle' adds spaces between closing angle
+        // brackets.
         BOOST_TEST(actual == expected);
     }
 }
@@ -269,13 +269,13 @@ BOOST_AUTO_TEST_CASE(test_generator_write_only_if_changed) {
 
     auto initial_time = fs::last_write_time(path);
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     gen.open(path);
     gen.forward_declarations();
     gen.close();
     BOOST_TEST((fs::last_write_time(path) == initial_time));
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::seconds(1));
     gen.add<ns1::bar>();
     gen.open(path);
     gen.forward_declarations();
