@@ -20,131 +20,24 @@
 namespace yorel {
 namespace yomm2 {
 
-namespace detail {
-
-template<typename Iter>
-Iter extract_type(Iter iter) {
-    auto depth = 0;
-
-    do {
-        switch (*iter) {
-        case '<':
-        case '[':
-        case '(':
-            ++depth;
-            break;
-
-        case '>':
-        case ']':
-        case ')':
-            if (--depth == 0) {
-                return iter;
-            }
-        }
-
-        ++iter;
-    } while (depth > 0);
-
-    return iter; // never reached - make compiler happy
-}
-
-template<typename Input, typename Output>
-Output extract_simple_types(Input first, Input last, Output out) {
-    auto iter = first;
-
-    while (std::isalnum(*iter) || *iter == '_' || *iter == ':') {
-        ++iter;
-    }
-
-    *out++ = std::string_view(&*first, iter - first);
-
-    return out;
-}
-
-} // namespace detail
-
 class generator {
   public:
-    void open(std::filesystem::path path);
-    void open(std::ostream& os);
-    void close();
-
-    void add(const generic_compiler& compiler);
-    void add(std::string_view name);
-    void add(const std::type_info& type);
+    void add_forward_declaration(const std::type_info& type);
     template<class... T>
-    void add();
-
-    void forward_declarations() const;
-    void static_offsets(const generic_compiler::method& method) const;
-    void static_offsets(const generic_compiler& compiler) const;
-
-    static constexpr auto temp_ext = ".yomm2.tmp";
+    void add_forward_declarations();
+    void add_forward_declarations(const generic_compiler& compiler);
+    void add_forward_declaration(std::string_view name);
+    void write_forward_declarations(std::ostream& os) const;
+    void write_static_offsets(
+        const generic_compiler& compiler, std::ostream& os) const;
 
   private:
+    void write_static_offsets(
+        const generic_compiler::method& method, std::ostream& os) const;
+
     static std::unordered_set<std::string_view> tokens;
-    std::filesystem::path path;
-    std::ofstream ofs;
-    std::ostream* os;
     std::set<std::string> names;
 };
-
-inline void generator::open(std::filesystem::path path) {
-    this->path = path;
-    os = &ofs;
-
-    std::filesystem::path temp = path;
-    temp += temp_ext;
-    ofs.open(temp);
-}
-
-inline void generator::open(std::ostream& os) {
-    close();
-    this->os = &os;
-}
-
-inline void generator::close() {
-    if (os == &ofs) {
-        namespace fs = std::filesystem;
-
-        std::filesystem::path temp = path;
-        temp += temp_ext;
-        std::ifstream olds(path);
-        std::ifstream curs(temp);
-
-        if (olds && curs) {
-            ofs.close();
-            bool same = true;
-            std::string old, cur;
-
-            do {
-                if (!std::getline(olds, old)) {
-                    same = !std::getline(curs, cur);
-                    break;
-                }
-
-                if (!std::getline(curs, cur)) {
-                    same = false;
-                    break;
-                }
-
-                same = cur == old;
-            } while (same);
-
-            if (same) {
-                fs::remove(temp);
-            } else {
-                fs::rename(temp, path);
-            }
-        } else {
-            fs::rename(temp, path);
-            ofs.close();
-        }
-    }
-
-    this->path.clear();
-    os = nullptr;
-}
 
 namespace detail {
 
@@ -166,12 +59,6 @@ inline bool starts_with(std::string_view name, const char* prefix) {
     return false;
 }
 
-template<typename Iter>
-Iter name_end(Iter first, Iter last) {
-    return std::find_if(first, last, [](char c) {
-        return !(std::isalnum(c) || c == '_' || c == ':');
-    });
-}
 } // namespace detail
 
 inline std::unordered_set<std::string_view> generator::tokens = {
@@ -179,13 +66,15 @@ inline std::unordered_set<std::string_view> generator::tokens = {
     "double", "short", "long", "signed", "unsigned",
 };
 
-inline void generator::add(const generic_compiler& compiler) {
+inline void
+generator::add_forward_declarations(const generic_compiler& compiler) {
     for (auto& method : compiler.methods) {
-        add(*reinterpret_cast<const std::type_info*>(method.info->method_type));
+        add_forward_declaration(
+            *reinterpret_cast<const std::type_info*>(method.info->method_type));
     }
 }
 
-inline void generator::add(std::string_view type) {
+inline void generator::add_forward_declaration(std::string_view type) {
     using namespace detail;
 
     std::regex name_regex(R"((\w+(?:::\w+)*)( *<)?)");
@@ -221,33 +110,21 @@ inline void generator::add(std::string_view type) {
     }
 }
 
-inline void generator::add(const std::type_info& type) {
-    add(boost::core::demangle(type.name()));
+inline void generator::add_forward_declaration(const std::type_info& type) {
+    add_forward_declaration(boost::core::demangle(type.name()));
 }
 
 template<class... T>
-void generator::add() {
-    (add(boost::core::demangle(typeid(T).name())), ...);
+void generator::add_forward_declarations() {
+    (add_forward_declaration(boost::core::demangle(typeid(T).name())), ...);
 }
 
-inline void generator::forward_declarations() const {
+inline void generator::write_forward_declarations(std::ostream& os) const {
     const std::string file_scope;
     auto prev_ns_iter = file_scope.begin();
     auto prev_ns_last = file_scope.begin();
 
     for (auto& name : names) {
-        //           v=prev_ns_last
-        // foo::bar::x
-        // fx
-
-        //           v=prev_ns_last
-        // foo::bar::x
-        // foo::bx
-
-        // v=prev_ns_last
-        // x
-        // y
-
         auto name_iter = name.begin();
         auto ns_last = name_iter;
 
@@ -255,7 +132,7 @@ inline void generator::forward_declarations() const {
             if (name_iter == name.end() || *prev_ns_iter != *name_iter) {
                 while (prev_ns_iter != prev_ns_last) {
                     if (*prev_ns_iter == ':') {
-                        *os << "}\n";
+                        os << "}\n";
                         ++prev_ns_iter;
                     }
                     ++prev_ns_iter;
@@ -281,14 +158,14 @@ inline void generator::forward_declarations() const {
             auto scope_iter = std::find(name_iter, name.end(), ':');
 
             if (scope_iter == name.end()) {
-                *os << "class "
-                    << std::string_view(&*name_iter, scope_iter - name_iter)
-                    << ";\n";
+                os << "class "
+                   << std::string_view(&*name_iter, scope_iter - name_iter)
+                   << ";\n";
                 break;
             } else {
-                *os << "namespace "
-                    << std::string_view(&*name_iter, scope_iter - name_iter)
-                    << " {\n";
+                os << "namespace "
+                   << std::string_view(&*name_iter, scope_iter - name_iter)
+                   << " {\n";
                 name_iter = scope_iter + 2;
                 prev_ns_last = name_iter;
             }
@@ -297,7 +174,7 @@ inline void generator::forward_declarations() const {
 
     while (prev_ns_iter != prev_ns_last) {
         if (*prev_ns_iter == ':') {
-            *os << "}\n";
+            os << "}\n";
             ++prev_ns_iter;
         }
 
@@ -305,38 +182,40 @@ inline void generator::forward_declarations() const {
     }
 }
 
-void generator::static_offsets(const generic_compiler& compiler) const {
+void generator::write_static_offsets(
+    const generic_compiler& compiler, std::ostream& os) const {
     for (auto& method : compiler.methods) {
-        static_offsets(method);
+        write_static_offsets(method, os);
     }
 }
 
-void generator::static_offsets(const generic_compiler::method& method) const {
+void generator::write_static_offsets(
+    const generic_compiler::method& method, std::ostream& os) const {
     auto method_name = boost::core::demangle(
         reinterpret_cast<const std::type_info*>(method.info->method_type)
             ->name());
-    *os << "template<> struct yorel::yomm2::detail::static_offsets<"
-        << method_name << "> {static constexpr size_t slots[] = {";
+    os << "template<> struct yorel::yomm2::detail::static_offsets<"
+       << method_name << "> {static constexpr size_t slots[] = {";
 
     const auto arity = method.info->arity();
     auto comma = "";
 
     for (auto slot : method.slots) {
-        *os << comma << slot;
+        os << comma << slot;
         comma = ", ";
     }
 
     if (arity > 1) {
-        *os << "}; static constexpr size_t strides[] = {";
+        os << "}; static constexpr size_t strides[] = {";
         comma = "";
 
         for (auto stride : method.strides) {
-            *os << comma << stride;
+            os << comma << stride;
             comma = ", ";
         }
     }
 
-    *os << "}; };\n";
+    os << "}; };\n";
 }
 
 } // namespace yomm2

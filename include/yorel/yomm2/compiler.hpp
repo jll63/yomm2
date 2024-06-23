@@ -311,6 +311,8 @@ struct compiler : generic_compiler {
     };
 };
 
+compiler() -> compiler<default_policy>;
+
 template<class Policy>
 void compiler<Policy>::install_global_tables() {
     if (!compilation_done) {

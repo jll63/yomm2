@@ -33,10 +33,6 @@ add_executable(lab lab.cpp)
 target_link_libraries(lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME lab COMMAND lab)
 
-add_executable(static-offsets-lab static-offsets-lab.cpp)
-target_link_libraries(static-offsets-lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME static-offsets-lab COMMAND static-offsets-lab)
-
 add_executable(member_method member_method.cpp)
 target_link_libraries(member_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME member_method COMMAND member_method)
@@ -80,7 +76,6 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
   set_target_properties(test_custom_rtti PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
 add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
-
 
 add_executable(test_generator test_generator.cpp)
 target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})

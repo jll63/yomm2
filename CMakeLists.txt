@@ -48,8 +48,11 @@ if (VARIANT_IS_DEBUG)
     add_compile_options(-fno-limit-debug-info)
   endif()
   if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
-    add_compile_options(-save-temps -fverbose-asm -masm=intel)
     add_compile_definitions(_GLIBCXX_DEBUG)
+  endif()
+else()
+  if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
+    add_compile_options(-save-temps -fverbose-asm -masm=intel)
   endif()
 endif()
 
@@ -111,6 +114,10 @@ if(${YOMM2_ENABLE_DOC})
     OUTPUT "${readme_md}"
     COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
     DEPENDS "${readme_cpp}")
+endif()
+
+if(YOMM2_ENABLE_TESTS)
+  add_custom_target(static-offsets DEPENDS static-offsets-app test_generator)
 endif()
 
 if(YOMM2_ENABLE_TESTS OR YOMM2_ENABLE_DOC)

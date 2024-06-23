@@ -48,4 +48,6 @@ if(NOT MSVC AND NOT APPLE)
   target_link_libraries(dl_main YOMM2::yomm2 dl)
   target_link_libraries(dl_shared YOMM2::yomm2)
   add_test(NAME dlopen COMMAND dl_main)
-  endif()
+endif()
+
+add_subdirectory(static-offsets)
