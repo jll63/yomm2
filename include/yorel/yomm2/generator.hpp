@@ -35,7 +35,7 @@ class generator {
     void write_static_offsets(
         const generic_compiler::method& method, std::ostream& os) const;
 
-    static std::unordered_set<std::string_view> tokens;
+    static std::unordered_set<std::string_view> keywords;
     std::set<std::string> names;
 };
 
@@ -61,9 +61,10 @@ inline bool starts_with(std::string_view name, const char* prefix) {
 
 } // namespace detail
 
-inline std::unordered_set<std::string_view> generator::tokens = {
+inline std::unordered_set<std::string_view> generator::keywords = {
     "void",   "bool",  "char", "int",    "float",
     "double", "short", "long", "signed", "unsigned",
+    "class", "struct", "enum",
 };
 
 inline void
@@ -88,17 +89,18 @@ inline void generator::add_forward_declaration(std::string_view type) {
         }
 
         auto match = (*iter)[1];
-        std::string_view name(&*match.first, match.length());
 
         if (!match.matched) {
             continue;
         }
 
+        std::string_view name(&*match.first, match.length());
+
         if (!std::isalpha(*match.first)) {
             continue;
         }
 
-        if (tokens.find(name) != tokens.end()) {
+        if (keywords.find(name) != keywords.end()) {
             continue;
         }
 

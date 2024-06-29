@@ -9,7 +9,7 @@ target_link_libraries(generate-static-offsets YOMM2::yomm2)
 
 add_custom_command(
    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/animals-yomm2-offsets.hpp
-   COMMAND generate-static-offsets ${CMAKE_CURRENT_BINARY_DIR}/animals-yomm2-offsets.hpp
+   COMMAND generate-static-offsets > ${CMAKE_CURRENT_BINARY_DIR}/animals-yomm2-offsets.hpp
    DEPENDS generate-static-offsets animals.cpp
 )
 add_custom_target(
