@@ -16,6 +16,7 @@
 
 #define BOOST_TEST_MODULE generator
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 
 using namespace yorel::yomm2;
 
@@ -49,7 +50,108 @@ namespace ns1_longer {
 struct foo {};
 } // namespace ns1_longer
 
-BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
+struct generic_forward_declaration_data {
+    std::string expected;
+    const std::type_info** const first_type;
+    const std::type_info** const last_type;
+};
+
+std::ostream&
+operator<<(std::ostream& os, const generic_forward_declaration_data& data) {
+    const char* sep = "";
+
+    for (auto& type : detail::range{data.first_type, data.last_type}) {
+        os << sep << boost::core::demangle(type->name());
+        sep = ", ";
+    }
+    return os;
+}
+
+template<typename... Ts>
+generic_forward_declaration_data fd(std::string expected) {
+    static const std::type_info* types[] = {&typeid(Ts)...};
+    return generic_forward_declaration_data(
+        {expected, types, types + sizeof...(Ts)});
+}
+
+namespace bdata = boost::unit_test::data;
+
+auto fd_dataset = bdata::make(
+    fd<int>("\n"), fd<foo>("\nclass foo;\n"),
+    fd<ns1::foo>(
+        R"(
+namespace ns1 {
+class foo;
+}
+)"),
+    fd<ns1::foo, ns2::foo>(
+        R"(
+namespace ns1 {
+class foo;
+}
+namespace ns2 {
+class foo;
+}
+)"),
+    fd<ns1::foo, ns1_longer::foo>(
+        R"(
+namespace ns1 {
+class foo;
+}
+namespace ns1_longer {
+class foo;
+}
+)"),
+    fd<method<foo, void(virtual_<baz<foo>&>, std::ostream)>>(
+        R"(
+class foo;
+)"),
+    fd<ns1::ns11::foo, ns1::ns11::bar>(
+        R"(
+namespace ns1 {
+namespace ns11 {
+class bar;
+class foo;
+}
+}
+)"),
+    fd<ns1::ns11::foo, ns2::ns21::foo>(
+        R"(
+namespace ns1 {
+namespace ns11 {
+class foo;
+}
+}
+namespace ns2 {
+namespace ns21 {
+class foo;
+}
+}
+)"),
+    fd<>(
+        R"(
+)"),
+    fd<>(
+        R"(
+)"),
+    fd<>(
+        R"(
+)"));
+
+BOOST_DATA_TEST_CASE(test_generator_write_forward_declarations, fd_dataset) {
+    std::ostringstream os;
+    generator gen;
+
+    for (auto& type : detail::range{sample.first_type, sample.last_type}) {
+        gen.add_forward_declaration(*type);
+    }
+
+    os << "\n";
+    gen.write_forward_declarations(os);
+    BOOST_TEST(os.str() == sample.expected);
+}
+
+BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations_) {
     using namespace detail;
 
     {
@@ -61,31 +163,10 @@ BOOST_AUTO_TEST_CASE(test_generator_write_forward_declarations) {
 
     {
         std::ostringstream os;
-        generator gen;
-        gen.add_forward_declarations<foo>();
-        gen.write_forward_declarations(os);
-        BOOST_TEST(os.str() == "class foo;\n");
-    }
-
-    {
-        std::ostringstream os;
         os << "\n";
         generator gen;
-        gen.add_forward_declarations<ns1::foo>();
-        gen.write_forward_declarations(os);
-        std::string_view expected = R"(
-namespace ns1 {
-class foo;
-}
-)";
-        BOOST_TEST(os.str() == expected);
-    }
-
-    {
-        std::ostringstream os;
-        os << "\n";
-        generator gen;
-        gen.add_forward_declarations<ns1::foo, ns1::ns11::bar, ns1::ns11::foo>();
+        gen.add_forward_declarations<
+            ns1::foo, ns1::ns11::bar, ns1::ns11::foo>();
         gen.write_forward_declarations(os);
         std::string_view expected = R"(
 namespace ns1 {
@@ -98,101 +179,6 @@ class foo;
 )";
         BOOST_TEST(os.str() == expected);
     }
-
-    {
-        std::ostringstream os;
-        os << "\n";
-        generator gen;
-        gen.add_forward_declarations<ns1::foo, ns2::foo>();
-        gen.write_forward_declarations(os);
-        std::string_view expected = R"(
-namespace ns1 {
-class foo;
-}
-namespace ns2 {
-class foo;
-}
-)";
-        BOOST_TEST(os.str() == expected);
-    }
-
-    {
-        std::ostringstream os;
-        os << "\n";
-        generator gen;
-        gen.add_forward_declarations<ns1::foo, ns1_longer::foo>();
-        gen.write_forward_declarations(os);
-        std::string_view expected = R"(
-namespace ns1 {
-class foo;
-}
-namespace ns1_longer {
-class foo;
-}
-)";
-        BOOST_TEST(os.str() == expected);
-    }
-
-    {
-        std::ostringstream os;
-        generator gen;
-        gen.add_forward_declarations<int>();
-        gen.add_forward_declarations<unsigned>();
-        gen.write_forward_declarations(os);
-        BOOST_TEST(os.str() == "");
-    }
-
-    {
-        std::ostringstream os;
-        os << "\n";
-        generator gen;
-        gen.add_forward_declarations<method<foo, void(virtual_<baz<foo>&>, std::ostream)>>();
-        gen.write_forward_declarations(os);
-        BOOST_TEST(os.str() == "\nclass foo;\n");
-    }
-}
-
-BOOST_AUTO_TEST_CASE(test_generate_classes_ns1_ns11) {
-    compiler<default_policy> comp;
-    comp.compile();
-    std::ostringstream os;
-    os << "\n";
-    generator gen;
-    gen.add_forward_declarations<ns1::ns11::foo, ns1::ns11::bar>();
-    gen.write_forward_declarations(os);
-    std::string_view expected = R"(
-namespace ns1 {
-namespace ns11 {
-class bar;
-class foo;
-}
-}
-)";
-    BOOST_TEST(os.str() == expected);
-}
-
-BOOST_AUTO_TEST_CASE(test_generate_classes_ns1_ns2) {
-    compiler<default_policy> comp;
-    comp.compile();
-    comp.compile();
-    std::ostringstream os;
-    os << "\n";
-    generator gen;
-    gen.add_forward_declarations<ns1::ns11::foo, ns2::ns21::foo>();
-    gen.write_forward_declarations(os);
-    std::string_view expected = R"(
-namespace ns1 {
-namespace ns11 {
-class foo;
-}
-}
-namespace ns2 {
-namespace ns21 {
-class foo;
-}
-}
-)";
-    BOOST_TEST(os.str() == expected);
 }
 
 struct baz_key;

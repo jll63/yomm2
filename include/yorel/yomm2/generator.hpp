@@ -61,11 +61,13 @@ inline bool starts_with(std::string_view name, const char* prefix) {
 
 } // namespace detail
 
+// clang-format off
 inline std::unordered_set<std::string_view> generator::keywords = {
     "void",   "bool",  "char", "int",    "float",
     "double", "short", "long", "signed", "unsigned",
     "class", "struct", "enum",
 };
+// clang-format on
 
 inline void
 generator::add_forward_declarations(const generic_compiler& compiler) {
