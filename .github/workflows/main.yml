@@ -27,7 +27,7 @@ jobs:
       - name: Unit Tests
         run: |
           cd build
-          YOMM2_TRACE=1 ctest --rerun-failed --output-on-failure .
+          YOMM2_TRACE=1 ctest --output-on-failure .
       - name: Examples
         run: |
           cd build/examples
@@ -52,7 +52,7 @@ jobs:
       - name: Unit Tests
         run: |
           cd build
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure .
       - name: Examples
         run: |
           pwd
@@ -82,7 +82,7 @@ jobs:
       - name: Unit Tests
         run: |
           cd build
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure .
       - name: Examples
         run: |
           pwd
@@ -99,19 +99,15 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
-          mkdir build
-          cd build
-          cmake --preset ${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1  . -G "NMake Makefiles"
+          cmake --preset ${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1  .
       - name: Build
         run: |
           cl
-          cd build
-          nmake
+          cmake --build build/${{ matrix.config }}
       - name: Unit Tests
         run: |
-          cd build
           $env:YOMM2_TRACE = 1
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure --test-dir build/${{ matrix.config }}
           $global:LASTEXITCODE = 0
   windows-shared:
     strategy:
@@ -127,17 +123,16 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
+          cmake --preset vcpkg-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
       - name: Build
         run: |
           cd build
           nmake
       - name: Unit Tests
         run: |
-          cd build
           $env:YOMM2_TRACE = 1
-          $env:PATH += ";" + (Get-Item .).FullName + "/src"
-          ctest --rerun-failed --output-on-failure .
+          $env:PATH += ";" + (Get-Item .).FullName + "/build/src"
+          ctest --output-on-failure --test-dir build/vcpkg-release
           $global:LASTEXITCODE = 0
   mac:
     runs-on: macOS-latest
@@ -160,7 +155,7 @@ jobs:
       - name: Unit Tests
         run: |
           cd build
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure .
       - name: Examples
         run: |
           cd build/examples
