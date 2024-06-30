@@ -6,6 +6,7 @@
 
 using yorel::yomm2::virtual_ptr;
 
+
 #if __has_include("animals-yomm2-offsets.hpp")
 #include "animals-yomm2-offsets.hpp"
 #endif

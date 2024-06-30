@@ -14,6 +14,7 @@
 
 #include "test_helpers.hpp"
 
+#define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE generator
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -127,15 +128,6 @@ namespace ns21 {
 class foo;
 }
 }
-)"),
-    fd<>(
-        R"(
-)"),
-    fd<>(
-        R"(
-)"),
-    fd<>(
-        R"(
 )"));
 
 BOOST_DATA_TEST_CASE(test_generator_write_forward_declarations, fd_dataset) {

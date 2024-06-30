@@ -13,19 +13,11 @@ endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(YOMM2_DOWNLOAD_DEPENDENCIES "Set to ON to build missing dependencies from source" OFF)
-include(cmake/download_package.cmake)
 
-# Find Boost dependency
+# Find Boost dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Boost 1.74 QUIET)
-if(NOT TARGET Boost::headers)
-  if (YOMM2_DOWNLOAD_DEPENDENCIES)
-    download_package(Boost INSTALL_WITH_YOMM)
-  else()
-    message(FATAL_ERROR  "Boost was not found on your system. Set YOMM2_DOWNLOAD_DEPENDENCIES to ON to download and build from the sources.")
-  endif()
-endif()
-message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
+find_package(Boost REQUIRED COMPONENTS
+  core mp11 preprocessor dynamic_bitset)
 
 macro(assign_bool VAR)
   if(${ARGN})
@@ -77,15 +69,9 @@ CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
 )
 if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
+  find_package(Boost REQUIRED COMPONENTS unit_test_framework )
   if(${YOMM2_ENABLE_BENCHMARKS})
-    find_package(benchmark QUIET)
-    if(NOT ${benchmark_FOUND})
-      if (YOMM2_DOWNLOAD_DEPENDENCIES)
-        download_package(benchmark)
-      else()
-        message(FATAL_ERROR  "benchmarks was not found on your system. Set YOMM2_DOWNLOAD_DEPENDENCIES to ON to download and build from the sources.")
-      endif()
-    endif()
+    find_package(benchmark REQUIRED)
     message(STATUS "Benchmarks enabled")
   endif()
   include(CTest)
@@ -137,11 +123,6 @@ install(EXPORT YOMM2Targets
   FILE YOMM2Targets.cmake
   NAMESPACE YOMM2::
   DESTINATION lib/cmake/YOMM2
-)
-# Configure package config (tells using code about dependencies)
-configure_package_config_file(
-  cmake/YOMM2Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
-  INSTALL_DESTINATION lib/cmake/YOMM2
 )
 # Copy config files to install directory
 install(FILES

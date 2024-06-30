@@ -20,9 +20,9 @@ if(YOMM2_SHARED)
     yomm2 PUBLIC
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
-    PUBLIC $<TARGET_PROPERTY:Boost::headers,INTERFACE_INCLUDE_DIRECTORIES>
+    PUBLIC $<TARGET_PROPERTY:${Boost_LIBRARIES},INTERFACE_INCLUDE_DIRECTORIES>
   )
-  target_link_libraries(yomm2 PUBLIC Boost::headers)
+  target_link_libraries(yomm2 PUBLIC ${Boost_LIBRARIES})
   target_compile_features(yomm2 PUBLIC cxx_std_17)
   if (${YOMM2_CHECK_ABI_COMPATIBILITY})
     message(STATUS "type: ${CMAKE_BUILD_TYPE} FLAGS: ${CMAKE_CXX_FLAGS_RELEASE}")
@@ -42,7 +42,7 @@ else()
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
   )
-  target_link_libraries(yomm2 INTERFACE Boost::headers)
+  target_link_libraries(yomm2 INTERFACE ${Boost_LIBRARIES})
   target_compile_features(yomm2 INTERFACE cxx_std_17)
 endif()
 
