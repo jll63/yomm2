@@ -1,0 +1,8 @@
+{
+  "name": "yomm2",
+  "version": "1.5.3",
+  "dependencies": [
+    "benchmark",
+    "boost"
+  ]
+}
