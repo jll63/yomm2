@@ -42,7 +42,7 @@ else()
     $<BUILD_INTERFACE:${YOMM2_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
   )
-  target_link_libraries(yomm2 INTERFACE ${Boost_LIBRARIES})
+  target_link_libraries(yomm2 INTERFACE Boost::headers)
   target_compile_features(yomm2 INTERFACE cxx_std_17)
 endif()
 

@@ -16,7 +16,7 @@ option(YOMM2_DOWNLOAD_DEPENDENCIES "Set to ON to build missing dependencies from
 
 # Find Boost dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Boost REQUIRED COMPONENTS mp11 preprocessor dynamic_bitset)
+find_package(Boost REQUIRED)
 
 macro(assign_bool VAR)
   if(${ARGN})
@@ -68,7 +68,6 @@ CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
 )
 if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
-  find_package(Boost REQUIRED COMPONENTS unit_test_framework )
   if(${YOMM2_ENABLE_BENCHMARKS})
     find_package(benchmark REQUIRED)
     message(STATUS "Benchmarks enabled")
