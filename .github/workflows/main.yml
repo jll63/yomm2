@@ -99,7 +99,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
-          cmake --preset ${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1  .
+          cmake --preset ${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -G "NMake Makefiles"  .
       - name: Build
         run: |
           cl
@@ -123,7 +123,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake --preset vcpkg-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
+          cmake --preset vcpkg-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -G "NMake Makefiles" .
       - name: Build
         run: |
           cd build
