@@ -121,8 +121,6 @@ jobs:
           vsversion: 2022
       - name: Configure
         run: |
-          mkdir build
-          cd build
           cmake --preset vcpkg-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1 -G "NMake Makefiles" .
       - name: Build
         run: |
