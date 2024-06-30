@@ -16,8 +16,7 @@ option(YOMM2_DOWNLOAD_DEPENDENCIES "Set to ON to build missing dependencies from
 
 # Find Boost dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Boost REQUIRED COMPONENTS
-  core mp11 preprocessor dynamic_bitset)
+find_package(Boost REQUIRED COMPONENTS mp11 preprocessor dynamic_bitset)
 
 macro(assign_bool VAR)
   if(${ARGN})
