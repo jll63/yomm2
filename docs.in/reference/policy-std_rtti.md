@@ -9,13 +9,13 @@ Implement `rtti` using the RTTI facilities provided by standard C++.
 
 ## Static member functions
 
-| Name                                          | Description                                     |
-| --------------------------------------------- | ----------------------------------------------- |
-| type_id [**static_type\<T>**](#static_type)   | return a `type_id` for `T`                      |
-| type_id [**dynamic_type\<T>**](#dynamic_type) | return a `type_id` for an object's dynamic type |
-| void [**type_name\<Stream>**](#type_name)     | write a description of `type_id` to a stream    |
-| *unspecified* [**type_index**](#type_index)   | return a unique key for a `type_id`             |
-| D [**dynamic_cast_ref\<D, B>**](#dynamic_cast_ref)  | cast from base class to derived class           |
+| Name                                               | Description                                     |
+| -------------------------------------------------- | ----------------------------------------------- |
+| type_id [**static_type\<T>**](#static_type)        | return a `type_id` for `T`                      |
+| type_id [**dynamic_type\<T>**](#dynamic_type)      | return a `type_id` for an object's dynamic type |
+| void [**type_name\<Stream>**](#type_name)          | write a description of `type_id` to a stream    |
+| *unspecified* [**type_index**](#type_index)        | return a unique key for a `type_id`             |
+| D [**dynamic_cast_ref\<D, B>**](#dynamic_cast_ref) | cast from base class to derived class           |
 
 ### static_type
 

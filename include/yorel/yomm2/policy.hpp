@@ -120,7 +120,7 @@ using method_call_error_handler =
 namespace policy {
 
 struct abstract_policy {};
-struct facet {};
+
 struct error_handler {};
 struct runtime_checks {};
 struct indirect_vptr {};
@@ -146,11 +146,6 @@ struct release_shared;
 namespace yorel {
 namespace yomm2 {
 
-struct catalog {
-    detail::static_chain<detail::class_info> classes;
-    detail::static_chain<detail::method_info> methods;
-};
-
 namespace policy {
 
 template<class Key>
@@ -164,16 +159,23 @@ template<class Key>
 template<class Class>
 std::uintptr_t* method_tables<Key>::static_vptr;
 
+using class_catalog = detail::static_chain<detail::class_info>;
+using method_catalog = detail::static_chain<detail::method_info>;
+
 struct domain {};
 
 template<class Key>
 struct yOMM2_API_gcc basic_domain : domain, method_tables<Key> {
-    static struct catalog catalog;
+    static class_catalog classes;
+    static method_catalog methods;
     static std::vector<std::uintptr_t> dispatch_data;
 };
 
 template<class Key>
-catalog basic_domain<Key>::catalog;
+class_catalog basic_domain<Key>::classes;
+
+template<class Key>
+method_catalog basic_domain<Key>::methods;
 
 template<class Key>
 std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;
@@ -295,7 +297,6 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     template<typename ForwardIterator>
     static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
         using namespace policy;
-        using detail::pair_first_iterator;
 
         size_t size;
 
@@ -413,6 +414,11 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
 
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
+    struct report {
+        size_t method_table_size, dispatch_table_size;
+        size_t hash_search_attempts;
+    };
+
     static type_id hash_mult;
     static std::size_t hash_shift;
     static std::size_t hash_length;
@@ -613,7 +619,7 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                 auto comma = "";
 
                 for (auto ti :
-                     type_range{error->types, error->types + error->arity}) {
+                     range{error->types, error->types + error->arity}) {
                     Policy::error_stream << comma;
                     Policy::type_name(ti, Policy::error_stream);
                     comma = ", ";
@@ -676,7 +682,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
                 << " for " << error.method_name << "(";
             auto comma = "";
 
-            for (auto ti : detail::type_range{ti_ptrs, ti_ptrs + arity}) {
+            for (auto ti : detail::range{ti_ptrs, ti_ptrs + arity}) {
                 Policy::error_stream << comma;
                 Policy::type_name(ti, Policy::error_stream);
                 comma = ", ";
@@ -751,6 +757,48 @@ using default_static = policy::debug;
 #endif
 
 } // namespace policy
+
+namespace detail {
+
+struct update_report : update_method_report {};
+
+template<class Facet, typename>
+struct has_report_aux : std::false_type {};
+
+template<class Facet>
+struct has_report_aux<Facet, std::void_t<typename Facet::report>>
+    : std::true_type {};
+
+template<class Facet>
+constexpr bool has_report = has_report_aux<Facet, void>::value;
+
+template<class Reports, class Facets, typename = void>
+struct aggregate_reports;
+
+template<class... Reports, class Facet, class... MoreFacets>
+struct aggregate_reports<
+    types<Reports...>, types<Facet, MoreFacets...>,
+    std::void_t<typename Facet::report>> {
+    using type = typename aggregate_reports<
+        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
+};
+
+template<class... Reports, class Facet, class... MoreFacets, typename Void>
+struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
+    using type = typename aggregate_reports<
+        types<Reports...>, types<MoreFacets...>>::type;
+};
+
+template<class... Reports, typename Void>
+struct aggregate_reports<types<Reports...>, types<>, Void> {
+    struct type : Reports... {};
+};
+
+template<class Policy>
+using report_type = typename aggregate_reports<
+    types<update_report>, typename Policy::facets>::type;
+
+} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

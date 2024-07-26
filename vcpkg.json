@@ -1,0 +1,13 @@
+{
+  "name": "yomm2",
+  "version": "1.5.3",
+  "dependencies": [
+    "benchmark",
+    "boost-core",
+    "boost-dynamic-bitset",
+    "boost-mp11",
+    "boost-preprocessor",
+    "boost-test",
+    "vcpkg-tool-ninja"
+  ]
+}

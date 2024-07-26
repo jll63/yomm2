@@ -1,6 +1,7 @@
 /***
 # YOMM2
 
+
 [![CI](https://github.com/jll63/yomm2/actions/workflows/main.yml/badge.svg)](https://github.com/jll63/yomm2/actions/workflows/main.yml)
 [![ConanCenter package](https://repology.org/badge/version-for-repo/conancenter/yomm2.svg)](https://repology.org/project/yomm2/versions)
 [![Vcpkg package](https://repology.org/badge/version-for-repo/vcpkg/yomm2.svg)](https://repology.org/project/yomm2/versions)
@@ -11,6 +12,7 @@ inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
 
 - [YOMM2](#yomm2)
+  - [](#)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
@@ -232,14 +234,8 @@ ctest --test-dir build.yomm2
 ```
 
 YOMM2 uses the following Boost libraries:
-* Preprocessor, DynamicBitset: included by YOMM2 headers
-* Boost.Test: only used to run the test suite
-
-If these libraries are already available on your machine, and they can be found
-by `cmake`, they will be used. In this case, make sure that the pre-installed
-libraries are at version 1.74 or above. You can also tell the cmake script to
-attempt to download and build the dependencies by setting
-`YOMM2_DOWNLOAD_DEPENDENCIES` to `ON`.
+* Mp11, Preprocessor, DynamicBitset: included by YOMM2 headers
+* Test: only used to run the test suite
 
 If you want to run the benchmarks (and in this case you really want a release
 build):
@@ -249,8 +245,7 @@ cmake -S yomm2 -B build.yomm2 -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
 ./build.yomm2/tests/benchmarks
 ```
 The benchmarks use the [Google benchmark](https://github.com/google/benchmark)
-library. Again, if it is not found, and `YOMM2_DOWNLOAD_DEPENDENCIES` is `ON`,
-it will be built from its source.
+library.
 
 If you like YOMM2, and you want to install it, either system-wide:
 

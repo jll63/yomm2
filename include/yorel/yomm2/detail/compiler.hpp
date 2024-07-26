@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_RUNTIME_INCLUDED
-#define YOREL_YOMM2_RUNTIME_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
+#define YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
 
 #include <algorithm> // for max, transform, copy
 #include <cassert>   // for assert
@@ -30,278 +30,200 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-struct rt_method;
-
-struct rt_arg {
-    rt_method* method;
-    size_t param;
-};
-
-struct rt_class {
-    bool is_abstract{false};
-    std::vector<type_id> type_ids;
-    std::vector<rt_class*> transitive_bases;
-    std::vector<rt_class*> direct_bases;
-    std::vector<rt_class*> direct_derived;
-    std::unordered_set<rt_class*> compatible_classes;
-    std::vector<rt_arg> used_by_vp;
-    int next_slot{0};
-    int first_used_slot{-1};
-    int layer{0};
-    size_t mark{0};   // temporary mark to detect cycles
-    size_t weight{0}; // number of proper direct or indirect bases
-    std::vector<size_t> vtbl;
-    std::uintptr_t** static_vptr;
-
-    const std::uintptr_t* vptr() const {
-        return *static_vptr;
-    }
-
-    const std::uintptr_t* const* indirect_vptr() const {
-        return static_vptr;
-    }
-
-    auto type_id_begin() const {
-        return type_ids.begin();
-    }
-
-    auto type_id_end() const {
-        return type_ids.end();
+struct rflush {
+    size_t width;
+    size_t value;
+    explicit rflush(size_t width, size_t value) : width(width), value(value) {
     }
 };
 
-struct rt_spec {
-    const definition_info* info;
-    std::vector<rt_class*> vp;
-    std::uintptr_t pf;
-};
+struct generic_compiler {
 
-using bitvec = boost::dynamic_bitset<>;
+    struct method;
 
-struct group {
-    std::vector<rt_class*> classes;
-    bool has_concrete_classes{false};
-};
+    struct parameter {
+        struct method* method;
+        size_t param;
+    };
 
-using group_map = std::map<bitvec, group>;
+    struct vtbl_entry {
+        size_t method_index, vp_index, group_index;
+    };
 
-struct dispatch_stats_t {
-    size_t cells{0};
-    size_t concrete_cells{0};
-    size_t not_implemented{0};
-    size_t concrete_not_implemented{0};
-    size_t ambiguous{0};
-    size_t concrete_ambiguous{0};
+    struct class_ {
+        bool is_abstract{false};
+        std::vector<type_id> type_ids;
+        std::vector<class_*> transitive_bases;
+        std::vector<class_*> direct_bases;
+        std::vector<class_*> direct_derived;
+        std::unordered_set<class_*> compatible_classes;
+        std::vector<parameter> used_by_vp;
+        int next_slot{0};
+        int first_used_slot{-1};
+        int layer{0};
+        size_t mark{0};   // temporary mark to detect cycles
+        size_t weight{0}; // number of proper direct or indirect bases
+        std::vector<vtbl_entry> vtbl;
+        std::uintptr_t** static_vptr;
 
-    void accumulate(const dispatch_stats_t& other);
-};
+        const std::uintptr_t* vptr() const {
+            return *static_vptr;
+        }
 
-struct rt_method {
-    method_info* info;
-    std::vector<rt_class*> vp;
-    std::vector<rt_spec> specs;
-    std::vector<size_t> slots;
-    std::vector<size_t> strides;
-    std::vector<const rt_spec*> dispatch_table;
-    // following two are dummies, when converting to a function pointer, we will
-    // get the corresponding pointer from method_info
-    rt_spec not_implemented;
-    rt_spec ambiguous;
-    const std::uintptr_t* gv_dispatch_table{nullptr};
-    auto arity() const {
-        return vp.size();
-    }
-    dispatch_stats_t stats;
-};
+        const std::uintptr_t* const* indirect_vptr() const {
+            return static_vptr;
+        }
 
-struct metrics_t : dispatch_stats_t {
-    size_t method_table_size, dispatch_table_size;
-    size_t hash_search_attempts;
-};
+        auto type_id_begin() const {
+            return type_ids.begin();
+        }
 
-inline std::ostream* log_on(std::ostream* os) {
-    auto prev = logs;
-    logs = os;
-    return prev;
-}
+        auto type_id_end() const {
+            return type_ids.end();
+        }
+    };
 
-inline std::ostream* log_off() {
-    auto prev = logs;
-    logs = nullptr;
-    return prev;
-}
+    struct definition {
+        const detail::definition_info* info;
+        std::vector<class_*> vp;
+        std::uintptr_t pf;
+        size_t method_index, group_index;
+    };
 
-struct type_name {
-    type_name(type_id type) : type(type) {
-    }
-    type_id type;
+    using bitvec = boost::dynamic_bitset<>;
+
+    struct group {
+        std::vector<class_*> classes;
+        bool has_concrete_classes{false};
+    };
+
+    using group_map = std::map<bitvec, group>;
+
+    static void
+    accumulate(const update_method_report& partial, update_report& total);
+
+    struct method {
+        detail::method_info* info;
+        std::vector<class_*> vp;
+        std::vector<definition> specs;
+        std::vector<size_t> slots;
+        std::vector<size_t> strides;
+        std::vector<const definition*> dispatch_table;
+        // following two are dummies, when converting to a function pointer, we will
+        // get the corresponding pointer from method_info
+        definition not_implemented;
+        definition ambiguous;
+        const std::uintptr_t* gv_dispatch_table{nullptr};
+        auto arity() const {
+            return vp.size();
+        }
+        update_method_report report;
+    };
+
+    struct type_name {
+        type_name(type_id type) : type(type) {
+        }
+        type_id type;
+    };
+
+    std::deque<class_> classes;
+    std::vector<method> methods;
+    size_t class_visit = 0;
+    bool compilation_done = false;
+    size_t max_specs = 0;
 };
 
 template<class Policy>
-struct runtime {
-    using policy_type = Policy;
-    using type_index_type = decltype(Policy::type_index(0));
+struct trace_type {
     static constexpr bool trace_enabled =
         Policy::template has_facet<policy::trace_output>;
 
-    std::unordered_map<type_index_type, rt_class*> class_map;
-    std::deque<rt_class> classes;
-    std::vector<rt_method> methods;
-    size_t class_visit{0};
-    metrics_t metrics;
+    size_t indentation_level{0};
 
-    runtime();
-
-    void update();
-
-    void resolve_static_type_ids();
-    void augment_classes();
-    void calculate_compatible_classes(rt_class& cls);
-    void augment_methods();
-    std::vector<rt_class*> layer_classes();
-    void allocate_slots();
-    void allocate_slot_down(rt_class* cls, size_t slot);
-    void allocate_slot_up(rt_class* cls, size_t slot);
-    void build_dispatch_tables();
-    void build_dispatch_table(
-        rt_method& m, size_t dim, std::vector<group_map>::const_iterator group,
-        const bitvec& candidates, bool concrete);
-    void install_gv();
-    void optimize();
-    void print(const dispatch_stats_t& stats);
-    static std::vector<const rt_spec*>
-    best(std::vector<const rt_spec*>& candidates);
-    static bool is_more_specific(const rt_spec* a, const rt_spec* b);
-    static bool is_base(const rt_spec* a, const rt_spec* b);
-
-    static type_id static_type(type_id type) {
-        if constexpr (std::is_base_of_v<
-                          policy::deferred_static_rtti, policy::rtti>) {
-            return reinterpret_cast<type_id (*)()>(type)();
-        } else {
-            return type;
+    trace_type& operator++() {
+        if constexpr (trace_enabled) {
+            if (Policy::trace_enabled) {
+                for (int i = 0; i < indentation_level; ++i) {
+                    Policy::trace_stream << "  ";
+                }
+            }
         }
+
+        return *this;
     }
 
-    struct rflush {
-        size_t width;
-        size_t value;
-        explicit rflush(size_t width, size_t value)
-            : width(width), value(value) {
+    trace_type& operator<<(const rflush& rf) {
+        if constexpr (trace_enabled) {
+            auto pad = rf.width;
+            auto remain = rf.value;
+
+            int digits = 1;
+            auto tmp = rf.value / 10;
+
+            while (tmp) {
+                ++digits;
+                tmp /= 10;
+            }
+
+            while (digits < rf.width) {
+                *this << " ";
+                ++digits;
+            }
+
+            *this << rf.value;
         }
-    };
 
-    struct trace_type {
-        size_t indentation_level{0};
+        return *this;
+    }
 
-        trace_type& operator++() {
-            if constexpr (trace_enabled) {
-                if (Policy::trace_enabled) {
-                    for (int i = 0; i < indentation_level; ++i) {
-                        Policy::trace_stream << "  ";
-                    }
+    trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
+        if constexpr (trace_enabled) {
+            if (Policy::trace_enabled) {
+                auto i = bits.size();
+                while (i != 0) {
+                    --i;
+                    Policy::trace_stream << bits[i];
                 }
             }
-
-            return *this;
         }
+        return *this;
+    }
 
-        trace_type& operator<<(const rflush& rf) {
-            if constexpr (trace_enabled) {
-                auto pad = rf.width;
-                auto remain = rf.value;
+    template<typename T>
+    trace_type& operator<<(const T& value) {
+        if constexpr (trace_enabled) {
+            if (Policy::trace_enabled) {
+                Policy::trace_stream << value;
+            }
+        }
+        return *this;
+    }
 
-                int digits = 1;
-                auto tmp = rf.value / 10;
-
-                while (tmp) {
-                    ++digits;
-                     tmp /= 10;
-                }
-
-                while (digits < rf.width) {
-                    *this << " ";
-                    ++digits;
-                }
-
-                *this << rf.value;
+    template<typename T, typename F>
+    trace_type& write_range(detail::range<T> range, F fn) {
+        if constexpr (trace_enabled) {
+            *this << "(";
+            const char* sep = "";
+            for (auto value : range) {
+                *this << sep << fn(value);
+                sep = ", ";
             }
 
-            return *this;
+            *this << ")";
         }
 
-        trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
-            if constexpr (trace_enabled) {
-                if (Policy::trace_enabled) {
-                    auto i = bits.size();
-                    while (i != 0) {
-                        --i;
-                        Policy::trace_stream << bits[i];
-                    }
-                }
-            }
-            return *this;
-        }
+        return *this;
+    }
 
-        template<typename T>
-        trace_type& operator<<(const T& value) {
-            if constexpr (trace_enabled) {
-                if (Policy::trace_enabled) {
-                    Policy::trace_stream << value;
-                }
-            }
-            return *this;
-        }
+    template<typename T>
+    trace_type& operator<<(detail::range<T> range) {
+        return write_range(range, [](auto value) { return value; });
+    }
 
-        trace_type& operator<<(type_range<type_id*> tips) {
-            if constexpr (trace_enabled) {
-                *this << "(";
-                const char* sep = "";
-                for (auto t : tips) {
-                    *this << sep << type_name(t);
-                    sep = ", ";
-                }
-
-                *this << ")";
-            }
-
-            return *this;
-        }
-
-        template<template<typename...> typename Container, typename... T>
-        trace_type& operator<<(Container<rt_class*, T...>& classes) {
-            if constexpr (trace_enabled) {
-                *this << "(";
-                const char* sep = "";
-                for (auto cls : classes) {
-                    *this << sep << *cls;
-                    sep = ", ";
-                }
-
-                *this << ")";
-            }
-
-            return *this;
-        }
-
-        trace_type& operator<<(type_name manip) {
-            if constexpr (trace_enabled) {
-                Policy::type_name(manip.type, *this);
-            }
-
-            return *this;
-        }
-
-        trace_type& operator<<(const rt_class& cls) {
-            if constexpr (trace_enabled) {
-                *this << type_name(cls.type_ids[0]);
-            }
-
-            return *this;
-        }
-    };
-
-    trace_type trace;
+    trace_type& operator<<(detail::range<type_id*> tips) {
+        return write_range(
+            tips, [](auto tip) { return generic_compiler::type_name(tip); });
+    }
 
     struct indent {
         trace_type& trace;
@@ -315,42 +237,156 @@ struct runtime {
             trace.indentation_level -= by;
         }
     };
+
+    trace_type& operator<<(generic_compiler::vtbl_entry entry) {
+        return *this << entry.method_index << "/" << entry.vp_index << "/"
+                     << entry.group_index;
+    }
+
+    trace_type& operator<<(const generic_compiler::definition* def) {
+        return *this << def->method_index << "/" << def->group_index;
+    }
+
+    trace_type& operator<<(const generic_compiler::class_& cls) {
+        if constexpr (trace_enabled) {
+            *this << generic_compiler::type_name(cls.type_ids[0]);
+        }
+
+        return *this;
+    }
+
+    template<template<typename...> typename Container, typename... T>
+    trace_type&
+    operator<<(Container<generic_compiler::class_*, T...>& classes) {
+        if constexpr (trace_enabled) {
+            *this << "(";
+            const char* sep = "";
+            for (auto cls : classes) {
+                *this << sep << *cls;
+                sep = ", ";
+            }
+
+            *this << ")";
+        }
+
+        return *this;
+    }
+
+    trace_type& operator<<(generic_compiler::type_name manip) {
+        if constexpr (trace_enabled) {
+            Policy::type_name(manip.type, *this);
+        }
+
+        return *this;
+    }
 };
 
 template<class Policy>
-void runtime<Policy>::update() {
+struct compiler : generic_compiler {
+    using policy_type = Policy;
+    using type_index_type = decltype(Policy::type_index(0));
+
+    typename aggregate_reports<
+        types<update_report>, typename Policy::facets>::type report;
+
+    std::unordered_map<type_index_type, class_*> class_map;
+
+    compiler();
+
+    auto compile();
+    auto update();
+    void install_global_tables();
+
+    void resolve_static_type_ids();
+    void augment_classes();
+    void calculate_compatible_classes(class_& cls);
+    void augment_methods();
+    std::vector<class_*> layer_classes();
+    void allocate_slots();
+    void allocate_slot_down(class_* cls, size_t slot);
+    void allocate_slot_up(class_* cls, size_t slot);
+    void build_dispatch_tables();
+    void build_dispatch_table(
+        method& m, size_t dim, std::vector<group_map>::const_iterator group,
+        const bitvec& candidates, bool concrete);
+    void install_gv();
+    void optimize();
+    void print(const update_method_report& report) const;
+    static std::vector<const definition*>
+    best(std::vector<const definition*>& candidates);
+    static bool is_more_specific(const definition* a, const definition* b);
+    static bool is_base(const definition* a, const definition* b);
+
+    static type_id static_type(type_id type) {
+        if constexpr (std::is_base_of_v<
+                          policy::deferred_static_rtti, policy::rtti>) {
+            return reinterpret_cast<type_id (*)()>(type)();
+        } else {
+            return type;
+        }
+    }
+
+    mutable trace_type<Policy> trace;
+    static constexpr bool trace_enabled =
+        Policy::template has_facet<policy::trace_output>;
+    using indent = typename trace_type<Policy>::indent;
+};
+
+compiler() -> compiler<default_policy>;
+
+template<class Policy>
+void compiler<Policy>::install_global_tables() {
+    if (!compilation_done) {
+        abort();
+    }
+
+    install_gv();
+    optimize();
+
+    print(report);
+    ++trace << "Finished\n";
+}
+
+template<class Policy>
+auto compiler<Policy>::compile() {
     resolve_static_type_ids();
     augment_classes();
     augment_methods();
     allocate_slots();
     build_dispatch_tables();
-    install_gv();
-    optimize();
 
-    print(metrics);
+    compilation_done = true;
 
-    ++trace << "Finished\n";
+    return report;
 }
 
 template<class Policy>
-runtime<Policy>::runtime() {
+auto compiler<Policy>::update() {
+    compile();
+    install_global_tables();
+
+    return *this;
 }
 
 template<class Policy>
-void runtime<Policy>::resolve_static_type_ids() {
+compiler<Policy>::compiler() {
+}
+
+template<class Policy>
+void compiler<Policy>::resolve_static_type_ids() {
     auto resolve = [](type_id* p) {
         auto pf = reinterpret_cast<type_id (*)()>(*p);
         *p = pf();
     };
 
     if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
-        if (!Policy::catalog.classes.empty())
-            for (auto& ci : Policy::catalog.classes) {
-                resolve(&ci.ti);
+        if (!Policy::classes.empty())
+            for (auto& ci : Policy::classes) {
+                resolve(&ci.type);
 
                 if (*ci.last_base == 0) {
                     for (auto& ti :
-                         detail::type_range{ci.first_base, ci.last_base}) {
+                         detail::range{ci.first_base, ci.last_base}) {
                         resolve(&ti);
                     }
 
@@ -358,10 +394,9 @@ void runtime<Policy>::resolve_static_type_ids() {
                 }
             }
 
-        if (!Policy::catalog.methods.empty())
-            for (auto& method : Policy::catalog.methods) {
-                for (auto& ti :
-                     detail::type_range{method.vp_begin, method.vp_end}) {
+        if (!Policy::methods.empty())
+            for (auto& method : Policy::methods) {
+                for (auto& ti : detail::range{method.vp_begin, method.vp_end}) {
                     if (*method.vp_end == 0) {
                         resolve(&ti);
                         *method.vp_end = 1;
@@ -370,7 +405,7 @@ void runtime<Policy>::resolve_static_type_ids() {
                     if (!method.specs.empty())
                         for (auto& definition : method.specs) {
                             if (*definition.vp_end == 0) {
-                                for (auto& ti : detail::type_range{
+                                for (auto& ti : detail::range{
                                          definition.vp_begin,
                                          definition.vp_end}) {
                                     resolve(&ti);
@@ -385,7 +420,9 @@ void runtime<Policy>::resolve_static_type_ids() {
 }
 
 template<class Policy>
-void runtime<Policy>::augment_classes() {
+void compiler<Policy>::augment_classes() {
+    using namespace detail;
+
     // scope
     {
         ++trace << "Static class info:\n";
@@ -393,18 +430,18 @@ void runtime<Policy>::augment_classes() {
         // The standard does not guarantee that there is exactly one
         // type_info object per class. However, it guarantees that the
         // type_index for a class has a unique value.
-        for (auto& cr : Policy::catalog.classes) {
+        for (auto& cr : Policy::classes) {
             if constexpr (trace_enabled) {
                 {
                     indent YOMM2_GENSYM(trace);
-                    ++trace << type_name(cr.ti) << ": "
-                            << type_range{cr.first_base, cr.last_base};
+                    ++trace << type_name(cr.type) << ": "
+                            << range{cr.first_base, cr.last_base};
 
                     ++trace << "\n";
                 }
             }
 
-            auto& rtc = class_map[Policy::type_index(cr.ti)];
+            auto& rtc = class_map[Policy::type_index(cr.type)];
 
             if (rtc == nullptr) {
                 rtc = &classes.emplace_back();
@@ -417,18 +454,19 @@ void runtime<Policy>::augment_classes() {
             // unordered_set because, again, this situation is highly
             // unlikely, and, were it to occur, the number of distinct ti*s
             // would probably be small.
-            if (std::find(rtc->type_ids.begin(), rtc->type_ids.end(), cr.ti) ==
+            if (std::find(
+                    rtc->type_ids.begin(), rtc->type_ids.end(), cr.type) ==
                 rtc->type_ids.end()) {
-                rtc->type_ids.push_back(cr.ti);
+                rtc->type_ids.push_back(cr.type);
             }
         }
     }
 
-    // All known classes now have exactly one associated rt_class* in the
+    // All known classes now have exactly one associated class_* in the
     // map. Collect the bases.
 
-    for (auto& cr : Policy::catalog.classes) {
-        auto& rtc = class_map[Policy::type_index(cr.ti)];
+    for (auto& cr : Policy::classes) {
+        auto& rtc = class_map[Policy::type_index(cr.type)];
 
         for (auto base_iter = cr.first_base; base_iter != cr.last_base;
              ++base_iter) {
@@ -529,7 +567,7 @@ void runtime<Policy>::augment_classes() {
 }
 
 template<class Policy>
-void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
+void compiler<Policy>::calculate_compatible_classes(class_& cls) {
     if (!cls.compatible_classes.empty()) {
         return;
     }
@@ -550,21 +588,21 @@ void runtime<Policy>::calculate_compatible_classes(rt_class& cls) {
 }
 
 template<class Policy>
-void runtime<Policy>::augment_methods() {
+void compiler<Policy>::augment_methods() {
     using namespace policy;
+    using namespace detail;
 
-    methods.resize(Policy::catalog.methods.size());
+    methods.resize(Policy::methods.size());
 
     ++trace << "Methods:\n";
     indent YOMM2_GENSYM(trace);
 
-    auto meth_iter = methods.rbegin();
-    // reverse the registration order reversed by 'chain'.
+    auto meth_iter = methods.begin();
 
-    for (auto& meth_info : Policy::catalog.methods) {
+    for (auto& meth_info : Policy::methods) {
         if constexpr (trace_enabled) {
             ++trace << meth_info.name << " "
-                    << type_range{meth_info.vp_begin, meth_info.vp_end} << "\n";
+                    << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
         }
 
         indent YOMM2_GENSYM(trace);
@@ -573,9 +611,9 @@ void runtime<Policy>::augment_methods() {
         meth_iter->vp.reserve(meth_info.arity());
         size_t param_index = 0;
 
-        for (auto ti : type_range{meth_info.vp_begin, meth_info.vp_end}) {
-            auto rt_class = class_map[Policy::type_index(ti)];
-            if (!rt_class) {
+        for (auto ti : range{meth_info.vp_begin, meth_info.vp_end}) {
+            auto class_ = class_map[Policy::type_index(ti)];
+            if (!class_) {
                 ++trace << "unkown class " << ti << "(" << type_name(ti)
                         << ") for parameter #" << (param_index + 1) << "\n";
                 unknown_class_error error;
@@ -587,8 +625,8 @@ void runtime<Policy>::augment_methods() {
 
                 abort();
             }
-            rt_arg param = {&*meth_iter, param_index++};
-            meth_iter->vp.push_back(rt_class);
+            parameter param = {&*meth_iter, param_index++};
+            meth_iter->vp.push_back(class_);
         }
 
         // initialize the function pointer in the dummy specs
@@ -598,10 +636,17 @@ void runtime<Policy>::augment_methods() {
             reinterpret_cast<uintptr_t>(meth_iter->info->not_implemented);
 
         meth_iter->specs.resize(meth_info.specs.size());
-        auto spec_iter = meth_iter->specs.rbegin();
-        // reverse the reversed order from 'chain'
+        auto spec_iter = meth_iter->specs.begin();
+        max_specs = 0;
 
         for (auto& definition_info : meth_info.specs) {
+            spec_iter->method_index = meth_iter - methods.begin();
+            spec_iter->group_index = spec_iter - meth_iter->specs.begin();
+
+            if (spec_iter->group_index >= max_specs) {
+                max_specs = spec_iter->group_index + 1;
+            }
+
             ++trace << type_name(definition_info.type) << " ("
                     << definition_info.pf << ")\n";
             spec_iter->info = &definition_info;
@@ -609,10 +654,10 @@ void runtime<Policy>::augment_methods() {
             size_t param_index = 0;
 
             for (auto type :
-                 type_range{definition_info.vp_begin, definition_info.vp_end}) {
+                 range{definition_info.vp_begin, definition_info.vp_end}) {
                 indent YOMM2_GENSYM(trace);
-                auto rt_class = class_map[Policy::type_index(type)];
-                if (!rt_class) {
+                auto class_ = class_map[Policy::type_index(type)];
+                if (!class_) {
                     ++trace << "error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
@@ -626,8 +671,7 @@ void runtime<Policy>::augment_methods() {
                 }
                 spec_iter->pf =
                     reinterpret_cast<uintptr_t>(spec_iter->info->pf);
-                spec_iter->vp.push_back(rt_class);
-                ++param_index;
+                spec_iter->vp.push_back(class_);
             }
             ++spec_iter;
         }
@@ -645,16 +689,16 @@ void runtime<Policy>::augment_methods() {
 }
 
 template<class Policy>
-std::vector<rt_class*> runtime<Policy>::layer_classes() {
+std::vector<generic_compiler::class_*> compiler<Policy>::layer_classes() {
     ++trace << "Layering classes...\n";
 
-    std::vector<rt_class*> input;
+    std::vector<class_*> input;
     input.reserve(classes.size());
     std::transform(
         classes.begin(), classes.end(), std::back_inserter(input),
-        [](rt_class& cls) { return &cls; });
+        [](class_& cls) { return &cls; });
 
-    std::vector<rt_class*> layered;
+    std::vector<class_*> layered;
     layered.reserve(classes.size());
 
     for (int layer = 1; !input.empty(); ++layer) {
@@ -698,7 +742,7 @@ std::vector<rt_class*> runtime<Policy>::layer_classes() {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slots() {
+void compiler<Policy>::allocate_slots() {
     auto layered = layer_classes();
 
     ++trace << "Allocating slots...\n";
@@ -739,7 +783,7 @@ void runtime<Policy>::allocate_slots() {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slot_down(rt_class* cls, size_t slot) {
+void compiler<Policy>::allocate_slot_down(class_* cls, size_t slot) {
 
     if (cls->mark == class_visit)
         return;
@@ -766,7 +810,7 @@ void runtime<Policy>::allocate_slot_down(rt_class* cls, size_t slot) {
 }
 
 template<class Policy>
-void runtime<Policy>::allocate_slot_up(rt_class* cls, size_t slot) {
+void compiler<Policy>::allocate_slot_up(class_* cls, size_t slot) {
 
     if (cls->mark == class_visit)
         return;
@@ -792,7 +836,9 @@ void runtime<Policy>::allocate_slot_up(rt_class* cls, size_t slot) {
 }
 
 template<class Policy>
-void runtime<Policy>::build_dispatch_tables() {
+void compiler<Policy>::build_dispatch_tables() {
+    using namespace detail;
+
     for (auto& m : methods) {
         ++trace << "Building dispatch table for " << m.info->name << "\n";
         indent YOMM2_GENSYM(trace);
@@ -811,29 +857,29 @@ void runtime<Policy>::build_dispatch_tables() {
                         << "\n";
                 indent YOMM2_GENSYM(trace);
 
-                for (auto compatible_classes : vp->compatible_classes) {
-                    ++trace << "specs applicable to " << *compatible_classes
+                for (auto compatible_class : vp->compatible_classes) {
+                    ++trace << "specs applicable to " << *compatible_class
                             << "\n";
                     bitvec mask;
                     mask.resize(m.specs.size());
 
-                    size_t spec_index = 0;
+                    size_t group_index = 0;
                     indent YOMM2_GENSYM(trace);
 
                     for (auto& spec : m.specs) {
                         if (spec.vp[dim]->compatible_classes.find(
-                                compatible_classes) !=
+                                compatible_class) !=
                             spec.vp[dim]->compatible_classes.end()) {
                             ++trace << type_name(spec.info->type) << "\n";
-                            mask[spec_index] = 1;
+                            mask[group_index] = 1;
                         }
-                        ++spec_index;
+                        ++group_index;
                     }
 
                     auto& group = dim_group[mask];
-                    group.classes.push_back(compatible_classes);
+                    group.classes.push_back(compatible_class);
                     group.has_concrete_classes = group.has_concrete_classes ||
-                        !compatible_classes->is_abstract;
+                        !compatible_class->is_abstract;
 
                     ++trace << "-> mask: " << mask << "\n";
                 }
@@ -860,15 +906,17 @@ void runtime<Policy>::build_dispatch_tables() {
             size_t group_num = 0;
             for (auto& [mask, group] : groups[dim]) {
                 for (auto cls : group.classes) {
-                    cls->vtbl[m.slots[dim]] = group_num;
+                    auto& entry = cls->vtbl[m.slots[dim]];
+                    entry.method_index = &m - &methods[0];
+                    entry.vp_index = dim;
+                    entry.group_index = group_num;
                 }
                 if constexpr (trace_enabled) {
-                    ++trace << "group " << dim << "/" << group_num << " mask "
-                            << mask << "\n";
+                    ++trace << group_num << " mask " << mask << "\n";
                     indent YOMM2_GENSYM(trace);
-                    for (auto cls : type_range{
-                             group.classes.begin(), group.classes.end()}) {
-                        ++trace << cls->type_ids[0] << "\n";
+                    for (auto cls :
+                         range{group.classes.begin(), group.classes.end()}) {
+                        ++trace << type_name(cls->type_ids[0]) << "\n";
                     }
                 }
                 ++group_num;
@@ -879,50 +927,53 @@ void runtime<Policy>::build_dispatch_tables() {
             ++trace << "assigning specs\n";
             bitvec all(m.specs.size());
             all = ~all;
-            build_dispatch_table(m, dims - 1, groups.end() - 1, all, false);
+            build_dispatch_table(m, dims - 1, groups.end() - 1, all, true);
 
             if (m.arity() > 1) {
                 indent YOMM2_GENSYM(trace);
-                m.stats.cells = 1;
+                m.report.cells = 1;
                 ++trace << "dispatch table rank: ";
                 const char* prefix = "";
+
                 for (const auto& dim_groups : groups) {
-                    m.stats.cells *= dim_groups.size();
+                    m.report.cells *= dim_groups.size();
                     trace << prefix << dim_groups.size();
                     prefix = " x ";
                 }
 
-                m.stats.concrete_cells = 1;
+                m.report.concrete_cells = 1;
                 prefix = ", concrete only: ";
+
                 for (const auto& dim_groups : groups) {
                     auto cells = std::count_if(
                         dim_groups.begin(), dim_groups.end(),
                         [](const auto& group) {
                             return group.second.has_concrete_classes;
                         });
-                    m.stats.concrete_cells *= cells;
+                    m.report.concrete_cells *= cells;
                     trace << prefix << cells;
                     prefix = " x ";
                 }
+
                 trace << "\n";
             }
 
-            print(m.stats);
-            metrics.accumulate(m.stats);
+            print(m.report);
+            accumulate(m.report, report);
             ++trace << "assigning next\n";
 
-            std::vector<const rt_spec*> specs;
+            std::vector<const definition*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(), std::back_inserter(specs),
-                [](const rt_spec& spec) { return &spec; });
+                [](const definition& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << type_name(spec.info->type) << ":\n";
-                std::vector<const rt_spec*> candidates;
+                std::vector<const definition*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
-                    [spec](const rt_spec* other) {
+                    [spec](const definition* other) {
                         return is_base(other, &spec);
                     });
 
@@ -932,7 +983,8 @@ void runtime<Policy>::build_dispatch_tables() {
 
                     for (auto& candidate : candidates) {
                         indent YOMM2_GENSYM(trace);
-                        ++trace << type_name(candidate->info->type) << "\n";
+                        ++trace << "#" << candidate->group_index
+                                << type_name(candidate->info->type) << "\n";
                     }
                 }
 
@@ -942,7 +994,9 @@ void runtime<Policy>::build_dispatch_tables() {
                 if (nexts.size() == 1) {
                     const definition_info* next_info = nexts.front()->info;
                     next = next_info->pf;
-                    ++trace << "-> " << type_name(next_info->type) << "\n";
+                    ++trace << "-> "
+                            << "#" << nexts.front()->group_index
+                            << type_name(next_info->type) << "\n";
                 } else if (nexts.empty()) {
                     ++trace << "-> none\n";
                     next = m.info->not_implemented;
@@ -960,9 +1014,11 @@ void runtime<Policy>::build_dispatch_tables() {
 }
 
 template<class Policy>
-void runtime<Policy>::build_dispatch_table(
-    rt_method& m, size_t dim, std::vector<group_map>::const_iterator group_iter,
+void compiler<Policy>::build_dispatch_table(
+    method& m, size_t dim, std::vector<group_map>::const_iterator group_iter,
     const bitvec& candidates, bool concrete) {
+    using namespace detail;
+
     indent YOMM2_GENSYM(trace);
     size_t group_index = 0;
 
@@ -973,14 +1029,13 @@ void runtime<Policy>::build_dispatch_table(
             ++trace << "group " << dim << "/" << group_index << " mask " << mask
                     << "\n";
             indent YOMM2_GENSYM(trace);
-            for (auto cls :
-                 type_range{group.classes.begin(), group.classes.end()}) {
-                ++trace << cls->type_ids[0] << "\n";
+            for (auto cls : range{group.classes.begin(), group.classes.end()}) {
+                ++trace << type_name(cls->type_ids[0]) << "\n";
             }
         }
 
         if (dim == 0) {
-            std::vector<const rt_spec*> applicable;
+            std::vector<const definition*> applicable;
             size_t i = 0;
 
             for (const auto& spec : m.specs) {
@@ -995,7 +1050,8 @@ void runtime<Policy>::build_dispatch_table(
                 indent YOMM2_GENSYM(trace);
 
                 for (auto& app : applicable) {
-                    ++trace << type_name(app->info->type) << "\n";
+                    ++trace << "#" << app->group_index << " "
+                            << type_name(app->info->type) << "\n";
                 }
             }
 
@@ -1005,22 +1061,24 @@ void runtime<Policy>::build_dispatch_table(
                 indent YOMM2_GENSYM(trace);
                 ++trace << "ambiguous\n";
                 m.dispatch_table.push_back(&m.ambiguous);
-                ++m.stats.ambiguous;
+                ++m.report.ambiguous;
                 if (concrete) {
-                    ++m.stats.concrete_ambiguous;
+                    ++m.report.concrete_ambiguous;
                 }
             } else if (specs.empty()) {
                 indent YOMM2_GENSYM(trace);
                 ++trace << "not implemented\n";
                 m.dispatch_table.push_back(&m.not_implemented);
-                ++m.stats.not_implemented;
-                if (concrete) {
-                    ++m.stats.concrete_not_implemented;
+                ++m.report.not_implemented;
+                if (concrete && group.has_concrete_classes) {
+                    ++m.report.concrete_not_implemented;
                 }
             } else {
-                m.dispatch_table.push_back(specs[0]);
-                ++trace << "-> " << type_name(specs[0]->info->type)
-                        << " pf = " << specs[0]->info->pf << "\n";
+                auto spec = specs[0];
+                m.dispatch_table.push_back(spec);
+                ++trace << "-> #" << spec->group_index << " "
+                        << type_name(spec->info->type)
+                        << " pf = " << spec->info->pf << "\n";
             }
         } else {
             build_dispatch_table(
@@ -1031,17 +1089,18 @@ void runtime<Policy>::build_dispatch_table(
     }
 }
 
-inline void dispatch_stats_t::accumulate(const dispatch_stats_t& other) {
-    cells += other.cells;
-    concrete_cells += other.concrete_cells;
-    not_implemented += other.not_implemented;
-    concrete_not_implemented += other.concrete_not_implemented;
-    ambiguous += other.ambiguous;
-    concrete_ambiguous += other.concrete_ambiguous;
+inline void generic_compiler::accumulate(
+    const update_method_report& partial, update_report& total) {
+    total.cells += partial.cells;
+    total.concrete_cells += partial.concrete_cells;
+    total.not_implemented += partial.not_implemented != 0;
+    total.concrete_not_implemented += partial.concrete_not_implemented != 0;
+    total.ambiguous += partial.ambiguous != 0;
+    total.concrete_ambiguous += partial.concrete_ambiguous != 0;
 }
 
 template<class Policy>
-void runtime<Policy>::install_gv() {
+void compiler<Policy>::install_gv() {
     using namespace policy;
 
     for (size_t pass = 0; pass != 2; ++pass) {
@@ -1049,7 +1108,7 @@ void runtime<Policy>::install_gv() {
 
         if constexpr (trace_enabled) {
             if (pass) {
-                ++trace << "Initializing dispatch tables at "
+                ++trace << "Initializing multi-method dispatch tables at "
                         << Policy::dispatch_data.data() << "\n";
             }
         }
@@ -1057,21 +1116,15 @@ void runtime<Policy>::install_gv() {
         for (auto& m : methods) {
             if (m.info->arity() == 1) {
                 // Uni-methods just need an index in the method table.
-                *m.info->slots_strides_p = m.slots[0];
+                m.info->slots_strides_ptr[0] = m.slots[0];
                 continue;
             }
 
             // multi-methods only
 
-            auto slot_iter = m.slots.begin();
-            auto stride_iter = m.strides.begin();
-            auto offsets_iter = m.info->slots_strides_p;
-            *offsets_iter++ = *slot_iter++;
-
-            while (slot_iter != m.slots.end()) {
-                *offsets_iter++ = *slot_iter++;
-                *offsets_iter++ = *stride_iter++;
-            }
+            auto strides_iter = std::copy(
+                m.slots.begin(), m.slots.end(), m.info->slots_strides_ptr);
+            std::copy(m.strides.begin(), m.strides.end(), strides_iter);
 
             if constexpr (trace_enabled) {
                 if (pass) {
@@ -1079,6 +1132,11 @@ void runtime<Policy>::install_gv() {
                             << Policy::dispatch_data.data() +
                             Policy::dispatch_data.size()
                             << " dispatch table for " << m.info->name << "\n";
+                    indent YOMM2_GENSYM(trace);
+                    ++trace
+                        << range(
+                               m.dispatch_table.begin(), m.dispatch_table.end())
+                        << "\n";
                 }
             }
 
@@ -1088,6 +1146,15 @@ void runtime<Policy>::install_gv() {
                 m.dispatch_table.begin(), m.dispatch_table.end(),
                 std::back_inserter(Policy::dispatch_data),
                 [](auto spec) { return spec->pf; });
+        }
+
+        if constexpr (trace_enabled) {
+            if (pass) {
+                ++trace << "Initializing v-tables at "
+                        << (Policy::dispatch_data.data() +
+                            Policy::dispatch_data.size())
+                        << "\n";
+            }
         }
 
         for (auto& cls : classes) {
@@ -1103,14 +1170,19 @@ void runtime<Policy>::install_gv() {
             if constexpr (trace_enabled) {
                 if (pass) {
                     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                            << *cls.static_vptr << " vtbl for " << cls << "\n";
+                            << *cls.static_vptr << " vtbl for " << cls
+                            << " slots [0/" << cls.first_used_slot << "/"
+                            << cls.vtbl.size() << "]\n";
+                    indent YOMM2_GENSYM(trace);
+                    ++trace << range(cls.vtbl.begin(), cls.vtbl.end()) << "\n";
                 }
             }
 
             if (cls.first_used_slot != -1) {
-                std::copy(
+                std::transform(
                     cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end(),
-                    std::back_inserter(Policy::dispatch_data));
+                    std::back_inserter(Policy::dispatch_data),
+                    [](auto entry) { return entry.group_index; });
             }
         }
     }
@@ -1125,7 +1197,7 @@ void runtime<Policy>::install_gv() {
 }
 
 template<class Policy>
-void runtime<Policy>::optimize() {
+void compiler<Policy>::optimize() {
     ++trace << "Optimizing\n";
 
     for (auto& m : methods) {
@@ -1135,13 +1207,14 @@ void runtime<Policy>::optimize() {
 
         if (m.arity() == 1) {
             for (auto cls : m.vp[0]->compatible_classes) {
-                auto pf = m.dispatch_table[(*cls->static_vptr)[slot]]->pf;
+                auto spec = m.dispatch_table[(*cls->static_vptr)[slot]];
                 if constexpr (trace_enabled) {
-                    ++trace << *cls << " vtbl[" << slot << "] = " << pf
-                            << " (function)"
-                            << "\n";
+                    ++trace << *cls << " vtbl[" << slot
+                            << "] = " << spec->method_index << "/"
+                            << spec->group_index << " function "
+                            << (void*)spec->pf << "\n";
                 }
-                (*cls->static_vptr)[slot] = pf;
+                (*cls->static_vptr)[slot] = spec->pf;
             }
         } else {
             for (auto cls : m.vp[0]->compatible_classes) {
@@ -1160,12 +1233,12 @@ void runtime<Policy>::optimize() {
 }
 
 template<class Policy>
-std::vector<const rt_spec*>
-runtime<Policy>::best(std::vector<const rt_spec*>& candidates) {
-    std::vector<const rt_spec*> best;
+std::vector<const generic_compiler::definition*>
+compiler<Policy>::best(std::vector<const definition*>& candidates) {
+    std::vector<const definition*> best;
 
     for (auto spec : candidates) {
-        const rt_spec* candidate = spec;
+        const definition* candidate = spec;
 
         for (auto iter = best.begin(); iter != best.end();) {
             if (is_more_specific(spec, *iter)) {
@@ -1187,7 +1260,8 @@ runtime<Policy>::best(std::vector<const rt_spec*>& candidates) {
 }
 
 template<class Policy>
-bool runtime<Policy>::is_more_specific(const rt_spec* a, const rt_spec* b) {
+bool compiler<Policy>::is_more_specific(
+    const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1209,7 +1283,7 @@ bool runtime<Policy>::is_more_specific(const rt_spec* a, const rt_spec* b) {
 }
 
 template<class Policy>
-bool runtime<Policy>::is_base(const rt_spec* a, const rt_spec* b) {
+bool compiler<Policy>::is_base(const definition* a, const definition* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1229,29 +1303,26 @@ bool runtime<Policy>::is_base(const rt_spec* a, const rt_spec* b) {
 }
 
 template<class Policy>
-void runtime<Policy>::print(const dispatch_stats_t& stats) {
+void compiler<Policy>::print(const update_method_report& report) const {
     ++trace;
-    if (stats.cells) {
+
+    if (report.cells) {
         // only for multi-methods, uni-methods don't have dispatch tables
-        ++trace << stats.cells << " dispatch table cells, ";
+        ++trace << report.cells << " dispatch table cells, ";
     }
-    trace << stats.not_implemented << " not implemented, ";
-    trace << stats.ambiguous << " ambiguities, concrete only: ";
-    if (stats.cells) {
-        trace << stats.concrete_cells << ", ";
+
+    trace << report.not_implemented << " not implemented, ";
+    trace << report.ambiguous << " ambiguities, concrete only: ";
+
+    if (report.cells) {
+        trace << report.concrete_cells << ", ";
     }
-    trace << stats.concrete_not_implemented << ", ";
-    trace << stats.concrete_ambiguous << "\n";
+
+    trace << report.concrete_not_implemented << ", ";
+    trace << report.concrete_ambiguous << "\n";
 }
 
 } // namespace detail
-
-template<class Policy>
-void update() {
-    detail::runtime<Policy> rt;
-    rt.update();
-}
-
 } // namespace yomm2
 } // namespace yorel
 
