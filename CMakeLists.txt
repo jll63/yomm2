@@ -5,6 +5,7 @@
 
 cmake_minimum_required(VERSION 3.20)
 cmake_policy(SET CMP0057 NEW)
+
 project(YOMM2 LANGUAGES CXX VERSION 1.5.2)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -12,23 +13,49 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(YOMM2_DOWNLOAD_DEPENDENCIES "Set to ON to build missing dependencies from source" OFF)
-include(cmake/download_package.cmake)
+option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
+option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" OFF)
+option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
+option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
+option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
+option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
+option(
+  YOMM2_CHECK_ABI_COMPATIBILITY
+  "Build shared library and examples in different modes" OFF)
 
-# Find Boost dependency
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-find_package(Boost 1.74 QUIET)
-if(NOT TARGET Boost::headers)
-  if (YOMM2_DOWNLOAD_DEPENDENCIES)
-    download_package(Boost INSTALL_WITH_YOMM)
+include(CMakeDependentOption)
+CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
+  "Set to ON to build benchmarks" OFF
+  "YOMM2_ENABLE_TESTS" OFF
+)
+
+macro(assign_bool VAR)
+  if(${ARGN})
+    set(${VAR} ON)
   else()
-    message(FATAL_ERROR  "Boost was not found on your system. Set YOMM2_DOWNLOAD_DEPENDENCIES to ON to download and build from the sources.")
+    set(${VAR} OFF)
   endif()
-endif()
-message(STATUS "Using Boost libraries from ${Boost_INCLUDE_DIRS}")
+endmacro()
 
-if(NOT ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug") AND (CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"))
-  add_compile_options(-save-temps -fverbose-asm -masm=intel)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set(COMPILER_IS_CLANG ON)
+endif()
+
+if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+  set(VARIANT_IS_DEBUG ON)
+endif()
+
+if (VARIANT_IS_DEBUG)
+  if(COMPILER_IS_CLANG)
+    add_compile_options(-fno-limit-debug-info)
+  endif()
+  if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
+    add_compile_definitions(_GLIBCXX_DEBUG)
+  endif()
+else()
+  if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
+    add_compile_options(-save-temps -masm=intel)
+  endif()
 endif()
 
 if(MSVC)
@@ -36,31 +63,32 @@ if(MSVC)
   add_compile_options(/EHsc /FAs)
 endif()
 
-option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
 if(${YOMM2_DEBUG_MACROS})
   message(STATUS "Macro debugging enabled")
   set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_SOURCE_DIR}/dev/ppfc)
 endif()
 
-add_subdirectory(src)
+# set(YOMM2_REQUIRED_BOOST_LIBRARIES core mp11 preprocessor dynamic_bitset)
 
-option(YOMM2_ENABLE_TESTS "Set to ON to build tests" ON)
-include(CMakeDependentOption)
-CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
-  "Set to ON to build benchmarks" OFF
-  "YOMM2_ENABLE_TESTS" OFF
-)
 if(${YOMM2_ENABLE_TESTS})
   message(STATUS "Tests enabled")
+  # set(YOMM2_REQUIRED_BOOST_LIBRARIES ${YOMM2_REQUIRED_BOOST_LIBRARIES} unit_test_framework)
+endif()
+
+# Find Boost dependencies
+# find_package(Boost REQUIRED COMPONENTS ${YOMM2_REQUIRED_BOOST_LIBRARIES})
+find_package(Boost REQUIRED)
+
+add_subdirectory(src)
+
+if(${YOMM2_ENABLE_EXAMPLES})
+  message(STATUS "Examples enabled")
+  add_subdirectory(examples)
+endif()
+
+if(${YOMM2_ENABLE_TESTS})
   if(${YOMM2_ENABLE_BENCHMARKS})
-    find_package(benchmark QUIET)
-    if(NOT ${benchmark_FOUND})
-      if (YOMM2_DOWNLOAD_DEPENDENCIES)
-        download_package(benchmark)
-      else()
-        message(FATAL_ERROR  "benchmarks was not found on your system. Set YOMM2_DOWNLOAD_DEPENDENCIES to ON to download and build from the sources.")
-      endif()
-    endif()
+    find_package(benchmark REQUIRED)
     message(STATUS "Benchmarks enabled")
   endif()
   include(CTest)
@@ -68,15 +96,6 @@ if(${YOMM2_ENABLE_TESTS})
   add_subdirectory(tests)
   add_subdirectory(ce)
 endif()
-
-option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" ON)
-if(${YOMM2_ENABLE_EXAMPLES})
-  message(STATUS "Examples enabled")
-  add_subdirectory(examples)
-endif()
-
-option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
-option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 
 set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
 set(readme_cpp "${CMAKE_SOURCE_DIR}/examples/README.cpp")
@@ -93,6 +112,7 @@ endif()
 
 if(YOMM2_ENABLE_TESTS OR YOMM2_ENABLE_DOC)
   add_subdirectory(docs.in)
+  add_custom_target(doc DEPENDS README_md README reference build_and_make_tutorials)
 endif()
 
 ## Install instruction
@@ -108,11 +128,6 @@ install(EXPORT YOMM2Targets
   FILE YOMM2Targets.cmake
   NAMESPACE YOMM2::
   DESTINATION lib/cmake/YOMM2
-)
-# Configure package config (tells using code about dependencies)
-configure_package_config_file(
-  cmake/YOMM2Config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake
-  INSTALL_DESTINATION lib/cmake/YOMM2
 )
 # Copy config files to install directory
 install(FILES
