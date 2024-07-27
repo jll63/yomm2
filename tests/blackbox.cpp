@@ -227,34 +227,6 @@ YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void deprecated_test_handler(const method_call_error& error, size_t, type_id*) {
-    throw error;
-}
-
-BOOST_AUTO_TEST_CASE(deprecated_error_handling) {
-    update();
-
-    set_method_call_error_handler(deprecated_test_handler);
-
-    try {
-        times(dense_matrix(), dense_matrix());
-    } catch (const method_call_error& error) {
-        BOOST_TEST(error.code == method_call_error::not_implemented);
-        return;
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-
-    try {
-        times(diagonal_matrix(), diagonal_matrix());
-    } catch (const method_call_error& error) {
-        BOOST_TEST(error.code == method_call_error::ambiguous);
-        return;
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-}
-
 void test_handler(const error_type& error_v) {
     if (auto error = std::get_if<resolution_error>(&error_v)) {
         throw *error;

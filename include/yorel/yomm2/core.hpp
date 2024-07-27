@@ -706,13 +706,6 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
     return prev;
 }
 
-inline method_call_error_handler
-set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = default_policy::call_error;
-    default_policy::call_error = handler;
-    return prev;
-}
-
 #endif
 
 #endif

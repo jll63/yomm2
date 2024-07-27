@@ -650,72 +650,22 @@ error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
         std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
         DefaultHandlerProvider>::default_error_handler;
 
-template<class Policy>
-struct yOMM2_API_gcc backward_compatible_error_handler
-    : vectored_error<Policy, backward_compatible_error_handler<Policy>> {
-    static method_call_error_handler call_error;
-
-    static void default_error_handler(const error_type& error_v) {
-        using namespace detail;
-
-        if (auto err = std::get_if<resolution_error>(&error_v)) {
-            method_call_error old_error;
-            old_error.code = err->status;
-            old_error.method_name = err->method_name;
-            call_error(std::move(old_error), err->arity, (type_id*)err->types);
-            abort();
-        }
-
-        vectored_error<Policy>::default_error_handler(error_v);
-    }
-
-    static void default_call_error_handler(
-        const method_call_error& error, size_t arity, type_id* ti_ptrs) {
-
-        using namespace policy;
-
-        if constexpr (Policy::template has_facet<error_output>) {
-            const char* explanation[] = {
-                "no applicable definition", "ambiguous call"};
-            Policy::error_stream
-                << explanation[error.code - resolution_error::no_definition]
-                << " for " << error.method_name << "(";
-            auto comma = "";
-
-            for (auto ti : detail::range{ti_ptrs, ti_ptrs + arity}) {
-                Policy::error_stream << comma;
-                Policy::type_name(ti, Policy::error_stream);
-                comma = ", ";
-            }
-
-            Policy::error_stream << ")\n";
-        }
-
-        abort();
-    }
-};
-
-template<class Policy>
-method_call_error_handler
-    backward_compatible_error_handler<Policy>::call_error =
-        backward_compatible_error_handler<Policy>::default_call_error_handler;
-
 struct yOMM2_API_gcc release
     : basic_policy<
           release, std_rtti, fast_perfect_hash<release>, vptr_vector<release>,
-          backward_compatible_error_handler<release>> {};
+          vectored_error<release>> {};
 
 struct yOMM2_API_gcc debug
     : basic_policy<
           debug, std_rtti, checked_perfect_hash<debug>, vptr_vector<debug>,
           basic_error_output<debug>, basic_trace_output<debug>,
-          backward_compatible_error_handler<debug>> {};
+          vectored_error<debug>> {};
 
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
 extern template class __declspec(dllimport) vectored_error<
-    debug_shared, backward_compatible_error_handler<debug_shared>>;
+    debug_shared, vectored_error<debug_shared>>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
@@ -724,12 +674,12 @@ extern template class __declspec(dllimport)
     basic_error_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
-    backward_compatible_error_handler<debug_shared>;
+    vectored_error<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
     basic_trace_output<debug_shared>,
-    backward_compatible_error_handler<debug_shared>>;
+    vectored_error<debug_shared>>;
 #endif
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
@@ -738,7 +688,7 @@ struct yOMM2_API_gcc debug_shared
           debug_shared, std_rtti, checked_perfect_hash<debug_shared>,
           vptr_vector<debug_shared>, basic_error_output<debug_shared>,
           basic_trace_output<debug_shared>,
-          backward_compatible_error_handler<debug_shared>> {};
+          vectored_error<debug_shared>> {};
 
 struct yOMM2_API_gcc release_shared : debug_shared {
     template<class Class>
