@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_CHAIN_INCLUDED
-#define YOREL_YOMM2_CHAIN_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_CHAIN_INCLUDED
+#define YOREL_YOMM2_DETAIL_CHAIN_INCLUDED
 
 #include <algorithm>
 #include <cassert>

@@ -9,8 +9,8 @@ struct use_definitions;
 ```
 
 `use_definitions` takes a templatized definition container `Definition`, and a
-[type list](types.md) of type lists, each consisting of a method class, followed
-by any number of types. It instantiates `Definition` with each type list, and,
+[type list](mp_list.md) of type lists, each consisting of a method class, followed
+by any number of mp_list. It instantiates `Definition` with each type list, and,
 if the resulting class does not derive from ->`not_defined`, it adds the
 definition container to the method, using ->`method::add_definition`.
 
@@ -35,6 +35,7 @@ struct sparse_matrix : abstract_matrix {};
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2; // for brevity
+using boost::mp11::mp_list;
 
 use_classes<
     abstract_matrix, ordinary_matrix, square_matrix, sparse_matrix
@@ -67,9 +68,9 @@ struct definition<same_type, Matrix, Matrix> {
 use_definitions<
     definition,
     product< // 4
-        types<same_type>,
-        types<ordinary_matrix, square_matrix, sparse_matrix>,
-        types<ordinary_matrix, square_matrix, sparse_matrix>
+        mp_list<same_type>,
+        mp_list<ordinary_matrix, square_matrix, sparse_matrix>,
+        mp_list<ordinary_matrix, square_matrix, sparse_matrix>
     >
 > YOMM2_GENSYM; // 5
 

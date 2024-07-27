@@ -15,7 +15,7 @@ does not matter, and ->YOMM2_GENSYM can be used to generated that single-use
 identifier.
 Unlike typical `std::tuple<typename... T>` implementations, `aggregate` can
 handle large numbers of `T`s. For example, clang++-12 has a limit of 1024
-types, which can be reached easily when writing templatized method
+mp_list, which can be reached easily when writing templatized method
 definitions.
 ## Example
 
@@ -29,15 +29,16 @@ int main() {}
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;
+using boost::mp11::mp_list;
 
 struct Animal { virtual ~Animal() {} };
 struct Dog : Animal {};
 struct Cat : Animal {};
 
 aggregate<
-    class_declaration<types<Animal>>,
-    class_declaration<types<Dog, Animal>>,
-    class_declaration<types<Cat, Animal>>
+    class_declaration<mp_list<Animal>>,
+    class_declaration<mp_list<Dog, Animal>>,
+    class_declaration<mp_list<Cat, Animal>>
 > YOMM2_GENSYM;
 
 #endif

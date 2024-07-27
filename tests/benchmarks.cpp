@@ -308,7 +308,7 @@ struct population : abstract_population {
         }
     };
 
-    using non_leaf_classes = types<
+    using non_leaf_classes = mp_list<
         vfunc_base, orthogonal_base<ordinary_inheritance>,
         direct_intrusive_base<ordinary_inheritance>,
         indirect_intrusive_base<ordinary_inheritance>, vfunc_vbase,
@@ -351,7 +351,7 @@ struct population : abstract_population {
         mp_append<
             mp_transform<leaf0, mp_iota_c<num_leaf_classes / 2>>,
             mp_transform<leaf1, mp_iota_c<(num_leaf_classes + 1) / 2>>>,
-        types>;
+        mp_list>;
 
     using classes = mp_append<non_leaf_classes, leaf_classes>;
 

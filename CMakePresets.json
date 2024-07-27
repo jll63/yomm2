@@ -76,6 +76,15 @@
                 "clang16-debug",
                 "shared"
             ]
+        },
+        {
+            "name": "windows-debug-shared",
+            "description": "",
+            "displayName": "",
+            "inherits": [
+                "shared",
+                "debug"
+            ]
         }
     ],
     "buildPresets": [
@@ -89,6 +98,14 @@
                 "reference",
                 "build_and_make_tutorials"
             ]
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "c16-debug-test",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "clang16-debug"
         }
     ]
 }

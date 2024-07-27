@@ -15,7 +15,6 @@
 #include <boost/test/included/unit_test.hpp>
 
 using namespace yorel::yomm2;
-using yorel::yomm2::detail::types;
 
 namespace states {
 

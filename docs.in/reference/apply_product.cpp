@@ -8,9 +8,9 @@ template<typename TemplateList, typename... TypeLists>
 using apply_product = /*unspecified*/;
 ```
 
-`apply_product` takes a ->templates list and list of ->types lists, and
-evaluates to a `types` list consisting of the application of each template to
-the n-fold Cartesian product of the input `types` lists.
+`apply_product` takes a ->templates list and list of ->mp_list lists, and
+evaluates to a `mp_list` list consisting of the application of each template to
+the n-fold Cartesian product of the input `mp_list` lists.
 
 ## Example
 
@@ -25,6 +25,7 @@ the n-fold Cartesian product of the input `types` lists.
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;
+using boost::mp11::mp_list;
 
 struct a;
 struct b;
@@ -39,10 +40,10 @@ static_assert(
     std::is_same_v<
         apply_product<
             templates<bin1, bin2>,
-            types<a, b>,
-            types<x, y, z>
+            mp_list<a, b>,
+            mp_list<x, y, z>
         >,
-        types<
+        mp_list<
             bin1<a, x>, bin1<a, y>, bin1<a, z>,
             bin1<b, x>, bin1<b, y>, bin1<b, z>,
 

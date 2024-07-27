@@ -26,17 +26,14 @@ namespace policy {
 template class yOMM2_API_msc basic_domain<debug_shared>;
 template class yOMM2_API_msc vptr_vector<debug_shared>;
 template class yOMM2_API_msc basic_indirect_vptr<debug_shared>;
-template class yOMM2_API_msc vectored_error<
-    debug_shared, backward_compatible_error_handler<debug_shared>>;
-template class yOMM2_API_msc backward_compatible_error_handler<debug_shared>;
 template class yOMM2_API_msc fast_perfect_hash<debug_shared>;
 template class yOMM2_API_msc checked_perfect_hash<debug_shared>;
 template class yOMM2_API_msc basic_error_output<debug_shared>;
 template class yOMM2_API_msc basic_trace_output<debug_shared>;
+template class yOMM2_API_msc vectored_error<debug_shared>;
 template class yOMM2_API_msc basic_policy<
     debug_shared, std_rtti, checked_perfect_hash<debug_shared>,
-    basic_error_output<debug_shared>, basic_trace_output<debug_shared>,
-    backward_compatible_error_handler<debug_shared>>;
+    basic_error_output<debug_shared>, basic_trace_output<debug_shared>>;
 
 } // namespace policy
 
@@ -55,12 +52,6 @@ set_error_handler(error_handler_type handler) {
     return prev;
 }
 
-yOMM2_API_gcc yOMM2_API_msc method_call_error_handler
-set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = default_policy::call_error;
-    default_policy::call_error = handler;
-    return prev;
-}
 
 } // namespace yomm2
 } // namespace yorel

@@ -24,6 +24,7 @@ std::ostream &operator<<(std::ostream &os, const std::type_info &ti) {
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;
+using boost::mp11::mp_list;
 
 // md<
 
@@ -290,9 +291,9 @@ inline bool operator==(const vector& a, const vector& b) {
 // ```
 
 // This "closed" approach is lazy, and defies the purpose of *open* methods. It
-// is not for the author of the library to decide which types to support. The
+// is not for the author of the library to decide which mp_list to support. The
 // user may have no interest in integer vectors, but may need `complex` vectors.
-// Or vectors of `decimal` floating-point numbers. Or, types from another
+// Or vectors of `decimal` floating-point numbers. Or, mp_list from another
 // library, or perhaps created by the user himself. An advanced user may also
 // want to add new operations or vector subtypes (like large sparse vectors).
 // All this must be possible, and not unduly complex. Extensibility is what open
@@ -308,14 +309,14 @@ inline bool operator==(const vector& a, const vector& b) {
 // 1. Put the definitions in one or several templates, where the method being
 //    defined is the first template argument.
 // 2. Create a meta-function that generates interesting combinations of methods
-//    and types.
+//    and mp_list.
 // 3. Instantiate the container(s) for these combinations. The resulting classes
 //    must satisfy the requirements of a definition container, *or* be derived
 //    from class `not_defined`. Add the definition containers to the method,
 //    extracted from the first template argument.
 
 // The meta-programming library comprises:
-// - containers for types and templates
+// - containers for mp_list and templates
 // - meta-functions that generate Cartesian products of these containers.
 // - a mechanism for instantiating the resulting definitions.
 
@@ -325,7 +326,7 @@ inline bool operator==(const vector& a, const vector& b) {
 // 1. Make it very easy for a new user to use the library with all the defaults.
 // 2. Make it easy for a "normal" user to specify which parts of the library to
 //    use.
-// 3. Make it possible for an advanced user to extend the library with new types
+// 3. Make it possible for an advanced user to extend the library with new mp_list
 //    and new operations.
 
 // Let's apply these ideas to the `vector` methods. First we declare a container
@@ -341,7 +342,7 @@ struct definition;
 // md<
 
 // Let's create partial specializations that defines addition, subtraction and
-// comparison for vectors or two underlying types:
+// comparison for vectors or two underlying mp_list:
 
 // >
 
@@ -400,15 +401,15 @@ struct definition<comparison, T, U> {
 // ...then add the resulting definitions to their respective method.
 
 // For the Cartesian product, we can use two constructs provided by YOMM2: the
-// `types` container, and the `product` meta-function.
+// `mp_list` container, and the `product` meta-function.
 
-// `types<typename...>` is a simple list of types. It is similar to Boost.Mp11's
-// `mp_list`. Unlike `mp_list`, `types` does not have a body. This helps detect
+// `mp_list<typename...>` is a simple list of mp_list. It is similar to Boost.Mp11's
+// `mp_list`. Unlike `mp_list`, `mp_list` does not have a body. This helps detect
 // meta-programming bugs.
 
-// `product<typename... TypeLists>` takes any number of `types` lists, and
-// returns a `types` list containing all the combinations of one element taken
-// from each input list, each combination being itself wrapped in a `types`. For
+// `product<typename... TypeLists>` takes any number of `mp_list` lists, and
+// returns a `mp_list` list containing all the combinations of one element taken
+// from each input list, each combination being itself wrapped in a `mp_list`. For
 // example:
 
 // >
@@ -418,12 +419,12 @@ struct definition<comparison, T, U> {
 static_assert(
     std::is_same_v<
         product<
-            types<int, double>,
-            types<int, double, float>
+            mp_list<int, double>,
+            mp_list<int, double, float>
         >,
-        types<
-            types<int, int>, types<int, double>, types<int, float>,
-            types<double, int>, types<double, double>, types<double, float>
+        mp_list<
+            mp_list<int, int>, mp_list<int, double>, mp_list<int, float>,
+            mp_list<double, int>, mp_list<double, double>, mp_list<double, float>
         >
 >);
 
@@ -453,9 +454,9 @@ use_classes<
 use_definitions<
     definition,
     product<
-        types<addition, subtraction, comparison>,
-        types<int, double>,
-        types<int, double>
+        mp_list<addition, subtraction, comparison>,
+        mp_list<int, double>,
+        mp_list<int, double>
     >
 > YOMM2_GENSYM;
 
@@ -503,7 +504,7 @@ BOOST_AUTO_TEST_CASE(test_vectors) {
 // ## Writing a user-friendly instantiation function
 
 // Now we have everything we need to write a single template that allows users
-// to initialize the library for the types they need. For that we use
+// to initialize the library for the mp_list they need. For that we use
 // `std::tuple` to lump teh registration object together:
 
 // >
@@ -520,9 +521,9 @@ using use_vector_library = std::tuple<
     use_definitions<
         definition,
         product<
-            types<addition, subtraction, comparison>,
-            types<NumericTypes...>,
-            types<NumericTypes...>
+            mp_list<addition, subtraction, comparison>,
+            mp_list<NumericTypes...>,
+            mp_list<NumericTypes...>
         >
     >
 >;
@@ -532,7 +533,7 @@ using use_vector_library = std::tuple<
 // md<
 
 // All the user of the library needs to do now is to create an instance (object)
-// of `use_vector_library`, instantiated with the required types:
+// of `use_vector_library`, instantiated with the required mp_list:
 
 // >
 
@@ -603,7 +604,7 @@ use_vector_library<int, double> init_vectors;
 
 // For brevity, we will consider only ordinary (i.e. non-square), square and
 // symmetric matrices. Also, we will omit all maths and storage management, to
-// focus on dealing with types.
+// focus on dealing with mp_list.
 
 // Here is the implementation of these classes, and the intermediary abstract
 // classes:
@@ -699,7 +700,7 @@ struct symmetric : any_symmetric<T> {
 // importantly, better interfaces. For example, square matrices have a
 // determinant, which ordinary matrices do not have. Also, type errors can be
 // diagnosed by the compiler. However, compile-time specialization is possible
-// only if the types of the matrices is known in advance. It may not always be
+// only if the mp_list of the matrices is known in advance. It may not always be
 // the case.
 
 // Thus, as library designers, we face a dilemma: which users to serve best?
@@ -906,7 +907,7 @@ auto operator~(const handle<Matrix<T>>& m) {
 // 1. `Matrix`  is actually one of our `matrix` templates; without (1), *any*
 //    template would match.
 // 2. `Matrix<T>` is abstract; without (2), we would have an ambiguity with our
-//    own `operator~` defined above for concrete matrix types.
+//    own `operator~` defined above for concrete matrix mp_list.
 
 // C++20 concepts offer a much cleaner solution for taming template
 // instantiations.
@@ -916,7 +917,7 @@ auto operator~(const handle<Matrix<T>>& m) {
 // methods, e.g. `negate`. For that we use a templatized definition container
 // called `unary_definition`. We want to instantiate it for every combination of
 // method template, abstract base class, concrete implementation of the abstract
-// class, and this for the required numeric types. E.g.:
+// class, and this for the required numeric mp_list. E.g.:
 // - `transpose<any<int>>`, `any<int>`, `ordinary<int>`
 // - `transpose<any<int>>`, `any_square`, `square`
 // - `transpose<any<int>>`, `any_square`, `symmetrical`
@@ -936,14 +937,14 @@ auto operator~(const handle<Matrix<T>>& m) {
 // M = { unary method templates: transpose, negate, etc }
 // A = { abstract class templates }
 // C = { concrete class templates }
-// T = { required numeric types }
+// T = { required numeric mp_list }
 // ```
 
 // ...and selecting the combinations that satisfy the condition:
 // - `A<T>` is a base of `C<T>`
 
 // This time, we need to make a Cartesian product that involves templates as
-// well as types. For this, YOMM2 provides two constructs:
+// well as mp_list. For this, YOMM2 provides two constructs:
 // - `template_<template<typename...> typename>` wraps a template in a type. It
 // contains a nested template `fn<typename...Ts>`, which applies the original
 // template to `Ts...`. Thus we have the identity:
@@ -951,7 +952,7 @@ auto operator~(const handle<Matrix<T>>& m) {
 // template_<F>::template fn<Ts...> = F<Ts...>
 // ```
 // - `templates<template<typename...> typename...>` wraps a list of templates in
-// a `types` list of `template_`s.
+// a `mp_list` list of `template_`s.
 
 // We can now implement `unary_definition`:
 
@@ -1029,27 +1030,27 @@ use_definitions<
     unary_definition,
     product<
         templates<transpose>, abstract_matrix_templates,
-        concrete_matrix_templates, types<double, int>>>
+        concrete_matrix_templates, mp_list<double, int>>>
     YOMM2_GENSYM;
 // >
 
 // md<
 
 // We must not forget to register all the matrix classes, for both numeric
-// types. For that, we can use another YOMM2 helper: `apply_product`. It takes a
-// `templates` list, and any number of `types` list; forms the Cartesian
+// mp_list. For that, we can use another YOMM2 helper: `apply_product`. It takes a
+// `templates` list, and any number of `mp_list` list; forms the Cartesian
 // product; and, for each resulting combination, applies the first element - a
-// template - to the other elements. The result is a `types` list of template
+// template - to the other elements. The result is a `mp_list` list of template
 // instantiations.
 
 // We saw that `use_classes` takes a list of classes. It also works with a
-// list of `types` lists. We can thus inject the result of `apply_product` into
+// list of `mp_list` lists. We can thus inject the result of `apply_product` into
 // `use_classes`:
 
 // >
 
 // code<
-YOMM2_STATIC(use_classes<apply_product<matrix_templates, types<double, int>>>);
+YOMM2_STATIC(use_classes<apply_product<matrix_templates, mp_list<double, int>>>);
 // >
 
 #endif
@@ -1085,12 +1086,12 @@ BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {
 // `any_square<double>`.
 
 // Fortunately, we can leverage the static `operator+` to deduce the return type
-// of additions that involve one or two abstract types. This is what the nested
-// `abstract_type` and `concrete_type` aliases are for. We can convert the types
+// of additions that involve one or two abstract mp_list. This is what the nested
+// `abstract_type` and `concrete_type` aliases are for. We can convert the mp_list
 // of the arguments to their nearest concrete type: for a
 // `any_symmetric<double>`, it is a `symmetric<double>`; for a `square<double>`,
 // it is `square<double>`. Then we can "pretend" to add two handles to objects
-// of the two types, and extract the result's type using `decltype`. And
+// of the two mp_list, and extract the result's type using `decltype`. And
 // finally, we convert that type to its abstract base class, using
 // `abstract_type`.
 
@@ -1179,7 +1180,7 @@ auto operator+(const handle<M1>& a, const handle<M2>& b) {
 // M = { unary method templates: transpose, negate, etc }
 // A1, A2 = { abstract class templates }
 // C1, C2 = { concrete class templates }
-// T1, T2 = { required numeric types }
+// T1, T2 = { required numeric mp_list }
 // ```
 
 // ...and selecting the combinations that satisfy the condition:
@@ -1284,8 +1285,8 @@ use_definitions<
     binary_definition,
     product<
         templates<add>, abstract_matrix_templates, concrete_matrix_templates,
-        types<double, int>, abstract_matrix_templates,
-        concrete_matrix_templates, types<double, int>>>
+        mp_list<double, int>, abstract_matrix_templates,
+        concrete_matrix_templates, mp_list<double, int>>>
     YOMM2_GENSYM;
 // >
 
@@ -1323,7 +1324,7 @@ BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
 // Now we need to create a mechanism that enable users to instantiate just the
 // method definitions they want. This is more complicated than for the vector
 // library, because users need to be able to select from three sets: the
-// underlying numeric types, the matrix types, and the methods. For example:
+// underlying numeric mp_list, the matrix mp_list, and the methods. For example:
 
 // >
 
@@ -1335,11 +1336,11 @@ BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
 // use_polymorphic_matrices<>::with<add, transpose> YOMM2_GENSYM;                        // 5
 // ```
 
-// 1. all matrix types of `double`, with all operations
-// 2. all matrix types of `int` and `double`, with all operations
+// 1. all matrix mp_list of `double`, with all operations
+// 2. all matrix mp_list of `int` and `double`, with all operations
 // 3. square and symmetric matrices of `double`, with all operations
 // 4. square and symmetric matrices of `int` and `double`, polymorphic addition only
-// 5. all matrix types of `double`, with all operations
+// 5. all matrix mp_list of `double`, with all operations
 
 // Let's implement this. First we need a few helpers.
 
@@ -1421,17 +1422,17 @@ struct definition_traits<add> : binary_definition_traits<add> {};
 
 template<template<typename> typename... Ms>
 struct use_polymorphic_matrices {
-    using abstract_matrix_templates = types<
+    using abstract_matrix_templates = mp_list<
         typename template_of<typename Ms<double>::abstract_type>::type...>;
     using concrete_matrix_templates = templates<Ms...>;
     template<typename... Ts>
     struct of {
-        using numeric_types = types<Ts...>;
+        using numeric_types = mp_list<Ts...>;
         template<template<typename...> typename... Ops>
         struct with
             : use_classes<
-                  apply_product<abstract_matrix_templates, types<Ts...>>,
-                  apply_product<concrete_matrix_templates, types<Ts...>>>,
+                  apply_product<abstract_matrix_templates, mp_list<Ts...>>,
+                  apply_product<concrete_matrix_templates, mp_list<Ts...>>>,
               definition_traits<Ops>::template fn<
                   abstract_matrix_templates, concrete_matrix_templates,
                   numeric_types>... {};

@@ -14,20 +14,20 @@
 
 namespace yorel { namespace yomm2 {
 
-using detail::types;
+using boost::mp11::mp_list;
 
 struct not_defined {};
 
 template<template<typename...> typename Template>
 struct template_ {
     template<typename... Ts>
-    using fn = boost::mp11::mp_apply<Template, types<Ts...>>;
+    using fn = boost::mp11::mp_apply<Template, mp_list<Ts...>>;
     // using fn = Template<Ts...> would not work because Template is not
     // necessarily variadic, but mp_apply can cope with this situation.
 };
 
 template<template<typename...> typename... Templates>
-using templates = types<template_<Templates>...>;
+using templates = mp_list<template_<Templates>...>;
 
 namespace detail {
 
@@ -38,8 +38,8 @@ template<typename...>
 struct product_impl;
 
 template<typename... Ts, typename... TypeLists>
-struct product_impl<types<Ts...>, TypeLists...> {
-    using type = mp11::mp_product<types, types<Ts...>, TypeLists...>;
+struct product_impl<mp_list<Ts...>, TypeLists...> {
+    using type = mp11::mp_product<mp_list, mp_list<Ts...>, TypeLists...>;
 };
 
 template<typename...>
@@ -49,7 +49,7 @@ template<template<typename...> typename... Templates, typename... TypeLists>
 struct apply_product_impl<templates<Templates...>, TypeLists...> {
     using type = mp11::mp_product<
         mp11::mp_invoke_q,
-        types<boost::mp11::mp_quote<Templates>...>,
+        mp_list<boost::mp11::mp_quote<Templates>...>,
         TypeLists...
     >;
 };
@@ -57,7 +57,7 @@ struct apply_product_impl<templates<Templates...>, TypeLists...> {
 }
 
 template<typename... TypeLists>
-using product = boost::mp11::mp_product<types, TypeLists...>;
+using product = boost::mp11::mp_product<mp_list, TypeLists...>;
 
 template<typename... Lists>
 using apply_product = typename detail::apply_product_impl<Lists...>::type;
@@ -70,7 +70,7 @@ using transform_product = boost::mp11::mp_apply<
             boost::mp11::mp_apply_q,
             boost::mp11::mp_quote<F>
         >,
-        boost::mp11::mp_product<types, TypeLists...>
+        boost::mp11::mp_product<mp_list, TypeLists...>
     >
 >;
 
@@ -128,8 +128,8 @@ struct is_defined {
 
 template<typename... T>
 struct large_aggregate : std::tuple<
-    mp11::mp_apply<aggregate, mp11::mp_take_c<types<T...>, sizeof...(T) / 2>>,
-    mp11::mp_apply<aggregate, mp11::mp_drop_c<types<T...>, sizeof...(T) / 2>>
+    mp11::mp_apply<aggregate, mp11::mp_take_c<mp_list<T...>, sizeof...(T) / 2>>,
+    mp11::mp_apply<aggregate, mp11::mp_drop_c<mp_list<T...>, sizeof...(T) / 2>>
 > {
 };
 
@@ -143,7 +143,7 @@ struct aggregate : boost::mp11::mp_if_c<
 >::type {};
 
 template<typename... T>
-struct aggregate<types<T...>> : aggregate<T...> {};
+struct aggregate<mp_list<T...>> : aggregate<T...> {};
 
 template<template<typename...> typename Definition, typename LoL>
 using use_definitions = boost::mp11::mp_apply<

@@ -7,6 +7,7 @@
 #include <yorel/yomm2/detail/forward.hpp>
 
 #include <yorel/yomm2/policy.hpp>
+#include <yorel/yomm2/detail.hpp>
 
 #pragma push_macro("min")
 #undef min
@@ -32,18 +33,19 @@ namespace detail {
 
 template<typename... Classes>
 using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_back<types<Classes...>>, default_policy>;
+    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
+    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>, default_policy>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
+    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
+    boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>,
+    boost::mp11::mp_list<Classes...>>;
 
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_first<detail::types<Ts...>>,
-    default_policy>;
+    sizeof...(Ts) == 2,
+    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>, default_policy>;
 } // namespace detail
 
 // -----------------------------------------------------------------------------
@@ -56,7 +58,7 @@ template<typename Key, typename R, class Policy, typename... A>
 struct method<Key, R(A...), Policy> : detail::method_info {
     using self_type = method;
     using policy_type = Policy;
-    using declared_argument_types = detail::types<A...>;
+    using declared_argument_types = boost::mp11::mp_list<A...>;
     using call_argument_types = boost::mp11::mp_transform<
         detail::remove_virtual, declared_argument_types>;
     using virtual_argument_types =
@@ -204,7 +206,7 @@ struct class_declaration
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
 template<class... Classes>
-struct class_declaration<detail::types<Classes...>>
+struct class_declaration<boost::mp11::mp_list<Classes...>>
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
@@ -468,9 +470,10 @@ method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     std::uintptr_t pf;
 
     if constexpr (arity == 1) {
-        pf = resolve_uni<types<A...>, ArgType...>(args...);
+        pf = resolve_uni<boost::mp11::mp_list<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, types<A...>, ArgType...>(args...);
+        pf = resolve_multi_first<0, boost::mp11::mp_list<A...>, ArgType...>(
+            args...);
     }
 
     return reinterpret_cast<function_pointer_type>(pf);
@@ -689,8 +692,6 @@ yOMM2_API auto update() -> detail::compiler<policy::debug_shared>;
 #endif
 
 yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
-yOMM2_API method_call_error_handler
-set_method_call_error_handler(method_call_error_handler handler);
 
 #else
 

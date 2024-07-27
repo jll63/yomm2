@@ -34,9 +34,9 @@ static_assert(
     std::is_same_v<
         mp_filter<
             is_virtual,
-            types< virtual_<a&>, b, virtual_<c&> >
+            mp_list< virtual_<a&>, b, virtual_<c&> >
         >,
-        types< virtual_<a&>, virtual_<c&> >
+        mp_list< virtual_<a&>, virtual_<c&> >
     >);
 
 static_assert(
@@ -55,9 +55,9 @@ static_assert(
     std::is_same_v<
         mp_transform<
             remove_virtual,
-            types< virtual_<a&>, virtual_<c&> >
+            mp_list< virtual_<a&>, virtual_<c&> >
         >,
-        types<a&, c&>
+        mp_list<a&, c&>
     >);
 
 static_assert(
@@ -66,10 +66,10 @@ static_assert(
             mp_bind_front<polymorphic_type, default_policy>,
             mp_transform<
                 remove_virtual,
-                types< virtual_<a&>, virtual_<c&> >
+                mp_list< virtual_<a&>, virtual_<c&> >
             >
         >,
-        types<a, c>
+        mp_list<a, c>
     >);
 
 static_assert(
@@ -80,31 +80,31 @@ static_assert(
                 remove_virtual,
                 mp_filter<
                     is_virtual,
-                    types< virtual_<a&>, b, virtual_<c&> >
+                    mp_list< virtual_<a&>, b, virtual_<c&> >
                 >
             >
         >,
-        types<a, c>
+        mp_list<a, c>
     >);
 
 static_assert(
     std::is_same_v<
-        polymorphic_types<types<virtual_<a&>, b, virtual_<c&>>>,
-        types<a&, c&>>);
+        polymorphic_types<mp_list<virtual_<a&>, b, virtual_<c&>>>,
+        mp_list<a&, c&>>);
 
 static_assert(
     std::is_same_v<
-        polymorphic_types<types<
+        polymorphic_types<mp_list<
             virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>>,
-        types<std::shared_ptr<a>, std::shared_ptr<c>>>);
+        mp_list<std::shared_ptr<a>, std::shared_ptr<c>>>);
 
 static_assert(
     std::is_same_v<
         spec_polymorphic_types<
             default_policy,
-            types<virtual_<a&>, b, virtual_<c&>>,
-            types<d&, e, f&>>,
-        types<d, f>>);
+            mp_list<virtual_<a&>, b, virtual_<c&>>,
+            mp_list<d&, e, f&>>,
+        mp_list<d, f>>);
 
 static_assert(
     std::is_same_v<
@@ -115,15 +115,15 @@ static_assert(
     std::is_same_v<
         spec_polymorphic_types<
             default_policy,
-            types<
+            mp_list<
                 virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>,
-            types<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
-        types<d, f>>);
+            mp_list<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
+        mp_list<d, f>>);
 
 BOOST_AUTO_TEST_CASE(test_type_id_list) {
     type_id expected[] = {type_id(&typeid(a)), type_id(&typeid(b))};
-    auto iter = type_id_list<default_policy, types<a&, b&>>::begin;
-    auto last = type_id_list<default_policy, types<a&, b&>>::end;
+    auto iter = type_id_list<default_policy, mp_list<a&, b&>>::begin;
+    auto last = type_id_list<default_policy, mp_list<a&, b&>>::end;
     BOOST_TEST_REQUIRE(last - iter == 2);
     BOOST_TEST_REQUIRE(*iter++ == type_id(&typeid(a)));
     BOOST_TEST_REQUIRE(*iter++ == type_id(&typeid(b)));
@@ -198,19 +198,19 @@ BOOST_AUTO_TEST_CASE(casts) {
     base_address = wrapper<
         default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
-        types<const Mammal&>>::fn(animal);
+        mp_list<const Mammal&>>::fn(animal);
     BOOST_TEST(base_address == &mammal);
 
     base_address = wrapper<
         default_policy,
         voidp(virtual_<const Animal&>), carnivore_this,
-        types<const Carnivore&>>::fn(animal);
+        mp_list<const Carnivore&>>::fn(animal);
     BOOST_TEST(base_address == &carnivore);
 
     base_address = wrapper<
         default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
-        types<const Dog&>>::fn(animal);
+        mp_list<const Dog&>>::fn(animal);
     BOOST_TEST(base_address == &dog);
 }
 
@@ -227,12 +227,12 @@ struct Dolphin : public Animal {};
 static_assert(
     std::is_same_v<
         inheritance_map<Animal, Dog, Bulldog, Cat, Dolphin>,
-        types<
-            types<Animal, Animal>,
-            types<Dog, Animal, Dog>,
-            types<Bulldog, Animal, Dog, Bulldog>,
-            types<Cat, Animal, Cat>,
-            types<Dolphin, Animal, Dolphin>
+        mp_list<
+            mp_list<Animal, Animal>,
+            mp_list<Dog, Animal, Dog>,
+            mp_list<Bulldog, Animal, Dog, Bulldog>,
+            mp_list<Cat, Animal, Cat>,
+            mp_list<Dolphin, Animal, Dolphin>
         >
 >);
 
@@ -240,11 +240,11 @@ static_assert(
     std::is_same_v<
         use_classes<Animal, Dog, Bulldog, Cat, Dolphin>,
         std::tuple<
-            class_declaration_aux<default_policy, types<Animal, Animal>>,
-            class_declaration_aux<default_policy, types<Dog, Animal, Dog>>,
-            class_declaration_aux<default_policy, types<Bulldog, Animal, Dog, Bulldog>>,
-            class_declaration_aux<default_policy, types<Cat, Animal, Cat>>,
-            class_declaration_aux<default_policy, types<Dolphin, Animal, Dolphin>>
+            class_declaration_aux<default_policy, mp_list<Animal, Animal>>,
+            class_declaration_aux<default_policy, mp_list<Dog, Animal, Dog>>,
+            class_declaration_aux<default_policy, mp_list<Bulldog, Animal, Dog, Bulldog>>,
+            class_declaration_aux<default_policy, mp_list<Cat, Animal, Cat>>,
+            class_declaration_aux<default_policy, mp_list<Dolphin, Animal, Dolphin>>
         >
 >);
 
@@ -252,7 +252,7 @@ static_assert(
     std::is_same_v<
         use_classes_macro<Animal, default_policy>,
         std::tuple<
-            class_declaration_aux<default_policy, types<Animal, Animal>>
+            class_declaration_aux<default_policy, mp_list<Animal, Animal>>
         >
 >);
 
@@ -262,7 +262,7 @@ static_assert(
     std::is_same_v<
         use_classes_macro<Animal, my_policy, default_policy>,
         std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
+            class_declaration_aux<my_policy, mp_list<Animal, Animal>>
         >
 >);
 
@@ -270,7 +270,7 @@ static_assert(
     std::is_same_v<
         use_classes_macro<Animal, my_policy>,
         std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
+            class_declaration_aux<my_policy, mp_list<Animal, Animal>>
         >
 >);
 
@@ -299,12 +299,12 @@ struct policy3 : policy1::rebind<policy3>::replace<std_rtti, alt_rtti> {};
 
 static_assert(std::is_same_v<
     policy2::facets,
-    types<std_rtti>
+    mp_list<std_rtti>
 >);
 
 static_assert(std::is_same_v<
     policy3::facets,
-    types<alt_rtti>
+    mp_list<alt_rtti>
 >);
 
 // static_assert(std::is_same_v<
@@ -318,7 +318,7 @@ void f(char, int) {}
 
 static_assert(std::is_same_v<
     parameter_type_list_t<decltype(f)>,
-    types<char, int>
+    mp_list<char, int>
 >);
 
 // -----------------------------------------------------------------------------
@@ -379,14 +379,14 @@ struct facet3 {
 static_assert(
     std::is_base_of_v<
         report, typename aggregate_reports<
-            types<report>, types<facet1, facet2, facet3>>::type>);
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
 static_assert(
     std::is_base_of_v<
         facet1::report, typename aggregate_reports<
-            types<report>, types<facet1, facet2, facet3>>::type>);
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
 static_assert(
     std::is_base_of_v<
         facet3::report, typename aggregate_reports<
-            types<report>, types<facet1, facet2, facet3>>::type>);
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
 
 }

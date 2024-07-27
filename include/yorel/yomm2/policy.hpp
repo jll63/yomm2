@@ -12,6 +12,8 @@
 #include <variant>
 #include <vector>
 
+#include <boost/mp11.hpp>
+
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
 #include <typeindex>
 #include <typeinfo>
@@ -105,18 +107,6 @@ using error_type = std::variant<
 
 using error_handler_type = std::function<void(const error_type& error)>;
 
-// deprecated
-
-struct method_call_error {
-    resolution_error::status_type code;
-    static constexpr auto not_implemented = resolution_error::no_definition;
-    static constexpr auto ambiguous = resolution_error::ambiguous;
-    std::string_view method_name;
-};
-
-using method_call_error_handler =
-    void (*)(const method_call_error& error, size_t arity, type_id* types);
-
 namespace policy {
 
 struct abstract_policy {};
@@ -141,10 +131,18 @@ struct release_shared;
 } // namespace yomm2
 } // namespace yorel
 
-#include "detail.hpp"
+#include "detail/chain.hpp"
+#include "detail/class_info.hpp"
+#include "detail/method_info.hpp"
+#include "detail/range.hpp"
+#include "detail/update_method_report.hpp"
 
 namespace yorel {
 namespace yomm2 {
+
+namespace detail {
+class ostderr;
+} // namespace detail
 
 namespace policy {
 
@@ -250,7 +248,7 @@ template<class Policy, class... Facets>
 struct basic_policy : virtual abstract_policy,
                       virtual basic_domain<Policy>,
                       virtual Facets... {
-    using facets = detail::types<Facets...>;
+    using facets = boost::mp11::mp_list<Facets...>;
 
     template<class Facet>
     static constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
@@ -458,7 +456,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
     if constexpr (trace_enabled) {
         if (Policy::trace_enabled) {
             Policy::trace_stream << "Finding hash factor for " << N
-                                 << " types\n";
+                                 << " boost::mp11::mp_list\n";
         }
     }
 
@@ -618,8 +616,9 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                     << " for " << error->method_name << "(";
                 auto comma = "";
 
-                for (auto ti :
-                     range{error->types, error->types + error->arity}) {
+                for (auto ti : range{
+                         error->types,
+                         error->types + error->arity}) {
                     Policy::error_stream << comma;
                     Policy::type_name(ti, Policy::error_stream);
                     comma = ", ";
@@ -664,8 +663,6 @@ struct yOMM2_API_gcc debug
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
-extern template class __declspec(dllimport) vectored_error<
-    debug_shared, vectored_error<debug_shared>>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
@@ -673,13 +670,11 @@ extern template class __declspec(dllimport)
 extern template class __declspec(dllimport)
     basic_error_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
-extern template class __declspec(dllimport)
-    vectored_error<debug_shared>;
+extern template class __declspec(dllimport) vectored_error<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
-    basic_trace_output<debug_shared>,
-    vectored_error<debug_shared>>;
+    basic_trace_output<debug_shared>, vectored_error<debug_shared>>;
 #endif
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
@@ -687,8 +682,7 @@ struct yOMM2_API_gcc debug_shared
     : basic_policy<
           debug_shared, std_rtti, checked_perfect_hash<debug_shared>,
           vptr_vector<debug_shared>, basic_error_output<debug_shared>,
-          basic_trace_output<debug_shared>,
-          vectored_error<debug_shared>> {};
+          basic_trace_output<debug_shared>, vectored_error<debug_shared>> {};
 
 struct yOMM2_API_gcc release_shared : debug_shared {
     template<class Class>
@@ -727,26 +721,32 @@ struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    types<Reports...>, types<Facet, MoreFacets...>,
+    boost::mp11::mp_list<Reports...>,
+    boost::mp11::mp_list<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
+        boost::mp11::mp_list<Reports..., typename Facet::report>,
+        boost::mp11::mp_list<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
+struct aggregate_reports<
+    boost::mp11::mp_list<Reports...>,
+    boost::mp11::mp_list<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        types<Reports...>, types<MoreFacets...>>::type;
+        boost::mp11::mp_list<Reports...>,
+        boost::mp11::mp_list<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
-struct aggregate_reports<types<Reports...>, types<>, Void> {
+struct aggregate_reports<
+    boost::mp11::mp_list<Reports...>, boost::mp11::mp_list<>, Void> {
     struct type : Reports... {};
 };
 
 template<class Policy>
 using report_type = typename aggregate_reports<
-    types<update_report>, typename Policy::facets>::type;
+    boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
 
 } // namespace detail
 

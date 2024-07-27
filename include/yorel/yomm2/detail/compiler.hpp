@@ -286,8 +286,9 @@ struct compiler : generic_compiler {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
 
-    typename aggregate_reports<
-        types<update_report>, typename Policy::facets>::type report;
+    typename detail::aggregate_reports<
+        boost::mp11::mp_list<update_report>, typename Policy::facets>::type
+        report;
 
     std::unordered_map<type_index_type, class_*> class_map;
 

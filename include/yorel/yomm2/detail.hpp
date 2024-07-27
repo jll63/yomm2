@@ -10,9 +10,6 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<typename... Types>
-struct types;
-
 template<class Policy, class Class>
 type_id collect_static_type_id() {
     if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
@@ -26,7 +23,7 @@ template<class Policy, class TypeList>
 struct type_id_list;
 
 template<class Policy, typename... T>
-struct type_id_list<Policy, types<T...>> {
+struct type_id_list<Policy, boost::mp11::mp_list<T...>> {
     // If using deferred 'static_type', add an extra element in 'value',
     // default-initialized to zero, indicating the ids need to be resolved. Set
     // to 1 after this is done.
@@ -38,39 +35,21 @@ struct type_id_list<Policy, types<T...>> {
 };
 
 template<class Policy, typename... T>
-type_id type_id_list<Policy, types<T...>>::value[values] = {
+type_id type_id_list<Policy, boost::mp11::mp_list<T...>>::value[values] = {
     collect_static_type_id<Policy, T>()...};
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, types<T...>>::begin = value;
+type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::begin = value;
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, types<T...>>::end = value + sizeof...(T);
+type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::end =
+    value + sizeof...(T);
 
 template<class Policy>
-struct type_id_list<Policy, types<>> {
+struct type_id_list<Policy, boost::mp11::mp_list<>> {
     static constexpr type_id* const begin = nullptr;
     static constexpr auto end = begin;
 };
-
-template<typename Iterator>
-struct range {
-    range(Iterator first, Iterator last) : first(first), last(last) {
-    }
-
-    Iterator first, last;
-
-    Iterator begin() const {
-        return first;
-    }
-
-    Iterator end() const {
-        return last;
-    }
-};
-
-template<typename Iterator>
-range(Iterator b, Iterator e) -> range<Iterator>;
 
 struct yomm2_end_of_dump {};
 
@@ -99,12 +78,12 @@ struct parameter_type_list;
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType(ParameterTypes...)> {
-    using type = types<ParameterTypes...>;
+    using type = boost::mp11::mp_list<ParameterTypes...>;
 };
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType (*)(ParameterTypes...)> {
-    using type = types<ParameterTypes...>;
+    using type = boost::mp11::mp_list<ParameterTypes...>;
 };
 
 template<typename T>
@@ -221,42 +200,18 @@ class pair_first_iterator {
     }
 };
 
-// -----------------------------------------------------------------------------
-// class info
-
-struct class_info : static_chain<class_info>::static_link {
-    type_id type;
-    std::uintptr_t** static_vptr;
-    type_id *first_base, *last_base;
-    bool is_abstract{false};
-
-    const std::uintptr_t* vptr() const {
-        return *static_vptr;
-    }
-
-    const std::uintptr_t* const* indirect_vptr() const {
-        return static_vptr;
-    }
-
-    auto type_id_begin() const {
-        return &type;
-    }
-
-    auto type_id_end() const {
-        return &type + 1;
-    }
-};
-
 template<class...>
 struct class_declaration_aux;
 
 template<class Policy, class Class, typename... Bases>
-struct class_declaration_aux<Policy, detail::types<Class, Bases...>>
+struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
     : class_info {
     class_declaration_aux() {
         this->type = collect_static_type_id<Policy, Class>();
-        this->first_base = type_id_list<Policy, types<Bases...>>::begin;
-        this->last_base = type_id_list<Policy, types<Bases...>>::end;
+        this->first_base =
+            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::begin;
+        this->last_base =
+            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::end;
         Policy::classes.push_front(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
@@ -283,21 +238,7 @@ struct definition_info : static_chain<definition_info>::static_link {
 
 template<typename... Ts>
 constexpr auto arity =
-    boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
-
-struct yOMM2_API method_info : static_chain<method_info>::static_link {
-    std::string_view name;
-    type_id *vp_begin, *vp_end;
-    static_chain<definition_info> specs;
-    void* ambiguous;
-    void* not_implemented;
-    type_id method_type;
-    size_t* slots_strides_ptr;
-
-    auto arity() const {
-        return std::distance(vp_begin, vp_end);
-    }
-};
+    boost::mp11::mp_count_if<boost::mp11::mp_list<Ts...>, is_virtual>::value;
 
 inline definition_info::~definition_info() {
     if (method) {
@@ -309,7 +250,7 @@ template<typename T>
 struct is_policy_aux : std::is_base_of<policy::abstract_policy, T> {};
 
 template<typename... T>
-struct is_policy_aux<types<T...>> : std::false_type {};
+struct is_policy_aux<boost::mp11::mp_list<T...>> : std::false_type {};
 
 template<typename T>
 constexpr bool is_policy = is_policy_aux<T>::value;
@@ -477,8 +418,9 @@ constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
 
 template<class... Ts>
 using virtual_ptr_class = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_second<detail::types<Ts..., void>>,
-    boost::mp11::mp_first<detail::types<Ts...>>>;
+    sizeof...(Ts) == 2,
+    boost::mp11::mp_second<boost::mp11::mp_list<Ts..., void>>,
+    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>>;
 
 template<class Policy, typename T>
 struct argument_traits {
@@ -620,13 +562,11 @@ using select_spec_polymorphic_type =
     typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
 
 template<class Policy, typename MethodArgList, typename SpecArgList>
-using spec_polymorphic_types = mp11::mp_rename<
-    mp11::mp_remove<
-        mp11::mp_transform_q<
-            mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
-            MethodArgList, SpecArgList>,
-        void>,
-    types>;
+using spec_polymorphic_types = mp11::mp_remove<
+    mp11::mp_transform_q<
+        mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
+        MethodArgList, SpecArgList>,
+    void>;
 
 template<class Policy, typename ArgType, typename T>
 inline uintptr_t get_tip(const T& arg) {
@@ -646,10 +586,12 @@ struct wrapper;
 template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
-struct wrapper<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
+struct wrapper<
+    Policy, BASE_RETURN(BASE_PARAM...), SPEC,
+    boost::mp11::mp_list<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
-        using base_type = mp11::mp_first<types<BASE_PARAM...>>;
-        using spec_type = mp11::mp_first<types<SPEC_PARAM...>>;
+        using base_type = mp11::mp_first<boost::mp11::mp_list<BASE_PARAM...>>;
+        using spec_type = mp11::mp_first<boost::mp11::mp_list<SPEC_PARAM...>>;
         return SPEC(
             argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
                 remove_virtual<BASE_PARAM>(arg))...);
@@ -681,42 +623,48 @@ struct member_function_wrapper<F, R (C::*)(Args...)> {
 // base. The direct and its direct and indirect proper bases are included. The
 // runtime will extract the direct proper bases. See unit tests for an example.
 template<typename... Cs>
-using inheritance_map = types<mp11::mp_push_front<
-    mp11::mp_filter_q<mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
+using inheritance_map = boost::mp11::mp_list<mp11::mp_push_front<
+    mp11::mp_filter_q<
+        mp11::mp_bind_back<std::is_base_of, Cs>, boost::mp11::mp_list<Cs...>>,
     Cs>...>;
 
 template<class Policy, class... Classes>
 struct use_classes_aux;
 
 template<class Policy, class... Classes>
-struct use_classes_aux<Policy, types<Classes...>> {
+struct use_classes_aux<Policy, boost::mp11::mp_list<Classes...>> {
     using type = mp11::mp_apply<
         std::tuple,
         mp11::mp_transform_q<
             mp11::mp_bind_front<class_declaration_aux, Policy>,
-            mp11::mp_apply<inheritance_map, types<Classes...>>>>;
+            mp11::mp_apply<inheritance_map, boost::mp11::mp_list<Classes...>>>>;
 };
 
 template<class Policy, class... Classes, class... MoreClassLists>
-struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
+struct use_classes_aux<
+    Policy,
+    boost::mp11::mp_list<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
     : use_classes_aux<
-          Policy, mp11::mp_append<types<Classes...>, MoreClassLists...>>
+          Policy,
+          mp11::mp_append<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
 
 {};
 
 template<typename... Ts>
 using second_last = boost::mp11::mp_at_c<
-    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
+    boost::mp11::mp_list<Ts...>,
+    boost::mp11::mp_size<boost::mp11::mp_list<Ts...>>::value - 2>;
 
 template<class... Classes>
 using use_classes_macro = typename std::conditional_t<
     is_policy<second_last<Classes...>>,
     use_classes_aux<
         second_last<Classes...>,
-        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
+        boost::mp11::mp_pop_back<
+            boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>,
     use_classes_aux<
-        boost::mp11::mp_back<types<Classes...>>,
-        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
+        boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
+        boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>::type;
 
 std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
@@ -805,18 +753,6 @@ template<class Method>
 struct has_static_offsets<
     Method, std::void_t<decltype(static_offsets<Method>::slots)>>
     : std::true_type {};
-
-// -----------------------------------------------------------------------------
-// report
-
-struct update_method_report {
-    size_t cells = 0;
-    size_t concrete_cells = 0;
-    size_t not_implemented = 0;
-    size_t concrete_not_implemented = 0;
-    size_t ambiguous = 0;
-    size_t concrete_ambiguous = 0;
-};
 
 } // namespace detail
 } // namespace yomm2

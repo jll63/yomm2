@@ -6,7 +6,7 @@ headers:yorel/yomm2/templates.hpp>
 template<typename... TypeLists>
 using product = /*unspecified*/;
 ```
-`product` takes a list of ->types lists, and evaluates to a `types` list
+`product` takes a list of ->mp_list lists, and evaluates to a `mp_list` list
 consisting of the n-fold Cartesian product of the input lists.
 
 ## Example
@@ -22,6 +22,7 @@ consisting of the n-fold Cartesian product of the input lists.
 #include <yorel/yomm2/templates.hpp>
 
 namespace yomm2 = yorel::yomm2;
+using boost::mp11::mp_list;
 
 struct a;
 struct b;
@@ -32,12 +33,12 @@ struct z;
 static_assert(
     std::is_same_v<
         yomm2::product<
-            yomm2::types<a, b>,
-            yomm2::types<x, y, z>
+            mp_list<a, b>,
+            mp_list<x, y, z>
         >,
-        yomm2::types<
-            yomm2::types<a, x>, yomm2::types<a, y>, yomm2::types<a, z>,
-            yomm2::types<b, x>, yomm2::types<b, y>, yomm2::types<b, z>
+        mp_list<
+            mp_list<a, x>, mp_list<a, y>, mp_list<a, z>,
+            mp_list<b, x>, mp_list<b, y>, mp_list<b, z>
         >
     >);
 

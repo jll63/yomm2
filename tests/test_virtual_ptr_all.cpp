@@ -13,6 +13,7 @@
 #include <boost/utility/identity_type.hpp>
 
 using namespace yorel::yomm2;
+using boost::mp11::mp_list;
 
 namespace yorel {
 namespace yomm2 {
@@ -54,7 +55,7 @@ struct indirect_test_policy : test_policy_<Key> {
 };
 
 template<int Key>
-using policy_types = types<test_policy_<Key>, indirect_test_policy<Key>>;
+using policy_types = mp_list<test_policy_<Key>, indirect_test_policy<Key>>;
 
 namespace YOMM2_GENSYM {
 
