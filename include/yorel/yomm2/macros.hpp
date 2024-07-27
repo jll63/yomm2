@@ -65,14 +65,14 @@
 
 #define YOMM2_DECLARE_3(R, ID, ARGS)                                           \
     yOMM2_DECLARE(                                                             \
-        R, ID, ARGS, ::yorel::yomm2::default_policy, yOMM2_WHEN_NOT_STATIC)
+        R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_NOT_STATIC)
 
 #define YOMM2_DECLARE_4(R, ID, ARGS, POLICY)                                   \
     yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_NOT_STATIC)
 
 #define YOMM2_STATIC_DECLARE_3(R, ID, ARGS)                                    \
     yOMM2_DECLARE(                                                             \
-        R, ID, ARGS, ::yorel::yomm2::default_policy, yOMM2_WHEN_STATIC)
+        R, ID, ARGS, YOMM2_DEFAULT_POLICY, yOMM2_WHEN_STATIC)
 
 #define YOMM2_STATIC_DECLARE_4(R, ID, ARGS, POLICY)                            \
     yOMM2_DECLARE(R, ID, ARGS, POLICY, yOMM2_WHEN_STATIC)
@@ -215,7 +215,7 @@
 
 #define YOMM2_CLASSES(...)                                                     \
     static ::yorel::yomm2::detail::use_classes_macro<                          \
-        __VA_ARGS__, ::yorel::yomm2::default_policy>                           \
+        __VA_ARGS__, YOMM2_DEFAULT_POLICY>                           \
         YOMM2_GENSYM;
 
 #if !BOOST_PP_VARIADICS_MSVC

@@ -1,5 +1,5 @@
-entry: generator
-headers: yorel/yomm2/generator.hpp
+<span style="font-size:xx-large;">yorel::yomm2::<strong>generator</strong></span><br/>
+<sub>defined in <yorel/yomm2/generator.hpp></sub><br/>
 
 ```c++
 class generator;
@@ -13,7 +13,7 @@ Like virtual functions, methods occupy slots in v-tables associated to classes.
 Unlike virtual functions, the slots cannot be determined by looking at a single
 translation unit; the entire program has to be examined before the slots
 are known. By default, method dispatch reads the slots from variables set by
-->`update`. The additional reads put open methods at a disadvantage, compared to
+[`update`](/yomm2/reference/update.html). The additional reads put open methods at a disadvantage, compared to
 ordinary virtual functions.
 
 `write_static_offsets` generates C++ code that enables method dispatch to use
@@ -25,7 +25,7 @@ units; failing to ensure this is a ODR violation.
 
 Using static slots shaves off 2*N-1 memory reads from a method call, where N is
 the number of virtual parameters in a method. A 1-method call via a
-->`virtual_ptr`, using static offsets, takes 2 instructions on a x64 CPU, the
+[`virtual_ptr`](/yomm2/reference/virtual_ptr.html), using static offsets, takes 2 instructions on a x64 CPU, the
 same as a virtual function call, but one fewer memory read. See the example for
 assembly listings.
 
@@ -38,7 +38,7 @@ challenging when using static offsets for an entire program.
 but it has limitations. See its documentation.
 
 `encode_dispatch_data` initializes the dispatch tables for a policy, using a
-compact representation of the data produced by ->`update`. It merely copies
+compact representation of the data produced by [`update`](/yomm2/reference/update.html). It merely copies
 integers and it does not allocate memory from the heap.
 
 ## Member functions
@@ -101,7 +101,7 @@ static void encode_dispatch_data(
 ```
 
 Write code to initialize the dispatch data for a policy to `os`.
-`compiler` is the object returned by the ->`update` function.
+`compiler` is the object returned by the [`update`](/yomm2/reference/update.html) function.
 
 (1) targets the default policy. (2) targets the specified policy.
 

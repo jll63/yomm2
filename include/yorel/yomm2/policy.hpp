@@ -4,7 +4,9 @@
 #include <array>
 #include <charconv>
 #include <cstdint>
+#include <functional>
 #include <limits>
+#include <memory>
 #include <random> // for default_random_en...
 #include <stdio.h>
 #include <string_view>
@@ -757,6 +759,16 @@ using default_static = policy::debug;
 #endif
 
 } // namespace policy
+
+#if defined(YOMM2_SHARED)
+#ifdef NDEBUG
+using default_policy = policy::release_shared;
+#else
+using default_policy = policy::debug_shared;
+#endif
+#else
+using default_policy = policy::default_static;
+#endif
 
 namespace detail {
 

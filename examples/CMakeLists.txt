@@ -56,5 +56,5 @@ if (NOT (MSVC AND YOMM2_SHARED))
   # would need to add the path to the directory containing yomm2.dll to PATH.
   # Anyway, if it works with static linking, it is very unlikely that it fails
   # with the runtime in a DLL.
-  add_subdirectory(static-slots)
+  add_subdirectory(generator)
 endif()
