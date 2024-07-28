@@ -15,18 +15,8 @@
 namespace yorel {
 namespace yomm2 {
 
-#ifdef YOMM2_DEFAULT_POLICY
-using default_policy = YOMM2_DEFAULT_POLICY;
-#else
-#if defined(YOMM2_SHARED)
-#ifdef NDEBUG
-using default_policy = policy::release_shared;
-#else
-using default_policy = policy::debug_shared;
-#endif
-#else
-using default_policy = policy::default_static;
-#endif
+#ifndef YOMM2_DEFAULT_POLICY
+#define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
 namespace detail {
@@ -34,7 +24,7 @@ namespace detail {
 template<typename... Classes>
 using get_policy = std::conditional_t<
     is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>, default_policy>;
+    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>, YOMM2_DEFAULT_POLICY>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
@@ -45,13 +35,13 @@ using remove_policy = std::conditional_t<
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
     sizeof...(Ts) == 2,
-    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>, default_policy>;
+    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>, YOMM2_DEFAULT_POLICY>;
 } // namespace detail
 
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy = default_policy>
+template<typename Key, typename Signature, class Policy= YOMM2_DEFAULT_POLICY>
 struct method;
 
 template<typename Key, typename R, class Policy, typename... A>
@@ -217,7 +207,7 @@ using use_classes = typename detail::use_classes_aux<
 // -----------------------------------------------------------------------------
 // virtual_ptr
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr {
     template<class, class>
     friend class virtual_ptr;
@@ -404,12 +394,12 @@ class virtual_ptr {
 };
 
 template<class Class>
-virtual_ptr(Class&) -> virtual_ptr<Class, default_policy>;
+virtual_ptr(Class&) -> virtual_ptr<Class, YOMM2_DEFAULT_POLICY>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 inline auto make_virtual_shared() {
     return virtual_shared_ptr<Class, Policy>::final(
         std::make_shared<detail::virtual_ptr_class<Class>>());
@@ -697,12 +687,12 @@ yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
 
-template<class Policy = default_policy>
+template<class Policy = YOMM2_DEFAULT_POLICY>
 auto update() -> detail::compiler<Policy>;
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
-    auto prev = default_policy::error;
+    auto prev= default_policy::error;
     default_policy::error = handler;
     return prev;
 }

@@ -32,25 +32,23 @@ class generator {
     void add_forward_declarations();
     void write_forward_declarations(std::ostream& os) const;
     template<class Policy>
-    const generator& write_static_slots(std::ostream& os) const;
-
-    template<class Compiler>
-    static void create_dispatch_data(
-        const Compiler& compiler, std::vector<std::size_t>& slots,
-        std::vector<std::uintptr_t>& tables);
+    const generator& write_static_offsets(std::ostream& os) const;
     template<class Compiler>
     static void
     encode_dispatch_data(const Compiler& compiler, std::ostream& os);
+    template<class Compiler>
+    static void encode_dispatch_data(
+        const Compiler& compiler, const std::string& policy, std::ostream& os);
     template<class Policy, typename Data>
     static void decode_dispatch_data(Data& data);
 
+  private:
     static constexpr size_t method_bits = sizeof(uint16_t) * 4;
     static constexpr std::uintptr_t spec_mask = (1 << method_bits) - 1;
     static constexpr std::uintptr_t stop_bit = 1 << (sizeof(uint16_t) * 8 - 1);
     static constexpr std::uintptr_t index_bit = 1 << (sizeof(uint16_t) * 8 - 2);
 
-  private:
-    void write_static_slots(
+    void write_static_offsets(
         const detail::method_info& method, std::ostream& os) const;
 
     static uint16_t encode_group(
@@ -208,22 +206,22 @@ inline void generator::write_forward_declarations(std::ostream& os) const {
 }
 
 template<class T>
-const generator& generator::write_static_slots(std::ostream& os) const {
+const generator& generator::write_static_offsets(std::ostream& os) const {
     using namespace detail;
 
     if constexpr (is_policy<T>) {
         for (auto& method : T::methods) {
-            write_static_slots(method, os);
+            write_static_offsets(method, os);
         }
     } else {
         static_assert(is_method<T>);
-        write_static_slots(T::fn, os);
+        write_static_offsets(T::fn, os);
     }
 
     return *this;
 }
 
-void generator::write_static_slots(
+void generator::write_static_offsets(
     const detail::method_info& method, std::ostream& os) const {
     using namespace detail;
 
@@ -274,6 +272,12 @@ uint16_t generator::encode_group(
 template<class Compiler>
 void generator::encode_dispatch_data(
     const Compiler& compiler, std::ostream& os) {
+    encode_dispatch_data(compiler, "YOMM2_DEFAULT_POLICY", os);
+}
+
+template<class Compiler>
+void generator::encode_dispatch_data(
+    const Compiler& compiler, const std::string& policy, std::ostream& os) {
     const char* indent = "        ";
     using namespace yorel::yomm2::detail;
 
@@ -315,10 +319,6 @@ void generator::encode_dispatch_data(
     }
 
     char prelude_format[] = R"(
-auto generated() {
-    constexpr auto stop_bit = yorel::yomm2::generator::stop_bit;
-    constexpr auto method_bits = yorel::yomm2::generator::method_bits;
-
     static union {
         struct {
             uint16_t headroom[%d];
@@ -327,7 +327,7 @@ auto generated() {
             uint16_t vtbl[%d];
         } packed;
         std::uintptr_t decode[%d];
-    } init = { { {}, {
+    } yomm2_dispatch_data = { { {}, {
 )";
 
     const auto total_decode_size = dispatch_tables_size + decode_vtbl_size;
@@ -415,13 +415,10 @@ auto generated() {
         os << "\n";
     }
 
-    os << R"(    } } };
-
-    yorel::yomm2::generator::decode_dispatch_data<yorel::yomm2::default_policy>(init);
-
-    return init.decode;
-}
-)";
+    os << "\n    } } };\n\n";
+    os << "    yorel::yomm2::generator::decode_dispatch_data<"
+       << (policy.empty() ? "YOMM2_DEFAULT_POLICY" : policy)
+       << ">(yomm2_dispatch_data);\n\n";
 }
 
 template<class Policy, typename Data>

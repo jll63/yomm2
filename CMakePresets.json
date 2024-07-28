@@ -92,6 +92,7 @@
             "name": "doc-debug",
             "configurePreset": "clang16-debug-doc",
             "targets": [
+                "all",
                 "doc",
                 "README_md",
                 "README",

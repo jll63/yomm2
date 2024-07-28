@@ -1,5 +1,5 @@
 [requires]
-yomm2/1.5.1
+yomm2/1.6.0
 [generators]
 CMakeDeps
 CMakeToolchain

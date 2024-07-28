@@ -169,6 +169,7 @@ for the shared runtime to be used.
 | ->error_handler_type             | type              | handler function                                                         |
 | ->error_type                     | variant           | object passed to error handler                                           |
 | ->friend_method                  | macro             | make a method in a container, or the entire container, a friend          |
+| ->generator                      | class             | generate compile-time offsets, pre-calculate dispatch data               |
 | ->hash_search_error              | class             | failure to find a hash function for registered classes                   |
 | ->make_virtual_shared            | function template | create an object and return a `virtual_shared_ptr`                       |
 | ->method                         | class template    | implement a method                                                       |

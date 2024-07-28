@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
             std::ostringstream os;
             os << "\n";
             generator gen;
-            gen.write_static_slots<baz1>(os);
+            gen.write_static_offsets<baz1>(os);
             std::string_view expected = R"(
 template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1>>> {static constexpr size_t slots[] = {2}; };
 )";
@@ -215,7 +215,7 @@ template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_
             os << "\n";
             generator gen;
             gen.write_forward_declarations(os);
-            gen.write_static_slots<policy>(os);
+            gen.write_static_offsets<policy>(os);
             std::string_view expected = R"(
 template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1>>> {static constexpr size_t slots[] = {0, 1}; static constexpr size_t strides[] = {1}; };
 template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1>>> {static constexpr size_t slots[] = {2}; };
