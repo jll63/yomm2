@@ -27,6 +27,7 @@ class Dolphin : public interfaces::Animal {};
 #include <string>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 using yorel::yomm2::virtual_;
 

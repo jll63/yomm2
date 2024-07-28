@@ -32,6 +32,7 @@ Extract the value of `error_variant`, and throw it as an exception.
 //***
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 namespace yomm2 = yorel::yomm2;
 using yomm2::virtual_;

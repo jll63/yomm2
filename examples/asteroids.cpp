@@ -7,6 +7,7 @@
 // Example for Wikipedia
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 class Thing {
   public:

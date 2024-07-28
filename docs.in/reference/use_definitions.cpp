@@ -31,6 +31,7 @@ struct square_matrix : abstract_matrix {};
 struct sparse_matrix : abstract_matrix {};
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 #include <yorel/yomm2/templates.hpp>
 

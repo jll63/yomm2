@@ -55,6 +55,7 @@ documentation of ->`method_container` for more information on method containers.
 
 #include <string>
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Animal { virtual ~Animal() {} };
 struct Dog : Animal {};

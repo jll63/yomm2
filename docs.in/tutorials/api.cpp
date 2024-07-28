@@ -34,12 +34,15 @@ std::ostream& operator<<(std::ostream& os, const std::type_info& ti) {
 
 // >
 
-#include <yorel/yomm2/core.hpp> // make it innocuous to include it in a namespace
+// make it innocuous to include it in a namespace
+#include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 namespace synopsis_functions_no_macros {
 
 // code<
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 using namespace yorel::yomm2;
 
@@ -231,6 +234,7 @@ class Bulldog : public Dog {};
 
 // code<
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;

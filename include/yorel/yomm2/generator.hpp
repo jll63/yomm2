@@ -7,6 +7,7 @@
 #define YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 #include <boost/core/demangle.hpp>
 

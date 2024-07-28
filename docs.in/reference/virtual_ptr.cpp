@@ -1,6 +1,7 @@
 // clang-format off
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>

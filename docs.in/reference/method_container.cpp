@@ -40,6 +40,7 @@ the same namespace as the container itself.
 #include <string>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 method_container(kicks);
 

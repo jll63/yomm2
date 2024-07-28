@@ -19,6 +19,7 @@ consisting of the n-fold Cartesian product of the input lists.
 
 #include <type_traits>
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 namespace yomm2 = yorel::yomm2;

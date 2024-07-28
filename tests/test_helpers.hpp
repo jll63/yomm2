@@ -2,6 +2,7 @@
 #define YOMM2_TEST_HELPERS_INCLUDED
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 template<int Key>
 struct test_policy_ :

@@ -175,6 +175,7 @@ make sense, see the example below.
 //***
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
 
 #include <memory>

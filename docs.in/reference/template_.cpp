@@ -23,6 +23,7 @@ the template with the specified types.
 #ifdef YOMM2_CODE
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include <type_traits>

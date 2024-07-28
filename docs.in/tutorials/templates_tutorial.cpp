@@ -20,6 +20,7 @@ std::ostream &operator<<(std::ostream &os, const std::type_info &ti) {
 #define elided
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 #include <yorel/yomm2/templates.hpp>
 
@@ -228,6 +229,7 @@ vector reals(new concrete_vector<double>{4., 5., 6.});
 
 // code<
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;

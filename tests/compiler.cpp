@@ -2,6 +2,7 @@
 #include <type_traits>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/detail/compiler.hpp>
 
 #include "test_helpers.hpp"
@@ -732,3 +733,36 @@ BOOST_AUTO_TEST_CASE(test_allocate_slots_mi) {
 }
 
 } // namespace multiple_inheritance
+
+namespace test_report {
+
+struct report {};
+
+struct facet1 {
+    struct report {};
+};
+
+struct facet2 {
+};
+
+struct facet3 {
+    struct report {};
+};
+
+using boost::mp11::mp_list;
+using yorel::yomm2::detail::aggregate_reports;
+
+static_assert(
+    std::is_base_of_v<
+        report, typename aggregate_reports<
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
+static_assert(
+    std::is_base_of_v<
+        facet1::report, typename aggregate_reports<
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
+static_assert(
+    std::is_base_of_v<
+        facet3::report, typename aggregate_reports<
+            mp_list<report>, mp_list<facet1, facet2, facet3>>::type>);
+
+}

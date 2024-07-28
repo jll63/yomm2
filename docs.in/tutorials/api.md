@@ -12,6 +12,7 @@ use any macros.
 
 ```c++
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 using namespace yorel::yomm2;
 
@@ -176,6 +177,7 @@ a helper.
 
 ```c++
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;
@@ -236,5 +238,3 @@ more reasons why you should use them.
 2. In the future, additional functionality may be added to containers.
 
 The rest of the example is as before.
-
-

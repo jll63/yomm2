@@ -26,6 +26,7 @@ int main() {}
 #ifdef YOMM2_CODE
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;

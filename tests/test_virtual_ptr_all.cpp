@@ -4,6 +4,7 @@
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "test_helpers.hpp"

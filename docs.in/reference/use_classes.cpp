@@ -65,6 +65,7 @@ Given the following hierarchy:
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 BOOST_AUTO_TEST_CASE(ref_dummy) {}
 

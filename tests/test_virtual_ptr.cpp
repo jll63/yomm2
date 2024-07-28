@@ -12,6 +12,7 @@
 #include <boost/test/tools/output_test_stream.hpp>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Animal {
     virtual ~Animal() {

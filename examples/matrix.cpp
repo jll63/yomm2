@@ -9,6 +9,7 @@
 #include <typeinfo>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 using std::make_shared;
 using std::shared_ptr;

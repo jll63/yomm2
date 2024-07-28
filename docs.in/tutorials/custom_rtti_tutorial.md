@@ -93,6 +93,7 @@ If standard RTTI is disabled, the body of this class is `#ifdef`'ed out, and the
 
 ```c++
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;
@@ -232,6 +233,7 @@ each type, so we don't need to provide a `type_index` function.
 
 ```c++
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 // for brevity
 using namespace yorel::yomm2;

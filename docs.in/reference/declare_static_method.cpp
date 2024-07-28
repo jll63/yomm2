@@ -27,6 +27,7 @@ create functions that can be picked via ADL.
 #include <string>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Engineer { virtual ~Engineer() {} };
 struct SeniorEngineer : Engineer {};

@@ -28,6 +28,7 @@ message to `stderr` in debug mode.
 
 #include <stdexcept>
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Animal {
     virtual ~Animal() {

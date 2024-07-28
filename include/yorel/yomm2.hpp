@@ -16,6 +16,7 @@
 #include <utility>
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/macros.hpp>
 
 #endif

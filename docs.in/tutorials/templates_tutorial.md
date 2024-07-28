@@ -145,6 +145,7 @@ and yield a vector. The third takes two vectors and yields a boolean.
 
 ```c++
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/symbols.hpp>
 
 using namespace yorel::yomm2;

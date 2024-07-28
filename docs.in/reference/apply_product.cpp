@@ -22,6 +22,7 @@ the n-fold Cartesian product of the input `mp_list` lists.
 
 #include <type_traits>
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;

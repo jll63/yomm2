@@ -20,6 +20,7 @@ int main() {}
 #ifdef YOMM2_CODE
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Animal {
     virtual ~Animal() {}

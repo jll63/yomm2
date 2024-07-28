@@ -97,6 +97,7 @@ struct diagonal_matrix : matrix { /* ... */
 
 #include <memory>
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 register_classes(matrix, dense_matrix, diagonal_matrix);
 

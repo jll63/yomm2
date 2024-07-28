@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Animal {
     const char* name;

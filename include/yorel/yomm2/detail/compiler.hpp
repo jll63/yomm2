@@ -25,6 +25,7 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -1394,8 +1395,9 @@ yOMM2_API auto update() -> compiler<policy::debug_shared>;
 
 #else
 
-template<class Policy = YOMM2_DEFAULT_POLICY>
-auto update() -> compiler<Policy>;
+inline auto update() -> compiler<YOMM2_DEFAULT_POLICY> {
+    return update<YOMM2_DEFAULT_POLICY>();
+}
 
 #endif
 

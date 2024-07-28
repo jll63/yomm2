@@ -15,6 +15,7 @@
 #endif
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -38,10 +39,9 @@ template class yOMM2_API_msc basic_policy<
 } // namespace policy
 
 template auto yOMM2_API_gcc yOMM2_API_msc update<policy::debug_shared>()
-    -> detail::compiler<policy::debug_shared>;
+    -> compiler<policy::debug_shared>;
 
-yOMM2_API_gcc yOMM2_API_msc auto update()
-    -> detail::compiler<policy::debug_shared> {
+yOMM2_API_gcc yOMM2_API_msc auto update() -> compiler<policy::debug_shared> {
     return update<policy::debug_shared>();
 }
 
@@ -51,7 +51,6 @@ set_error_handler(error_handler_type handler) {
     default_policy::error = handler;
     return prev;
 }
-
 
 } // namespace yomm2
 } // namespace yorel

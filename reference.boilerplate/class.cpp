@@ -51,6 +51,7 @@ TODO.
 
 //***
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 // for brevity
 using namespace yorel::yomm2;

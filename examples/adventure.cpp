@@ -8,6 +8,7 @@
 #include <string>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Character {
     virtual ~Character() {

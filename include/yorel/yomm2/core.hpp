@@ -25,7 +25,6 @@ struct virtual_ptr;
 } // namespace yomm2
 } // namespace yorel
 
-
 #include <yorel/yomm2/detail.hpp>
 
 namespace yorel {
@@ -660,14 +659,6 @@ method<Key, R(A...), Policy>::ambiguous_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
-} // namespace yomm2
-} // namespace yorel
-
-#include <yorel/yomm2/detail/compiler.hpp>
-
-namespace yorel {
-namespace yomm2 {
-
 #ifdef YOMM2_SHARED
 
 yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
@@ -689,8 +680,6 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
 
 } // namespace yomm2
 } // namespace yorel
-
-#include <yorel/yomm2/detail/compiler.hpp>
 
 #pragma pop_macro("min")
 

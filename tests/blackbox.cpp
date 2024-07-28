@@ -8,6 +8,7 @@
 #include <type_traits>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 #include "test_helpers.hpp"
 

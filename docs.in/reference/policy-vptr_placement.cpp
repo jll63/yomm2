@@ -155,6 +155,7 @@ struct number_aware_policy : default_static::replace<vptr_placement, vptr_page> 
 // Make it the default policy.
 #define YOMM2_DEFAULT_POLICY number_aware_policy
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 //***
 

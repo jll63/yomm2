@@ -42,6 +42,7 @@ Allocate a static `char` variable and return its address, cast to ->`type_id`.
 #include <vector>
 
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 using namespace yorel::yomm2;
 
 struct Animal {};

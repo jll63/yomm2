@@ -1,4 +1,5 @@
 #include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2/compiler.hpp>
 
 struct Role {
     virtual ~Role() {
