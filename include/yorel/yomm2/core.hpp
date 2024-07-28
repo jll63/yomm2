@@ -4,44 +4,37 @@
 #include <functional>
 #include <memory>
 
-#include <yorel/yomm2/detail/forward.hpp>
-
 #include <yorel/yomm2/policy.hpp>
-#include <yorel/yomm2/detail.hpp>
 
 #pragma push_macro("min")
 #undef min
-
-namespace yorel {
-namespace yomm2 {
 
 #ifndef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
-namespace detail {
+namespace yorel {
+namespace yomm2 {
 
-template<typename... Classes>
-using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>, YOMM2_DEFAULT_POLICY>;
+template<typename T>
+struct virtual_;
 
-template<typename... Classes>
-using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>,
-    boost::mp11::mp_list<Classes...>>;
+template<class Class, class Policy>
+struct virtual_ptr;
 
-template<class... Ts>
-using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2,
-    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>, YOMM2_DEFAULT_POLICY>;
-} // namespace detail
+} // namespace yomm2
+} // namespace yorel
+
+
+#include <yorel/yomm2/detail.hpp>
+
+namespace yorel {
+namespace yomm2 {
 
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy= YOMM2_DEFAULT_POLICY>
+template<typename Key, typename Signature, class Policy = YOMM2_DEFAULT_POLICY>
 struct method;
 
 template<typename Key, typename R, class Policy, typename... A>

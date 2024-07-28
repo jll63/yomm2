@@ -56,12 +56,6 @@ struct catalog;
 using type_id = std::uintptr_t;
 constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
 
-template<class Class, class Policy>
-struct virtual_ptr;
-
-template<typename T>
-struct virtual_;
-
 template<class Policy, typename Key, typename Signature>
 struct method;
 

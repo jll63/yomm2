@@ -4,8 +4,6 @@
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 
-#include "yorel/yomm2/detail/chain.hpp"
-
 namespace yorel {
 namespace yomm2 {
 namespace detail {
@@ -60,8 +58,6 @@ struct dump_type {
 
 template<class Policy>
 struct runtime;
-
-namespace mp11 = boost::mp11;
 
 enum { TRACE_RUNTIME = 1, TRACE_CALLS = 2 };
 
@@ -530,8 +526,8 @@ struct virtual_traits<Policy, std::shared_ptr<T>> {
 };
 
 template<typename MethodArgList>
-using polymorphic_types = mp11::mp_transform<
-    remove_virtual, mp11::mp_filter<detail::is_virtual, MethodArgList>>;
+using polymorphic_types = boost::mp11::mp_transform<
+    remove_virtual, boost::mp11::mp_filter<detail::is_virtual, MethodArgList>>;
 
 template<class Policy, typename P, typename Q>
 struct select_spec_polymorphic_type_aux {
@@ -562,9 +558,9 @@ using select_spec_polymorphic_type =
     typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
 
 template<class Policy, typename MethodArgList, typename SpecArgList>
-using spec_polymorphic_types = mp11::mp_remove<
-    mp11::mp_transform_q<
-        mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
+using spec_polymorphic_types = boost::mp11::mp_remove<
+    boost::mp11::mp_transform_q<
+        boost::mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
         MethodArgList, SpecArgList>,
     void>;
 
@@ -577,6 +573,22 @@ inline uintptr_t get_tip(const T& arg) {
     }
 }
 
+template<typename... Classes>
+using get_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
+    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
+    YOMM2_DEFAULT_POLICY>;
+
+template<typename... Classes>
+using remove_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
+    boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>,
+    boost::mp11::mp_list<Classes...>>;
+
+template<class... Ts>
+using virtual_ptr_policy = std::conditional_t<
+    sizeof...(Ts) == 2, boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>,
+    YOMM2_DEFAULT_POLICY>;
 // -------
 // wrapper
 
@@ -590,8 +602,10 @@ struct wrapper<
     Policy, BASE_RETURN(BASE_PARAM...), SPEC,
     boost::mp11::mp_list<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
-        using base_type = mp11::mp_first<boost::mp11::mp_list<BASE_PARAM...>>;
-        using spec_type = mp11::mp_first<boost::mp11::mp_list<SPEC_PARAM...>>;
+        using base_type =
+            boost::mp11::mp_first<boost::mp11::mp_list<BASE_PARAM...>>;
+        using spec_type =
+            boost::mp11::mp_first<boost::mp11::mp_list<SPEC_PARAM...>>;
         return SPEC(
             argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
                 remove_virtual<BASE_PARAM>(arg))...);
@@ -623,9 +637,10 @@ struct member_function_wrapper<F, R (C::*)(Args...)> {
 // base. The direct and its direct and indirect proper bases are included. The
 // runtime will extract the direct proper bases. See unit tests for an example.
 template<typename... Cs>
-using inheritance_map = boost::mp11::mp_list<mp11::mp_push_front<
-    mp11::mp_filter_q<
-        mp11::mp_bind_back<std::is_base_of, Cs>, boost::mp11::mp_list<Cs...>>,
+using inheritance_map = boost::mp11::mp_list<boost::mp11::mp_push_front<
+    boost::mp11::mp_filter_q<
+        boost::mp11::mp_bind_back<std::is_base_of, Cs>,
+        boost::mp11::mp_list<Cs...>>,
     Cs>...>;
 
 template<class Policy, class... Classes>
@@ -633,11 +648,12 @@ struct use_classes_aux;
 
 template<class Policy, class... Classes>
 struct use_classes_aux<Policy, boost::mp11::mp_list<Classes...>> {
-    using type = mp11::mp_apply<
+    using type = boost::mp11::mp_apply<
         std::tuple,
-        mp11::mp_transform_q<
-            mp11::mp_bind_front<class_declaration_aux, Policy>,
-            mp11::mp_apply<inheritance_map, boost::mp11::mp_list<Classes...>>>>;
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
+            boost::mp11::mp_apply<
+                inheritance_map, boost::mp11::mp_list<Classes...>>>>;
 };
 
 template<class Policy, class... Classes, class... MoreClassLists>
@@ -646,7 +662,8 @@ struct use_classes_aux<
     boost::mp11::mp_list<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
     : use_classes_aux<
           Policy,
-          mp11::mp_append<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
+          boost::mp11::mp_append<
+              boost::mp11::mp_list<Classes...>, MoreClassLists...>>
 
 {};
 
