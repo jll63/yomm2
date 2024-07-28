@@ -670,18 +670,11 @@ namespace yomm2 {
 
 #ifdef YOMM2_SHARED
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-yOMM2_API auto update() -> detail::compiler<policy::debug_shared>;
-#endif
-
 yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
 
 #else
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-
-template<class Policy = YOMM2_DEFAULT_POLICY>
-auto update() -> detail::compiler<Policy>;
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
@@ -693,22 +686,6 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
 #endif
 
 #endif
-
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-
-[[deprecated("use update() instead")]] yOMM2_API inline void update_methods() {
-    update();
-}
-
-#endif
-
-template<class Policy>
-auto update() -> typename detail::compiler<Policy> {
-    detail::compiler<Policy> compiler;
-    compiler.update();
-
-    return compiler;
-}
 
 } // namespace yomm2
 } // namespace yorel

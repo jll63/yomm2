@@ -131,7 +131,6 @@ struct release_shared;
 #include "detail/class_info.hpp"
 #include "detail/method_info.hpp"
 #include "detail/range.hpp"
-#include "detail/update_method_report.hpp"
 
 namespace yorel {
 namespace yomm2 {
@@ -707,54 +706,6 @@ using default_policy = policy::debug_shared;
 #else
 using default_policy = policy::default_static;
 #endif
-
-namespace detail {
-
-struct update_report : update_method_report {};
-
-template<class Facet, typename>
-struct has_report_aux : std::false_type {};
-
-template<class Facet>
-struct has_report_aux<Facet, std::void_t<typename Facet::report>>
-    : std::true_type {};
-
-template<class Facet>
-constexpr bool has_report = has_report_aux<Facet, void>::value;
-
-template<class Reports, class Facets, typename = void>
-struct aggregate_reports;
-
-template<class... Reports, class Facet, class... MoreFacets>
-struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>,
-    std::void_t<typename Facet::report>> {
-    using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports..., typename Facet::report>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
-};
-
-template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>, Void> {
-    using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports...>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
-};
-
-template<class... Reports, typename Void>
-struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>, boost::mp11::mp_list<>, Void> {
-    struct type : Reports... {};
-};
-
-template<class Policy>
-using report_type = typename aggregate_reports<
-    boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
-
-} // namespace detail
 
 } // namespace yomm2
 } // namespace yorel

@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
-#define YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
+#ifndef YOREL_YOMM2_COMPILER_INCLUDED
+#define YOREL_YOMM2_COMPILER_INCLUDED
 
 #include <algorithm> // for max, transform, copy
 #include <cassert>   // for assert
@@ -36,6 +36,48 @@ struct rflush {
     explicit rflush(size_t width, size_t value) : width(width), value(value) {
     }
 };
+
+template<class Facet, typename>
+struct has_report_aux : std::false_type {};
+
+template<class Facet>
+struct has_report_aux<Facet, std::void_t<typename Facet::report>>
+    : std::true_type {};
+
+template<class Facet>
+constexpr bool has_report = has_report_aux<Facet, void>::value;
+
+template<class Reports, class Facets, typename = void>
+struct aggregate_reports;
+
+template<class... Reports, class Facet, class... MoreFacets>
+struct aggregate_reports<
+    boost::mp11::mp_list<Reports...>,
+    boost::mp11::mp_list<Facet, MoreFacets...>,
+    std::void_t<typename Facet::report>> {
+    using type = typename aggregate_reports<
+        boost::mp11::mp_list<Reports..., typename Facet::report>,
+        boost::mp11::mp_list<MoreFacets...>>::type;
+};
+
+template<class... Reports, class Facet, class... MoreFacets, typename Void>
+struct aggregate_reports<
+    boost::mp11::mp_list<Reports...>,
+    boost::mp11::mp_list<Facet, MoreFacets...>, Void> {
+    using type = typename aggregate_reports<
+        boost::mp11::mp_list<Reports...>,
+        boost::mp11::mp_list<MoreFacets...>>::type;
+};
+
+template<class... Reports, typename Void>
+struct aggregate_reports<
+    boost::mp11::mp_list<Reports...>, boost::mp11::mp_list<>, Void> {
+    struct type : Reports... {};
+};
+
+// template<class Policy>
+// using report_type = typename aggregate_reports<
+//     boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
 
 struct generic_compiler {
 
@@ -98,6 +140,17 @@ struct generic_compiler {
     };
 
     using group_map = std::map<bitvec, group>;
+
+    struct update_method_report {
+        size_t cells = 0;
+        size_t concrete_cells = 0;
+        size_t not_implemented = 0;
+        size_t concrete_not_implemented = 0;
+        size_t ambiguous = 0;
+        size_t concrete_ambiguous = 0;
+    };
+
+    struct update_report : update_method_report {};
 
     static void
     accumulate(const update_method_report& partial, update_report& total);
@@ -280,9 +333,10 @@ struct trace_type {
         return *this;
     }
 };
+} // namespace detail
 
 template<class Policy>
-struct compiler : generic_compiler {
+struct compiler : detail::generic_compiler {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
 
@@ -327,10 +381,10 @@ struct compiler : generic_compiler {
         }
     }
 
-    mutable trace_type<Policy> trace;
+    mutable detail::trace_type<Policy> trace;
     static constexpr bool trace_enabled =
         Policy::template has_facet<policy::trace_output>;
-    using indent = typename trace_type<Policy>::indent;
+    using indent = typename detail::trace_type<Policy>::indent;
 };
 
 compiler() -> compiler<default_policy>;
@@ -690,7 +744,7 @@ void compiler<Policy>::augment_methods() {
 }
 
 template<class Policy>
-std::vector<generic_compiler::class_*> compiler<Policy>::layer_classes() {
+std::vector<detail::generic_compiler::class_*> compiler<Policy>::layer_classes() {
     ++trace << "Layering classes...\n";
 
     std::vector<class_*> input;
@@ -1090,7 +1144,7 @@ void compiler<Policy>::build_dispatch_table(
     }
 }
 
-inline void generic_compiler::accumulate(
+inline void detail::generic_compiler::accumulate(
     const update_method_report& partial, update_report& total) {
     total.cells += partial.cells;
     total.concrete_cells += partial.concrete_cells;
@@ -1103,6 +1157,7 @@ inline void generic_compiler::accumulate(
 template<class Policy>
 void compiler<Policy>::install_gv() {
     using namespace policy;
+    using namespace detail;
 
     for (size_t pass = 0; pass != 2; ++pass) {
         Policy::dispatch_data.resize(0);
@@ -1234,7 +1289,7 @@ void compiler<Policy>::optimize() {
 }
 
 template<class Policy>
-std::vector<const generic_compiler::definition*>
+std::vector<const detail::generic_compiler::definition*>
 compiler<Policy>::best(std::vector<const definition*>& candidates) {
     std::vector<const definition*> best;
 
@@ -1323,7 +1378,27 @@ void compiler<Policy>::print(const update_method_report& report) const {
     trace << report.concrete_ambiguous << "\n";
 }
 
-} // namespace detail
+template<class Policy>
+auto update() -> compiler<Policy> {
+    compiler<Policy> compiler;
+    compiler.update();
+
+    return compiler;
+}
+
+#ifdef YOMM2_SHARED
+
+#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+yOMM2_API auto update() -> compiler<policy::debug_shared>;
+#endif
+
+#else
+
+template<class Policy = YOMM2_DEFAULT_POLICY>
+auto update() -> compiler<Policy>;
+
+#endif
+
 } // namespace yomm2
 } // namespace yorel
 
