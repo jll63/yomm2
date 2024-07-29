@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Configure
         run: |
-          git clone https://github.com/microsoft/vcpkg "$HOME/vcpkg"
+          git clone --branch 2024.07.12 --depth 1 https://github.com/microsoft/vcpkg "$HOME/vcpkg"
           export VCPKG_ROOT="$HOME/vcpkg"
           cmake --preset ci-${{ matrix.config }} -B build -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
       - name: Build
