@@ -37,7 +37,7 @@ macro(assign_bool VAR)
   endif()
 endmacro()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(COMPILER_IS_CLANG ON)
 endif()
 
