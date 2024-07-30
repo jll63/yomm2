@@ -4,6 +4,8 @@
 #include <functional>
 #include <memory>
 
+#include <yorel/yomm2/detail/forward.hpp>
+
 #include <yorel/yomm2/policy.hpp>
 
 #pragma push_macro("min")
@@ -12,18 +14,8 @@
 namespace yorel {
 namespace yomm2 {
 
-#ifdef YOMM2_DEFAULT_POLICY
-using default_policy = YOMM2_DEFAULT_POLICY;
-#else
-#if defined(YOMM2_SHARED)
-#ifdef NDEBUG
-using default_policy = policy::release_shared;
-#else
-using default_policy = policy::debug_shared;
-#endif
-#else
-using default_policy = policy::default_static;
-#endif
+#ifndef YOMM2_DEFAULT_POLICY
+#define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
 namespace detail {
@@ -31,7 +23,7 @@ namespace detail {
 template<typename... Classes>
 using get_policy = std::conditional_t<
     is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_back<types<Classes...>>, default_policy>;
+    boost::mp11::mp_back<types<Classes...>>, YOMM2_DEFAULT_POLICY>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
@@ -41,18 +33,17 @@ using remove_policy = std::conditional_t<
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
     sizeof...(Ts) == 2, boost::mp11::mp_first<detail::types<Ts...>>,
-    default_policy>;
+    YOMM2_DEFAULT_POLICY>;
 } // namespace detail
 
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy = default_policy>
+template<typename Key, typename Signature, class Policy= YOMM2_DEFAULT_POLICY>
 struct method;
 
 template<typename Key, typename R, class Policy, typename... A>
-struct method<Key, R(A...), Policy>
-    : detail::slots_strides_base<detail::arity<A...>>, detail::method_info {
+struct method<Key, R(A...), Policy> : detail::method_info {
     using self_type = method;
     using policy_type = Policy;
     using declared_argument_types = detail::types<A...>;
@@ -68,8 +59,16 @@ struct method<Key, R(A...), Policy>
     static constexpr auto arity = detail::arity<A...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
 
+    static size_t slots_strides[2 * arity - 1];
+    // Slots followed by strides. No stride for first virtual argument.
+    // For 1-method: the offset of the method in the method table, which
+    // contains a pointer to a function.
+    // For multi-methods: the offset of the first virtual argument in the
+    // method table, which contains a pointer to the corresponding cell in
+    // the dispatch table, followed by the offset of the second argument and
+    // the stride in the second dimension, etc.
+
     static method fn;
-    static function_pointer_type fake_definition;
 
     method();
 
@@ -182,10 +181,6 @@ template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy> method<Key, R(A...), Policy>::fn;
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::function_pointer_type
-    method<Key, R(A...), Policy>::fake_definition;
-
-template<typename Key, typename R, class Policy, typename... A>
 template<typename Container>
 typename method<Key, R(A...), Policy>::next_type
     method<Key, R(A...), Policy>::use_next<Container>::next;
@@ -205,13 +200,12 @@ struct class_declaration<detail::types<Classes...>>
 
 template<class... Classes>
 using use_classes = typename detail::use_classes_aux<
-    detail::get_policy<Classes...>,
-    detail::remove_policy<Classes...>>::type;
+    detail::get_policy<Classes...>, detail::remove_policy<Classes...>>::type;
 
 // -----------------------------------------------------------------------------
 // virtual_ptr
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr {
     template<class, class>
     friend class virtual_ptr;
@@ -398,12 +392,12 @@ class virtual_ptr {
 };
 
 template<class Class>
-virtual_ptr(Class&) -> virtual_ptr<Class, default_policy>;
+virtual_ptr(Class&) -> virtual_ptr<Class, YOMM2_DEFAULT_POLICY>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
 
-template<class Class, class Policy = default_policy>
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 inline auto make_virtual_shared() {
     return virtual_shared_ptr<Class, Policy>::final(
         std::make_shared<detail::virtual_ptr_class<Class>>());
@@ -424,8 +418,8 @@ inline auto final_virtual_ptr(Class& obj) {
 
 template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::method() {
+    this->slots_strides_ptr = slots_strides;
     this->name = detail::default_method_name<method>();
-    this->slots_strides_p = this->slots_strides;
     using virtual_type_ids = detail::type_id_list<
         Policy,
         boost::mp11::mp_transform_q<
@@ -435,12 +429,16 @@ method<Key, R(A...), Policy>::method() {
     this->vp_end = virtual_type_ids::end;
     this->not_implemented = (void*)not_implemented_handler;
     this->ambiguous = (void*)ambiguous_handler;
-    Policy::catalog.methods.push_front(*this);
+    this->method_type = Policy::template static_type<method>();
+    Policy::methods.push_front(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
+size_t method<Key, R(A...), Policy>::slots_strides[2 * arity - 1];
+
+template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::~method() {
-    Policy::catalog.methods.remove(*this);
+    Policy::methods.remove(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
@@ -601,16 +599,14 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
             slot = static_offsets<method>::slots[VirtualArg];
             stride = static_offsets<method>::strides[VirtualArg - 1];
             if constexpr (Policy::template has_facet<policy::runtime_checks>) {
-                check_static_offset<static_stride_error>(
-                    static_offsets<method>::strides[VirtualArg - 1],
-                    this->slots_strides[2 * VirtualArg]);
                 check_static_offset<static_slot_error>(
-                    static_offsets<method>::slots[VirtualArg],
-                    this->slots_strides[2 * VirtualArg - 1]);
+                    this->slots_strides[VirtualArg], slot);
+                check_static_offset<static_stride_error>(
+                    this->slots_strides[2 * VirtualArg], stride);
             }
         } else {
-            slot = this->slots_strides[2 * VirtualArg - 1];
-            stride = this->slots_strides[2 * VirtualArg];
+            slot = this->slots_strides[VirtualArg];
+            stride = this->slots_strides[arity + VirtualArg - 1];
         }
 
         dispatch = dispatch + vtbl[slot] * stride;
@@ -668,12 +664,20 @@ method<Key, R(A...), Policy>::ambiguous_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
-template<class Policy>
-void update();
+} // namespace yomm2
+} // namespace yorel
+
+#include <yorel/yomm2/detail/compiler.hpp>
+
+namespace yorel {
+namespace yomm2 {
 
 #ifdef YOMM2_SHARED
 
-yOMM2_API void update();
+#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+yOMM2_API auto update() -> detail::compiler<policy::debug_shared>;
+#endif
+
 yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
 yOMM2_API method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler);
@@ -682,20 +686,19 @@ set_method_call_error_handler(method_call_error_handler handler);
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
 
-inline void update() {
-    update<default_policy>();
-}
+template<class Policy = YOMM2_DEFAULT_POLICY>
+auto update() -> detail::compiler<Policy>;
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
-    auto prev = default_policy::error;
+    auto prev= default_policy::error;
     default_policy::error = handler;
     return prev;
 }
 
 inline method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev = default_policy::call_error;
+    auto prev= default_policy::call_error;
     default_policy::call_error = handler;
     return prev;
 }
@@ -712,10 +715,18 @@ set_method_call_error_handler(method_call_error_handler handler) {
 
 #endif
 
+template<class Policy>
+auto update() -> typename detail::compiler<Policy> {
+    detail::compiler<Policy> compiler;
+    compiler.update();
+
+    return compiler;
+}
+
 } // namespace yomm2
 } // namespace yorel
 
-#include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/detail/compiler.hpp>
 
 #pragma pop_macro("min")
 

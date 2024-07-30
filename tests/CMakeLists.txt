@@ -45,14 +45,13 @@ add_executable(pointer_to_method pointer_to_method.cpp)
 target_link_libraries(pointer_to_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME pointer_to_method COMMAND pointer_to_method)
 
-if(${YOMM2_ENABLE_BENCHMARKS})
+if(YOMM2_ENABLE_BENCHMARKS AND NOT (WIN32 OR APPLE))
   add_executable(benchmarks benchmarks.cpp)
-  target_link_libraries(benchmarks YOMM2::yomm2 benchmark::benchmark)
+  target_link_libraries(
+    benchmarks YOMM2::yomm2 benchmark::benchmark ${CMAKE_THREAD_LIBS_INIT})
+  add_executable(rdtsc-benchmark rdtsc-benchmark.cpp)
+  target_link_libraries(rdtsc-benchmark YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 endif()
-
-# add_executable(intrusive intrusive.cpp)
-# target_link_libraries(intrusive YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-# add_test(NAME intrusive COMMAND intrusive)
 
 add_executable(test_virtual_ptr_basic test_virtual_ptr_basic.cpp)
 target_link_libraries(test_virtual_ptr_basic YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
@@ -76,3 +75,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
   set_target_properties(test_custom_rtti PROPERTIES COMPILE_FLAGS "-fno-rtti")
 endif()
 add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
+
+add_executable(test_generator test_generator.cpp)
+target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_generator COMMAND test_generator)

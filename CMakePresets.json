@@ -1,0 +1,95 @@
+{
+    "version": 6,
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Ninja",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "YOMM2_ENABLE_EXAMPLES": "ON",
+                "YOMM2_ENABLE_TESTS": "ON",
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
+            }
+        },
+        {
+            "name": "shared",
+            "hidden": true,
+            "cacheVariables": {
+                "YOMM2_SHARED": "ON"
+            }
+        },
+        {
+            "name": "debug",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "ci-debug",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "ci-release",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "clang16-debug",
+            "inherits": "debug",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++-16"
+            }
+        },
+        {
+            "name": "clang16-release",
+            "inherits": "release",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++-16"
+            }
+        },
+        {
+            "name": "clang16-debug-doc",
+            "inherits": "clang16-debug",
+            "cacheVariables": {
+                "YOMM2_ENABLE_DOC": "ON"
+            }
+        },
+        {
+            "name": "clang16-debug-shared",
+            "inherits": [
+                "clang16-debug",
+                "shared"
+            ]
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "doc-debug",
+            "configurePreset": "clang16-debug-doc",
+            "targets": [
+                "all",
+                "doc",
+                "README_md",
+                "README",
+                "reference",
+                "build_and_make_tutorials"
+            ]
+        }
+    ]
+}

@@ -25,7 +25,7 @@ int main() {
 #include <benchmark/benchmark.h>
 
 #include <yorel/yomm2/keywords.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/detail/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 #include "benchmarks_parameters.hpp"
@@ -43,6 +43,10 @@ enum { NH = YOMM2_BENCHMARK_HIERARCHIES };
 #else
 enum { NH = 100 };
 #endif
+
+#define mb()	asm volatile("mfence":::"memory")
+#define rmb()	asm volatile("lfence":::"memory")
+#define wmb()	asm volatile("sfence" ::: "memory")
 
 const std::string yomm2_ = "yomm2_";
 

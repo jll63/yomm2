@@ -54,18 +54,23 @@ struct type_id_list<Policy, types<>> {
 };
 
 template<typename Iterator>
-struct type_range {
+struct range {
+    range(Iterator first, Iterator last) : first(first), last(last) {
+    }
+
     Iterator first, last;
+
     Iterator begin() const {
         return first;
     }
+
     Iterator end() const {
         return last;
     }
 };
 
 template<typename Iterator>
-type_range(Iterator b, Iterator e) -> type_range<Iterator>;
+range(Iterator b, Iterator e) -> range<Iterator>;
 
 struct yomm2_end_of_dump {};
 
@@ -220,10 +225,26 @@ class pair_first_iterator {
 // class info
 
 struct class_info : static_chain<class_info>::static_link {
-    type_id ti;
+    type_id type;
     std::uintptr_t** static_vptr;
     type_id *first_base, *last_base;
     bool is_abstract{false};
+
+    const std::uintptr_t* vptr() const {
+        return *static_vptr;
+    }
+
+    const std::uintptr_t* const* indirect_vptr() const {
+        return static_vptr;
+    }
+
+    auto type_id_begin() const {
+        return &type;
+    }
+
+    auto type_id_end() const {
+        return &type + 1;
+    }
 };
 
 template<class...>
@@ -233,16 +254,16 @@ template<class Policy, class Class, typename... Bases>
 struct class_declaration_aux<Policy, detail::types<Class, Bases...>>
     : class_info {
     class_declaration_aux() {
-        this->ti = collect_static_type_id<Policy, Class>();
+        this->type = collect_static_type_id<Policy, Class>();
         this->first_base = type_id_list<Policy, types<Bases...>>::begin;
         this->last_base = type_id_list<Policy, types<Bases...>>::end;
-        Policy::catalog.classes.push_front(*this);
+        Policy::classes.push_front(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
     }
 
     ~class_declaration_aux() {
-        Policy::catalog.classes.remove(*this);
+        Policy::classes.remove(*this);
     }
 };
 
@@ -264,24 +285,14 @@ template<typename... Ts>
 constexpr auto arity =
     boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
 
-template<size_t Arity>
-struct slots_strides_base {
-    size_t slots_strides[2 * Arity - 1];
-    // For 1-method: the offset of the method in the method table, which
-    // contains a pointer to a function.
-    // For multi-methods: the offset of the first virtual argument in the
-    // method table, which contains a pointer to the corresponding cell in
-    // the dispatch table, followed by the offset of the second argument and
-    // the stride in the second dimension, etc.
-};
-
 struct yOMM2_API method_info : static_chain<method_info>::static_link {
-    size_t* slots_strides_p;
     std::string_view name;
     type_id *vp_begin, *vp_end;
     static_chain<definition_info> specs;
     void* ambiguous;
     void* not_implemented;
+    type_id method_type;
+    size_t* slots_strides_ptr;
 
     auto arity() const {
         return std::distance(vp_begin, vp_end);
@@ -305,6 +316,15 @@ constexpr bool is_policy = is_policy_aux<T>::value;
 
 template<typename T>
 constexpr bool is_not_policy = !is_policy<T>;
+
+template<typename T>
+struct is_method_aux : std::false_type {};
+
+template<typename... T>
+struct is_method_aux<method<T...>> : std::true_type {};
+
+template<typename T>
+constexpr bool is_method = is_method_aux<T>::value;
 
 template<typename Signature>
 struct next_ptr_t;
@@ -785,6 +805,18 @@ template<class Method>
 struct has_static_offsets<
     Method, std::void_t<decltype(static_offsets<Method>::slots)>>
     : std::true_type {};
+
+// -----------------------------------------------------------------------------
+// report
+
+struct update_method_report {
+    size_t cells = 0;
+    size_t concrete_cells = 0;
+    size_t not_implemented = 0;
+    size_t concrete_not_implemented = 0;
+    size_t ambiguous = 0;
+    size_t concrete_ambiguous = 0;
+};
 
 } // namespace detail
 } // namespace yomm2

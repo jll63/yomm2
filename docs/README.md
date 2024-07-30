@@ -169,6 +169,7 @@ for the shared runtime to be used.
 | [error_handler_type](/yomm2/reference/error.html)             | type              | handler function                                                         |
 | [error_type](/yomm2/reference/error.html)                     | variant           | object passed to error handler                                           |
 | [friend_method](/yomm2/reference/friend_method.html)                  | macro             | make a method in a container, or the entire container, a friend          |
+| [generator](/yomm2/reference/generator.html)                      | class             | generate compile-time offsets, pre-calculate dispatch data               |
 | [hash_search_error](/yomm2/reference/error.html)              | class             | failure to find a hash function for registered classes                   |
 | [make_virtual_shared](/yomm2/reference/virtual_ptr.html)            | function template | create an object and return a `virtual_shared_ptr`                       |
 | [method](/yomm2/reference/method.html)                         | class template    | implement a method                                                       |

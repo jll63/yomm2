@@ -360,3 +360,33 @@ using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);
 
 }
+
+namespace test_report {
+
+struct report {};
+
+struct facet1 {
+    struct report {};
+};
+
+struct facet2 {
+};
+
+struct facet3 {
+    struct report {};
+};
+
+static_assert(
+    std::is_base_of_v<
+        report, typename aggregate_reports<
+            types<report>, types<facet1, facet2, facet3>>::type>);
+static_assert(
+    std::is_base_of_v<
+        facet1::report, typename aggregate_reports<
+            types<report>, types<facet1, facet2, facet3>>::type>);
+static_assert(
+    std::is_base_of_v<
+        facet3::report, typename aggregate_reports<
+            types<report>, types<facet1, facet2, facet3>>::type>);
+
+}

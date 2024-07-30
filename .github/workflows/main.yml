@@ -8,110 +8,67 @@ on: [push, pull_request, workflow_dispatch]
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
-    container:
-      ghcr.io/jll63/yomm2-gha:latest
     strategy:
       matrix:
-        compiler: [clang++-15, clang++-16, g++-12, g++-13]
+        compiler: [clang++, g++]
         standard: [17, 20]
-        config: [Debug, Release]
+        config: [debug, release]
     steps:
       - uses: actions/checkout@v4
       - name: Configure
         run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1
+          git clone --branch 2024.07.12 --depth 1 https://github.com/microsoft/vcpkg "$HOME/vcpkg"
+          export VCPKG_ROOT="$HOME/vcpkg"
+          cmake --preset ci-${{ matrix.config }} -B build -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
       - name: Build
-        run: VERBOSE=1 cmake --build build -j 8
+        run: cmake --build build -j 8
       - name: Unit Tests
         run: |
-          cd build
-          YOMM2_TRACE=1 ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure --test-dir build
       - name: Examples
         run: |
-          cd build/examples
-          YOMM2_TRACE=1 find . -type f -executable -exec {} \;
+          find build -type f -executable -exec {} \;
   ubuntu-shared:
     runs-on: ubuntu-latest
-    container:
-      ghcr.io/jll63/yomm2-gha:latest
     strategy:
       matrix:
-        compiler: [clang++-16, g++-13]
+        compiler: [clang++, g++]
         check_abi_compatibility: [OFF, ON]
     steps:
       - uses: actions/checkout@v4
       - name: Configure
         run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_ENABLE_TESTS=1
+          git clone https://github.com/microsoft/vcpkg "$HOME/vcpkg"
+          export VCPKG_ROOT="$HOME/vcpkg"
+          cmake --preset ci-release -B build -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
       - name: Build
-        run: VERBOSE=1 cmake --build build
+        run: cmake --build build -j 8
       - name: Unit Tests
-        run: |
-          cd build
-          ctest --rerun-failed --output-on-failure .
+        run: YOMM2_TRACE=1 ctest --output-on-failure --test-dir build
       - name: Examples
-        run: |
-          pwd
-          cd build/examples
-          find . -type f -executable -exec {} \;
-  ubuntu-cmake:
-    runs-on: ubuntu-latest
-    container:
-      ghcr.io/jll63/yomm2-gha:latest
-    strategy:
-      matrix:
-        compiler: [clang++-16, g++-13]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Add git, remove Boost and Google Benchmarks
-        run: |
-          apt-get update
-          apt-get install -y git
-          apt-get remove -y libbenchmark-dev libboost-all-dev
-      - name: Configure
-        run: |
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DYOMM2_SHARED=1 -DCMAKE_CXX_COMPILER=${{ matrix.compiler }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
-      - name: Build
-        run: VERBOSE=1 cmake --build build
-      - name: Unit Tests
-        run: |
-          cd build
-          ctest --rerun-failed --output-on-failure .
-      - name: Examples
-        run: |
-          pwd
-          cd build/examples
-          find . -type f -executable -exec {} \;
+        run: YOMM2_TRACE=1 find build -type f -executable -exec {} \;
   windows:
     runs-on: windows-latest
     strategy:
       matrix:
-        config: [Debug, Release]
+        config: [debug, release]
         standard: [17, 20]
     steps:
       - uses: actions/checkout@v4
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Configure
         run: |
-          mkdir build
-          cd build
-          cmake .. -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
+          git clone https://github.com/microsoft/vcpkg "$env:USERPROFILE/vcpkg"
+          $env:VCPKG_ROOT = "$env:USERPROFILE/vcpkg"
+          cmake --preset ci-${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -B build
       - name: Build
         run: |
           cl
-          cd build
-          nmake
+          cmake --build build -j 8
       - name: Unit Tests
         run: |
-          cd build
           $env:YOMM2_TRACE = 1
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure --test-dir build
           $global:LASTEXITCODE = 0
   windows-shared:
     strategy:
@@ -125,43 +82,34 @@ jobs:
           vsversion: 2022
       - name: Configure
         run: |
-          mkdir build
-          cd build
-          cmake .. -G "NMake Makefiles" -DYOMM2_SHARED=1 -DCMAKE_BUILD_TYPE=Release -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_STANDARD=17 -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
+          git clone https://github.com/microsoft/vcpkg "$env:USERPROFILE/vcpkg"
+          $env:VCPKG_ROOT = "$env:USERPROFILE/vcpkg"
+          cmake --preset ci-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -B build
       - name: Build
-        run: |
-          cd build
-          nmake
+        run: cmake --build build -j 8
       - name: Unit Tests
         run: |
-          cd build
           $env:YOMM2_TRACE = 1
-          $env:PATH += ";" + (Get-Item .).FullName + "/src"
-          ctest --rerun-failed --output-on-failure .
+          $env:PATH += ";" + (Get-Item .).FullName + "/build/src"
+          ctest --output-on-failure --test-dir build
           $global:LASTEXITCODE = 0
   mac:
     runs-on: macOS-latest
     strategy:
       matrix:
-        # config: [Debug, Release, ReleaseDebug, DebugRelease]
-        config: [Debug, Release]
+        config: [debug, release]
     steps:
       - uses: actions/checkout@v4
       - name: Configure
         run: |
-          brew install boost
-          mkdir build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DYOMM2_DOWNLOAD_DEPENDENCIES=1 -DYOMM2_ENABLE_TESTS=1
+          git clone https://github.com/microsoft/vcpkg "$HOME/vcpkg"
+          export VCPKG_ROOT="$HOME/vcpkg"
+          cmake --preset ci-${{ matrix.config }} -B build
       - name: Build
-        run: |
-          cd build
-          make
+        run: cmake --build build -j 8
       - name: Unit Tests
         run: |
-          cd build
-          ctest --rerun-failed --output-on-failure .
+          ctest --output-on-failure --test-dir build
       - name: Examples
         run: |
-          cd build/examples
-          find . -type f -perm +0111 -exec {} \;
+          find build -type f -perm +0111 -exec {} \;

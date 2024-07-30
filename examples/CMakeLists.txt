@@ -38,7 +38,8 @@ add_test(NAME asteroids COMMAND asteroids)
 add_subdirectory(containers)
 add_test(NAME containers COMMAND containers)
 
-if(NOT MSVC AND NOT APPLE)
+if (NOT (WIN32 OR APPLE))
+  message(STATUS "Building dlopen example.")
   add_executable(dl_main dl_main.cpp)
   add_library(dl_shared SHARED dl_shared.cpp)
   get_target_property(YOMM2_INCLUDE_DIRS YOMM2::yomm2 INTERFACE_INCLUDE_DIRECTORIES)
@@ -48,4 +49,12 @@ if(NOT MSVC AND NOT APPLE)
   target_link_libraries(dl_main YOMM2::yomm2 dl)
   target_link_libraries(dl_shared YOMM2::yomm2)
   add_test(NAME dlopen COMMAND dl_main)
-  endif()
+endif()
+
+if (NOT (MSVC AND YOMM2_SHARED))
+  # Running this example with a Windows DLL is too much of a hassle, because we
+  # would need to add the path to the directory containing yomm2.dll to PATH.
+  # Anyway, if it works with static linking, it is very unlikely that it fails
+  # with the runtime in a DLL.
+  add_subdirectory(generator)
+endif()
