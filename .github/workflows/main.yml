@@ -1,3 +1,6 @@
+# Seeded from https://github.com/lukka/CppCMakeVcpkgTemplate
+# Thank you Lucas Beyer for the template!
+
 name: CI
 
 env:
@@ -6,110 +9,106 @@ env:
 on: [push, pull_request, workflow_dispatch]
 
 jobs:
-  ubuntu:
-    runs-on: ubuntu-latest
+  job:
+    name: ${{ matrix.os }}-${{ matrix.linkage }}-${{ matrix.config }}
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        compiler: [clang++, g++]
-        standard: [17, 20]
-        config: [debug, release]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        config: [dbg, rel]
+        linkage: [headers-only, shared]
+        include:
+          # - os: windows-latest
+          #   triplet: x64-windows
+          # - os: ubuntu-latest
+          #   triplet: x64-linux
+          # - os: ubuntu-latest
+          #   triplet: i686-linux
+          # - os: macos-latest
+          #   triplet: x64-osx
+          - os: windows-latest
+            config: dbg
+            linkage: shared
+            test_preamble: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\shared\src\Debug"
+          - os: windows-latest
+            config: rel
+            test_preamble: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\shared\src\Release"
+    env:
+      # Indicates the location of the vcpkg as a Git submodule of the project
+      # repository. Not using "VCPKG_ROOT" because a variable with the same name
+      # is defined in the VS's Developer Command Prompt environment in VS 2022
+      # 17.6, which would override this one if it had the same name.
+      _VCPKG_: ${{ github.workspace }}/vcpkg
+      # Tells vcpkg where binary packages are stored.
+      VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
+      # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
+      VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Configure
-        run: |
-          git clone --branch 2024.07.12 --depth 1 https://github.com/microsoft/vcpkg "$HOME/vcpkg"
-          export VCPKG_ROOT="$HOME/vcpkg"
-          cmake --preset ci-${{ matrix.config }} -B build -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
-      - name: Build
-        run: cmake --build build -j 8
-      - name: Unit Tests
-        run: |
-          ctest --output-on-failure --test-dir build
-      - name: Examples
-        run: |
-          find build -type f -executable -exec {} \;
-  ubuntu-shared:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        compiler: [clang++, g++]
-        check_abi_compatibility: [OFF, ON]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure
-        run: |
-          git clone https://github.com/microsoft/vcpkg "$HOME/vcpkg"
-          export VCPKG_ROOT="$HOME/vcpkg"
-          cmake --preset ci-release -B build -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
-      - name: Build
-        run: cmake --build build -j 8
-      - name: Unit Tests
-        run: YOMM2_TRACE=1 ctest --output-on-failure --test-dir build
-      - name: Examples
-        run: YOMM2_TRACE=1 find build -type f -executable -exec {} \;
-  windows:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        config: [debug, release]
-        standard: [17, 20]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
-      - name: Configure
-        run: |
-          git clone https://github.com/microsoft/vcpkg "$env:USERPROFILE/vcpkg"
-          $env:VCPKG_ROOT = "$env:USERPROFILE/vcpkg"
-          cmake --preset ci-${{ matrix.config }} -DCMAKE_CXX_STANDARD=${{ matrix.standard }} -B build
-      - name: Build
-        run: |
-          cl
-          cmake --build build -j 8
-      - name: Unit Tests
-        run: |
-          $env:YOMM2_TRACE = 1
-          ctest --output-on-failure --test-dir build
-          $global:LASTEXITCODE = 0
-  windows-shared:
-    strategy:
-      matrix:
-        check_abi_compatibility: [OFF, ON]
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ilammy/msvc-dev-cmd@v1
+    # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
+    # for Binary Caching.
+      - uses: actions/github-script@v7
         with:
-          vsversion: 2022
-      - name: Configure
-        run: |
-          git clone https://github.com/microsoft/vcpkg "$env:USERPROFILE/vcpkg"
-          $env:VCPKG_ROOT = "$env:USERPROFILE/vcpkg"
-          cmake --preset ci-release -DYOMM2_SHARED=1 -DYOMM2_CHECK_ABI_COMPATIBILITY=${{ matrix.check_abi_compatibility }} -B build
-      - name: Build
-        run: cmake --build build -j 8
-      - name: Unit Tests
-        run: |
-          $env:YOMM2_TRACE = 1
-          $env:PATH += ";" + (Get-Item .).FullName + "/build/src"
-          ctest --output-on-failure --test-dir build
-          $global:LASTEXITCODE = 0
-  mac:
-    runs-on: macOS-latest
-    strategy:
-      matrix:
-        config: [debug, release]
-    steps:
+          script: |
+            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - uses: actions/checkout@v4
-      - name: Configure
+        with:
+          submodules: true
+      - name: "Create directory '${{ env.VCPKG_DEFAULT_BINARY_CACHE }}'"
+        run: mkdir -p $VCPKG_DEFAULT_BINARY_CACHE
+        shell: bash
+
+      # Setup the build machine with the most recent versions of CMake and
+      # Ninja. Both are cached if not already: on subsequent runs both will be
+      # quickly restored from GitHub cache service.
+      - uses: lukka/get-cmake@latest
+
+      # Restore vcpkg from the GitHub Action cache service. Note that packages
+      # are restored by vcpkg's binary caching when it is being run afterwards
+      # by CMake.
+      - name: Restore vcpkg
+        uses: actions/cache@v4
+        with:
+          # The first path is the location of vcpkg: it contains the vcpkg
+          # executable and data files, as long as the built package archives
+          # (aka binary cache) which are located by VCPKG_DEFAULT_BINARY_CACHE
+          # env var. The other paths starting with '!' are exclusions: they
+          # contain termporary files generated during the build of the installed
+          # packages.
+          path: |
+            ${{ env._VCPKG_ }}
+            !${{ env._VCPKG_ }}/buildtrees
+            !${{ env._VCPKG_ }}/packages
+            !${{ env._VCPKG_ }}/downloads
+            !${{ env._VCPKG_ }}/installed
+          # The key is composed in a way that it gets properly invalidated whenever a different version of vcpkg is being used.
+          key: |
+            ${{ hashFiles( '.git/modules/vcpkg/HEAD' )}}
+
+      # On Windows runners, let's ensure to have the Developer Command Prompt
+      # environment setup correctly. As used here the Developer Command Prompt
+      # created is targeting x64 and using the default the Windows SDK.
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      # Run CMake to generate Ninja project files, using the vcpkg's toolchain
+      # file to resolve and install the dependencies as specified in vcpkg.json.
+      # Note that the vcpkg's toolchain is specified in the CMakePresets.json
+      # file.
+
+      # This step also runs vcpkg with Binary Caching leveraging GitHub Action
+      # cache to store the built packages artifacts.
+      - name: Restore from cache the dependencies and generate project files
         run: |
-          git clone https://github.com/microsoft/vcpkg "$HOME/vcpkg"
-          export VCPKG_ROOT="$HOME/vcpkg"
-          cmake --preset ci-${{ matrix.config }} -B build
+          cmake --preset ${{ matrix.linkage }}
+
       - name: Build
-        run: cmake --build build -j 8
-      - name: Unit Tests
         run: |
-          ctest --output-on-failure --test-dir build
-      - name: Examples
+          cmake --build --preset build-${{ matrix.linkage}}-${{ matrix.config }}
+
+      - name: Test
         run: |
-          find build -type f -perm +0111 -exec {} \;
+          ${{ matrix.test_preamble }}
+          ctest --preset test-${{ matrix.linkage }}-${{ matrix.config }} --output-on-failure
