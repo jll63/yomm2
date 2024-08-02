@@ -35,20 +35,18 @@ add_test(NAME custom_rtti_tutorial COMMAND custom_rtti_tutorial)
 file(GLOB templates_tutorial_cpps "templates_tutorial_*_*.cpp")
 string(REGEX MATCHALL "templates_tutorial_[^_]+_." templates_tutorial_execs "${templates_tutorial_cpps}")
 
-if(${YOMM2_ENABLE_DOC})
-    SET(tutorials "")
-    SET(cpps "api.cpp;templates_tutorial.cpp;custom_rtti_tutorial.cpp")
-    foreach(cpp ${cpps})
-        cmake_path(GET cpp STEM LAST_ONLY stem)
-        set(md "${CMAKE_SOURCE_DIR}/docs/tutorials/${stem}.md")
-        add_custom_command(
-            OUTPUT "${md}"
-            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs.in/tutorials"
-            COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md}"
-            DEPENDS "${CMAKE_SOURCE_DIR}/docs.in/tutorials/${cpp}")
-        list(APPEND tutorials "${md}")
-    endforeach()
+SET(tutorials "")
+SET(cpps "api.cpp;templates_tutorial.cpp;custom_rtti_tutorial.cpp")
+foreach(cpp ${cpps})
+    cmake_path(GET cpp STEM LAST_ONLY stem)
+    set(md "${CMAKE_SOURCE_DIR}/docs/tutorials/${stem}.md")
+    add_custom_command(
+        OUTPUT "${md}"
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/docs.in/tutorials"
+        COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${cpp}" "${md}"
+        DEPENDS "${CMAKE_SOURCE_DIR}/docs.in/tutorials/${cpp}")
+    list(APPEND tutorials "${md}")
+endforeach()
 
-    add_custom_target(make_tutorials ALL DEPENDS "${tutorials}")
-    add_custom_target(build_and_make_tutorials ALL DEPENDS "${tutorials};${templates_tutorial_execs}")
-endif()
+add_custom_target(TUTORIALS DEPENDS "${tutorials};${templates_tutorial_execs}")
+add_dependencies(DOCS TUTORIALS)
