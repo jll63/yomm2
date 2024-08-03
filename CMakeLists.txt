@@ -16,7 +16,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
 option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" OFF)
 option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
-option(YOMM2_ENABLE_DOC "Set to ON to generate tutorials and reference" OFF)
 option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
 option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
 option(
@@ -37,7 +36,7 @@ macro(assign_bool VAR)
   endif()
 endmacro()
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(COMPILER_IS_CLANG ON)
 endif()
 
@@ -97,22 +96,19 @@ if(${YOMM2_ENABLE_TESTS})
   add_subdirectory(ce)
 endif()
 
+set(YOMM2_PYTHON ${CMAKE_SOURCE_DIR}/.venv/bin/python)
+add_custom_target(README_md DEPENDS "${readme_md}")
 set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
 set(readme_cpp "${CMAKE_SOURCE_DIR}/examples/README.cpp")
+add_custom_command(
+  OUTPUT "${readme_md}"
+  COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
+  DEPENDS "${readme_cpp}")
+add_custom_target(DOCS DEPENDS README_md README reference build_and_make_tutorials)
 
-if(${YOMM2_ENABLE_DOC})
-  message(STATUS "Documentation generation enabled")
-  set(YOMM2_PYTHON ${CMAKE_SOURCE_DIR}/.venv/bin/python)
-  add_custom_target(README_md ALL DEPENDS "${readme_md}")
-  add_custom_command(
-    OUTPUT "${readme_md}"
-    COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
-    DEPENDS "${readme_cpp}")
-endif()
-
-if(YOMM2_ENABLE_TESTS OR YOMM2_ENABLE_DOC)
+if(YOMM2_ENABLE_TESTS)
+  # Code in cpp doc files also serves as tests.
   add_subdirectory(docs.in)
-  add_custom_target(doc DEPENDS README_md README reference build_and_make_tutorials)
 endif()
 
 ## Install instruction

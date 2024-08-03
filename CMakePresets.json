@@ -1,11 +1,18 @@
 {
-    "version": 6,
+    "version": 7,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
     "configurePresets": [
         {
-            "name": "base",
+            "name": "multi-vcpkg",
             "hidden": true,
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "generator": "Ninja",
+            "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations, using a headers-only library",
+            "binaryDir": "${sourceDir}/builds/${presetName}",
+            "generator": "Ninja Multi-Config",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
@@ -15,98 +22,86 @@
             }
         },
         {
+            "name": "headers-only",
+            "displayName": "Ninja Multi-Config, Headers Only",
+            "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations, using a headers-only library",
+            "inherits": "multi-vcpkg",
+            "cacheVariables": {
+                "YOMM2_SHARED": "OFF"
+            }
+        },
+        {
             "name": "shared",
-            "hidden": true,
+            "displayName": "Ninja Multi-Config, Shared Library",
+            "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations, using a shared library",
+            "inherits": "multi-vcpkg",
             "cacheVariables": {
                 "YOMM2_SHARED": "ON"
             }
-        },
-        {
-            "name": "debug",
-            "inherits": "base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "release",
-            "inherits": "base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
-            "name": "ci-debug",
-            "inherits": "base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "ci-release",
-            "inherits": "base",
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
-            "name": "clang16-debug",
-            "inherits": "debug",
-            "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++-16"
-            }
-        },
-        {
-            "name": "clang16-release",
-            "inherits": "release",
-            "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++-16"
-            }
-        },
-        {
-            "name": "clang16-debug-doc",
-            "inherits": "clang16-debug",
-            "cacheVariables": {
-                "YOMM2_ENABLE_DOC": "ON"
-            }
-        },
-        {
-            "name": "clang16-debug-shared",
-            "inherits": [
-                "clang16-debug",
-                "shared"
-            ]
-        },
-        {
-            "name": "windows-debug-shared",
-            "description": "",
-            "displayName": "",
-            "inherits": [
-                "shared",
-                "debug"
-            ]
         }
     ],
     "buildPresets": [
         {
-            "name": "doc-debug",
-            "configurePreset": "clang16-debug-doc",
-            "targets": [
-                "all",
-                "doc",
-                "README_md",
-                "README",
-                "reference",
-                "build_and_make_tutorials"
-            ]
+            "name": "build-headers-only",
+            "configurePreset": "headers-only",
+            "displayName": "Build",
+            "description": "Build with Ninja/vcpkg"
+        },
+        {
+            "name": "build-headers-only-dbg",
+            "inherits": "build-headers-only",
+            "configuration": "Debug"
+        },
+        {
+            "name": "build-headers-only-rel",
+            "configurePreset": "headers-only",
+            "configuration": "Release"
+        },
+        {
+            "name": "build-shared",
+            "configurePreset": "shared",
+            "displayName": "Build",
+            "description": "Build with Ninja/vcpkg"
+        },
+        {
+            "name": "build-shared-dbg",
+            "inherits": "build-shared",
+            "configuration": "Debug"
+        },
+        {
+            "name": "build-shared-rel",
+            "configurePreset": "shared",
+            "configuration": "Release"
         }
     ],
     "testPresets": [
         {
-            "name": "c16-debug-test",
-            "description": "",
-            "displayName": "",
-            "configurePreset": "clang16-debug"
+            "name": "test-headers-only",
+            "configurePreset": "headers-only"
+        },
+        {
+            "name": "test-headers-only-dbg",
+            "configurePreset": "headers-only",
+            "configuration": "Debug"
+        },
+        {
+            "name": "test-headers-only-rel",
+            "configurePreset": "headers-only",
+            "configuration": "Release"
+        },
+        {
+            "name": "test-shared",
+            "configurePreset": "shared"
+        },
+        {
+            "name": "test-shared-dbg",
+            "configurePreset": "shared",
+            "configuration": "Debug"
+        },
+        {
+            "name": "test-shared-rel",
+            "configurePreset": "shared",
+            "configuration": "Release"
         }
     ]
 }

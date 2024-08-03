@@ -30,7 +30,7 @@ static size_t hash_initialize(ForwardIterator first, ForwardIterator last)
 ```
 
 Calls
-[`fast_perfect_hash::hash_initialize`](fast_perfect_hash.md#hash_initialize).
+[`fast_perfect_hash::hash_initialize`](policy-fast_perfect_hash.html#hash_initialize).
 Also build a reverse mapping, from hashed ids to registered ids.
 
 
@@ -53,7 +53,6 @@ template<class Policy>
 static type_id hash_type_id(type_id type)
 ```
 
-[`fast_perfect_hash::hash_type_index`](fast_perfect_hash.md#hash_initialize).
 Retrieve the registered id corresponding to the hashed id. Compare it with
 `type`. If they are the same, return the hashed value. If not, report an error
 via `Policy::error` if `Policy` has an `error_handler` facet; otherwise,
