@@ -5,19 +5,19 @@ Animal::~Animal() {
 
 register_classes(Animal, Dog, Cat);
 
-define_method(void, kick, (virtual_ptr<Cat> dog)) {
+define_method(void, kick, (virtual_ptr<Cat>)) {
     std::cout << "hiss\n";
 }
 
-define_method(void, kick, (virtual_ptr<Dog> dog)) {
+define_method(void, kick, (virtual_ptr<Dog>)) {
     std::cout << "bark\n";
 }
 
-define_method(void, pet, (virtual_ptr<Cat> dog)) {
+define_method(void, pet, (virtual_ptr<Cat>)) {
     std::cout << "purr\n";
 }
 
-define_method(void, pet, (virtual_ptr<Dog> dog)) {
+define_method(void, pet, (virtual_ptr<Dog>)) {
     std::cout << "wag tail\n";
 }
 

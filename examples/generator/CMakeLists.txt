@@ -11,9 +11,8 @@ set(GENERATED_FILES "${CMAKE_CURRENT_BINARY_DIR}/slots.hpp;${CMAKE_CURRENT_BINAR
 
 add_custom_command(
    OUTPUT ${GENERATED_FILES}
-   COMMAND generate ${GENERATED_FILES}
-   cat "${CMAKE_CURRENT_BINARY_DIR}/slots.hpp"
-   DEPENDS generate animals.cpp
+   COMMAND generate
+   DEPENDS generate animals.hpp animals.cpp
 )
 add_custom_target(
     animals_yomm2_slots_hpp

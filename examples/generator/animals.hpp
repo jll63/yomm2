@@ -5,6 +5,7 @@
 
 #include <yorel/yomm2/policy.hpp>
 
+#ifdef NDEBUG
 // Override the default policy with a minimal policy:
 //  * no external vptr table, because we will only use 'final'
 //  * therefore, no need for a hash function
@@ -16,6 +17,7 @@ struct animals_policy : yorel::yomm2::policy::basic_policy<
                             animals_policy, yorel::yomm2::policy::std_rtti> {};
 
 #define YOMM2_DEFAULT_POLICY animals_policy
+#endif
 
 #include <yorel/yomm2/keywords.hpp>
 

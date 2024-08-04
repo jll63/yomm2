@@ -76,6 +76,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU
 endif()
 add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
 
-add_executable(test_generator test_generator.cpp)
-target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME test_generator COMMAND test_generator)
+if (NOT MSVC)
+  # boost::demangle's output is not stable across compilers, just test with
+  # clang and gcc.
+  add_executable(test_generator test_generator.cpp)
+  target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+  add_test(NAME test_generator COMMAND test_generator)
+endif()
