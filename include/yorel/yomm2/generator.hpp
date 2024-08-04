@@ -376,9 +376,9 @@ void generator::encode_dispatch_data(
         auto dt_iter = std::transform(
             method.dispatch_table.begin(), method.dispatch_table.end() - 1,
             std::ostream_iterator<uint16_t>(os, ", "),
-            [&method](auto entry) { return entry->group_index; });
+            [&method](auto entry) { return entry->spec_index; });
         auto& last = method.dispatch_table.back();
-        *dt_iter = (uint16_t)last->group_index | stop_bit;
+        *dt_iter = (uint16_t)last->spec_index | stop_bit;
         os << "\n";
     }
 
@@ -405,8 +405,12 @@ void generator::encode_dispatch_data(
                 os << (entry.group_index | index_bit | stop);
             } else {
                 // It's a uni-method, or the first virtual parameter of a
-                // multi-method. Encode the method index and the spec index;
-                os << entry.method_index << ", " << (entry.group_index | stop);
+                // multi-method. The group is an index into a linear table of
+                // specs.
+                auto method = methods[entry.method_index];
+                auto spec = method->dispatch_table[entry.group_index];
+                // Encode the method index and the spec index;
+                os << entry.method_index << ", " << (spec->spec_index | stop);
             }
 
             os << ", ";
@@ -425,7 +429,7 @@ template<class Policy, typename Data>
 void generator::decode_dispatch_data(Data& init) {
     using namespace yorel::yomm2::detail;
 
-    constexpr auto pointer_size = sizeof(std::uintptr_t*);
+    constexpr auto pointer_size = sizeof(std::uintptr_t);
 
     trace_type<Policy> trace;
     using indent = typename trace_type<Policy>::indent;
@@ -455,7 +459,7 @@ void generator::decode_dispatch_data(Data& init) {
     auto packed_slots_iter = init.packed.slots;
     auto methods = (method_info**)alloca(method_count * pointer_size);
     auto methods_iter = methods;
-    auto method_defs = (definition_info***)alloca(method_count * pointer_size);
+    auto method_defs = (uintptr_t**)alloca(method_count * pointer_size);
     auto method_defs_iter = method_defs;
     auto dispatch_tables =
         (std::uintptr_t**)alloca(method_count * pointer_size);
@@ -489,12 +493,14 @@ void generator::decode_dispatch_data(Data& init) {
         packed_slots_iter += slots_strides_count;
 
         auto specs =
-            (definition_info**)alloca(method.specs.size() * pointer_size);
-        std::transform(
-            method.specs.begin(), method.specs.end(), specs,
-            [](auto& spec) { return &spec; });
+            (uintptr_t*)alloca((method.specs.size() + 2) * pointer_size);
         *method_defs_iter++ = specs;
         ++trace << "specs index: " << specs << "\n";
+        specs = std::transform(
+            method.specs.begin(), method.specs.end(), specs,
+            [](auto& spec) { return (uintptr_t)spec.pf; });
+        *specs++ = (uintptr_t)method.not_implemented;
+        *specs++ = (uintptr_t)method.ambiguous;
 
         if (method.arity() >= 2) {
             ++trace << "m-method "
@@ -533,14 +539,13 @@ void generator::decode_dispatch_data(Data& init) {
         do {
             auto spec_index = *packed_iter & ~stop_bit;
             trace << " " << spec_index;
-            *decode_iter++ = (uintptr_t)defs[spec_index]->pf;
+            *decode_iter++ = defs[spec_index];
         } while (!(*packed_iter++ & stop_bit));
 
         trace << "\n";
     }
 
     ++trace << "decoding v-tables\n";
-
     auto vtbl_iter = init.packed.vtbl;
 
     for (auto& cls : Policy::classes) {
@@ -574,16 +579,18 @@ void generator::decode_dispatch_data(Data& init) {
 
                 if (method->arity() == 1) {
                     ++trace << "uni-method " << method_index << " group "
-                            << group_index << "\n";
-                    *decode_iter++ =
-                        (std::uintptr_t)method_defs[method_index][group_index]
-                            ->pf;
+                            << group_index;
+                    *decode_iter++ = method_defs[method_index][group_index];
                 } else {
                     ++trace << "multi-method " << method_index << " group "
-                            << group_index << "\n";
+                            << group_index;
                     *decode_iter++ = (std::uintptr_t)(
                         dispatch_tables[method_index] + group_index);
                 }
+
+                trace << " ";
+                Policy::type_name(method->method_type, trace);
+                trace << "\n";
             }
         } while (!(*vtbl_iter++ & stop_bit));
     }

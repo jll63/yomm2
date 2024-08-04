@@ -274,7 +274,7 @@ struct method_info;
 
 struct definition_info : static_chain<definition_info>::static_link {
     ~definition_info();
-    method_info* method;
+    method_info* method; // todo: is this used?
     type_id type; // of the function, for trace
     void** next;
     type_id *vp_begin, *vp_end;

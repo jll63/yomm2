@@ -87,7 +87,7 @@ struct generic_compiler {
         const detail::definition_info* info;
         std::vector<class_*> vp;
         std::uintptr_t pf;
-        size_t method_index, group_index;
+        size_t method_index, spec_index;
     };
 
     using bitvec = boost::dynamic_bitset<>;
@@ -130,7 +130,6 @@ struct generic_compiler {
     std::vector<method> methods;
     size_t class_visit = 0;
     bool compilation_done = false;
-    size_t max_specs = 0;
 };
 
 template<class Policy>
@@ -244,7 +243,7 @@ struct trace_type {
     }
 
     trace_type& operator<<(const generic_compiler::definition* def) {
-        return *this << def->method_index << "/" << def->group_index;
+        return *this << def->method_index << "/" << def->spec_index;
     }
 
     trace_type& operator<<(const generic_compiler::class_& cls) {
@@ -637,15 +636,10 @@ void compiler<Policy>::augment_methods() {
 
         meth_iter->specs.resize(meth_info.specs.size());
         auto spec_iter = meth_iter->specs.begin();
-        max_specs = 0;
 
         for (auto& definition_info : meth_info.specs) {
             spec_iter->method_index = meth_iter - methods.begin();
-            spec_iter->group_index = spec_iter - meth_iter->specs.begin();
-
-            if (spec_iter->group_index >= max_specs) {
-                max_specs = spec_iter->group_index + 1;
-            }
+            spec_iter->spec_index = spec_iter - meth_iter->specs.begin();
 
             ++trace << type_name(definition_info.type) << " ("
                     << definition_info.pf << ")\n";
@@ -983,7 +977,7 @@ void compiler<Policy>::build_dispatch_tables() {
 
                     for (auto& candidate : candidates) {
                         indent YOMM2_GENSYM(trace);
-                        ++trace << "#" << candidate->group_index
+                        ++trace << "#" << candidate->spec_index
                                 << type_name(candidate->info->type) << "\n";
                     }
                 }
@@ -995,7 +989,7 @@ void compiler<Policy>::build_dispatch_tables() {
                     const definition_info* next_info = nexts.front()->info;
                     next = next_info->pf;
                     ++trace << "-> "
-                            << "#" << nexts.front()->group_index
+                            << "#" << nexts.front()->spec_index
                             << type_name(next_info->type) << "\n";
                 } else if (nexts.empty()) {
                     ++trace << "-> none\n";
@@ -1050,7 +1044,7 @@ void compiler<Policy>::build_dispatch_table(
                 indent YOMM2_GENSYM(trace);
 
                 for (auto& app : applicable) {
-                    ++trace << "#" << app->group_index << " "
+                    ++trace << "#" << app->spec_index << " "
                             << type_name(app->info->type) << "\n";
                 }
             }
@@ -1076,7 +1070,7 @@ void compiler<Policy>::build_dispatch_table(
             } else {
                 auto spec = specs[0];
                 m.dispatch_table.push_back(spec);
-                ++trace << "-> #" << spec->group_index << " "
+                ++trace << "-> #" << spec->spec_index << " "
                         << type_name(spec->info->type)
                         << " pf = " << spec->info->pf << "\n";
             }
@@ -1171,10 +1165,37 @@ void compiler<Policy>::install_gv() {
                 if (pass) {
                     ++trace << rflush(4, Policy::dispatch_data.size()) << " "
                             << *cls.static_vptr << " vtbl for " << cls
-                            << " slots [0/" << cls.first_used_slot << "/"
-                            << cls.vtbl.size() << "]\n";
+                            << " slots " << cls.first_used_slot << "-"
+                            << cls.vtbl.size() << "\n";
                     indent YOMM2_GENSYM(trace);
-                    ++trace << range(cls.vtbl.begin(), cls.vtbl.end()) << "\n";
+
+                    for (auto entry : cls.vtbl) {
+                        ++trace << "method " << entry.method_index << " vp "
+                                << entry.vp_index << " group "
+                                << entry.group_index << " ";
+                        auto method = methods[entry.method_index];
+                        Policy::type_name(method.info->method_type, trace);
+
+                        if (method.arity() == 1) {
+                            auto spec =
+                                method.dispatch_table[entry.group_index];
+                            trace << " ";
+
+                            if (spec->pf ==
+                                methods[entry.method_index].ambiguous.pf) {
+                                trace << "ambiguous";
+                            } else if (
+                                spec->pf ==
+                                methods[entry.method_index]
+                                    .not_implemented.pf) {
+                                trace << "not implemented";
+                            } else {
+                                Policy::type_name(spec->info->type, trace);
+                            }
+                        }
+
+                        trace << "\n";
+                    }
                 }
             }
 
@@ -1211,7 +1232,7 @@ void compiler<Policy>::optimize() {
                 if constexpr (trace_enabled) {
                     ++trace << *cls << " vtbl[" << slot
                             << "] = " << spec->method_index << "/"
-                            << spec->group_index << " function "
+                            << spec->spec_index << " function "
                             << (void*)spec->pf << "\n";
                 }
                 (*cls->static_vptr)[slot] = spec->pf;

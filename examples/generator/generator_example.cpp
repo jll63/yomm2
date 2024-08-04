@@ -65,8 +65,8 @@ int main() {
     // // our yardstick: an ordinary virtual function call
     // felix.kick();
 
-    call_kick(cat);
     call_pet(dog);
+    call_kick(cat);
     call_meet(cat, cat);
     call_mate(dog, dog);
 
