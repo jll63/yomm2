@@ -3,6 +3,7 @@
 
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include "yorel/yomm2/detail/chain.hpp"
 
@@ -275,7 +276,7 @@ struct method_info;
 struct definition_info : static_chain<definition_info>::static_link {
     ~definition_info();
     method_info* method; // todo: is this used?
-    type_id type; // of the function, for trace
+    type_id type;        // of the function, for trace
     void** next;
     type_id *vp_begin, *vp_end;
     void* pf;
@@ -722,6 +723,137 @@ std::ostream* log_on(std::ostream* os);
 std::ostream* log_off();
 
 // -----------------------------------------------------------------------------
+// tracing
+
+struct rflush {
+    size_t width;
+    size_t value;
+    explicit rflush(size_t width, size_t value) : width(width), value(value) {
+    }
+};
+
+struct type_name {
+    type_name(type_id type) : type(type) {
+    }
+    type_id type;
+};
+
+template<class Policy>
+struct trace_type {
+    static constexpr bool trace_enabled =
+        Policy::template has_facet<policy::trace_output>;
+
+    size_t indentation_level{0};
+
+    trace_type& operator++() {
+        if constexpr (trace_enabled) {
+            if (Policy::trace_enabled) {
+                for (int i = 0; i < indentation_level; ++i) {
+                    Policy::trace_stream << "  ";
+                }
+            }
+        }
+
+        return *this;
+    }
+
+    struct indent {
+        trace_type& trace;
+        int by;
+
+        explicit indent(trace_type& trace, int by = 2) : trace(trace), by(by) {
+            trace.indentation_level += by;
+        }
+
+        ~indent() {
+            trace.indentation_level -= by;
+        }
+    };
+};
+
+template<class Policy, typename T, typename F>
+auto& write_range(trace_type<Policy>& trace, detail::range<T> range, F fn) {
+    if constexpr (trace_type<Policy>::trace_enabled) {
+        if (Policy::trace_enabled) {
+            trace << "(";
+            const char* sep = "";
+            for (auto value : range) {
+                trace << sep << fn(value);
+                sep = ", ";
+            }
+
+            trace << ")";
+        }
+    }
+
+    return trace;
+}
+
+template<class Policy, typename T>
+auto& operator<<(trace_type<Policy>& trace, const T& value) {
+    if constexpr (trace_type<Policy>::trace_enabled) {
+        if (Policy::trace_enabled) {
+            Policy::trace_stream << value;
+        }
+    }
+    return trace;
+}
+
+template<class Policy>
+auto& operator<<(trace_type<Policy>& trace, const rflush& rf) {
+    if constexpr (trace_type<Policy>::trace_enabled) {
+        if (Policy::trace_enabled) {
+            auto pad = rf.width;
+            auto remain = rf.value;
+
+            int digits = 1;
+            auto tmp = rf.value / 10;
+
+            while (tmp) {
+                ++digits;
+                tmp /= 10;
+            }
+
+            while (digits < rf.width) {
+                trace << " ";
+                ++digits;
+            }
+
+            trace << rf.value;
+        }
+    }
+
+    return trace;
+}
+
+template<class Policy>
+auto& operator<<(trace_type<Policy>& trace, const boost::dynamic_bitset<>& bits) {
+    if constexpr (trace_type<Policy>::trace_enabled) {
+        if (Policy::trace_enabled) {
+            if (Policy::trace_enabled) {
+                auto i = bits.size();
+                while (i != 0) {
+                    --i;
+                    Policy::trace_stream << bits[i];
+                }
+            }
+        }
+    }
+
+    return trace;
+}
+
+template<class Policy>
+auto& operator<<(trace_type<Policy>& trace, const detail::range<type_id*>& tips) {
+    return write_range(trace, tips, [](auto tip) { return type_name(tip); });
+}
+
+template<class Policy, typename T>
+auto& operator<<(trace_type<Policy>& trace, const detail::range<T>& range) {
+    return write_range(trace, range, [](auto value) { return value; });
+}
+
+// -----------------------------------------------------------------------------
 // lightweight ostream
 
 struct ostdstream {
@@ -805,6 +937,191 @@ template<class Method>
 struct has_static_offsets<
     Method, std::void_t<decltype(static_offsets<Method>::slots)>>
     : std::true_type {};
+
+// -----------------------------------------------------------------------------
+// encode/decode dispatch data
+
+constexpr size_t method_bits = sizeof(uint16_t) * 4;
+constexpr std::uintptr_t spec_mask = (1 << method_bits) - 1;
+constexpr std::uintptr_t stop_bit = 1 << (sizeof(uint16_t) * 8 - 1);
+constexpr std::uintptr_t index_bit = 1 << (sizeof(uint16_t) * 8 - 2);
+
+template<class Policy, typename Data>
+void decode_dispatch_data(Data& init) {
+    using namespace yorel::yomm2::detail;
+
+    constexpr auto pointer_size = sizeof(std::uintptr_t);
+
+    trace_type<Policy> trace;
+    using indent = typename trace_type<Policy>::indent;
+
+    trace << "Decoding dispatch data for ";
+    Policy::type_name(Policy::template static_type<Policy>(), trace);
+    trace << "\n";
+
+    auto method_count = 0, multi_method_count = 0;
+
+    for (auto& method : Policy::methods) {
+        ++method_count;
+
+        if (method.arity() >= 2) {
+            ++multi_method_count;
+        }
+    }
+
+    ++trace << method_count << " methods, " << multi_method_count
+            << " multi-methods\n";
+
+    // First copy the slots and strides to the static arrays in methods. Also
+    // build an array of arrays of pointer to method definitions. Methods and
+    // definitions are in reverse order, because of how 'chain' works. While
+    // building the array of array of defintions, we put them back in the order
+    // in which the compiler saw them.
+    auto packed_slots_iter = init.packed.slots;
+    auto methods = (method_info**)alloca(method_count * pointer_size);
+    auto methods_iter = methods;
+    auto method_defs = (uintptr_t**)alloca(method_count * pointer_size);
+    auto method_defs_iter = method_defs;
+    auto dispatch_tables =
+        (std::uintptr_t**)alloca(method_count * pointer_size);
+    auto multi_method_to_method =
+        (size_t*)alloca(multi_method_count * sizeof(size_t));
+    auto multi_method_to_method_iter = multi_method_to_method;
+    auto method_index = 0;
+
+    for (auto& method : Policy::methods) {
+        ++trace << "method " << method.name << "\n";
+        indent _(trace);
+
+        *methods_iter++ = &method;
+
+        ++trace << "specializations:\n";
+
+        for (auto& spec : method.specs) {
+            indent _(trace);
+            ++trace << spec.pf << " ";
+            Policy::type_name(spec.type, trace);
+            trace << "\n";
+        }
+
+        auto slots_strides_count = 2 * method.arity() - 1;
+
+        // copy slots and strides into the method's static
+        ++trace << "installing " << slots_strides_count
+                << " slots and strides\n";
+        std::copy_n(
+            packed_slots_iter, slots_strides_count, method.slots_strides_ptr);
+        packed_slots_iter += slots_strides_count;
+
+        auto specs =
+            (uintptr_t*)alloca((method.specs.size() + 2) * pointer_size);
+        *method_defs_iter++ = specs;
+        ++trace << "specs index: " << specs << "\n";
+        specs = std::transform(
+            method.specs.begin(), method.specs.end(), specs,
+            [](auto& spec) { return (uintptr_t)spec.pf; });
+        *specs++ = (uintptr_t)method.not_implemented;
+        *specs++ = (uintptr_t)method.ambiguous;
+
+        if (method.arity() >= 2) {
+            ++trace << "m-method "
+                    << (multi_method_to_method_iter - multi_method_to_method)
+                    << " is method " << method_index << "\n";
+            *multi_method_to_method_iter++ = method_index;
+        }
+
+        ++method_index;
+    }
+
+    // Build a table of pointers to dispatch tables, for multi-methods only.
+
+    // decode the dispatch tables for multi-methods, and keep track of them in
+    // an array. We will use it when we fill the vtables. The packed dispatch
+    // tables are in compiler order.
+
+    auto packed_iter = init.packed.dispatch;
+    auto decode_iter = init.decode;
+
+    ++trace << "decoding multi-method dispatch tables\n";
+
+    for (auto i = 0; i < multi_method_count; ++i) {
+        assert((char*)decode_iter < (char*)packed_iter);
+        indent _(trace);
+
+        dispatch_tables[i] = decode_iter;
+        ++trace << "multi-method " << i << " dispatch table at " << decode_iter
+                << "\n";
+
+        indent __(trace);
+        ++trace << "specs:";
+
+        auto defs = method_defs[multi_method_to_method[i]];
+
+        do {
+            auto spec_index = *packed_iter & ~stop_bit;
+            trace << " " << spec_index;
+            *decode_iter++ = defs[spec_index];
+        } while (!(*packed_iter++ & stop_bit));
+
+        trace << "\n";
+    }
+
+    ++trace << "decoding v-tables\n";
+    auto vtbl_iter = init.packed.vtbl;
+
+    for (auto& cls : Policy::classes) {
+        if (*cls.static_vptr != nullptr) {
+            continue;
+        }
+
+        indent _1(trace);
+        ++trace << "class ";
+        Policy::type_name(cls.type, trace);
+        trace << "\n";
+
+        indent _2(trace);
+
+        auto first_slot = *vtbl_iter++;
+        ++trace << "first slot: " << first_slot << "\n";
+
+        *cls.static_vptr = decode_iter - first_slot;
+
+        do {
+            auto entry = *vtbl_iter & ~stop_bit;
+
+            if (entry & index_bit) {
+                auto index = *vtbl_iter & ~index_bit;
+                ++trace << "multi-method index " << index << "\n";
+                *decode_iter++ = index;
+            } else {
+                auto method_index = entry;
+                auto group_index = *++vtbl_iter & ~stop_bit;
+                auto method = methods[method_index];
+
+                if (method->arity() == 1) {
+                    ++trace << "uni-method " << method_index << " group "
+                            << group_index;
+                    *decode_iter++ = method_defs[method_index][group_index];
+                } else {
+                    ++trace << "multi-method " << method_index << " group "
+                            << group_index;
+                    *decode_iter++ = (std::uintptr_t)(
+                        dispatch_tables[method_index] + group_index);
+                }
+
+                trace << " ";
+                Policy::type_name(method->method_type, trace);
+                trace << "\n";
+            }
+        } while (!(*vtbl_iter++ & stop_bit));
+    }
+
+    using namespace policy;
+
+    if constexpr (Policy::template has_facet<policy::external_vptr>) {
+        Policy::publish_vptrs(Policy::classes.begin(), Policy::classes.end());
+    }
+}
 
 // -----------------------------------------------------------------------------
 // report
