@@ -12,7 +12,6 @@ inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
 
 - [YOMM2](#yomm2)
-  - [](#)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)

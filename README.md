@@ -12,7 +12,6 @@ inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
 
 - [YOMM2](#yomm2)
-  - [](#)
   - [TL;DR](#tldr)
   - [Open Methods in a Nutshell](#open-methods-in-a-nutshell)
     - [Cross-cutting Concerns and the Expression Problem](#cross-cutting-concerns-and-the-expression-problem)
@@ -330,4 +329,3 @@ the future. No promises, no time table.
 If you have ideas, comments, suggestions...get in touch! If you use YOMM2, I
 would appreciate it if you take the time to send me a description of your use
 case(s), and links to the project(s), if they are publicly available.
-

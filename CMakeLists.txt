@@ -104,7 +104,7 @@ add_custom_command(
   OUTPUT "${readme_md}"
   COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
   DEPENDS "${readme_cpp}")
-add_custom_target(DOCS DEPENDS README_md README reference build_and_make_tutorials)
+add_custom_target(DOCS DEPENDS README_md README)
 
 if(YOMM2_ENABLE_TESTS)
   # Code in cpp doc files also serves as tests.
