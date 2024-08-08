@@ -55,6 +55,7 @@
     "buildPresets": [
         {
             "name": "build-headers-only",
+            "hidden": true,
             "configurePreset": "headers-only",
             "displayName": "Build",
             "description": "Build with Ninja/vcpkg"
@@ -71,6 +72,7 @@
         },
         {
             "name": "build-shared",
+            "hidden": true,
             "configurePreset": "shared",
             "displayName": "Build",
             "description": "Build with Ninja/vcpkg"
@@ -89,6 +91,7 @@
     "testPresets": [
         {
             "name": "test-headers-only",
+            "hidden": true,
             "configurePreset": "headers-only"
         },
         {
@@ -103,6 +106,7 @@
         },
         {
             "name": "test-shared",
+            "hidden": true,
             "configurePreset": "shared"
         },
         {
