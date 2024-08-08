@@ -1,6 +1,7 @@
 .hrefs
 .rtags
 build/
+builds/
 **/#*#
 dependencies/*
 extern/*
