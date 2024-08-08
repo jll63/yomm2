@@ -40,15 +40,8 @@ class generator {
     template<class Compiler>
     static void encode_dispatch_data(
         const Compiler& compiler, const std::string& policy, std::ostream& os);
-    template<class Policy, typename Data>
-    static void decode_dispatch_data(Data& data);
 
   private:
-    static constexpr size_t method_bits = sizeof(uint16_t) * 4;
-    static constexpr std::uintptr_t spec_mask = (1 << method_bits) - 1;
-    static constexpr std::uintptr_t stop_bit = 1 << (sizeof(uint16_t) * 8 - 1);
-    static constexpr std::uintptr_t index_bit = 1 << (sizeof(uint16_t) * 8 - 2);
-
     void write_static_offsets(
         const detail::method_info& method, std::ostream& os) const;
 
@@ -289,10 +282,10 @@ void generator::encode_dispatch_data(
     os << std::hex << std::showbase;
 
     auto slots_and_strides_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), 0,
+        compiler.methods.begin(), compiler.methods.end(), size_t(0),
         [](auto sum, auto& method) { return sum + 2 * method.arity() - 1; });
     auto dispatch_tables_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), 0,
+        compiler.methods.begin(), compiler.methods.end(), size_t(0),
         [](auto sum, auto& method) {
             return sum + method.dispatch_table.size();
         });
@@ -354,12 +347,14 @@ void generator::encode_dispatch_data(
         os << indent << "// "
            << boost::core::demangle(method->info->name.data()) << "\n";
         os << indent;
-        auto strides_iter = std::copy(
+        auto strides_iter = std::transform(
             method->slots.begin(), method->slots.end(),
-            std::ostream_iterator<uint16_t>(os, ", "));
-        std::copy(
+            std::ostream_iterator<uint16_t>(os, ", "),
+            [](auto slot) { return uint16_t(slot); });
+        std::transform(
             method->strides.begin(), method->strides.end(),
-            std::ostream_iterator<uint16_t>(os, ", "));
+            std::ostream_iterator<uint16_t>(os, ", "),
+            [](auto slot) { return uint16_t(slot); });
         os << "\n";
     }
 
@@ -377,7 +372,7 @@ void generator::encode_dispatch_data(
         auto dt_iter = std::transform(
             method.dispatch_table.begin(), method.dispatch_table.end() - 1,
             std::ostream_iterator<uint16_t>(os, ", "),
-            [&method](auto entry) { return entry->spec_index; });
+            [&method](auto entry) { return uint16_t(entry->spec_index); });
         auto& last = method.dispatch_table.back();
         *dt_iter = (uint16_t)last->spec_index | stop_bit;
         os << "\n";
@@ -421,186 +416,9 @@ void generator::encode_dispatch_data(
     }
 
     os << "\n    } } };\n\n";
-    os << "    yorel::yomm2::generator::decode_dispatch_data<"
+    os << "    yorel::yomm2::detail::decode_dispatch_data<"
        << (policy.empty() ? "YOMM2_DEFAULT_POLICY" : policy)
        << ">(yomm2_dispatch_data);\n\n";
-}
-
-template<class Policy, typename Data>
-void generator::decode_dispatch_data(Data& init) {
-    using namespace yorel::yomm2::detail;
-
-    constexpr auto pointer_size = sizeof(std::uintptr_t);
-
-    trace_type<Policy> trace;
-    using indent = typename trace_type<Policy>::indent;
-
-    trace << "Decoding dispatch data for ";
-    Policy::type_name(Policy::template static_type<Policy>(), trace);
-    trace << "\n";
-
-    auto method_count = 0, multi_method_count = 0;
-
-    for (auto& method : Policy::methods) {
-        ++method_count;
-
-        if (method.arity() >= 2) {
-            ++multi_method_count;
-        }
-    }
-
-    ++trace << method_count << " methods, " << multi_method_count
-            << " multi-methods\n";
-
-    // First copy the slots and strides to the static arrays in methods. Also
-    // build an array of arrays of pointer to method definitions. Methods and
-    // definitions are in reverse order, because of how 'chain' works. While
-    // building the array of array of defintions, we put them back in the order
-    // in which the compiler saw them.
-    auto packed_slots_iter = init.packed.slots;
-    auto methods = (method_info**)alloca(method_count * pointer_size);
-    auto methods_iter = methods;
-    auto method_defs = (uintptr_t**)alloca(method_count * pointer_size);
-    auto method_defs_iter = method_defs;
-    auto dispatch_tables =
-        (std::uintptr_t**)alloca(method_count * pointer_size);
-    auto multi_method_to_method =
-        (size_t*)alloca(multi_method_count * sizeof(size_t));
-    auto multi_method_to_method_iter = multi_method_to_method;
-    auto method_index = 0;
-
-    for (auto& method : Policy::methods) {
-        ++trace << "method " << method.name << "\n";
-        indent _(trace);
-
-        *methods_iter++ = &method;
-
-        ++trace << "specializations:\n";
-
-        for (auto& spec : method.specs) {
-            indent _(trace);
-            ++trace << spec.pf << " ";
-            Policy::type_name(spec.type, trace);
-            trace << "\n";
-        }
-
-        auto slots_strides_count = 2 * method.arity() - 1;
-
-        // copy slots and strides into the method's static
-        ++trace << "installing " << slots_strides_count
-                << " slots and strides\n";
-        std::copy_n(
-            packed_slots_iter, slots_strides_count, method.slots_strides_ptr);
-        packed_slots_iter += slots_strides_count;
-
-        auto specs =
-            (uintptr_t*)alloca((method.specs.size() + 2) * pointer_size);
-        *method_defs_iter++ = specs;
-        ++trace << "specs index: " << specs << "\n";
-        specs = std::transform(
-            method.specs.begin(), method.specs.end(), specs,
-            [](auto& spec) { return (uintptr_t)spec.pf; });
-        *specs++ = (uintptr_t)method.not_implemented;
-        *specs++ = (uintptr_t)method.ambiguous;
-
-        if (method.arity() >= 2) {
-            ++trace << "m-method "
-                    << (multi_method_to_method_iter - multi_method_to_method)
-                    << " is method " << method_index << "\n";
-            *multi_method_to_method_iter++ = method_index;
-        }
-
-        ++method_index;
-    }
-
-    // Build a table of pointers to dispatch tables, for multi-methods only.
-
-    // decode the dispatch tables for multi-methods, and keep track of them in
-    // an array. We will use it when we fill the vtables. The packed dispatch
-    // tables are in compiler order.
-
-    auto packed_iter = init.packed.dispatch;
-    auto decode_iter = init.decode;
-
-    ++trace << "decoding multi-method dispatch tables\n";
-
-    for (auto i = 0; i < multi_method_count; ++i) {
-        assert((char*)decode_iter < (char*)packed_iter);
-        indent _(trace);
-
-        dispatch_tables[i] = decode_iter;
-        ++trace << "multi-method " << i << " dispatch table at " << decode_iter
-                << "\n";
-
-        indent __(trace);
-        ++trace << "specs:";
-
-        auto defs = method_defs[multi_method_to_method[i]];
-
-        do {
-            auto spec_index = *packed_iter & ~stop_bit;
-            trace << " " << spec_index;
-            *decode_iter++ = defs[spec_index];
-        } while (!(*packed_iter++ & stop_bit));
-
-        trace << "\n";
-    }
-
-    ++trace << "decoding v-tables\n";
-    auto vtbl_iter = init.packed.vtbl;
-
-    for (auto& cls : Policy::classes) {
-        if (*cls.static_vptr != nullptr) {
-            continue;
-        }
-
-        indent _1(trace);
-        ++trace << "class ";
-        Policy::type_name(cls.type, trace);
-        trace << "\n";
-
-        indent _2(trace);
-
-        auto first_slot = *vtbl_iter++;
-        ++trace << "first slot: " << first_slot << "\n";
-
-        *cls.static_vptr = decode_iter - first_slot;
-
-        do {
-            auto entry = *vtbl_iter & ~stop_bit;
-
-            if (entry & index_bit) {
-                auto index = *vtbl_iter & ~index_bit;
-                ++trace << "multi-method index " << index << "\n";
-                *decode_iter++ = index;
-            } else {
-                auto method_index = entry;
-                auto group_index = *++vtbl_iter & ~stop_bit;
-                auto method = methods[method_index];
-
-                if (method->arity() == 1) {
-                    ++trace << "uni-method " << method_index << " group "
-                            << group_index;
-                    *decode_iter++ = method_defs[method_index][group_index];
-                } else {
-                    ++trace << "multi-method " << method_index << " group "
-                            << group_index;
-                    *decode_iter++ = (std::uintptr_t)(
-                        dispatch_tables[method_index] + group_index);
-                }
-
-                trace << " ";
-                Policy::type_name(method->method_type, trace);
-                trace << "\n";
-            }
-        } while (!(*vtbl_iter++ & stop_bit));
-    }
-
-    using namespace policy;
-
-    if constexpr (has_facet<Policy, external_vptr>) {
-        Policy::publish_vptrs(Policy::classes.begin(), Policy::classes.end());
-    }
 }
 
 } // namespace yomm2

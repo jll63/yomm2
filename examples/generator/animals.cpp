@@ -1,5 +1,7 @@
 #include "animals.hpp"
 
+#include <iostream>
+
 Animal::~Animal() {
 }
 

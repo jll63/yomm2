@@ -31,13 +31,6 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-struct rflush {
-    size_t width;
-    size_t value;
-    explicit rflush(size_t width, size_t value) : width(width), value(value) {
-    }
-};
-
 template<class Facet, typename>
 struct has_report_aux : std::false_type {};
 
@@ -174,12 +167,6 @@ struct generic_compiler {
         update_method_report report;
     };
 
-    struct type_name {
-        type_name(type_id type) : type(type) {
-        }
-        type_id type;
-    };
-
     std::deque<class_> classes;
     std::vector<method> methods;
     size_t class_visit = 0;
@@ -187,152 +174,54 @@ struct generic_compiler {
 };
 
 template<class Policy>
-struct trace_type {
-    static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::trace_output>;
+auto& operator<<(
+    trace_type<Policy>& trace, generic_compiler::vtbl_entry entry) {
+    return trace << entry.method_index << "/" << entry.vp_index << "/"
+                 << entry.group_index;
+}
 
-    size_t indentation_level{0};
+template<class Policy>
+trace_type<Policy>&
+operator<<(trace_type<Policy>& trace, const generic_compiler::definition* def) {
+    return trace << def->method_index << "/" << def->spec_index;
+}
 
-    trace_type& operator++() {
-        if constexpr (trace_enabled) {
-            if (Policy::trace_enabled) {
-                for (int i = 0; i < indentation_level; ++i) {
-                    Policy::trace_stream << "  ";
-                }
-            }
+template<class Policy>
+trace_type<Policy>&
+operator<<(trace_type<Policy>& trace, const generic_compiler::class_& cls) {
+    if constexpr (Policy::template has_facet<policy::trace_output>) {
+        trace << type_name(cls.type_ids[0]);
+    }
+
+    return trace;
+}
+
+template<class Policy, template<typename...> typename Container, typename... T>
+trace_type<Policy>& operator<<(
+    trace_type<Policy>& trace,
+    Container<generic_compiler::class_*, T...>& classes) {
+    if constexpr (Policy::template has_facet<policy::trace_output>) {
+        trace << "(";
+        const char* sep = "";
+        for (auto cls : classes) {
+            trace << sep << *cls;
+            sep = ", ";
         }
 
-        return *this;
+        trace << ")";
     }
 
-    trace_type& operator<<(const rflush& rf) {
-        if constexpr (trace_enabled) {
-            auto pad = rf.width;
-            auto remain = rf.value;
+    return trace;
+}
 
-            int digits = 1;
-            auto tmp = rf.value / 10;
-
-            while (tmp) {
-                ++digits;
-                tmp /= 10;
-            }
-
-            while (digits < rf.width) {
-                *this << " ";
-                ++digits;
-            }
-
-            *this << rf.value;
-        }
-
-        return *this;
+template<class Policy>
+auto& operator<<(trace_type<Policy>& trace, const type_name& manip) {
+    if constexpr (Policy::template has_facet<policy::trace_output>) {
+        Policy::type_name(manip.type, trace);
     }
 
-    trace_type& operator<<(const boost::dynamic_bitset<>& bits) {
-        if constexpr (trace_enabled) {
-            if (Policy::trace_enabled) {
-                auto i = bits.size();
-                while (i != 0) {
-                    --i;
-                    Policy::trace_stream << bits[i];
-                }
-            }
-        }
-        return *this;
-    }
-
-    template<typename T>
-    trace_type& operator<<(const T& value) {
-        if constexpr (trace_enabled) {
-            if (Policy::trace_enabled) {
-                Policy::trace_stream << value;
-            }
-        }
-        return *this;
-    }
-
-    template<typename T, typename F>
-    trace_type& write_range(detail::range<T> range, F fn) {
-        if constexpr (trace_enabled) {
-            *this << "(";
-            const char* sep = "";
-            for (auto value : range) {
-                *this << sep << fn(value);
-                sep = ", ";
-            }
-
-            *this << ")";
-        }
-
-        return *this;
-    }
-
-    template<typename T>
-    trace_type& operator<<(detail::range<T> range) {
-        return write_range(range, [](auto value) { return value; });
-    }
-
-    trace_type& operator<<(detail::range<type_id*> tips) {
-        return write_range(
-            tips, [](auto tip) { return generic_compiler::type_name(tip); });
-    }
-
-    struct indent {
-        trace_type& trace;
-        int by;
-
-        explicit indent(trace_type& trace, int by = 2) : trace(trace), by(by) {
-            trace.indentation_level += by;
-        }
-
-        ~indent() {
-            trace.indentation_level -= by;
-        }
-    };
-
-    trace_type& operator<<(generic_compiler::vtbl_entry entry) {
-        return *this << entry.method_index << "/" << entry.vp_index << "/"
-                     << entry.group_index;
-    }
-
-    trace_type& operator<<(const generic_compiler::definition* def) {
-        return *this << def->method_index << "/" << def->spec_index;
-    }
-
-    trace_type& operator<<(const generic_compiler::class_& cls) {
-        if constexpr (trace_enabled) {
-            *this << generic_compiler::type_name(cls.type_ids[0]);
-        }
-
-        return *this;
-    }
-
-    template<template<typename...> typename Container, typename... T>
-    trace_type&
-    operator<<(Container<generic_compiler::class_*, T...>& classes) {
-        if constexpr (trace_enabled) {
-            *this << "(";
-            const char* sep = "";
-            for (auto cls : classes) {
-                *this << sep << *cls;
-                sep = ", ";
-            }
-
-            *this << ")";
-        }
-
-        return *this;
-    }
-
-    trace_type& operator<<(generic_compiler::type_name manip) {
-        if constexpr (trace_enabled) {
-            Policy::type_name(manip.type, *this);
-        }
-
-        return *this;
-    }
-};
+    return trace;
+}
 } // namespace detail
 
 template<class Policy>
