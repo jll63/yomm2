@@ -50,6 +50,8 @@ jobs:
       # repository. Not using "VCPKG_ROOT" because a variable with the same name
       # is defined in the VS's Developer Command Prompt environment in VS 2022
       # 17.6, which would override this one if it had the same name.
+      # ^^^ JLL: macos needs VCPKG_ROOT.
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       _VCPKG_: ${{ github.workspace }}/vcpkg
       # Tells vcpkg where binary packages are stored.
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
