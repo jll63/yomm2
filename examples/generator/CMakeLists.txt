@@ -3,27 +3,28 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_executable(generate generate.cpp animals.cpp)
-target_include_directories(generate PRIVATE .)
-target_link_libraries(generate YOMM2::yomm2)
+add_library(generator_lib OBJECT animals.cpp)
+target_link_libraries(generator_lib YOMM2::yomm2)
 
-set(GENERATED_FILES "${CMAKE_CURRENT_BINARY_DIR}/slots.hpp;${CMAKE_CURRENT_BINARY_DIR}/tables.hpp")
+add_executable(generator_gen generator_gen.cpp)
+target_link_libraries(generator_gen generator_lib YOMM2::yomm2)
 
-add_custom_command(
-   OUTPUT ${GENERATED_FILES}
-   COMMAND generate
-   DEPENDS generate animals.hpp animals.cpp
+set(GENERATED_FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/slots.hpp"
+    "${CMAKE_CURRENT_BINARY_DIR}/tables.hpp"
 )
-add_custom_target(
-    animals_yomm2_slots_hpp
-    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/slots.hpp ${CMAKE_CURRENT_BINARY_DIR}/tables.hpp)
+add_custom_command(
+    OUTPUT ${GENERATED_FILES}
+    COMMAND generator_gen
+    DEPENDS generator_gen
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_custom_target(generator_generate DEPENDS ${GENERATED_FILES})
+add_library(generator_generated_lib INTERFACE)
+add_dependencies(generator_generated_lib generator_generate)
+target_include_directories(generator_generated_lib INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(animals_yomm2_slots INTERFACE)
-add_dependencies(animals_yomm2_slots animals_yomm2_slots_hpp)
-target_include_directories(animals_yomm2_slots INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-
-add_executable(generator_example generator_example.cpp animals.cpp)
-target_include_directories(generator_example PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(
-    generator_example PRIVATE animals_yomm2_slots YOMM2::yomm2)
-add_test(NAME generator_example COMMAND generator_example)
+add_executable(generator_app generator_app.cpp)
+target_include_directories(generator_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(generator_app PRIVATE generator_generated_lib generator_lib YOMM2::yomm2)
+add_test(NAME generator_app COMMAND generator_app)

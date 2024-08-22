@@ -79,7 +79,52 @@ add_test(NAME test_custom_rtti COMMAND test_custom_rtti)
 if (NOT MSVC)
   # boost::demangle's output is not stable across compilers, just test with
   # clang and gcc.
-  add_executable(test_generator test_generator.cpp)
-  target_link_libraries(test_generator YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-  add_test(NAME test_generator COMMAND test_generator)
+  add_executable(test_generator_forward_decls test_generator_forward_decls.cpp)
+  target_link_libraries(test_generator_forward_decls YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+  add_test(NAME test_generator_forward_decls COMMAND test_generator_forward_decls)
+
+  # Thanks to https://stackoverflow.com/users/3440745/tsyvarev for providing the
+  # following cmake incantations.
 endif()
+
+if(CMAKE_CONFIGURATION_TYPES)
+  # Multi-configuration generator
+  #
+  # Explicitly use generator expression,
+  # so CMake won't automatically append the subdirectory with a config name.
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+else()
+  # Single-configuration generator
+  #
+  # While it is allowable to create config-specific directory,
+  # we don't do that: every configuration already has its own build tree.
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+endif()
+
+add_library(test_generator_lib OBJECT test_generator_domain.cpp)
+target_link_libraries(test_generator_lib YOMM2::yomm2)
+
+add_executable(test_generator_gen test_generator_gen.cpp)
+add_dependencies(test_generator_gen test_generator_lib)
+target_link_libraries(test_generator_gen test_generator_lib YOMM2::yomm2)
+
+set(GENERATED_FILES
+    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_slots.hpp"
+    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_tables.hpp"
+)
+
+add_custom_command(
+    OUTPUT ${GENERATED_FILES}
+    COMMAND test_generator_gen
+    DEPENDS test_generator_gen
+    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+)
+add_custom_target(test_generator_generate DEPENDS ${GENERATED_FILES})
+add_library(test_generator_generated_lib INTERFACE)
+add_dependencies(test_generator_generated_lib test_generator_generate)
+target_include_directories(test_generator_generated_lib INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(test_generator test_generator.cpp)
+target_include_directories(test_generator PRIVATE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+target_link_libraries(test_generator PRIVATE test_generator_generated_lib test_generator_lib YOMM2::yomm2)
+add_test(NAME test_generator COMMAND test_generator)

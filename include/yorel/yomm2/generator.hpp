@@ -24,14 +24,14 @@ namespace yomm2 {
 
 class generator {
   public:
-    void add_forward_declaration(const std::type_info& type);
+    generator& add_forward_declaration(const std::type_info& type);
     template<typename T>
-    void add_forward_declaration();
-    void add_forward_declaration(std::string_view name);
-    template<class Policy>
-    void add_forward_declarations();
-    void write_forward_declarations(std::ostream& os) const;
-    template<class Policy>
+    generator& add_forward_declaration();
+    generator& add_forward_declaration(std::string_view name);
+    template<class Policy = YOMM2_DEFAULT_POLICY>
+    generator& add_forward_declarations();
+    const generator& write_forward_declarations(std::ostream& os) const;
+    template<class Policy = YOMM2_DEFAULT_POLICY>
     const generator& write_static_offsets(std::ostream& os) const;
     template<class Compiler>
     static void
@@ -82,7 +82,7 @@ inline std::unordered_set<std::string_view> generator::keywords = {
 };
 // clang-format on
 
-inline void generator::add_forward_declaration(std::string_view type) {
+inline generator& generator::add_forward_declaration(std::string_view type) {
     using namespace detail;
 
     std::regex name_regex(R"((\w+(?:::\w+)*)( *<)?)");
@@ -117,25 +117,32 @@ inline void generator::add_forward_declaration(std::string_view type) {
 
         names.emplace(name);
     }
+
+    return *this;
 }
 
-inline void generator::add_forward_declaration(const std::type_info& type) {
-    add_forward_declaration(boost::core::demangle(type.name()));
+inline generator&
+generator::add_forward_declaration(const std::type_info& type) {
+    return add_forward_declaration(boost::core::demangle(type.name()));
 }
 
 template<typename T>
-inline void generator::add_forward_declaration() {
-    add_forward_declaration(typeid(T));
+inline generator& generator::add_forward_declaration() {
+    return add_forward_declaration(typeid(T));
 }
 
 template<class Policy>
-void generator::add_forward_declarations() {
+generator& generator::add_forward_declarations() {
     for (auto& method : Policy::methods) {
         add_forward_declaration(
             *reinterpret_cast<const std::type_info*>(method.method_type));
     }
+
+    return *this;
 }
-inline void generator::write_forward_declarations(std::ostream& os) const {
+
+inline const generator&
+generator::write_forward_declarations(std::ostream& os) const {
     const std::string file_scope;
     auto prev_ns_iter = file_scope.begin();
     auto prev_ns_last = file_scope.begin();
@@ -196,6 +203,8 @@ inline void generator::write_forward_declarations(std::ostream& os) const {
 
         ++prev_ns_iter;
     }
+
+    return *this;
 }
 
 template<class T>
@@ -276,9 +285,9 @@ void generator::encode_dispatch_data(
 
     std::vector<std::size_t> slots;
     std::vector<std::uintptr_t> tables;
-    //    create_dispatch_data(compiler, slots, tables);
 
-    os << std::hex << std::showbase;
+    // -------------------------------------------------------------------------
+    // Calculate data sizes.
 
     auto slots_and_strides_size = std::accumulate(
         compiler.methods.begin(), compiler.methods.end(), size_t(0),
@@ -286,54 +295,67 @@ void generator::encode_dispatch_data(
     auto dispatch_tables_size = std::accumulate(
         compiler.methods.begin(), compiler.methods.end(), size_t(0),
         [](auto sum, auto& method) {
-            return sum + method.dispatch_table.size();
+            if (method.arity() == 1) {
+                return sum;
+            } else {
+                return sum + method.dispatch_table.size();
+            }
         });
 
     size_t encode_vtbl_size = 0, decode_vtbl_size = 0;
 
     for (auto& cls : compiler.classes) {
-        size_t encode_size = 0;
+        ++encode_vtbl_size; // for first slot index
 
         for (auto& entry :
              range(cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end())) {
-            if (entry.vp_index > 1) {
+            if (entry.vp_index != 0) {
                 // It's a multi-method, and not the first virtual parameter.
                 // Encode the index, it will be decoded as is.
-                ++encode_size;
+                ++encode_vtbl_size;
             } else {
                 // It's a uni-method, or the first virtual parameter of a
                 // multi-method. Encode the method index and the spec index;
-                encode_size += 2;
+                encode_vtbl_size += 2;
             }
         }
 
-        encode_vtbl_size += encode_size;
         decode_vtbl_size += cls.vtbl.size() - cls.first_used_slot;
     }
 
+    // -------------------------------------------------------------------------
+    // Write data structure declaration and open initializer.
+
     char prelude_format[] = R"(
-    static union {
-        struct {
-            uint16_t headroom[%d];
-            uint16_t slots[%d];
-            uint16_t dispatch[%d];
-            uint16_t vtbl[%d];
-        } packed;
-        std::uintptr_t decode[%d];
-    } yomm2_dispatch_data = { { {}, {
+    static struct {
+        union {
+            struct {
+                uint16_t headroom[%d];
+                uint16_t slots[%d];
+                uint16_t vtbls[%d];
+            } encoded;
+            std::uintptr_t vtbls[%d];
+        };
+        std::uintptr_t dtbls[%d];
+    } yomm2_dispatch_data = { { { {}, {
 )";
 
-    const auto total_decode_size = dispatch_tables_size + decode_vtbl_size;
-    const auto total_encode_size =
-        slots_and_strides_size + dispatch_tables_size + encode_vtbl_size;
+    const auto decode_size = sizeof(uintptr_t);
+    const auto encode_size = sizeof(uint16_t);
 
-    const auto headroom = total_decode_size * sizeof(uintptr_t) -
-        total_encode_size * sizeof(uint16_t);
+    const auto total_decode_size = decode_vtbl_size;
+    const auto total_encode_size = slots_and_strides_size + encode_vtbl_size;
+
+    const auto headroom =
+        (decode_vtbl_size * decode_size -
+         (encode_vtbl_size - slots_and_strides_size) * encode_size) /
+        encode_size;
+
     char prelude[sizeof(prelude_format) + 5 * 6];
     std::snprintf(
-        prelude, sizeof(prelude), prelude_format, headroom / sizeof(uint16_t),
-        slots_and_strides_size, dispatch_tables_size, encode_vtbl_size,
-        total_decode_size);
+        prelude, sizeof(prelude), prelude_format, headroom,
+        slots_and_strides_size, encode_vtbl_size, decode_vtbl_size,
+        dispatch_tables_size);
     os << prelude;
 
     std::vector<const generic_compiler::method*> methods;
@@ -341,6 +363,13 @@ void generator::encode_dispatch_data(
     std::transform(
         compiler.methods.begin(), compiler.methods.end(), methods.begin(),
         [](auto& method) { return &method; });
+
+    // -------------------------------------------------------------------------
+    // Write slots and strides.
+
+    // Write hex from now on.
+    os << std::hex << std::showbase;
+    os << indent << "// slots and strides\n";
 
     for (auto& method : methods) {
         os << indent << "// "
@@ -358,6 +387,59 @@ void generator::encode_dispatch_data(
     }
 
     os << "    }, {\n";
+
+    // -------------------------------------------------------------------------
+    // Write v-tables.
+
+    os << indent << "// v-tables\n";
+
+    for (auto& cls : compiler.classes) {
+        os << indent << "// "
+           << boost::core::demangle(
+                  reinterpret_cast<const std::type_info*>(cls.type_ids[0])
+                      ->name())
+           << "\n";
+
+        os << indent << cls.first_used_slot << ", // first used slot\n";
+
+        for (auto& entry : cls.vtbl) {
+            os << indent;
+            auto stop = &entry == &cls.vtbl.back() ? stop_bit : 0;
+
+            if (entry.vp_index > 0) {
+                // It's a multi-method, and not the first virtual parameter.
+                // Encode the index, it will be decoded as is.
+                os << uint16_t(entry.group_index | index_bit | stop);
+            } else {
+                // It's a uni-method, or the first virtual parameter of a
+                // multi-method. The group is an index into a linear table of
+                // specs.
+                auto method = methods[entry.method_index];
+                os << uint16_t(entry.method_index) << ", ";
+
+                if (method->info->arity() == 1) {
+                    // For 1-methods, there is no dispatch table, the v-table
+                    // slot contains a pointer to function. Encode the spec
+                    // index.
+                    auto spec = method->dispatch_table[entry.group_index];
+                    os << uint16_t(spec->spec_index | stop);
+                } else {
+                    // For multi-methods, the v-table slot contains a pointer to
+                    // a row in the dispatch table. Enocde the row index.
+                    os << uint16_t(entry.group_index | stop);
+                }
+            }
+
+            os << ",\n";
+        }
+    }
+
+    os << "   } } }, {\n";
+
+    // -------------------------------------------------------------------------
+    // Write multi-methods dispatch tables.
+
+    os << indent << "// multi-methods dispatch tables\n";
 
     for (auto& method :
          range(compiler.methods.begin(), compiler.methods.end())) {
@@ -377,44 +459,13 @@ void generator::encode_dispatch_data(
         os << "\n";
     }
 
-    os << "    }, {\n";
+    // -------------------------------------------------------------------------
+    // Close braces.
 
-    std::vector<std::vector<uint16_t>> vtbls(compiler.classes.size());
+    os << "    } };\n\n";
 
-    for (auto& cls : range(compiler.classes.begin(), compiler.classes.end())) {
-        os << indent << "// "
-           << boost::core::demangle(
-                  reinterpret_cast<const std::type_info*>(cls.type_ids[0])
-                      ->name())
-           << "\n";
-
-        os << indent << cls.first_used_slot << ", ";
-
-        for (auto& entry : cls.vtbl) {
-            os << "    ";
-            auto stop = &entry == &cls.vtbl.back() ? stop_bit : 0;
-
-            if (entry.vp_index > 0) {
-                // It's a multi-method, and not the first virtual parameter.
-                // Encode the index, it will be decoded as is.
-                os << (entry.group_index | index_bit | stop);
-            } else {
-                // It's a uni-method, or the first virtual parameter of a
-                // multi-method. The group is an index into a linear table of
-                // specs.
-                auto method = methods[entry.method_index];
-                auto spec = method->dispatch_table[entry.group_index];
-                // Encode the method index and the spec index;
-                os << entry.method_index << ", " << (spec->spec_index | stop);
-            }
-
-            os << ", ";
-        }
-
-        os << "\n";
-    }
-
-    os << "\n    } } };\n\n";
+    // -------------------------------------------------------------------------
+    // Write call to decoder.
     os << "    yorel::yomm2::detail::decode_dispatch_data<"
        << (policy.empty() ? "YOMM2_DEFAULT_POLICY" : policy)
        << ">(yomm2_dispatch_data);\n\n";

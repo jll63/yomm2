@@ -716,17 +716,17 @@ struct yOMM2_API_gcc debug
 #if defined(_MSC_VER) && !defined(yOMM2_DLL)
 extern template class __declspec(dllimport) basic_domain<debug_shared>;
 extern template class __declspec(dllimport) vptr_vector<debug_shared>;
-extern template class __declspec(dllimport) vectored_error<
-    debug_shared, backward_compatible_error_handler<debug_shared>>;
+extern template class __declspec(dllimport)
+vectored_error<debug_shared, backward_compatible_error_handler<debug_shared>>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
-    basic_trace_output<debug_shared, detail::ostderr>;
+basic_trace_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport)
-    basic_error_output<debug_shared, detail::ostderr>;
+basic_error_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
-    backward_compatible_error_handler<debug_shared>;
+backward_compatible_error_handler<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
     debug_shared, vptr_vector<debug_shared>, std_rtti,
     checked_perfect_hash<debug_shared>, basic_error_output<debug_shared>,
