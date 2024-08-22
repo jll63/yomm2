@@ -1,0 +1,15 @@
+name: Probe Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: List available compilers
+        run: |
+          lsb_release -a
+          apt list --installed | grep clang
+          apt list --installed | grep g++

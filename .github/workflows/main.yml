@@ -10,14 +10,14 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   job:
-    name: ${{ matrix.os }}-${{ matrix.linkage }}-${{ matrix.config }}
+    name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.linkage }}-${{ matrix.config }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         config: [dbg, rel]
-        linkage: [headers-only, shared]
+        linkage: [static, shared]
         include:
           # - os: windows-latest
           #   triplet: x64-windows
@@ -30,10 +30,21 @@ jobs:
           - os: windows-latest
             config: dbg
             linkage: shared
-            test_preamble: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\shared\src\Debug"
+            add_shared_path: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\ninja-cl-shared\src\Debug"
           - os: windows-latest
             config: rel
-            test_preamble: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\shared\src\Release"
+            add_shared_path: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\ninja-cl-shared\src\Release"
+          - os: ubuntu-latest
+            gcc12: true
+            compiler: g++-12
+          - os: ubuntu-latest
+            clang18: true
+            compiler: clang++-18
+            pre_configure: dev/ci-pre-configure-clang 18
+          - os: macos-latest
+            compiler: c++
+          - os: windows-latest
+            compiler: cl
     env:
       # Indicates the location of the vcpkg as a Git submodule of the project
       # repository. Not using "VCPKG_ROOT" because a variable with the same name
@@ -44,8 +55,14 @@ jobs:
       VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/vcpkg/bincache
       # Let's use GitHub Action cache as storage for the vcpkg Binary Caching feature.
       VCPKG_BINARY_SOURCES: 'clear;x-gha,readwrite'
+      CXX: ${{ matrix.compiler }}
 
     steps:
+      # - name: List compilers
+      #   run: |
+      #     apt list --installed | grep clang
+      #     apt list --installed | grep g++
+
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
     # for Binary Caching.
       - uses: actions/github-script@v7
@@ -102,13 +119,15 @@ jobs:
       # cache to store the built packages artifacts.
       - name: Restore from cache the dependencies and generate project files
         run: |
-          cmake --preset ${{ matrix.linkage }}
+          ${{ matrix.pre_configure }}
+          cmake --preset ninja-${{ matrix.compiler }}-${{ matrix.linkage }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
 
       - name: Build
         run: |
-          cmake --build --preset build-${{ matrix.linkage}}-${{ matrix.config }}
+          ${{ matrix.add_shared_path }}
+          cmake --build --preset build-ninja-${{ matrix.compiler }}-${{ matrix.linkage}}-${{ matrix.config }}
 
       - name: Test
         run: |
-          ${{ matrix.test_preamble }}
-          ctest --preset test-${{ matrix.linkage }}-${{ matrix.config }} --output-on-failure
+          ${{ matrix.add_shared_path }}
+          ctest --preset test-ninja-${{ matrix.compiler }}-${{ matrix.linkage}}-${{ matrix.config }} --output-on-failure

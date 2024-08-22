@@ -19,3 +19,8 @@ equivalent (closed) virtual function based approaches.
 
 YOMM2 can also [add polymorphic operations to non-polymorphic
 classes](https://jll63.github.io/yomm2/ce/vptr-final.html).
+
+When `virtual_ptr` is used in combination with generated static offsets, method
+dispatch matches the speed of virtual functions. It is also possible to generate
+dispatch data that can be installed without calling `update`, a fairly expensive
+operaiton. See [this example](https://jll63.github.io/yomm2/ce/generator.html).

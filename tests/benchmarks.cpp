@@ -527,8 +527,8 @@ struct population : abstract_population {
                     this->dispatcher<Dispatch, Arity, Inheritance>() =
                         [this]() {
                             dispatch<Dispatch, Arity, Inheritance>::fn(
-                                Dispatch::template draw(*this),
-                                Dispatch::template draw(*this));
+                                Dispatch::template draw<population>(*this),
+                                Dispatch::template draw<population>(*this));
                         };
                 });
             });

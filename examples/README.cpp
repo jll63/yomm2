@@ -168,20 +168,19 @@ situations, for example to implement binary operations on matrices:
 // matrix * matrix
 
 declare_method(
-    std::shared_ptr<const matrix>,
-    times, (virtual_<const matrix&>, virtual_<const matrix&>));
+    std::shared_ptr<const matrix>, times,
+    (virtual_<const matrix&>, virtual_<const matrix&>));
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
-    std::shared_ptr<const matrix>,
-    times, (const matrix& a, const matrix& b)) {
+    std::shared_ptr<const matrix>, times, (const matrix& a, const matrix& b)) {
     return std::make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
-    std::shared_ptr<const matrix>,
-    times, (const diagonal_matrix& a, const diagonal_matrix& b)) {
+    std::shared_ptr<const matrix>, times,
+    (const diagonal_matrix& a, const diagonal_matrix& b)) {
     return std::make_shared<diagonal_matrix>();
 }
 //***
@@ -201,6 +200,13 @@ does any amount of work, the difference is unnoticeable.
 [`virtual_ptr`](https://jll63.github.io/yomm2/reference/virtual_ptr.md), a fat
 pointer class, can be used to make method dispatch even faster - three
 instructions and two memory reads.
+
+If maximum performance is required, it is possible to [generate
+offsets](https://github.com/jll63/yomm2/tree/master/examples/generator), to be
+used at compile time. In combination with `virtual_ptr`, calling a method with
+one virtual argument is [faster than the equivalent virtual function
+call](https://jll63.github.io/yomm2/ce/generator.html): two instructions and one
+read, vs two instructions and two reads.
 
 [Examples](ce/README.md) are available on Compiler Explorer.
 

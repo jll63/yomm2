@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sudo add-apt-repository ppa:ubuntu-toolchain-r/ppa
+sudo apt update
+sudo apt install -y g++-$1

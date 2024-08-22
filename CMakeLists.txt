@@ -3,7 +3,7 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.21)
 cmake_policy(SET CMP0057 NEW)
 
 project(YOMM2 LANGUAGES CXX VERSION 1.6.0)

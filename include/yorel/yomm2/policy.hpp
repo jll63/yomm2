@@ -661,9 +661,9 @@ extern template class __declspec(dllimport) vptr_vector<debug_shared>;
 extern template class __declspec(dllimport) fast_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport)
-    basic_trace_output<debug_shared, detail::ostderr>;
+basic_trace_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport)
-    basic_error_output<debug_shared, detail::ostderr>;
+basic_error_output<debug_shared, detail::ostderr>;
 extern template class __declspec(dllimport) checked_perfect_hash<debug_shared>;
 extern template class __declspec(dllimport) vectored_error<debug_shared>;
 extern template class __declspec(dllimport) basic_policy<
