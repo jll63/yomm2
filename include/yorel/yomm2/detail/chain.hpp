@@ -2,7 +2,7 @@
 #define YOREL_YOMM2_DETAIL_CHAIN_INCLUDED
 
 #include <algorithm>
-#include <cassert>
+#include <boost/assert.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -13,69 +13,78 @@ class static_chain {
     static_chain(static_chain&) = delete;
     static_chain() = default;
 
-    explicit static_chain(int) : first(nullptr), removed_prev(nullptr) {
-    }
-
     class static_link {
       public:
         static_link(const static_link&) = delete;
         static_link() = default;
-        explicit static_link(int) : _next(nullptr) {
-        }
 
         T* next() {
-            return _next;
+            return next_ptr;
         }
 
       protected:
         friend class static_chain;
-        T* _next;
+        T* prev_ptr;
+        T* next_ptr;
     };
 
-    struct link : static_link {
-        link() : static_link(0) {
-        }
-    };
+    void push_back(T& node) {
+        assert(node.prev_ptr == nullptr);
+        assert(node.next_ptr == nullptr);
 
-    void push_front(T& node) {
-        assert(node._next == nullptr);
-        node._next = first;
-        first = &node;
-    }
-
-    void remove(T& node) {
-        iterator iter;
-
-        if (&node == first) {
-            first = node._next;
-            node._next = nullptr;
-            removed_prev = nullptr;
+        if (!first) {
+            first = &node;
+            node.prev_ptr = &node;
             return;
         }
 
-        if (removed_prev != nullptr && removed_prev != &node) {
-            iter =
-                std::find_if(iterator(removed_prev), end(), [&node](T& other) {
-                    return other._next == &node;
-                });
-            if (iter == end()) {
-                iter = std::find_if(
-                    begin(), iterator(removed_prev),
-                    [&node](T& other) { return other._next == &node; });
+        auto last = first->prev_ptr;
+        last->next_ptr = &node;
+        node.prev_ptr = last;
+        first->prev_ptr = &node;
+    }
+
+    void remove(T& node) {
+        BOOST_ASSERT(first != nullptr);
+
+        auto prev = node.prev_ptr;
+        auto next = node.next_ptr;
+        auto last = first->prev_ptr;
+
+        node.prev_ptr = nullptr;
+        node.next_ptr = nullptr;
+
+        if (&node == last) {
+            if (&node == first) {
+                first = nullptr;
+                return;
             }
-        } else {
-            iter = std::find_if(begin(), end(), [&node](T& other) {
-                return other._next == &node;
-            });
+
+            first->prev_ptr = prev;
+            prev->next_ptr = nullptr;
+            return;
         }
 
-        if (iter == end()) {
-            assert(false);
-            abort();
+        if (&node == first) {
+            first = next;
+            first->prev_ptr = last;
+            return;
         }
 
-        iter->_next = node._next;
-        removed_prev = &*iter;
+        prev->next_ptr = next;
+        next->prev_ptr = prev;
+    }
+
+    void clear() {
+        auto next = first;
+        first = nullptr;
+
+        while (next) {
+            auto cur = next;
+            next = cur->next_ptr;
+            cur->prev_ptr = nullptr;
+            cur->next_ptr = nullptr;
+        }
     }
 
     class iterator {
@@ -100,7 +109,7 @@ class static_chain {
 
         iterator& operator++() {
             assert(ptr);
-            ptr = ptr->_next;
+            ptr = ptr->next_ptr;
             return *this;
         }
 
@@ -151,7 +160,7 @@ class static_chain {
 
         const_iterator& operator++() {
             assert(ptr);
-            ptr = ptr->_next;
+            ptr = ptr->next_ptr;
             return *this;
         }
 
@@ -192,16 +201,6 @@ class static_chain {
 
   protected:
     T* first;
-    T* removed_prev;
-};
-
-template<typename T>
-class chain : public static_chain<T> {
-  public:
-    chain() {
-        this->first = nullptr;
-        this->removed_prev = nullptr;
-    }
 };
 
 } // namespace detail

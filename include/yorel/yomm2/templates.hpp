@@ -86,7 +86,7 @@ template<typename T>
 std::false_type has_method_aux(...);
 
 template<typename T>
-constexpr bool has_method = decltype(detail::has_method_aux<T>(nullptr))::value;
+constexpr bool has_method = decltype(has_method_aux<T>(nullptr))::value;
 
 template<template<typename...> typename Definition>
 struct use_definition {

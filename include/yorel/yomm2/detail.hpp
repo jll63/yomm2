@@ -60,16 +60,6 @@ struct dump_type {
 template<class Policy>
 struct runtime;
 
-enum { TRACE_RUNTIME = 1, TRACE_CALLS = 2 };
-
-#if defined(YOMM2_SHARED)
-extern yOMM2_API std::ostream* logs;
-extern yOMM2_API unsigned trace_flags;
-#else
-inline std::ostream* logs;
-inline unsigned trace_flags;
-#endif
-
 template<typename>
 struct parameter_type_list;
 
@@ -152,51 +142,6 @@ const char* default_method_name() {
 #endif
 }
 
-// -----------------------------------------------------------------------------
-// iterator adapter for passing range from external_vpt to fast_perfect_hash
-
-template<class PairIterator>
-class pair_first_iterator {
-    PairIterator iter;
-
-  public:
-    using iterator_category = typename std::forward_iterator_tag;
-    using difference_type = typename PairIterator::difference_type;
-    using value_type = decltype(std::declval<PairIterator>()->first);
-    using pointer = const value_type*;
-    using reference = const value_type&;
-
-    explicit pair_first_iterator(PairIterator iter) : iter(iter) {
-    }
-
-    reference operator*() const {
-        return iter->first;
-    }
-
-    pointer operator->() const {
-        return &iter->first;
-    }
-
-    pair_first_iterator& operator++() {
-        ++iter;
-        return *this;
-    }
-
-    pair_first_iterator operator++(int) const {
-        return pair_first_iterator(iter++);
-    }
-
-    friend bool
-    operator==(const pair_first_iterator& a, const pair_first_iterator& b) {
-        return a.iter == b.iter;
-    }
-
-    friend bool
-    operator!=(const pair_first_iterator& a, const pair_first_iterator& b) {
-        return a.iter != b.iter;
-    }
-};
-
 template<class...>
 struct class_declaration_aux;
 
@@ -209,7 +154,7 @@ struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
             type_id_list<Policy, boost::mp11::mp_list<Bases...>>::begin;
         this->last_base =
             type_id_list<Policy, boost::mp11::mp_list<Bases...>>::end;
-        Policy::classes.push_front(*this);
+        Policy::classes.push_back(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
     }
@@ -738,7 +683,7 @@ struct trace_type {
 };
 
 template<class Policy, typename T, typename F>
-auto& write_range(trace_type<Policy>& trace, detail::range<T> range, F fn) {
+auto& write_range(trace_type<Policy>& trace, range<T> range, F fn) {
     if constexpr (trace_type<Policy>::trace_enabled) {
         if (Policy::trace_enabled) {
             trace << "(";
@@ -812,12 +757,12 @@ auto& operator<<(
 
 template<class Policy>
 auto& operator<<(
-    trace_type<Policy>& trace, const detail::range<type_id*>& tips) {
+    trace_type<Policy>& trace, const range<type_id*>& tips) {
     return write_range(trace, tips, [](auto tip) { return type_name(tip); });
 }
 
 template<class Policy, typename T>
-auto& operator<<(trace_type<Policy>& trace, const detail::range<T>& range) {
+auto& operator<<(trace_type<Policy>& trace, const range<T>& range) {
     return write_range(trace, range, [](auto value) { return value; });
 }
 

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     update<Policy>();
 
     using vptr_player = virtual_ptr<Player, Policy>;
-    static_assert(detail::is_virtual_ptr<vptr_player>);
+    static_assert(is_virtual_ptr<vptr_player>);
     using vptr_cat = virtual_ptr<Bear, Policy>;
 
     Player player;
