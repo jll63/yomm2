@@ -24,6 +24,7 @@ namespace yomm2 {
 
 class generator {
   public:
+#ifndef _MSC_VER
     generator& add_forward_declaration(const std::type_info& type);
     template<typename T>
     generator& add_forward_declaration();
@@ -31,6 +32,7 @@ class generator {
     template<class Policy = YOMM2_DEFAULT_POLICY>
     generator& add_forward_declarations();
     const generator& write_forward_declarations(std::ostream& os) const;
+#endif
     template<class Policy = YOMM2_DEFAULT_POLICY>
     const generator& write_static_offsets(std::ostream& os) const;
     template<class Compiler>
@@ -81,6 +83,8 @@ inline std::unordered_set<std::string_view> generator::keywords = {
     "class", "struct", "enum",
 };
 // clang-format on
+
+#ifndef _MSC_VER
 
 inline generator& generator::add_forward_declaration(std::string_view type) {
     using namespace detail;
@@ -207,6 +211,8 @@ generator::write_forward_declarations(std::ostream& os) const {
     return *this;
 }
 
+#endif
+
 template<class T>
 const generator& generator::write_static_offsets(std::ostream& os) const {
     using namespace detail;
@@ -307,8 +313,7 @@ void generator::encode_dispatch_data(
     for (auto& cls : compiler.classes) {
         ++encode_vtbl_size; // for first slot index
 
-        for (auto& entry :
-             range(cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end())) {
+        for (auto& entry : cls.vtbl) {
             if (entry.vp_index != 0) {
                 // It's a multi-method, and not the first virtual parameter.
                 // Encode the index, it will be decoded as is.
@@ -320,7 +325,7 @@ void generator::encode_dispatch_data(
             }
         }
 
-        decode_vtbl_size += cls.vtbl.size() - cls.first_used_slot;
+        decode_vtbl_size += cls.vtbl.size() - cls.first_slot;
     }
 
     // -------------------------------------------------------------------------
@@ -400,7 +405,7 @@ void generator::encode_dispatch_data(
                       ->name())
            << "\n";
 
-        os << indent << cls.first_used_slot << ", // first used slot\n";
+        os << indent << cls.first_slot << ", // first used slot\n";
 
         for (auto& entry : cls.vtbl) {
             os << indent;

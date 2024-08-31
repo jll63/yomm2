@@ -39,7 +39,7 @@ using virtual_ptr_policy = std::conditional_t<
 // -----------------------------------------------------------------------------
 // Method
 
-template<typename Key, typename Signature, class Policy= YOMM2_DEFAULT_POLICY>
+template<typename Key, typename Signature, class Policy = YOMM2_DEFAULT_POLICY>
 struct method;
 
 template<typename Key, typename R, class Policy, typename... A>
@@ -136,7 +136,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
                     Policy, declared_argument_types, parameter_types>>;
             info.vp_begin = spec_type_ids::begin;
             info.vp_end = spec_type_ids::end;
-            fn.specs.push_front(info);
+            fn.specs.push_back(info);
         }
     };
 
@@ -278,7 +278,7 @@ class virtual_ptr {
                         Policy, Other&>::polymorphic_type>;
             } else {
                 vptr = Policy::template static_vptr<
-                    typename detail::virtual_traits<
+                    typename virtual_traits<
                         Policy, Other&>::polymorphic_type>;
             }
         } else {
@@ -430,7 +430,7 @@ method<Key, R(A...), Policy>::method() {
     this->not_implemented = (void*)not_implemented_handler;
     this->ambiguous = (void*)ambiguous_handler;
     this->method_type = Policy::template static_type<method>();
-    Policy::methods.push_front(*this);
+    Policy::methods.push_back(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
@@ -691,14 +691,14 @@ auto update() -> detail::compiler<Policy>;
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
-    auto prev= default_policy::error;
+    auto prev = default_policy::error;
     default_policy::error = handler;
     return prev;
 }
 
 inline method_call_error_handler
 set_method_call_error_handler(method_call_error_handler handler) {
-    auto prev= default_policy::call_error;
+    auto prev = default_policy::call_error;
     default_policy::call_error = handler;
     return prev;
 }

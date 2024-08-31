@@ -16,9 +16,10 @@ int main(int argc, char* argv[]) {
     generator generator;
 
     std::ofstream slots("test_generator_slots.hpp");
-    generator.add_forward_declarations()
-        .write_forward_declarations(slots)
-        .write_static_offsets(slots);
+#ifndef _MSC_VER
+    generator.add_forward_declarations().write_forward_declarations(slots);
+#endif
+        generator.write_static_offsets(slots);
 
     std::ofstream tables("test_generator_tables.hpp");
     generator.encode_dispatch_data(compiler, tables);
