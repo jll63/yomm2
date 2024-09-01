@@ -146,7 +146,7 @@ struct number_aware_policy : default_static::replace<vptr_placement, vptr_page> 
 template<class T>
 class Page {
   private:
-    static constexpr size_t page_size = 1024;
+    static constexpr std::size_t page_size = 1024;
     char* base;
     T* top;
 
@@ -157,7 +157,7 @@ class Page {
         *reinterpret_cast<std::uintptr_t**>(base) =
             number_aware_policy::static_vptr<T>;
         void* first = base + sizeof(std::uintptr_t*);
-        size_t space = page_size - sizeof(std::uintptr_t*);
+        std::size_t space = page_size - sizeof(std::uintptr_t*);
         std::align(alignof(T), sizeof(T), first, space);
         top = reinterpret_cast<T*>(first);
     }
