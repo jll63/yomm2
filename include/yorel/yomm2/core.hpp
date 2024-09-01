@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_CORE_INCLUDED
-#define YOREL_YOMM2_CORE_INCLUDED
+#ifndef YOREL_YOMM2_CORE_HPP
+#define YOREL_YOMM2_CORE_HPP
 
 #include <functional>
 #include <memory>

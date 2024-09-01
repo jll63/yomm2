@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_DETAIL_INCLUDED
-#define YOREL_YOMM2_DETAIL_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_HPP
+#define YOREL_YOMM2_DETAIL_HPP
 
 #include <boost/assert.hpp>
 #include <boost/dynamic_bitset.hpp>

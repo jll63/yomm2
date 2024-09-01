@@ -3,31 +3,27 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_COMPILER_INCLUDED
-#define YOREL_YOMM2_COMPILER_INCLUDED
-
-#include <algorithm> // for max, transform, copy
-#include <cstdint>   // for uintptr_t
-#include <cstdio>
-#include <cstdlib> // for abort, getenv
-#include <deque>
-#include <list>          // for list, _List_iterator
-#include <map>           // for map
-#include <memory>        // for allocator_traits<...
-#include <numeric>       // for accumulate
-#include <stdexcept>     // for runtime_error
-#include <string>        // for char_traits, allo...
-#include <unordered_map> // for _Node_iterator
-#include <unordered_set> // for unordered_set<>::...
-#include <utility>       // for pair
-#include <vector>        // for vector, vector<>:...
-
-#include <boost/assert.hpp>
-#include <boost/dynamic_bitset.hpp>
+#ifndef YOREL_YOMM2_DETAIL_COMPILER_HPP
+#define YOREL_YOMM2_DETAIL_COMPILER_HPP
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/detail/ostdstream.hpp>
 #include <yorel/yomm2/detail/trace.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <deque>
+#include <map>
+#include <memory>
+#include <numeric>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <boost/assert.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 namespace yorel {
 namespace yomm2 {

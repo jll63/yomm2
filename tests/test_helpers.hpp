@@ -1,5 +1,5 @@
-#ifndef YOMM2_TEST_HELPERS_INCLUDED
-#define YOMM2_TEST_HELPERS_INCLUDED
+#ifndef YOMM2_TEST_HELPERS_HPP
+#define YOMM2_TEST_HELPERS_HPP
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>

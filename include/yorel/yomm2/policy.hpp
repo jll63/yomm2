@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_POLICY_INCLUDED
-#define YOREL_YOMM2_POLICY_INCLUDED
+#ifndef YOREL_YOMM2_POLICY_HPP
+#define YOREL_YOMM2_POLICY_HPP
 
 #include <charconv>
 #include <cstdint>
