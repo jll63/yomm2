@@ -620,7 +620,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
 
@@ -642,7 +642,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::ambiguous_handler(
     detail::remove_virtual<A>... args) {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
