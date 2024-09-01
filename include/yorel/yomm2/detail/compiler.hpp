@@ -29,25 +29,7 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
-    if (b.size() < a.size()) {
-        b.resize(a.size());
-    }
-
-    for (std::size_t i = 0; i < a.size(); ++i) {
-        if (a[i]) {
-            b[i] = true;
-        }
-    }
-}
-
-inline void set_bit(boost::dynamic_bitset<>& mask, std::size_t bit) {
-    if (bit >= mask.size()) {
-        mask.resize(bit + 1);
-    }
-
-    mask[bit] = true;
-}
+struct update_report : update_method_report {};
 
 template<class Facet, typename>
 struct has_report_aux : std::false_type {};
@@ -87,9 +69,29 @@ struct aggregate_reports<
     struct type : Reports... {};
 };
 
-// template<class Policy>
-// using report_type = typename aggregate_reports<
-//     boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
+template<class Policy>
+using report_type = typename aggregate_reports<
+    boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
+
+inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
+    if (b.size() < a.size()) {
+        b.resize(a.size());
+    }
+
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        if (a[i]) {
+            b[i] = true;
+        }
+    }
+}
+
+inline void set_bit(boost::dynamic_bitset<>& mask, std::size_t bit) {
+    if (bit >= mask.size()) {
+        mask.resize(bit + 1);
+    }
+
+    mask[bit] = true;
+}
 
 struct generic_compiler {
 
