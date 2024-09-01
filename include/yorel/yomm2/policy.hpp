@@ -161,8 +161,8 @@ template<class Key>
 template<class Class>
 std::uintptr_t* method_tables<Key>::static_vptr;
 
-using class_catalog = detail::static_chain<detail::class_info>;
-using method_catalog = detail::static_chain<detail::method_info>;
+using class_catalog = detail::static_list<detail::class_info>;
+using method_catalog = detail::static_list<detail::method_info>;
 
 struct domain {};
 

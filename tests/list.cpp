@@ -3,20 +3,20 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "yorel/yomm2/detail/chain.hpp"
+#include "yorel/yomm2/detail/list.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
 
-using namespace yorel::yomm2::detail;
+using yorel::yomm2::detail::static_list;
 
-struct value : static_chain<value>::static_link {};
+struct value : static_list<value>::static_link {};
 
-using test_iter = static_chain<value>::iterator;
+using test_iter = static_list<value>::iterator;
 BOOST_TEST_DONT_PRINT_LOG_VALUE(test_iter);
 
-BOOST_AUTO_TEST_CASE(test_chain) {
-    static static_chain<value> l;
+BOOST_AUTO_TEST_CASE(test_list) {
+    static static_list<value> l;
     static value a, b, c, d;
 
     BOOST_TEST_REQUIRE(l.begin() == l.end());
@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(test_chain) {
     BOOST_TEST_REQUIRE(!l.empty());
     BOOST_TEST_REQUIRE(std::distance(l.begin(), l.end()) == 1);
 
-    static_chain<value>::iterator iter;
+    static_list<value>::iterator iter;
 
     l.push_back(b);
     // a b
@@ -101,25 +101,25 @@ BOOST_AUTO_TEST_CASE(test_chain) {
     BOOST_TEST_REQUIRE(std::distance(l.begin(), l.end()) == 0);
 }
 
-struct static_value : static_chain<static_value>::static_link {
-    explicit static_value(static_chain<static_value>& reg) {
+struct static_value : static_list<static_value>::static_link {
+    explicit static_value(static_list<static_value>& reg) {
         reg.push_back(*this);
     }
 };
 
-// Check that static links and chain work regardless of static initialization
+// Check that static links and list work regardless of static initialization
 // order.
 
-using static_test_iter = static_chain<static_value>::iterator;
+using static_test_iter = static_list<static_value>::iterator;
 BOOST_TEST_DONT_PRINT_LOG_VALUE(static_test_iter);
 
-namespace link_link_chain {
-extern static_chain<static_value> reg;
+namespace link_link_list {
+extern static_list<static_value> reg;
 static_value a(reg);
 static_value b(reg);
-static_chain<static_value> reg;
+static_list<static_value> reg;
 
-BOOST_AUTO_TEST_CASE(test_static_link_link_chain) {
+BOOST_AUTO_TEST_CASE(test_static_link_link_list) {
     auto iter = reg.begin(), last = reg.end();
     BOOST_TEST_REQUIRE(iter != last);
     BOOST_TEST_REQUIRE(&*iter == &a);
@@ -127,15 +127,15 @@ BOOST_AUTO_TEST_CASE(test_static_link_link_chain) {
     BOOST_TEST_REQUIRE(&*iter == &b);
     BOOST_TEST_REQUIRE(++iter == last);
 }
-} // namespace link_link_chain
+} // namespace link_link_list
 
-namespace link_chain_link {
-extern static_chain<static_value> reg;
+namespace link_list_link {
+extern static_list<static_value> reg;
 static_value a(reg);
-static_chain<static_value> reg;
+static_list<static_value> reg;
 static_value b(reg);
 
-BOOST_AUTO_TEST_CASE(test_static_link_chain_link) {
+BOOST_AUTO_TEST_CASE(test_static_link_list_link) {
     auto iter = reg.begin(), last = reg.end();
     BOOST_TEST_REQUIRE(iter != last);
     BOOST_TEST_REQUIRE(&*iter == &a);
@@ -143,14 +143,14 @@ BOOST_AUTO_TEST_CASE(test_static_link_chain_link) {
     BOOST_TEST_REQUIRE(&*iter == &b);
     BOOST_TEST_REQUIRE(++iter == last);
 }
-} // namespace link_chain_link
+} // namespace link_list_link
 
-namespace chain_link_link {
-static_chain<static_value> reg;
+namespace list_link_link {
+static_list<static_value> reg;
 static_value a(reg);
 static_value b(reg);
 
-BOOST_AUTO_TEST_CASE(test_static_chain_link_link) {
+BOOST_AUTO_TEST_CASE(test_static_list_link_link) {
     auto iter = reg.begin(), last = reg.end();
     BOOST_TEST_REQUIRE(iter != last);
     BOOST_TEST_REQUIRE(&*iter == &a);
@@ -158,4 +158,4 @@ BOOST_AUTO_TEST_CASE(test_static_chain_link_link) {
     BOOST_TEST_REQUIRE(&*iter == &b);
     BOOST_TEST_REQUIRE(++iter == last);
 }
-} // namespace chain_link_link
+} // namespace list_link_link
