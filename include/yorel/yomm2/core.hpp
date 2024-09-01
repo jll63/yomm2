@@ -59,7 +59,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     static constexpr auto arity = detail::arity<A...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
 
-    static size_t slots_strides[2 * arity - 1];
+    static std::size_t slots_strides[2 * arity - 1];
     // Slots followed by strides. No stride for first virtual argument.
     // For 1-method: the offset of the method in the method table, which
     // contains a pointer to a function.
@@ -81,20 +81,20 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     const std::uintptr_t* vptr(const ArgType& arg) const;
 
     template<class Error>
-    void check_static_offset(size_t actual, size_t expected) const;
+    void check_static_offset(std::size_t actual, std::size_t expected) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     std::uintptr_t
     resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
-        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     std::uintptr_t resolve_multi_first(
         const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
-        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     std::uintptr_t resolve_multi_next(
         const std::uintptr_t* dispatch, const ArgType& arg,
@@ -434,7 +434,7 @@ method<Key, R(A...), Policy>::method() {
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-size_t method<Key, R(A...), Policy>::slots_strides[2 * arity - 1];
+std::size_t method<Key, R(A...), Policy>::slots_strides[2 * arity - 1];
 
 template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::~method() {
@@ -482,7 +482,7 @@ method<Key, R(A...), Policy>::vptr(const ArgType& arg) const {
 template<typename Key, typename R, class Policy, typename... A>
 template<class Error>
 inline void method<Key, R(A...), Policy>::check_static_offset(
-    size_t actual, size_t expected) const {
+    std::size_t actual, std::size_t expected) const {
     using namespace detail;
 
     if (actual != expected) {
@@ -531,7 +531,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
 
 template<typename Key, typename R, class Policy, typename... A>
 template<
-    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
@@ -548,7 +548,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
             vtbl = vptr<ArgType>(arg);
         }
 
-        size_t slot;
+        std::size_t slot;
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[0];
@@ -575,7 +575,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
 
 template<typename Key, typename R, class Policy, typename... A>
 template<
-    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
@@ -593,7 +593,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
             vtbl = vptr<ArgType>(arg);
         }
 
-        size_t slot, stride;
+        std::size_t slot, stride;
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[VirtualArg];

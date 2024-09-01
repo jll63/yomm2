@@ -186,7 +186,7 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(iptr, pet_iptr(dyn_ref));
 
 // -----------------------------------------------------------------------------
-// std::std_unordered_map
+// std_unordered_map
 
 declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 
@@ -260,7 +260,7 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(stat_iptr, pet_iptr(stat_ref));
 
 // -----------------------------------------------------------------------------
-// std::std_unordered_map
+// std_unordered_map
 
 declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 

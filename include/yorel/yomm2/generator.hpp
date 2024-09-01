@@ -236,19 +236,19 @@ void generator::write_static_offsets(
     auto method_name = boost::core::demangle(
         reinterpret_cast<const std::type_info*>(method.method_type)->name());
     os << "template<> struct yorel::yomm2::detail::static_offsets<"
-       << method_name << "> {static constexpr size_t slots[] = {";
+       << method_name << "> {static constexpr std::size_t slots[] = {";
 
     os << method.slots_strides_ptr[0];
 
     if (method.arity() > 1) {
-        for (size_t i = 1; i < method.arity(); i++) {
+        for (std::size_t i = 1; i < method.arity(); i++) {
             os << ", " << method.slots_strides_ptr[i * 2 - 1];
         }
 
-        os << "}; static constexpr size_t strides[] = {";
+        os << "}; static constexpr std::size_t strides[] = {";
         auto comma = "";
 
-        for (size_t i = 1; i < method.arity(); i++) {
+        for (std::size_t i = 1; i < method.arity(); i++) {
             os << comma << method.slots_strides_ptr[i * 2];
             comma = ", ";
         }
@@ -296,10 +296,10 @@ void generator::encode_dispatch_data(
     // Calculate data sizes.
 
     auto slots_and_strides_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), size_t(0),
+        compiler.methods.begin(), compiler.methods.end(), std::size_t(0),
         [](auto sum, auto& method) { return sum + 2 * method.arity() - 1; });
     auto dispatch_tables_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), size_t(0),
+        compiler.methods.begin(), compiler.methods.end(), std::size_t(0),
         [](auto sum, auto& method) {
             if (method.arity() == 1) {
                 return sum;
@@ -308,7 +308,7 @@ void generator::encode_dispatch_data(
             }
         });
 
-    size_t encode_vtbl_size = 0, decode_vtbl_size = 0;
+    std::size_t encode_vtbl_size = 0, decode_vtbl_size = 0;
 
     for (auto& cls : compiler.classes) {
         ++encode_vtbl_size; // for first slot index

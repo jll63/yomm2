@@ -74,8 +74,8 @@ struct error {};
 struct resolution_error : error {
     enum status_type { no_definition = 1, ambiguous } status;
     std::string_view method_name;
-    size_t arity;
-    static constexpr size_t max_types = 16;
+    std::size_t arity;
+    static constexpr std::size_t max_types = 16;
     type_id types[max_types];
 };
 
@@ -85,8 +85,8 @@ struct unknown_class_error : error {
 };
 
 struct hash_search_error : error {
-    size_t attempts;
-    size_t buckets;
+    std::size_t attempts;
+    std::size_t buckets;
 };
 
 struct method_table_error : error {
@@ -117,7 +117,7 @@ struct method_call_error {
 };
 
 using method_call_error_handler =
-    void (*)(const method_call_error& error, size_t arity, type_id* types);
+    void (*)(const method_call_error& error, std::size_t arity, type_id* types);
 
 namespace policy {
 
@@ -300,7 +300,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
         using namespace policy;
 
-        size_t size;
+        std::size_t size;
 
         if constexpr (has_facet<Policy, type_hash>) {
             Policy::hash_initialize(first, last);
@@ -417,8 +417,8 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
     struct report {
-        size_t method_table_size, dispatch_table_size;
-        size_t hash_search_attempts;
+        std::size_t method_table_size, dispatch_table_size;
+        std::size_t hash_search_attempts;
     };
 
     static type_id hash_mult;
@@ -465,8 +465,8 @@ void fast_perfect_hash<Policy>::hash_initialize(
     }
 
     std::default_random_engine rnd(13081963);
-    size_t total_attempts = 0;
-    size_t M = 1;
+    std::size_t total_attempts = 0;
+    std::size_t M = 1;
 
     for (auto size = N * 5 / 4; size >>= 1;) {
         ++M;
@@ -474,7 +474,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
 
     std::uniform_int_distribution<type_id> uniform_dist;
 
-    for (size_t pass = 0; pass < 4; ++pass, ++M) {
+    for (std::size_t pass = 0; pass < 4; ++pass, ++M) {
         hash_shift = 8 * sizeof(type_id) - M;
         auto hash_size = 1 << M;
 
@@ -486,7 +486,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
         }
 
         bool found = false;
-        size_t attempts = 0;
+        std::size_t attempts = 0;
         buckets.resize(hash_size);
         hash_length = 0;
 
@@ -672,7 +672,7 @@ struct yOMM2_API_gcc backward_compatible_error_handler
     }
 
     static void default_call_error_handler(
-        const method_call_error& error, size_t arity, type_id* ti_ptrs) {
+        const method_call_error& error, std::size_t arity, type_id* ti_ptrs) {
 
         using namespace policy;
 
