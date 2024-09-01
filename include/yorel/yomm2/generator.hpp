@@ -7,10 +7,10 @@
 #define YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/decode.hpp>
 
 #include <boost/core/demangle.hpp>
 
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -470,7 +470,7 @@ void generator::encode_dispatch_data(
 
     // -------------------------------------------------------------------------
     // Write call to decoder.
-    os << "    yorel::yomm2::detail::decode_dispatch_data<"
+    os << "    yorel::yomm2::decode_dispatch_data<"
        << (policy.empty() ? "YOMM2_DEFAULT_POLICY" : policy)
        << ">(yomm2_dispatch_data);\n\n";
 }

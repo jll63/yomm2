@@ -8,6 +8,8 @@
 
 #include "test_generator_domain.hpp"
 
+#include <yorel/yomm2/decode.hpp>
+
 using namespace yorel::yomm2;
 
 static_assert(detail::has_static_offsets<method_class(

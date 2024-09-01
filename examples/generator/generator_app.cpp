@@ -1,5 +1,6 @@
 #include "animals.hpp"
 #include <yorel/yomm2/generator.hpp>
+#include <yorel/yomm2/decode.hpp>
 
 #include <iomanip>
 

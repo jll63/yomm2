@@ -675,7 +675,7 @@ namespace yomm2 {
 
 #ifdef YOMM2_SHARED
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 yOMM2_API auto update() -> detail::compiler<policy::debug_shared>;
 #endif
 
@@ -685,7 +685,7 @@ set_method_call_error_handler(method_call_error_handler handler);
 
 #else
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 
 template<class Policy = YOMM2_DEFAULT_POLICY>
 auto update() -> detail::compiler<Policy>;
@@ -708,7 +708,7 @@ set_method_call_error_handler(method_call_error_handler handler) {
 
 #endif
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 
 [[deprecated("use update() instead")]] yOMM2_API inline void update_methods() {
     update();
