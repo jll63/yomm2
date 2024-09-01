@@ -1,22 +1,21 @@
 #ifndef YOREL_YOMM2_POLICY_INCLUDED
 #define YOREL_YOMM2_POLICY_INCLUDED
 
-#include <array>
 #include <charconv>
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
-#include <random> // for default_random_en...
-#include <stdio.h>
+#include <random>
 #include <string_view>
 #include <unordered_map>
 #include <variant>
 #include <vector>
 
+#include <boost/config.hpp>
 #include <boost/mp11.hpp>
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 #include <typeindex>
 #include <typeinfo>
 #endif
@@ -235,7 +234,7 @@ struct minimal_rtti : virtual rtti {
 };
 
 struct std_rtti : virtual rtti {
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
     template<class Class>
     static type_id static_type() {
         auto tip = &typeid(Class);
@@ -714,7 +713,7 @@ extern template class __declspec(dllimport) basic_policy<
     basic_trace_output<debug_shared>, vectored_error<debug_shared>>;
 #endif
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 struct yOMM2_API_gcc debug_shared
     : basic_policy<
           debug_shared, std_rtti, checked_perfect_hash<debug_shared>,

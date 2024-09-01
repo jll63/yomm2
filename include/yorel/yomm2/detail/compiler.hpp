@@ -26,7 +26,8 @@
 #include <boost/dynamic_bitset.hpp>
 
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/detail/ostdstream.hpp>
+#include <yorel/yomm2/detail/trace.hpp>
 
 namespace yorel {
 namespace yomm2 {

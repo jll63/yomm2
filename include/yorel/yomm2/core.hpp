@@ -666,7 +666,7 @@ yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
 
 #else
 
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
