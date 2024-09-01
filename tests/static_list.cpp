@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "yorel/yomm2/detail/list.hpp"
+#include "yorel/yomm2/detail/static_list.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>

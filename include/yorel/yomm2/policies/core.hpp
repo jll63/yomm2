@@ -1,7 +1,7 @@
 #ifndef YOREL_YOMM2_POLICIES_CORE_HPP
 #define YOREL_YOMM2_POLICIES_CORE_HPP
 
-#include <yorel/yomm2/detail/list.hpp>
+#include <yorel/yomm2/detail/static_list.hpp>
 
 #if defined(YOMM2_SHARED)
 #if defined(_MSC_VER)
