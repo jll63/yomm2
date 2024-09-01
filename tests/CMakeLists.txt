@@ -3,9 +3,9 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_executable(chain chain.cpp)
-target_link_libraries(chain YOMM2::yomm2)
-add_test(NAME chain COMMAND chain)
+add_executable(list list.cpp)
+target_link_libraries(list YOMM2::yomm2)
+add_test(NAME list COMMAND list)
 
 add_executable(test_core test_core.cpp)
 target_link_libraries(test_core YOMM2::yomm2)

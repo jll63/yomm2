@@ -127,8 +127,7 @@ struct release_shared;
 } // namespace yomm2
 } // namespace yorel
 
-#include "detail/chain.hpp"
-#include "detail/method_info.hpp"
+#include "detail/list.hpp"
 #include "detail/range.hpp"
 
 namespace yorel {
@@ -141,7 +140,7 @@ class ostderr;
 // -----------------------------------------------------------------------------
 // class info
 
-struct class_info : static_chain<class_info>::static_link {
+struct class_info : static_list<class_info>::static_link {
     type_id type;
     std::uintptr_t** static_vptr;
     type_id *first_base, *last_base;
@@ -164,6 +163,22 @@ struct class_info : static_chain<class_info>::static_link {
     }
 };
 
+struct definition_info;
+
+struct yOMM2_API method_info : static_list<method_info>::static_link {
+    std::string_view name;
+    type_id *vp_begin, *vp_end;
+    static_list<definition_info> specs;
+    void* ambiguous;
+    void* not_implemented;
+    type_id method_type;
+    size_t* slots_strides_ptr;
+
+    auto arity() const {
+        return std::distance(vp_begin, vp_end);
+    }
+};
+
 } // namespace detail
 
 namespace policy {
@@ -179,8 +194,8 @@ template<class Key>
 template<class Class>
 std::uintptr_t* method_tables<Key>::static_vptr;
 
-using class_catalog = detail::static_chain<detail::class_info>;
-using method_catalog = detail::static_chain<detail::method_info>;
+using class_catalog = detail::static_list<detail::class_info>;
+using method_catalog = detail::static_list<detail::method_info>;
 
 struct domain {};
 

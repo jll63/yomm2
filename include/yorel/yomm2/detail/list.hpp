@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_DETAIL_CHAIN_INCLUDED
-#define YOREL_YOMM2_DETAIL_CHAIN_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_LIST_INCLUDED
+#define YOREL_YOMM2_DETAIL_LIST_INCLUDED
 
 #include <algorithm>
 #include <boost/assert.hpp>
@@ -7,11 +7,12 @@
 namespace yorel {
 namespace yomm2 {
 namespace detail {
+
 template<typename T>
-class static_chain {
+class static_list {
   public:
-    static_chain(static_chain&) = delete;
-    static_chain() = default;
+    static_list(static_list&) = delete;
+    static_list() = default;
 
     class static_link {
       public:
@@ -23,7 +24,7 @@ class static_chain {
         }
 
       protected:
-        friend class static_chain;
+        friend class static_list;
         T* prev_ptr;
         T* next_ptr;
     };

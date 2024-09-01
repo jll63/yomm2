@@ -5,6 +5,8 @@
 #include <boost/mp11/bind.hpp>
 #include <boost/dynamic_bitset.hpp>
 
+#include "yorel/yomm2/detail/list.hpp"
+
 namespace yorel {
 namespace yomm2 {
 namespace detail {
@@ -169,7 +171,7 @@ struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
 
 struct method_info;
 
-struct definition_info : static_chain<definition_info>::static_link {
+struct definition_info : static_list<definition_info>::static_link {
     ~definition_info();
     method_info* method; // for the destructor, to remove definition
     type_id type;        // of the function, for trace
@@ -893,7 +895,7 @@ void decode_dispatch_data(Data& init) {
 
     // First copy the slots and strides to the static arrays in methods. Also
     // build an array of arrays of pointer to method definitions. Methods and
-    // definitions are in reverse order, because of how 'chain' works. While
+    // definitions are in reverse order, because of how 'list' works. While
     // building the array of array of defintions, we put them back in the order
     // in which the compiler saw them.
     auto packed_slots_iter = init.encoded.slots;
