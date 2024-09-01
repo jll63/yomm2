@@ -4,7 +4,7 @@
 #include <yorel/yomm2/keywords.hpp>
 #include <yorel/yomm2/detail/compiler.hpp>
 
-#include "test_helpers.hpp"
+#include "test_util.hpp"
 
 #define BOOST_TEST_MODULE compiler
 #include <boost/test/included/unit_test.hpp>
