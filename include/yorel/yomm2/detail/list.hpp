@@ -30,8 +30,8 @@ class static_list {
     };
 
     void push_back(T& node) {
-        assert(node.prev_ptr == nullptr);
-        assert(node.next_ptr == nullptr);
+        BOOST_ASSERT(node.prev_ptr == nullptr);
+        BOOST_ASSERT(node.next_ptr == nullptr);
 
         if (!first) {
             first = &node;
@@ -109,7 +109,7 @@ class static_list {
         }
 
         iterator& operator++() {
-            assert(ptr);
+            BOOST_ASSERT(ptr);
             ptr = ptr->next_ptr;
             return *this;
         }
@@ -160,7 +160,7 @@ class static_list {
         }
 
         const_iterator& operator++() {
-            assert(ptr);
+            BOOST_ASSERT(ptr);
             ptr = ptr->next_ptr;
             return *this;
         }

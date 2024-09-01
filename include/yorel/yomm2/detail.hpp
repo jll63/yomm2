@@ -2,6 +2,7 @@
 #define YOREL_YOMM2_DETAIL_INCLUDED
 
 #include <boost/mp11/algorithm.hpp>
+#include <boost/assert.hpp>
 #include <boost/mp11/bind.hpp>
 #include <boost/dynamic_bitset.hpp>
 
@@ -1025,7 +1026,7 @@ void decode_dispatch_data(Data& init) {
     bool last;
 
     auto fetch = [&]() {
-        assert((char*)(encode_iter + 1) >= (char*)decode_iter);
+        BOOST_ASSERT((char*)(encode_iter + 1) >= (char*)decode_iter);
         auto code = *encode_iter++;
         last = code & stop_bit;
         return code & ~stop_bit;
