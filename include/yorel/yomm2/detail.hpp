@@ -12,9 +12,6 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<typename... Types>
-struct types;
-
 template<class Policy, class Class>
 type_id collect_static_type_id() {
     if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
