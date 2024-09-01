@@ -39,8 +39,7 @@ struct Cat : Animal {
 };
 
 declare_method(void, kick, (virtual_ptr<Animal>));
-declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>));
+declare_method(void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>));
 
 #if __has_include("slots.hpp")
 #include "slots.hpp"

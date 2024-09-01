@@ -99,25 +99,25 @@ namespace no_projection {
 struct Animal {
     const char* name;
 
-    Animal(const char* name, size_t type) : name(name), type(type) {
+    Animal(const char* name, std::size_t type) : name(name), type(type) {
     }
 
-    static constexpr size_t static_type = 0;
-    size_t type;
+    static constexpr std::size_t static_type = 0;
+    std::size_t type;
 };
 
 struct Dog : Animal {
-    Dog(const char* name, size_t type = static_type) : Animal(name, type) {
+    Dog(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static constexpr size_t static_type = 1;
+    static constexpr std::size_t static_type = 1;
 };
 
 struct Cat : Animal {
-    Cat(const char* name, size_t type = static_type) : Animal(name, type) {
+    Cat(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static constexpr size_t static_type = 2;
+    static constexpr std::size_t static_type = 2;
 };
 
 struct custom_rtti : policy::rtti {
@@ -227,15 +227,15 @@ namespace virtual_base {
 struct Animal {
     const char* name;
 
-    Animal(const char* name, size_t type) : name(name), type(type) {
+    Animal(const char* name, std::size_t type) : name(name), type(type) {
     }
 
-    virtual void* cast_aux(size_t type) {
+    virtual void* cast_aux(std::size_t type) {
         return type == static_type ? this : nullptr;
     }
 
-    static constexpr size_t static_type = 0;
-    size_t type;
+    static constexpr std::size_t static_type = 0;
+    std::size_t type;
 };
 
 template<typename Derived, typename Base>
@@ -247,25 +247,25 @@ Derived custom_dynamic_cast(Base& obj) {
 }
 
 struct Dog : virtual Animal {
-    Dog(const char* name, size_t type = static_type) : Animal(name, type) {
+    Dog(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    void* cast_aux(size_t type) override {
+    void* cast_aux(std::size_t type) override {
         return type == static_type ? this : Animal::cast_aux(type);
     }
 
-    static constexpr size_t static_type = 1;
+    static constexpr std::size_t static_type = 1;
 };
 
 struct Cat : virtual Animal {
-    Cat(const char* name, size_t type = static_type) : Animal(name, type) {
+    Cat(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    void* cast_aux(size_t type) override {
+    void* cast_aux(std::size_t type) override {
         return type == static_type ? this : Animal::cast_aux(type);
     }
 
-    static constexpr size_t static_type = 2;
+    static constexpr std::size_t static_type = 2;
 };
 
 struct custom_rtti : policy::rtti {
@@ -380,34 +380,34 @@ namespace defered_type_id {
 struct Animal {
     const char* name;
 
-    Animal(const char* name, size_t type) : name(name), type(type) {
+    Animal(const char* name, std::size_t type) : name(name), type(type) {
     }
 
-    static size_t last_type_id;
-    static size_t static_type;
-    size_t type;
+    static std::size_t last_type_id;
+    static std::size_t static_type;
+    std::size_t type;
 };
 
-size_t Animal::last_type_id;
-size_t Animal::static_type = ++Animal::last_type_id;
+std::size_t Animal::last_type_id;
+std::size_t Animal::static_type = ++Animal::last_type_id;
 
 struct Dog : Animal {
-    Dog(const char* name, size_t type = static_type) : Animal(name, type) {
+    Dog(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static size_t static_type;
+    static std::size_t static_type;
 };
 
-size_t Dog::static_type = ++Animal::last_type_id;
+std::size_t Dog::static_type = ++Animal::last_type_id;
 
 struct Cat : Animal {
-    Cat(const char* name, size_t type = static_type) : Animal(name, type) {
+    Cat(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static size_t static_type;
+    static std::size_t static_type;
 };
 
-size_t Cat::static_type = ++Animal::last_type_id;
+std::size_t Cat::static_type = ++Animal::last_type_id;
 
 struct custom_rtti : policy::deferred_static_rtti {
     template<typename T>

@@ -3,7 +3,6 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-
 #include "test_generator_domain.hpp"
 
 #include <iostream>
@@ -19,7 +18,7 @@ int main(int argc, char* argv[]) {
 #ifndef _MSC_VER
     generator.add_forward_declarations().write_forward_declarations(slots);
 #endif
-        generator.write_static_offsets(slots);
+    generator.write_static_offsets(slots);
 
     std::ofstream tables("test_generator_tables.hpp");
     generator.encode_dispatch_data(compiler, tables);

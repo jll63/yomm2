@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE(test_list) {
     // a b c
     BOOST_TEST_REQUIRE(std::distance(l.begin(), l.end()) == 3);
 
-
     // test remove from back, the most common case
     l.remove(c);
     // a b

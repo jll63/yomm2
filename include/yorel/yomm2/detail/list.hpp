@@ -192,7 +192,7 @@ class static_list {
         return const_iterator(nullptr);
     }
 
-    size_t size() const {
+    std::size_t size() const {
         return std::distance(begin(), end());
     }
 

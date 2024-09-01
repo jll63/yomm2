@@ -591,17 +591,17 @@ use_vector_library<int, double> init_vectors;
 // any_triangular~T~ <|-- upper_triangular~T~
 // any_triangular~T~ <|-- lower_triangular~T~
 // any~T~
-// ordinary~T~: size_t rows
-// ordinary~T~: size_t columns
+// ordinary~T~: std::size_t rows
+// ordinary~T~: std::size_t columns
 // ordinary~T~: vector~T~ entries
-// square~T~: size_t order
+// square~T~: std::size_t order
 // square~T~: vector~T~ entries
-// any_triangular~T~: size_t order
+// any_triangular~T~: std::size_t order
 // any_triangular~T~: vector~T~ entries
-// symmetric~T~: size_t order
+// symmetric~T~: std::size_t order
 // symmetric~T~: vector~T~ entries
 // diagonal~T~: vector~T~ entries
-// identity~T~: size_t order
+// identity~T~: std::size_t order
 // ```
 
 // For brevity, we will consider only ordinary (i.e. non-square), square and

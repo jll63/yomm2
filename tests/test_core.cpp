@@ -340,7 +340,7 @@ struct static_offsets<
             virtual_<test_static_slots::Animal&>,
             virtual_<test_static_slots::Animal&>)>
 > {
-    static constexpr size_t slots[] = { 0, 1 };
+    static constexpr std::size_t slots[] = { 0, 1 };
 };
 
 }
