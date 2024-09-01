@@ -538,16 +538,17 @@ template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
     sizeof...(Ts) == 2, boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>,
     YOMM2_DEFAULT_POLICY>;
-// -------
-// wrapper
+
+// -----------------------------------------------------------------------------
+// thunk
 
 template<class Policy, typename, auto, typename>
-struct wrapper;
+struct thunk;
 
 template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
-struct wrapper<
+struct thunk<
     Policy, BASE_RETURN(BASE_PARAM...), SPEC,
     boost::mp11::mp_list<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
@@ -570,10 +571,10 @@ template<typename Method, typename Container>
 typename Method::next_type next_aux<Method, Container>::next;
 
 template<auto F, typename T>
-struct member_function_wrapper;
+struct member_function_thunk;
 
 template<auto F, class R, class C, typename... Args>
-struct member_function_wrapper<F, R (C::*)(Args...)> {
+struct member_function_thunk<F, R (C::*)(Args...)> {
     static R fn(C* this_, Args&&... args) {
         return (this_->*F)(args...);
     }

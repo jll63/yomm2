@@ -124,7 +124,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
             info.next = reinterpret_cast<void**>(next);
             using parameter_types =
                 detail::parameter_type_list_t<decltype(Function)>;
-            info.pf = (void*)detail::wrapper<
+            info.pf = (void*)detail::thunk<
                 Policy, signature_type, Function, parameter_types>::fn;
             using spec_type_ids = detail::type_id_list<
                 Policy,
@@ -160,7 +160,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
 
     template<auto F>
     struct add_member_function
-        : add_function<detail::member_function_wrapper<F, decltype(F)>::fn> {};
+        : add_function<detail::member_function_thunk<F, decltype(F)>::fn> {};
 
     template<auto... F>
     struct add_member_functions {
