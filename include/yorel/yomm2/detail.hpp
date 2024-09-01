@@ -6,7 +6,7 @@
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 
-#include <yorel/yomm2/detail/list.hpp>
+#include <yorel/yomm2/detail/static_list.hpp>
 
 namespace yorel {
 namespace yomm2 {
