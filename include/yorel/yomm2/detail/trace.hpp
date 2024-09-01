@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_DETAIL_TRACE_INCLUDED
-#define YOREL_YOMM2_DETAIL_TRACE_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_TRACE_HPP
+#define YOREL_YOMM2_DETAIL_TRACE_HPP
 
 namespace yorel {
 namespace yomm2 {
@@ -151,4 +151,4 @@ auto& operator<<(trace_type<Policy>& trace, const type_name& manip) {
 } // namespace yomm2
 } // namespace yorel
 
-#endif // YOREL_YOMM2_DETAIL_INCLUDED
+#endif // YOREL_YOMM2_DETAIL_HPP

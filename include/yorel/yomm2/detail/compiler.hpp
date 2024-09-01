@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
-#define YOREL_YOMM2_DETAIL_COMPILER_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_COMPILER_HPP
+#define YOREL_YOMM2_DETAIL_COMPILER_HPP
 
 #include <algorithm> // for max, transform, copy
 #include <cstdint>   // for uintptr_t

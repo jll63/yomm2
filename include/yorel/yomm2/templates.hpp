@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_TEMPLATES_INCLUDED
-#define YOREL_YOMM2_TEMPLATES_INCLUDED
+#ifndef YOREL_YOMM2_TEMPLATES_HPP
+#define YOREL_YOMM2_TEMPLATES_HPP
 
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>

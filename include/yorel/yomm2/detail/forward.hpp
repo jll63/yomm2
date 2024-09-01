@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_DETAIL_FORWARD_INCLUDED
-#define YOREL_YOMM2_DETAIL_FORWARD_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_FORWARD_HPP
+#define YOREL_YOMM2_DETAIL_FORWARD_HPP
 
 namespace yorel {
 namespace yomm2 {

@@ -3,8 +3,8 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_INCLUDED
-#define YOREL_YOMM2_INCLUDED
+#ifndef YOREL_YOMM2_HPP
+#define YOREL_YOMM2_HPP
 
 #include <algorithm> // IWYU pragma: keep
 #include <iostream>

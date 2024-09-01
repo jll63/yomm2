@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_DETAIL_LIST_INCLUDED
-#define YOREL_YOMM2_DETAIL_LIST_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_LIST_HPP
+#define YOREL_YOMM2_DETAIL_LIST_HPP
 
 #include <algorithm>
 #include <boost/assert.hpp>

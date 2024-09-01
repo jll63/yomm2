@@ -1,7 +1,7 @@
 // Copyright (c) 2018-2024 Jean-Louis Leroy
 
-#ifndef YOREL_YOMM2_MACROS_INCLUDED
-#define YOREL_YOMM2_MACROS_INCLUDED
+#ifndef YOREL_YOMM2_MACROS_HPP
+#define YOREL_YOMM2_MACROS_HPP
 
 #include <boost/preprocessor/config/config.hpp>
 #include <boost/preprocessor/control/iif.hpp>
