@@ -7,7 +7,7 @@
 #include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 
-#include "test_helpers.hpp"
+#include "test_util.hpp"
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>

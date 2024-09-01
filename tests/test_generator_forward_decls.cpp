@@ -12,7 +12,7 @@
 #include <yorel/yomm2.hpp>
 #include <yorel/yomm2/generator.hpp>
 
-#include "test_helpers.hpp"
+#include "test_util.hpp"
 
 #define BOOST_TEST_MAIN
 #define BOOST_TEST_MODULE generator
