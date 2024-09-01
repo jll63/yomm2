@@ -195,19 +195,19 @@ BOOST_AUTO_TEST_CASE(casts) {
 
     voidp base_address;
 
-    base_address = wrapper<
+    base_address = thunk<
         default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
         types<const Mammal&>>::fn(animal);
     BOOST_TEST(base_address == &mammal);
 
-    base_address = wrapper<
+    base_address = thunk<
         default_policy,
         voidp(virtual_<const Animal&>), carnivore_this,
         types<const Carnivore&>>::fn(animal);
     BOOST_TEST(base_address == &carnivore);
 
-    base_address = wrapper<
+    base_address = thunk<
         default_policy,
         voidp(virtual_<const Animal&>), mammal_this,
         types<const Dog&>>::fn(animal);

@@ -584,16 +584,16 @@ inline uintptr_t get_tip(const T& arg) {
     }
 }
 
-// -------
-// wrapper
+// -----------------------------------------------------------------------------
+// thunk
 
 template<class Policy, typename, auto, typename>
-struct wrapper;
+struct thunk;
 
 template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
-struct wrapper<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
+struct thunk<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
         using base_type = mp11::mp_first<types<BASE_PARAM...>>;
         using spec_type = mp11::mp_first<types<SPEC_PARAM...>>;
@@ -612,10 +612,10 @@ template<typename Method, typename Container>
 typename Method::next_type next_aux<Method, Container>::next;
 
 template<auto F, typename T>
-struct member_function_wrapper;
+struct member_function_thunk;
 
 template<auto F, class R, class C, typename... Args>
-struct member_function_wrapper<F, R (C::*)(Args...)> {
+struct member_function_thunk<F, R (C::*)(Args...)> {
     static R fn(C* this_, Args&&... args) {
         return (this_->*F)(args...);
     }
