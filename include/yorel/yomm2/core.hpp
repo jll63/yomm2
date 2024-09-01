@@ -8,9 +8,6 @@
 
 #include <yorel/yomm2/policy.hpp>
 
-#pragma push_macro("min")
-#undef min
-
 #ifndef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
@@ -618,7 +615,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
 
@@ -631,7 +628,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::min(sizeof...(args), resolution_error::max_types),
+            types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -640,7 +637,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::ambiguous_handler(
     detail::remove_virtual<A>... args) {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
@@ -652,7 +649,7 @@ method<Key, R(A...), Policy>::ambiguous_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::min(sizeof...(args), resolution_error::max_types),
+            types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -681,7 +678,5 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
 
 } // namespace yomm2
 } // namespace yorel
-
-#pragma pop_macro("min")
 
 #endif

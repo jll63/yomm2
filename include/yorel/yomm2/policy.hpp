@@ -20,11 +20,6 @@
 #include <typeinfo>
 #endif
 
-#pragma push_macro("min")
-#undef min
-#pragma push_macro("max")
-#undef max
-
 #if defined(YOMM2_SHARED)
 #if defined(_MSC_VER)
 #if !defined(yOMM2_API_msc)
@@ -53,7 +48,7 @@ struct context;
 struct catalog;
 
 using type_id = std::uintptr_t;
-constexpr type_id invalid_type = std::numeric_limits<type_id>::max();
+constexpr type_id invalid_type = (std::numeric_limits<type_id>::max)();
 
 template<class Policy, typename Key, typename Signature>
 struct method;
@@ -343,7 +338,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
             for (auto iter = first; iter != last; ++iter) {
                 for (auto type_iter = iter->type_id_begin();
                      type_iter != iter->type_id_end(); ++type_iter) {
-                    size = std::max(size, *type_iter);
+                    size = (std::max)(size, *type_iter);
                 }
             }
 
@@ -534,8 +529,8 @@ void fast_perfect_hash<Policy>::hash_initialize(
                      type_iter != iter->type_id_end(); ++type_iter) {
                     auto type = *type_iter;
                     auto index = (type * hash_mult) >> hash_shift;
-                    hash_min = std::min(hash_min, index);
-                    hash_max = std::max(hash_max, index);
+                    hash_min = (std::min)(hash_min, index);
+                    hash_max = (std::max)(hash_max, index);
 
                     if (buckets[index] != static_cast<type_id>(-1)) {
                         found = false;
@@ -750,8 +745,5 @@ using default_policy = policy::default_static;
 
 } // namespace yomm2
 } // namespace yorel
-
-#pragma pop_macro("min")
-#pragma pop_macro("max")
 
 #endif
