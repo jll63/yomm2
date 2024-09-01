@@ -613,48 +613,6 @@ using default_policy = policy::debug_shared;
 using default_policy = policy::default_static;
 #endif
 
-namespace detail {
-
-struct update_report : update_method_report {};
-
-template<class Facet, typename>
-struct has_report_aux : std::false_type {};
-
-template<class Facet>
-struct has_report_aux<Facet, std::void_t<typename Facet::report>>
-    : std::true_type {};
-
-template<class Facet>
-constexpr bool has_report = has_report_aux<Facet, void>::value;
-
-template<class Reports, class Facets, typename = void>
-struct aggregate_reports;
-
-template<class... Reports, class Facet, class... MoreFacets>
-struct aggregate_reports<
-    types<Reports...>, types<Facet, MoreFacets...>,
-    std::void_t<typename Facet::report>> {
-    using type = typename aggregate_reports<
-        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
-};
-
-template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
-    using type = typename aggregate_reports<
-        types<Reports...>, types<MoreFacets...>>::type;
-};
-
-template<class... Reports, typename Void>
-struct aggregate_reports<types<Reports...>, types<>, Void> {
-    struct type : Reports... {};
-};
-
-template<class Policy>
-using report_type = typename aggregate_reports<
-    types<update_report>, typename Policy::facets>::type;
-
-} // namespace detail
-
 } // namespace yomm2
 } // namespace yorel
 
