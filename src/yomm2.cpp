@@ -43,8 +43,8 @@ template class yOMM2_API_msc basic_policy<
 template auto yOMM2_API_gcc yOMM2_API_msc update<policy::debug_shared>()
     -> detail::compiler<policy::debug_shared>;
 
-yOMM2_API_gcc yOMM2_API_msc auto update()
-    -> detail::compiler<policy::debug_shared> {
+yOMM2_API_gcc yOMM2_API_msc auto
+update() -> detail::compiler<policy::debug_shared> {
     return update<policy::debug_shared>();
 }
 

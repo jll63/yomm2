@@ -293,8 +293,7 @@ void compiler<Policy>::resolve_static_type_ids() {
                 resolve(&ci.type);
 
                 if (*ci.last_base == 0) {
-                    for (auto& ti :
-                         range{ci.first_base, ci.last_base}) {
+                    for (auto& ti : range{ci.first_base, ci.last_base}) {
                         resolve(&ti);
                     }
 
@@ -592,7 +591,6 @@ void compiler<Policy>::augment_methods() {
         }
     }
 }
-
 
 template<class Policy>
 void compiler<Policy>::assign_slots() {

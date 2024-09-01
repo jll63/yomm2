@@ -19,7 +19,8 @@ int main() {
 
 #if __has_include(<boost/unordered/unordered_flat_map.hpp>)
 #include <boost/unordered/unordered_flat_map.hpp>
-#define UNORDERED_FLAT_MAP_AVAILABLE __has_include(<boost/unordered/unordered_flat_map.hpp>)
+#define UNORDERED_FLAT_MAP_AVAILABLE                                           \
+    __has_include(<boost/unordered/unordered_flat_map.hpp>)
 #endif
 
 #include <benchmark/benchmark.h>
@@ -44,9 +45,9 @@ enum { NH = YOMM2_BENCHMARK_HIERARCHIES };
 enum { NH = 100 };
 #endif
 
-#define mb()	asm volatile("mfence":::"memory")
-#define rmb()	asm volatile("lfence":::"memory")
-#define wmb()	asm volatile("sfence" ::: "memory")
+#define mb() asm volatile("mfence" ::: "memory")
+#define rmb() asm volatile("lfence" ::: "memory")
+#define wmb() asm volatile("sfence" ::: "memory")
 
 const std::string yomm2_ = "yomm2_";
 
@@ -668,7 +669,7 @@ int main(int argc, char** argv) {
 #if !defined(NDEBUG)
     mp_for_each<dispatch_types>([](auto D_value) {
         using Dispatch = decltype(D_value);
-        if constexpr (true ||!std::is_same_v<Dispatch, no_dispatch>) {
+        if constexpr (true || !std::is_same_v<Dispatch, no_dispatch>) {
             mp_for_each<arity_types>([](auto A_value) {
                 using Arity = decltype(A_value);
                 mp_for_each<inheritance_types>([](auto I_value) {

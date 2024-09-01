@@ -24,7 +24,6 @@ define_method(void, meet, (Dog&, Cat&, std::ostream& os)) {
     os << "chase";
 }
 
-
 define_method(void, identify, (DomesticCat & animal, std::ostream& os)) {
     os << animal.owner << "'s"
        << " cat";

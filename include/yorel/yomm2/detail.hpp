@@ -791,8 +791,7 @@ auto& operator<<(
 }
 
 template<class Policy>
-auto& operator<<(
-    trace_type<Policy>& trace, const range<type_id*>& tips) {
+auto& operator<<(trace_type<Policy>& trace, const range<type_id*>& tips) {
     return write_range(trace, tips, [](auto tip) { return type_name(tip); });
 }
 

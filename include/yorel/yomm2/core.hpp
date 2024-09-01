@@ -278,8 +278,7 @@ class virtual_ptr {
                         Policy, Other&>::polymorphic_type>;
             } else {
                 vptr = Policy::template static_vptr<
-                    typename virtual_traits<
-                        Policy, Other&>::polymorphic_type>;
+                    typename virtual_traits<Policy, Other&>::polymorphic_type>;
             }
         } else {
             auto index = dynamic_id;

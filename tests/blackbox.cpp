@@ -227,7 +227,8 @@ YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void deprecated_test_handler(const method_call_error& error, std::size_t, type_id*) {
+void deprecated_test_handler(
+    const method_call_error& error, std::size_t, type_id*) {
     throw error;
 }
 

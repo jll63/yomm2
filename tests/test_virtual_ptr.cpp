@@ -57,11 +57,15 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_basic) {
             virtual_ptr<Animal> const_upcast_copy(p);
         }
 
-        { auto p = virtual_ptr<const Animal>(dog); }
+        {
+            auto p = virtual_ptr<const Animal>(dog);
+        }
 
 // should not compile
 #ifdef YOMM2_SHOULD_NOT_COMPILE
-        { auto vptr = virtual_ptr<Dog>(Dog()); }
+        {
+            auto vptr = virtual_ptr<Dog>(Dog());
+        }
 #endif
     }
 
@@ -74,9 +78,13 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_basic) {
             virtual_shared_ptr<Animal> upcast_copy(p);
         }
 
-        { auto p = virtual_shared_ptr<Dog>(std::make_shared<Dog>()); }
+        {
+            auto p = virtual_shared_ptr<Dog>(std::make_shared<Dog>());
+        }
 
-        { auto p = virtual_shared_ptr<Animal>(std::make_shared<Dog>()); }
+        {
+            auto p = virtual_shared_ptr<Animal>(std::make_shared<Dog>());
+        }
     }
 
     {
