@@ -31,16 +31,6 @@ namespace detail {
 
 struct update_report : update_method_report {};
 
-template<class Facet, typename>
-struct has_report_aux : std::false_type {};
-
-template<class Facet>
-struct has_report_aux<Facet, std::void_t<typename Facet::report>>
-    : std::true_type {};
-
-template<class Facet>
-constexpr bool has_report = has_report_aux<Facet, void>::value;
-
 template<class Reports, class Facets, typename = void>
 struct aggregate_reports;
 
