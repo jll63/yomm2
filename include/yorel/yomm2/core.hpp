@@ -12,6 +12,8 @@
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
+#include <yorel/yomm2/detail.hpp>
+
 namespace yorel {
 namespace yomm2 {
 

@@ -157,20 +157,6 @@ struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
     }
 };
 
-// -----------
-// method info
-
-struct method_info;
-
-struct definition_info : static_list<definition_info>::static_link {
-    ~definition_info();
-    method_info* method; // for the destructor, to remove definition
-    type_id type;        // of the function, for trace
-    void** next;
-    type_id *vp_begin, *vp_end;
-    void* pf;
-};
-
 template<typename... Ts>
 constexpr auto arity =
     boost::mp11::mp_count_if<boost::mp11::mp_list<Ts...>, is_virtual>::value;

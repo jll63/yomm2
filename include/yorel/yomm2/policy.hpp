@@ -12,195 +12,21 @@
 #include <variant>
 #include <vector>
 
-#include <boost/config.hpp>
-#include <boost/mp11.hpp>
-
 #ifndef BOOST_NO_RTTI
 #include <typeindex>
 #include <typeinfo>
 #include <boost/core/demangle.hpp>
 #endif
 
-#if !defined(yOMM2_API_gcc)
-#define yOMM2_API_gcc
-#endif
+#include <boost/mp11.hpp>
 
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc
-#endif
-
-#define yOMM2_API yOMM2_API_gcc yOMM2_API_msc
-
-// -----------------------------------------------------------------------------
-// Forward declarations needed by "detail.hpp"
+#include <yorel/yomm2/policies/core.hpp>
+#include <yorel/yomm2/detail/ostdstream.hpp>
+#include <yorel/yomm2/detail/range.hpp>
 
 namespace yorel {
 namespace yomm2 {
-
-struct context;
-struct catalog;
-
-using type_id = std::uintptr_t;
-constexpr type_id invalid_type = (std::numeric_limits<type_id>::max)();
-
-template<class Policy, typename Key, typename Signature>
-struct method;
-
-template<class... Classes>
-struct class_declaration;
-
-// -----------------------------------------------------------------------------
-// Error handling
-
-struct error {};
-
-struct resolution_error : error {
-    enum status_type { no_definition = 1, ambiguous } status;
-    std::string_view method_name;
-    std::size_t arity;
-    static constexpr std::size_t max_types = 16;
-    type_id types[max_types];
-};
-
-struct unknown_class_error : error {
-    enum { update = 1, call } context;
-    type_id type;
-};
-
-struct hash_search_error : error {
-    std::size_t attempts;
-    std::size_t buckets;
-};
-
-struct method_table_error : error {
-    type_id type;
-};
-
-struct static_offset_error : error {
-    type_id method;
-    int actual, expected;
-};
-
-struct static_slot_error : static_offset_error {};
-struct static_stride_error : static_offset_error {};
-
-using error_type = std::variant<
-    error, resolution_error, unknown_class_error, hash_search_error,
-    method_table_error, static_slot_error, static_stride_error>;
-
-using error_handler_type = std::function<void(const error_type& error)>;
-
 namespace policy {
-
-struct abstract_policy {};
-
-struct error_handler {};
-struct runtime_checks {};
-struct indirect_vptr {};
-struct type_hash {};
-struct vptr_placement {};
-struct external_vptr : virtual vptr_placement {};
-struct error_output {};
-struct trace_output {};
-
-struct deferred_static_rtti;
-struct debug;
-struct release;
-struct debug_shared;
-struct release_shared;
-
-} // namespace policy
-
-} // namespace yomm2
-} // namespace yorel
-
-#include "detail/list.hpp"
-#include "detail/range.hpp"
-
-namespace yorel {
-namespace yomm2 {
-
-namespace detail {
-
-class ostderr;
-
-// -----------------------------------------------------------------------------
-// class info
-
-struct class_info : static_list<class_info>::static_link {
-    type_id type;
-    std::uintptr_t** static_vptr;
-    type_id *first_base, *last_base;
-    bool is_abstract{false};
-
-    const std::uintptr_t* vptr() const {
-        return *static_vptr;
-    }
-
-    const std::uintptr_t* const* indirect_vptr() const {
-        return static_vptr;
-    }
-
-    auto type_id_begin() const {
-        return &type;
-    }
-
-    auto type_id_end() const {
-        return &type + 1;
-    }
-};
-
-struct definition_info;
-
-struct yOMM2_API method_info : static_list<method_info>::static_link {
-    std::string_view name;
-    type_id *vp_begin, *vp_end;
-    static_list<definition_info> specs;
-    void* ambiguous;
-    void* not_implemented;
-    type_id method_type;
-    size_t* slots_strides_ptr;
-
-    auto arity() const {
-        return std::distance(vp_begin, vp_end);
-    }
-};
-
-} // namespace detail
-
-namespace policy {
-
-template<class Key>
-struct yOMM2_API_gcc yOMM2_API_msc method_tables {
-    // Why is yOMM2_API_msc needed here???
-    template<class Class>
-    static std::uintptr_t* static_vptr;
-};
-
-template<class Key>
-template<class Class>
-std::uintptr_t* method_tables<Key>::static_vptr;
-
-using class_catalog = detail::static_list<detail::class_info>;
-using method_catalog = detail::static_list<detail::method_info>;
-
-struct domain {};
-
-template<class Key>
-struct yOMM2_API_gcc basic_domain : domain, method_tables<Key> {
-    static class_catalog classes;
-    static method_catalog methods;
-    static std::vector<std::uintptr_t> dispatch_data;
-};
-
-template<class Key>
-class_catalog basic_domain<Key>::classes;
-
-template<class Key>
-method_catalog basic_domain<Key>::methods;
-
-template<class Key>
-std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;
 
 struct rtti {
     static type_id type_index(type_id type) {
