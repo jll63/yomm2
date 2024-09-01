@@ -104,9 +104,10 @@ struct method<Key, R(A...), Policy> : detail::method_info {
 
     return_type operator()(detail::remove_virtual<A>... args) const;
 
-    static return_type
+    static BOOST_NORETURN return_type
     not_implemented_handler(detail::remove_virtual<A>... args);
-    static return_type ambiguous_handler(detail::remove_virtual<A>... args);
+    static BOOST_NORETURN return_type
+    ambiguous_handler(detail::remove_virtual<A>... args);
 
     template<typename Container>
     using next = detail::next_aux<method, Container>;
