@@ -657,12 +657,6 @@ method<Key, R(A...), Policy>::ambiguous_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
-#ifdef YOMM2_SHARED
-
-yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
-
-#else
-
 #ifndef BOOST_NO_RTTI
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
@@ -671,8 +665,6 @@ inline error_handler_type set_error_handler(error_handler_type handler) {
     default_policy::error = handler;
     return prev;
 }
-
-#endif
 
 #endif
 

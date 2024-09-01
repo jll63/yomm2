@@ -100,7 +100,6 @@ The header itself does not define any macros, except for its include guard
 The header consumes three macros:
 * `NDEBUG`: if defined, no checks are performed during method calls. This
   delivers a performance close to normal virtual function calls.
-* `YOMM2_SHARED`: if defined, the library runtime is in a shared library or DLL.
 * ->`YOMM2_DEFAULT_POLICY`: if defined, overrides the default policy.
 
 The header defines the following macros:

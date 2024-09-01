@@ -52,7 +52,6 @@ presets = {
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON" if linkage == "shared" else "OFF",
             },
             **tool_chain.configure_presets,
         }

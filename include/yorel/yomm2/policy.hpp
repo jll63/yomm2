@@ -20,14 +20,6 @@
 #include <typeinfo>
 #endif
 
-#if defined(YOMM2_SHARED)
-#if defined(_MSC_VER)
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc __declspec(dllimport)
-#endif
-#endif
-#endif
-
 #if !defined(yOMM2_API_gcc)
 #define yOMM2_API_gcc
 #endif
@@ -733,15 +725,7 @@ using default_static = policy::debug;
 
 } // namespace policy
 
-#if defined(YOMM2_SHARED)
-#ifdef NDEBUG
-using default_policy = policy::release_shared;
-#else
-using default_policy = policy::debug_shared;
-#endif
-#else
 using default_policy = policy::default_static;
-#endif
 
 } // namespace yomm2
 } // namespace yorel

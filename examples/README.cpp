@@ -282,9 +282,6 @@ clang++ -std=c++17 -O3 -Iinclude examples/synopsis.cpp -o synopsis
 The YOMM2 runtime - responsible for building the dispatch tables - adds ~75K to
 the image, or ~64K after stripping.
 
-The runtime can also be built and installed as a shared library, by adding
--DYOMM2_SHARED=1 to the `cmake` command line.
-
 A CMake package configuration is also installed. If the install location is in
 `CMAKE_PREFIX_PATH`, you can use `find_package(YOMM2)` to locate YOMM2, then
 `target_link_libraries(<your_target> YOMM2::yomm2)` to add the necessary include

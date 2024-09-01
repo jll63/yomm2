@@ -17,8 +17,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -32,8 +31,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -47,8 +45,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -62,8 +59,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -77,8 +73,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -92,8 +87,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -107,8 +101,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -122,8 +115,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -137,8 +129,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -152,8 +143,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -167,8 +157,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -182,13 +171,13 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
             "name": "ninja-c++-static",
             "generator": "Ninja Multi-Config",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -196,13 +185,13 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
             "name": "ninja-c++-shared",
             "generator": "Ninja Multi-Config",
+            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
@@ -210,8 +199,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -225,8 +213,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -240,8 +227,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             }
         },
         {
@@ -255,8 +241,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "OFF"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             },
             "condition": {
                 "type": "equals",
@@ -275,8 +260,7 @@
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON",
-                "YOMM2_SHARED": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON"
             },
             "condition": {
                 "type": "equals",
