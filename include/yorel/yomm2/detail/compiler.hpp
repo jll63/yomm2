@@ -664,6 +664,7 @@ void compiler<Policy>::assign_slots() {
                         cls.covariant_classes.end(), [](auto cls) {
                             return cls->direct_bases.size() > 1;
                         }) == cls.covariant_classes.end()) {
+                    indent _(trace);
                     assign_tree_slots(cls, 0);
                 } else {
                     assign_lattice_slots(cls);
@@ -697,8 +698,12 @@ void compiler<Policy>::assign_slots() {
 template<class Policy>
 void compiler<Policy>::assign_tree_slots(class_& cls, std::size_t base_slot) {
     auto next_slot = base_slot;
+    using namespace detail;
 
     for (const auto& mp : cls.used_by_vp) {
+        ++trace << " in " << cls << " for "
+                << type_name(mp.method->info->method_type) << " parameter "
+                << mp.param << ": " << next_slot << "\n";
         mp.method->slots[mp.param] = next_slot++;
     }
 
@@ -712,6 +717,8 @@ void compiler<Policy>::assign_tree_slots(class_& cls, std::size_t base_slot) {
 
 template<class Policy>
 void compiler<Policy>::assign_lattice_slots(class_& cls) {
+    using namespace detail;
+
     if (cls.mark == class_mark) {
         return;
     }
@@ -720,8 +727,9 @@ void compiler<Policy>::assign_lattice_slots(class_& cls) {
 
     if (!cls.used_by_vp.empty()) {
         for (const auto& mp : cls.used_by_vp) {
-            ++trace << " in " << cls << " for " << mp.method->info->name
-                    << " parameter " << mp.param << "\n";
+            ++trace << " in " << cls << " for "
+                    << type_name(mp.method->info->method_type) << " parameter "
+                    << mp.param << "\n";
 
             indent _(trace);
 
@@ -788,7 +796,8 @@ void compiler<Policy>::build_dispatch_tables() {
     using namespace detail;
 
     for (auto& m : methods) {
-        ++trace << "Building dispatch table for " << m.info->name << "\n";
+        ++trace << "Building dispatch table for "
+                << type_name(m.info->method_type) << "\n";
         indent _(trace);
 
         auto dims = m.arity();
@@ -1083,7 +1092,7 @@ void compiler<Policy>::install_gv() {
         if constexpr (trace_enabled) {
             ++trace << rflush(4, Policy::dispatch_data.size()) << " "
                     << " method #" << m.dispatch_table[0]->method_index << " "
-                    << m.info->name << "\n";
+                    << type_name(m.info->method_type) << "\n";
             indent _(trace);
 
             for (auto& entry : m.dispatch_table) {

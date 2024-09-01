@@ -18,6 +18,7 @@
 #ifndef BOOST_NO_RTTI
 #include <typeindex>
 #include <typeinfo>
+#include <boost/core/demangle.hpp>
 #endif
 
 #if !defined(yOMM2_API_gcc)
@@ -236,7 +237,8 @@ struct std_rtti : virtual rtti {
 
     template<typename Stream>
     static void type_name(type_id type, Stream& stream) {
-        stream << reinterpret_cast<const std::type_info*>(type)->name();
+        stream << boost::core::demangle(
+            reinterpret_cast<const std::type_info*>(type)->name());
     }
 
     static std::type_index type_index(type_id type) {
