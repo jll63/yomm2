@@ -7,7 +7,6 @@
 #define YOREL_YOMM2_INCLUDED
 
 #include <algorithm> // IWYU pragma: keep
-#include <cassert>
 #include <iostream>
 #include <iterator> // IWYU pragma: keep
 #include <type_traits>

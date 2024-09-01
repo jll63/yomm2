@@ -4,6 +4,8 @@
 #include <functional>
 #include <memory>
 
+#include <boost/assert.hpp>
+
 #include <yorel/yomm2/policy.hpp>
 
 #pragma push_macro("min")
@@ -113,7 +115,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
             static detail::definition_info info;
 
             if (info.method) {
-                assert(info.method == &fn);
+                BOOST_ASSERT(info.method == &fn);
                 return;
             }
 

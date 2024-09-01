@@ -7,7 +7,6 @@
 #define YOREL_YOMM2_COMPILER_INCLUDED
 
 #include <algorithm> // for max, transform, copy
-#include <cassert>   // for assert
 #include <cstdint>   // for uintptr_t
 #include <cstdio>
 #include <cstdlib> // for abort, getenv
@@ -23,6 +22,7 @@
 #include <utility>       // for pair
 #include <vector>        // for vector, vector<>:...
 
+#include <boost/assert.hpp>
 #include <boost/dynamic_bitset.hpp>
 
 #include <yorel/yomm2/core.hpp>
@@ -1096,7 +1096,7 @@ void compiler<Policy>::install_gv() {
         }
 
         m.gv_dispatch_table = gv_iter;
-        assert(gv_iter + m.dispatch_table.size() <= gv_last);
+        BOOST_ASSERT(gv_iter + m.dispatch_table.size() <= gv_last);
         gv_iter = std::transform(
             m.dispatch_table.begin(), m.dispatch_table.end(), gv_iter,
             [](auto spec) { return spec->pf; });
@@ -1128,14 +1128,14 @@ void compiler<Policy>::install_gv() {
                 indent _(trace);
                 ++trace << type_name(method.info->method_type) << "\n";
                 ++trace << spec_name(method, spec);
-                assert(gv_iter + 1 <= gv_last);
+                BOOST_ASSERT(gv_iter + 1 <= gv_last);
                 *gv_iter++ = spec->pf;
             } else {
                 trace << "vp #" << entry.vp_index << " group #"
                       << entry.group_index << "\n";
                 indent _(trace);
                 ++trace << type_name(method.info->method_type);
-                assert(gv_iter + 1 <= gv_last);
+                BOOST_ASSERT(gv_iter + 1 <= gv_last);
 
                 if (entry.vp_index == 0) {
                     *gv_iter++ = std::uintptr_t(
