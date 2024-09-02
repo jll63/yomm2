@@ -1,38 +1,21 @@
+// Copyright (c) 2018-2024 Jean-Louis Leroy
+// Distributed under the Boost Software License, Version 1.0.
+// See accompanying file LICENSE_1_0.txt
+// or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 #ifndef YOREL_YOMM2_POLICIES_CORE_HPP
 #define YOREL_YOMM2_POLICIES_CORE_HPP
 
+#include <yorel/yomm2/detail/types.hpp>
 #include <yorel/yomm2/detail/static_list.hpp>
 
-#if defined(YOMM2_SHARED)
-#if defined(_MSC_VER)
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc __declspec(dllimport)
-#endif
-#endif
-#endif
+#include <boost/mp11/algorithm.hpp>
+#include <boost/mp11/bind.hpp>
 
-#if !defined(yOMM2_API_gcc)
-#define yOMM2_API_gcc
-#endif
-
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc
-#endif
-
-#define yOMM2_API yOMM2_API_gcc yOMM2_API_msc
-
-// -----------------------------------------------------------------------------
-// Forward declarations needed by "detail.hpp"
+#include <string_view>
 
 namespace yorel {
 namespace yomm2 {
-
-struct context;
-struct catalog;
-
-using type_id = std::uintptr_t;
-constexpr type_id invalid_type = (std::numeric_limits<type_id>::max)();
-
 namespace detail {
 
 // -----------------------------------------------------------------------------
@@ -206,6 +189,75 @@ detail::method_catalog basic_domain<Key>::methods;
 
 template<class Key>
 std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;
+
+template<typename Policy, class Facet>
+struct rebind_facet {
+    using type = Facet;
+};
+
+template<
+    typename NewPolicy, typename OldPolicy,
+    template<typename...> class GenericFacet, typename... Args>
+struct rebind_facet<NewPolicy, GenericFacet<OldPolicy, Args...>> {
+    using type = GenericFacet<NewPolicy, Args...>;
+};
+
+template<class Policy, class... Facets>
+struct basic_policy : virtual abstract_policy,
+                      virtual basic_domain<Policy>,
+                      virtual Facets... {
+    using facets = detail::types<Facets...>;
+
+    template<class Facet>
+    static constexpr bool has_facet = std::is_base_of_v<Facet, Policy>;
+
+    template<class Facet>
+    using use_facet = boost::mp11::mp_first<boost::mp11::mp_filter_q<
+        boost::mp11::mp_bind_front_q<
+            boost::mp11::mp_quote_trait<std::is_base_of>, Facet>,
+        facets>>;
+
+    template<class NewPolicy>
+    using rebind = basic_policy<
+        NewPolicy, typename rebind_facet<NewPolicy, Facets>::type...>;
+
+    template<class Base, class Facet>
+    using replace = boost::mp11::mp_apply<
+        basic_policy,
+        boost::mp11::mp_push_front<
+            boost::mp11::mp_replace_if_q<
+                facets,
+                boost::mp11::mp_bind_front_q<
+                    boost::mp11::mp_quote_trait<std::is_base_of>, Base>,
+                Facet>,
+            Policy>>;
+
+    template<class Base>
+    using remove = boost::mp11::mp_apply<
+        basic_policy,
+        boost::mp11::mp_push_front<
+            boost::mp11::mp_remove_if_q<
+                facets,
+                boost::mp11::mp_bind_front_q<
+                    boost::mp11::mp_quote_trait<std::is_base_of>, Base>>,
+            Policy>>;
+};
+
+template<class Policy, class Facet>
+constexpr bool has_facet = Policy::template has_facet<Facet>;
+
+struct rtti {
+    static type_id type_index(type_id type) {
+        return type;
+    }
+
+    template<typename Stream>
+    static void type_name(type_id type, Stream& stream) {
+        stream << "type_id(" << type << ")";
+    }
+};
+
+struct deferred_static_rtti : virtual rtti {};
 
 } // namespace policy
 

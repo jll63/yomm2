@@ -1,6 +1,8 @@
 #ifndef YOREL_YOMM2_DETAIL_TRACE_HPP
 #define YOREL_YOMM2_DETAIL_TRACE_HPP
 
+#include <boost/dynamic_bitset.hpp>
+
 namespace yorel {
 namespace yomm2 {
 namespace detail {

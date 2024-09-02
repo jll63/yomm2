@@ -1,12 +1,9 @@
 #ifndef YOREL_YOMM2_DETAIL_HPP
 #define YOREL_YOMM2_DETAIL_HPP
 
-#include <boost/assert.hpp>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/mp11/algorithm.hpp>
-#include <boost/mp11/bind.hpp>
-
 #include <yorel/yomm2/detail/static_list.hpp>
+
+#include <boost/assert.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -25,7 +22,7 @@ template<class Policy, class TypeList>
 struct type_id_list;
 
 template<class Policy, typename... T>
-struct type_id_list<Policy, boost::mp11::mp_list<T...>> {
+struct type_id_list<Policy, types<T...>> {
     // If using deferred 'static_type', add an extra element in 'value',
     // default-initialized to zero, indicating the ids need to be resolved. Set
     // to 1 after this is done.
@@ -37,18 +34,18 @@ struct type_id_list<Policy, boost::mp11::mp_list<T...>> {
 };
 
 template<class Policy, typename... T>
-type_id type_id_list<Policy, boost::mp11::mp_list<T...>>::value[values] = {
+type_id type_id_list<Policy, types<T...>>::value[values] = {
     collect_static_type_id<Policy, T>()...};
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::begin = value;
+type_id* type_id_list<Policy, types<T...>>::begin = value;
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::end =
+type_id* type_id_list<Policy, types<T...>>::end =
     value + sizeof...(T);
 
 template<class Policy>
-struct type_id_list<Policy, boost::mp11::mp_list<>> {
+struct type_id_list<Policy, types<>> {
     static constexpr type_id* const begin = nullptr;
     static constexpr auto end = begin;
 };
@@ -70,12 +67,12 @@ struct parameter_type_list;
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType(ParameterTypes...)> {
-    using type = boost::mp11::mp_list<ParameterTypes...>;
+    using type = types<ParameterTypes...>;
 };
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType (*)(ParameterTypes...)> {
-    using type = boost::mp11::mp_list<ParameterTypes...>;
+    using type = types<ParameterTypes...>;
 };
 
 template<typename T>
@@ -139,14 +136,14 @@ template<class...>
 struct class_declaration_aux;
 
 template<class Policy, class Class, typename... Bases>
-struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
+struct class_declaration_aux<Policy, types<Class, Bases...>>
     : class_info {
     class_declaration_aux() {
         this->type = collect_static_type_id<Policy, Class>();
         this->first_base =
-            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::begin;
+            type_id_list<Policy, types<Bases...>>::begin;
         this->last_base =
-            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::end;
+            type_id_list<Policy, types<Bases...>>::end;
         Policy::classes.push_back(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
@@ -159,7 +156,7 @@ struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
 
 template<typename... Ts>
 constexpr auto arity =
-    boost::mp11::mp_count_if<boost::mp11::mp_list<Ts...>, is_virtual>::value;
+    boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
 
 inline definition_info::~definition_info() {
     if (method) {
@@ -171,7 +168,7 @@ template<typename T>
 struct is_policy_aux : std::is_base_of<policy::abstract_policy, T> {};
 
 template<typename... T>
-struct is_policy_aux<boost::mp11::mp_list<T...>> : std::false_type {};
+struct is_policy_aux<types<T...>> : std::false_type {};
 
 template<typename T>
 constexpr bool is_policy = is_policy_aux<T>::value;
@@ -340,8 +337,8 @@ constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
 template<class... Ts>
 using virtual_ptr_class = std::conditional_t<
     sizeof...(Ts) == 2,
-    boost::mp11::mp_second<boost::mp11::mp_list<Ts..., void>>,
-    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>>;
+    boost::mp11::mp_second<types<Ts..., void>>,
+    boost::mp11::mp_first<types<Ts...>>>;
 
 template<class Policy, typename T>
 struct argument_traits {
@@ -500,19 +497,19 @@ inline uintptr_t get_tip(const T& arg) {
 
 template<typename... Classes>
 using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_back<types<Classes...>>,
     YOMM2_DEFAULT_POLICY>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>,
-    boost::mp11::mp_list<Classes...>>;
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_pop_back<types<Classes...>>,
+    types<Classes...>>;
 
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>,
+    sizeof...(Ts) == 2, boost::mp11::mp_first<types<Ts...>>,
     YOMM2_DEFAULT_POLICY>;
 
 // -----------------------------------------------------------------------------
@@ -526,12 +523,12 @@ template<
     typename... SPEC_PARAM>
 struct thunk<
     Policy, BASE_RETURN(BASE_PARAM...), SPEC,
-    boost::mp11::mp_list<SPEC_PARAM...>> {
+    types<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
         using base_type =
-            boost::mp11::mp_first<boost::mp11::mp_list<BASE_PARAM...>>;
+            boost::mp11::mp_first<types<BASE_PARAM...>>;
         using spec_type =
-            boost::mp11::mp_first<boost::mp11::mp_list<SPEC_PARAM...>>;
+            boost::mp11::mp_first<types<SPEC_PARAM...>>;
         return SPEC(
             argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
                 remove_virtual<BASE_PARAM>(arg))...);
@@ -563,40 +560,40 @@ struct member_function_thunk<F, R (C::*)(Args...)> {
 // base. The direct and its direct and indirect proper bases are included. The
 // runtime will extract the direct proper bases. See unit tests for an example.
 template<typename... Cs>
-using inheritance_map = boost::mp11::mp_list<boost::mp11::mp_push_front<
+using inheritance_map = types<boost::mp11::mp_push_front<
     boost::mp11::mp_filter_q<
         boost::mp11::mp_bind_back<std::is_base_of, Cs>,
-        boost::mp11::mp_list<Cs...>>,
+        types<Cs...>>,
     Cs>...>;
 
 template<class Policy, class... Classes>
 struct use_classes_aux;
 
 template<class Policy, class... Classes>
-struct use_classes_aux<Policy, boost::mp11::mp_list<Classes...>> {
+struct use_classes_aux<Policy, types<Classes...>> {
     using type = boost::mp11::mp_apply<
         std::tuple,
         boost::mp11::mp_transform_q<
             boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
             boost::mp11::mp_apply<
-                inheritance_map, boost::mp11::mp_list<Classes...>>>>;
+                inheritance_map, types<Classes...>>>>;
 };
 
 template<class Policy, class... Classes, class... MoreClassLists>
 struct use_classes_aux<
     Policy,
-    boost::mp11::mp_list<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
+    types<types<Classes...>, MoreClassLists...>>
     : use_classes_aux<
           Policy,
           boost::mp11::mp_append<
-              boost::mp11::mp_list<Classes...>, MoreClassLists...>>
+              types<Classes...>, MoreClassLists...>>
 
 {};
 
 template<typename... Ts>
 using second_last = boost::mp11::mp_at_c<
-    boost::mp11::mp_list<Ts...>,
-    boost::mp11::mp_size<boost::mp11::mp_list<Ts...>>::value - 2>;
+    types<Ts...>,
+    boost::mp11::mp_size<types<Ts...>>::value - 2>;
 
 template<class... Classes>
 using use_classes_macro = typename std::conditional_t<
@@ -604,10 +601,10 @@ using use_classes_macro = typename std::conditional_t<
     use_classes_aux<
         second_last<Classes...>,
         boost::mp11::mp_pop_back<
-            boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>,
+            boost::mp11::mp_pop_back<types<Classes...>>>>,
     use_classes_aux<
-        boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
-        boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>::type;
+        boost::mp11::mp_back<types<Classes...>>,
+        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
 
 struct empty_base {};
 

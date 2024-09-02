@@ -36,32 +36,32 @@ struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>,
+    types<Reports...>,
+    types<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports..., typename Facet::report>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
+        types<Reports..., typename Facet::report>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>, Void> {
+    types<Reports...>,
+    types<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports...>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
+        types<Reports...>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>, boost::mp11::mp_list<>, Void> {
+    types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
 
 template<class Policy>
 using report_type = typename aggregate_reports<
-    boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
+    types<update_report>, typename Policy::facets>::type;
 
 inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
     if (b.size() < a.size()) {
@@ -242,7 +242,7 @@ struct compiler : detail::generic_compiler {
     using type_index_type = decltype(Policy::type_index(0));
 
     typename detail::aggregate_reports<
-        boost::mp11::mp_list<update_report>, typename Policy::facets>::type
+        detail::types<update_report>, typename Policy::facets>::type
         report;
 
     std::unordered_map<type_index_type, class_*> class_map;

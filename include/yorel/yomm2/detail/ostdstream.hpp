@@ -3,6 +3,8 @@
 
 #include <array>
 #include <cstdio>
+#include <charconv>
+#include <random>
 
 namespace yorel {
 namespace yomm2 {

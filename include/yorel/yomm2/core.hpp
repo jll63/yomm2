@@ -23,14 +23,6 @@ struct virtual_;
 template<class Class, class Policy>
 struct virtual_ptr;
 
-} // namespace yomm2
-} // namespace yorel
-
-#include <yorel/yomm2/detail.hpp>
-
-namespace yorel {
-namespace yomm2 {
-
 // -----------------------------------------------------------------------------
 // Method
 
@@ -41,7 +33,7 @@ template<typename Key, typename R, class Policy, typename... A>
 struct method<Key, R(A...), Policy> : detail::method_info {
     using self_type = method;
     using policy_type = Policy;
-    using declared_argument_types = boost::mp11::mp_list<A...>;
+    using declared_argument_types = detail::types<A...>;
     using call_argument_types = boost::mp11::mp_transform<
         detail::remove_virtual, declared_argument_types>;
     using virtual_argument_types =
@@ -190,7 +182,7 @@ struct class_declaration
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
 template<class... Classes>
-struct class_declaration<boost::mp11::mp_list<Classes...>>
+struct class_declaration<detail::types<Classes...>>
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
@@ -453,9 +445,9 @@ method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     std::uintptr_t pf;
 
     if constexpr (arity == 1) {
-        pf = resolve_uni<boost::mp11::mp_list<A...>, ArgType...>(args...);
+        pf = resolve_uni<types<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, boost::mp11::mp_list<A...>, ArgType...>(
+        pf = resolve_multi_first<0, types<A...>, ArgType...>(
             args...);
     }
 
