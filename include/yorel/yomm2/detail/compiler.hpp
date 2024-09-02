@@ -25,7 +25,6 @@
 #include <boost/assert.hpp>
 #include <boost/dynamic_bitset.hpp>
 
-
 namespace yorel {
 namespace yomm2 {
 namespace detail {
@@ -37,20 +36,26 @@ struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    types<Reports...>, types<Facet, MoreFacets...>,
+    types<Reports...>,
+    types<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
+        types<Reports..., typename Facet::report>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
+struct aggregate_reports<
+    types<Reports...>,
+    types<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        types<Reports...>, types<MoreFacets...>>::type;
+        types<Reports...>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
-struct aggregate_reports<types<Reports...>, types<>, Void> {
+struct aggregate_reports<
+    types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
 
@@ -224,7 +229,8 @@ struct compiler : generic_compiler {
     using type_index_type = decltype(Policy::type_index(0));
 
     typename aggregate_reports<
-        types<update_report>, typename Policy::facets>::type report;
+        types<update_report>, typename Policy::facets>::type
+        report;
 
     std::unordered_map<type_index_type, class_*> class_map;
 

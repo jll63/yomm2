@@ -1,12 +1,9 @@
 #ifndef YOREL_YOMM2_DETAIL_HPP
 #define YOREL_YOMM2_DETAIL_HPP
 
-#include <boost/assert.hpp>
-#include <boost/dynamic_bitset.hpp>
-#include <boost/mp11/algorithm.hpp>
-#include <boost/mp11/bind.hpp>
-
 #include <yorel/yomm2/detail/static_list.hpp>
+
+#include <boost/assert.hpp>
 
 namespace yorel {
 namespace yomm2 {
