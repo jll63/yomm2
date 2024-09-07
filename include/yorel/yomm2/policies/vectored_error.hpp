@@ -63,8 +63,8 @@ error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
         std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
         DefaultHandlerProvider>::default_error_handler;
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

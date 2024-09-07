@@ -28,8 +28,8 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
     return env && *env++ == '1' && *env++ == 0;
 }());
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

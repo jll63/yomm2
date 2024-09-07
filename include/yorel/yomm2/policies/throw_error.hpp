@@ -18,8 +18,8 @@ struct yOMM2_API_gcc throw_error : virtual error_handler {
     }
 };
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

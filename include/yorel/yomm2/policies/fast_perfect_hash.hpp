@@ -195,8 +195,8 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 template<class Policy>
 std::vector<type_id> checked_perfect_hash<Policy>::control;
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

@@ -22,8 +22,8 @@ template<class Policy>
 std::vector<std::uintptr_t const* const*>
     basic_indirect_vptr<Policy>::indirect_vptrs;
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif
