@@ -6,8 +6,6 @@
 
 #include <boost/assert.hpp>
 
-#include <yorel/yomm2/detail/forward.hpp>
-
 #include <yorel/yomm2/policy.hpp>
 
 namespace yorel {

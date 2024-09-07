@@ -31,9 +31,6 @@ using templates = types<template_<Templates>...>;
 
 namespace detail {
 
-// template <template <typename...> typename... F>
-// using mp_list_q = types<boost::mp11::mp_quote<F>...>;
-
 template<typename...>
 struct product_impl;
 
