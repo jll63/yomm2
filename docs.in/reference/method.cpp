@@ -46,20 +46,20 @@ name in the same namespace. ->YOMM2_SYMBOL can be used for that effect.
 ## constructor
 
 ```c++
-method<Name, R(Args...)>::method();
+method<Name, ReturnType(Args...)>::method();
 ```
 Add the method to the policy's method list.
 
 ## destructor
 
 ```c++
-method<Name, R(Args...)>::~method();
+method<Name, ReturnType(Args...)>::~method();
 ```
 Remove the method from the policy's method list.
 
 ## call operator
 ```c++
-method<Name, R(Args...)>::operator()(args...);
+method<Name, ReturnType(Args...)>::operator()(args...);
 ```
 Call the method. The dynamic types of the arguments corresponding to a
 ->virtual_ parameter determine which method definition to call.
@@ -73,10 +73,10 @@ Call the method. The dynamic types of the arguments corresponding to a
 ## fn
 
 ```c++
-method<Name, R(Args...)>::fn;
+method<Name, ReturnType(Args...)>::fn;
 ```
 
-The single instance of `method<Name, R(Args...)>`. Used to call the method.
+The single instance of `method<Name, ReturnType(Args...)>`. Used to call the method.
 
 ## Member types
 
@@ -125,8 +125,8 @@ type of `Function` must be compatible with the return type of the method.
 ## next_type
 
 ```c++
-template<typename Name, typename R, typename... Args>
-struct method<Name, R(Args...)> {
+template<typename Name, typename ReturnType, typename... Args>
+struct method<Name, ReturnType(Args...)> {
     using next_type = unspecified;
 };
 ```
@@ -146,10 +146,10 @@ template<typename Container>
 struct use_next {
     static next_type next;
 };
-template<typename Name, typename R, typename... A, typename... Unspecified>
+template<typename Name, typename ReturnType, typename... A, typename... Unspecified>
 template<typename Container>
-typename method<Name, R(A...), Unspecified...>::next_type
-method<Name, R(A...), Unspecified...>::use_next<Container>::next;
+typename method<Name, ReturnType(A...), Unspecified...>::next_type
+method<Name, ReturnType(A...), Unspecified...>::use_next<Container>::next;
 ```
 
 [CRTP](https://en.wikipedia.org/wiki/Curiously_recurring_template_pattern)
