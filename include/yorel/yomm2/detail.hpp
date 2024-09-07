@@ -184,9 +184,9 @@ constexpr bool is_method = is_method_aux<T>::value;
 template<typename Signature>
 struct next_ptr_t;
 
-template<typename R, typename... T>
-struct next_ptr_t<R(T...)> {
-    using type = R (*)(T...);
+template<typename ReturnType, typename... T>
+struct next_ptr_t<ReturnType(T...)> {
+    using type = ReturnType (*)(T...);
 };
 
 template<typename Method, typename Signature>
@@ -535,9 +535,9 @@ typename Method::next_type next_aux<Method, Container>::next;
 template<auto F, typename T>
 struct member_function_thunk;
 
-template<auto F, class R, class C, typename... Args>
-struct member_function_thunk<F, R (C::*)(Args...)> {
-    static R fn(C* this_, Args&&... args) {
+template<auto F, class ReturnType, class C, typename... Args>
+struct member_function_thunk<F, ReturnType (C::*)(Args...)> {
+    static ReturnType fn(C* this_, Args&&... args) {
         return (this_->*F)(args...);
     }
 };

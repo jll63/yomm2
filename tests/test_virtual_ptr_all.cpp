@@ -50,13 +50,13 @@ auto fight_bear(VirtualWarriorPtr, VirtualAxePtr, VirtualBearPtr) {
     return "kill bear";
 }
 
-template<int Key>
-struct indirect_test_policy : test_policy_<Key> {
+template<int Name>
+struct indirect_test_policy : test_policy_<Name> {
     static constexpr bool use_indirect_method_pointers = true;
 };
 
-template<int Key>
-using policy_types = mp_list<test_policy_<Key>, indirect_test_policy<Key>>;
+template<int Name>
+using policy_types = types<test_policy_<Name>, indirect_test_policy<Name>>;
 
 namespace YOMM2_GENSYM {
 
