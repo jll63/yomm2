@@ -78,8 +78,8 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
 template<class Policy>
 std::vector<const std::uintptr_t*> vptr_vector<Policy>::vptrs;
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

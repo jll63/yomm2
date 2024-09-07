@@ -21,8 +21,8 @@ struct minimal_rtti : virtual rtti {
     }
 };
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

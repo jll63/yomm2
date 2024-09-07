@@ -36,26 +36,20 @@ struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    types<Reports...>,
-    types<Facet, MoreFacets...>,
+    types<Reports...>, types<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        types<Reports..., typename Facet::report>,
-        types<MoreFacets...>>::type;
+        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<
-    types<Reports...>,
-    types<Facet, MoreFacets...>, Void> {
+struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        types<Reports...>,
-        types<MoreFacets...>>::type;
+        types<Reports...>, types<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
-struct aggregate_reports<
-    types<Reports...>, types<>, Void> {
+struct aggregate_reports<types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
 
@@ -241,9 +235,8 @@ struct compiler : detail::generic_compiler {
     using policy_type = Policy;
     using type_index_type = decltype(Policy::type_index(0));
 
-    typename detail::aggregate_reports<
-        detail::types<update_report>, typename Policy::facets>::type
-        report;
+    typename aggregate_reports<
+        types<update_report>, typename Policy::facets>::type report;
 
     std::unordered_map<type_index_type, class_*> class_map;
 
