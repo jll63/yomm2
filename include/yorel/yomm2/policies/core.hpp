@@ -72,16 +72,16 @@ struct definition_info : static_list<definition_info>::static_link {
     void* pf;
 };
 
-template<class Key>
+template<class Name>
 struct yOMM2_API_gcc yOMM2_API_msc method_tables {
     // Why is yOMM2_API_msc needed here???
     template<class Class>
     static std::uintptr_t* static_vptr;
 };
 
-template<class Key>
+template<class Name>
 template<class Class>
-std::uintptr_t* method_tables<Key>::static_vptr;
+std::uintptr_t* method_tables<Name>::static_vptr;
 
 using class_catalog = detail::static_list<detail::class_info>;
 using method_catalog = detail::static_list<detail::method_info>;
@@ -96,7 +96,7 @@ struct virtual_ptr;
 template<typename T>
 struct virtual_;
 
-template<class Policy, typename Key, typename Signature>
+template<class Policy, typename Name, typename Signature>
 struct method;
 
 template<class... Classes>
@@ -174,21 +174,22 @@ struct release;
 struct debug_shared;
 struct release_shared;
 
-template<class Key>
-struct yOMM2_API_gcc basic_domain : detail::domain, detail::method_tables<Key> {
+template<class Name>
+struct yOMM2_API_gcc basic_domain : detail::domain,
+                                    detail::method_tables<Name> {
     static detail::class_catalog classes;
     static detail::method_catalog methods;
     static std::vector<std::uintptr_t> dispatch_data;
 };
 
-template<class Key>
-detail::class_catalog basic_domain<Key>::classes;
+template<class Name>
+detail::class_catalog basic_domain<Name>::classes;
 
-template<class Key>
-detail::method_catalog basic_domain<Key>::methods;
+template<class Name>
+detail::method_catalog basic_domain<Name>::methods;
 
-template<class Key>
-std::vector<std::uintptr_t> basic_domain<Key>::dispatch_data;
+template<class Name>
+std::vector<std::uintptr_t> basic_domain<Name>::dispatch_data;
 
 template<typename Policy, class Facet>
 struct rebind_facet {
