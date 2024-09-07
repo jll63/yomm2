@@ -50,7 +50,8 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
         typename detail::polymorphic_types<declared_argument_types>;
     using signature_type = ReturnType(Args...);
     using return_type = ReturnType;
-    using function_pointer_type = ReturnType (*)(detail::remove_virtual<Args>...);
+    using function_pointer_type =
+        ReturnType (*)(detail::remove_virtual<Args>...);
     using next_type = function_pointer_type;
 
     static constexpr auto arity = detail::arity<Args...>;
@@ -176,7 +177,8 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
 };
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-method<Name, ReturnType(Args...), Policy> method<Name, ReturnType(Args...), Policy>::fn;
+method<Name, ReturnType(Args...), Policy>
+    method<Name, ReturnType(Args...), Policy>::fn;
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename Container>
@@ -431,7 +433,8 @@ method<Name, ReturnType(Args...), Policy>::method() {
 }
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-std::size_t method<Name, ReturnType(Args...), Policy>::slots_strides[2 * arity - 1];
+std::size_t
+    method<Name, ReturnType(Args...), Policy>::slots_strides[2 * arity - 1];
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 method<Name, ReturnType(Args...), Policy>::~method() {
@@ -440,7 +443,8 @@ method<Name, ReturnType(Args...), Policy>::~method() {
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 typename method<Name, ReturnType(Args...), Policy>::return_type inline method<
-    Name, ReturnType(Args...), Policy>::operator()(detail::remove_virtual<Args>... args) const {
+    Name, ReturnType(Args...),
+    Policy>::operator()(detail::remove_virtual<Args>... args) const {
     using namespace detail;
     auto pf = resolve(argument_traits<Policy, Args>::rarg(args)...);
     return pf(std::forward<remove_virtual<Args>>(args)...);
@@ -449,7 +453,8 @@ typename method<Name, ReturnType(Args...), Policy>::return_type inline method<
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename... ArgType>
 inline typename method<Name, ReturnType(Args...), Policy>::function_pointer_type
-method<Name, ReturnType(Args...), Policy>::resolve(const ArgType&... args) const {
+method<Name, ReturnType(Args...), Policy>::resolve(
+    const ArgType&... args) const {
     using namespace detail;
 
     std::uintptr_t pf;
@@ -530,7 +535,8 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
+inline std::uintptr_t
+method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
     using namespace detail;
@@ -574,7 +580,8 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
+inline std::uintptr_t
+method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const {
 

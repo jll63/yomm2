@@ -161,7 +161,8 @@ struct debug_shared;
 struct release_shared;
 
 template<class Name>
-struct yOMM2_API_gcc basic_domain : detail::domain, detail::method_tables<Name> {
+struct yOMM2_API_gcc basic_domain : detail::domain,
+                                    detail::method_tables<Name> {
     static detail::class_catalog classes;
     static detail::method_catalog methods;
     static std::vector<std::uintptr_t> dispatch_data;
