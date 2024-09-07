@@ -3,12 +3,12 @@
 
 #include <yorel/yomm2/core.hpp>
 
-template<int Key>
+template<int Name>
 struct test_policy_ :
 #ifdef NDEBUG
-    yorel::yomm2::policy::release::rebind<test_policy_<Key>>
+    yorel::yomm2::policy::release::rebind<test_policy_<Name>>
 #else
-    yorel::yomm2::policy::debug::rebind<test_policy_<Key>>
+    yorel::yomm2::policy::debug::rebind<test_policy_<Name>>
 #endif
 {
 };
