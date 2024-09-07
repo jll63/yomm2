@@ -1,135 +1,66 @@
-# Copyright (c) 2018-2024 Jean-Louis Leroy
+# Copyright 2018, 2019 Peter Dimov
 # Distributed under the Boost Software License, Version 1.0.
-# See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt
 
-cmake_minimum_required(VERSION 3.21)
-cmake_policy(SET CMP0057 NEW)
+cmake_minimum_required(VERSION 3.5...3.16)
 
-project(YOMM2 LANGUAGES CXX VERSION 1.6.0)
+project(boost_openmethod VERSION 1.87.0 LANGUAGES CXX)
 
-if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_library(boost_openmethod INTERFACE)
+add_library(Boost::openmethod ALIAS boost_openmethod)
 
-option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
-option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" OFF)
-option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
-option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
-option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
-option(
-  YOMM2_CHECK_ABI_COMPATIBILITY
-  "Build shared library and examples in different modes" OFF)
+target_include_directories(boost_openmethod INTERFACE include)
+target_compile_features(boost_openmethod INTERFACE cxx_alias_templates cxx_variadic_templates cxx_decltype)
 
-include(CMakeDependentOption)
-CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
-  "Set to ON to build benchmarks" OFF
-  "YOMM2_ENABLE_TESTS" OFF
-)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 
-macro(assign_bool VAR)
-  if(${ARGN})
-    set(${VAR} ON)
-  else()
-    set(${VAR} OFF)
-  endif()
-endmacro()
+  # Fetch support files
 
-if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set(COMPILER_IS_CLANG ON)
-endif()
+  message(STATUS "Fetching BoostFetch.cmake")
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(VARIANT_IS_DEBUG ON)
-endif()
+  file(DOWNLOAD
+    "https://raw.githubusercontent.com/boostorg/cmake/develop/include/BoostFetch.cmake"
+    "${CMAKE_BINARY_DIR}/fetch_and_include/BoostFetch.cmake"
+  )
 
-if (VARIANT_IS_DEBUG)
-  if(COMPILER_IS_CLANG)
-    add_compile_options(-fno-limit-debug-info)
-  endif()
-  if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
-    add_compile_definitions(_GLIBCXX_DEBUG)
-  endif()
-else()
-  if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
-    add_compile_options(-save-temps -masm=intel)
-  endif()
-endif()
+  include("${CMAKE_BINARY_DIR}/fetch_and_include/BoostFetch.cmake")
 
-if(MSVC)
-  add_compile_definitions(_SCL_SECURE_NO_WARNINGS _CRT_SECURE_NO_WARNINGS)
-  add_compile_options(/EHsc /FAs)
-endif()
+  boost_fetch(boostorg/cmake TAG develop NO_ADD_SUBDIR)
 
-if(${YOMM2_DEBUG_MACROS})
-  message(STATUS "Macro debugging enabled")
-  set(CMAKE_CXX_COMPILER_LAUNCHER ${CMAKE_SOURCE_DIR}/dev/ppfc)
-endif()
+  FetchContent_GetProperties(boostorg_cmake)
 
-# set(YOMM2_REQUIRED_BOOST_LIBRARIES core mp11 preprocessor dynamic_bitset)
+  list(APPEND CMAKE_MODULE_PATH ${boostorg_cmake_SOURCE_DIR}/include)
 
-if(${YOMM2_ENABLE_TESTS})
-  message(STATUS "Tests enabled")
-  # set(YOMM2_REQUIRED_BOOST_LIBRARIES ${YOMM2_REQUIRED_BOOST_LIBRARIES} unit_test_framework)
-endif()
+  # Testing (off by default)
 
-# Find Boost dependencies
-# find_package(Boost REQUIRED COMPONENTS ${YOMM2_REQUIRED_BOOST_LIBRARIES})
-find_package(Boost REQUIRED)
-
-add_subdirectory(src)
-
-if(${YOMM2_ENABLE_EXAMPLES})
-  message(STATUS "Examples enabled")
-  add_subdirectory(examples)
-endif()
-
-if(${YOMM2_ENABLE_TESTS})
-  if(${YOMM2_ENABLE_BENCHMARKS})
-    find_package(benchmark REQUIRED)
-    message(STATUS "Benchmarks enabled")
-  endif()
+  option(BUILD_TESTING "Build the tests." OFF)
   include(CTest)
-  enable_testing()
-  add_subdirectory(tests)
-  add_subdirectory(ce)
+
+  if(BUILD_TESTING)
+
+    set(BUILD_TESTING OFF) # hide cache variable
+
+    boost_fetch(boostorg/assert TAG develop EXCLUDE_FROM_ALL)
+    boost_fetch(boostorg/config TAG develop EXCLUDE_FROM_ALL)
+    boost_fetch(boostorg/core TAG develop EXCLUDE_FROM_ALL)
+    boost_fetch(boostorg/static_assert TAG develop EXCLUDE_FROM_ALL)
+    boost_fetch(boostorg/throw_exception TAG develop EXCLUDE_FROM_ALL)
+
+    unset(BUILD_TESTING)
+
+  endif()
+
+  # Do not use the default BoostInstall versioned layout on Windows when standalone
+  set(BOOST_INSTALL_LAYOUT "system" CACHE STRING "Installation layout (versioned, tagged, or system)")
+
+  include(BoostInstall)
+
+  boost_install(TARGETS boost_openmethod HEADER_DIRECTORY include/)
+
 endif()
 
-set(YOMM2_PYTHON ${CMAKE_SOURCE_DIR}/.venv/bin/python)
-add_custom_target(README_md DEPENDS "${readme_md}")
-set(readme_md "${CMAKE_SOURCE_DIR}/README.md")
-set(readme_cpp "${CMAKE_SOURCE_DIR}/examples/README.cpp")
-add_custom_command(
-  OUTPUT "${readme_md}"
-  COMMAND "${YOMM2_PYTHON}" ${CMAKE_SOURCE_DIR}/dev/code2md "${readme_cpp}" "${readme_md}"
-  DEPENDS "${readme_cpp}")
-add_custom_target(DOCS DEPENDS README_md README)
+if(BUILD_TESTING)
 
-if(YOMM2_ENABLE_TESTS)
-  # Code in cpp doc files also serves as tests.
-  add_subdirectory(docs.in)
+  add_subdirectory(test)
+
 endif()
-
-## Install instruction
-# Create version file for cmake package
-include(CMakePackageConfigHelpers)
-write_basic_package_version_file(
-  YOMM2ConfigVersion.cmake
-  VERSION ${PACKAGE_VERSION}
-  COMPATIBILITY SameMajorVersion
-)
-# Create targets file of yomm2
-install(EXPORT YOMM2Targets
-  FILE YOMM2Targets.cmake
-  NAMESPACE YOMM2::
-  DESTINATION lib/cmake/YOMM2
-)
-# Copy config files to install directory
-install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake"
-  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2ConfigVersion.cmake"
-  DESTINATION lib/cmake/YOMM2
-)
-
-install(DIRECTORY include/yorel DESTINATION include)
