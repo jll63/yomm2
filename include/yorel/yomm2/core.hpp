@@ -447,8 +447,7 @@ method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     if constexpr (arity == 1) {
         pf = resolve_uni<types<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, types<A...>, ArgType...>(
-            args...);
+        pf = resolve_multi_first<0, types<A...>, ArgType...>(args...);
     }
 
     return reinterpret_cast<function_pointer_type>(pf);

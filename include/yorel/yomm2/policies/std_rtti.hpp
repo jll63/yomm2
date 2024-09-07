@@ -50,8 +50,8 @@ struct std_rtti : virtual rtti {
 #endif
 };
 
-}
-}
-}
+} // namespace policy
+} // namespace yomm2
+} // namespace yorel
 
 #endif

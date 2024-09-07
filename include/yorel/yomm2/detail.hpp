@@ -41,8 +41,7 @@ template<class Policy, typename... T>
 type_id* type_id_list<Policy, types<T...>>::begin = value;
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, types<T...>>::end =
-    value + sizeof...(T);
+type_id* type_id_list<Policy, types<T...>>::end = value + sizeof...(T);
 
 template<class Policy>
 struct type_id_list<Policy, types<>> {
@@ -136,14 +135,11 @@ template<class...>
 struct class_declaration_aux;
 
 template<class Policy, class Class, typename... Bases>
-struct class_declaration_aux<Policy, types<Class, Bases...>>
-    : class_info {
+struct class_declaration_aux<Policy, types<Class, Bases...>> : class_info {
     class_declaration_aux() {
         this->type = collect_static_type_id<Policy, Class>();
-        this->first_base =
-            type_id_list<Policy, types<Bases...>>::begin;
-        this->last_base =
-            type_id_list<Policy, types<Bases...>>::end;
+        this->first_base = type_id_list<Policy, types<Bases...>>::begin;
+        this->last_base = type_id_list<Policy, types<Bases...>>::end;
         Policy::classes.push_back(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
@@ -336,8 +332,7 @@ constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
 
 template<class... Ts>
 using virtual_ptr_class = std::conditional_t<
-    sizeof...(Ts) == 2,
-    boost::mp11::mp_second<types<Ts..., void>>,
+    sizeof...(Ts) == 2, boost::mp11::mp_second<types<Ts..., void>>,
     boost::mp11::mp_first<types<Ts...>>>;
 
 template<class Policy, typename T>
@@ -498,14 +493,12 @@ inline uintptr_t get_tip(const T& arg) {
 template<typename... Classes>
 using get_policy = std::conditional_t<
     is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_back<types<Classes...>>,
-    YOMM2_DEFAULT_POLICY>;
+    boost::mp11::mp_back<types<Classes...>>, YOMM2_DEFAULT_POLICY>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
     is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_pop_back<types<Classes...>>,
-    types<Classes...>>;
+    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
 
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
@@ -521,14 +514,10 @@ struct thunk;
 template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
-struct thunk<
-    Policy, BASE_RETURN(BASE_PARAM...), SPEC,
-    types<SPEC_PARAM...>> {
+struct thunk<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
-        using base_type =
-            boost::mp11::mp_first<types<BASE_PARAM...>>;
-        using spec_type =
-            boost::mp11::mp_first<types<SPEC_PARAM...>>;
+        using base_type = boost::mp11::mp_first<types<BASE_PARAM...>>;
+        using spec_type = boost::mp11::mp_first<types<SPEC_PARAM...>>;
         return SPEC(
             argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
                 remove_virtual<BASE_PARAM>(arg))...);
@@ -562,8 +551,7 @@ struct member_function_thunk<F, R (C::*)(Args...)> {
 template<typename... Cs>
 using inheritance_map = types<boost::mp11::mp_push_front<
     boost::mp11::mp_filter_q<
-        boost::mp11::mp_bind_back<std::is_base_of, Cs>,
-        types<Cs...>>,
+        boost::mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
     Cs>...>;
 
 template<class Policy, class... Classes>
@@ -575,33 +563,26 @@ struct use_classes_aux<Policy, types<Classes...>> {
         std::tuple,
         boost::mp11::mp_transform_q<
             boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
-            boost::mp11::mp_apply<
-                inheritance_map, types<Classes...>>>>;
+            boost::mp11::mp_apply<inheritance_map, types<Classes...>>>>;
 };
 
 template<class Policy, class... Classes, class... MoreClassLists>
-struct use_classes_aux<
-    Policy,
-    types<types<Classes...>, MoreClassLists...>>
+struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
     : use_classes_aux<
-          Policy,
-          boost::mp11::mp_append<
-              types<Classes...>, MoreClassLists...>>
+          Policy, boost::mp11::mp_append<types<Classes...>, MoreClassLists...>>
 
 {};
 
 template<typename... Ts>
 using second_last = boost::mp11::mp_at_c<
-    types<Ts...>,
-    boost::mp11::mp_size<types<Ts...>>::value - 2>;
+    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
 
 template<class... Classes>
 using use_classes_macro = typename std::conditional_t<
     is_policy<second_last<Classes...>>,
     use_classes_aux<
         second_last<Classes...>,
-        boost::mp11::mp_pop_back<
-            boost::mp11::mp_pop_back<types<Classes...>>>>,
+        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
     use_classes_aux<
         boost::mp11::mp_back<types<Classes...>>,
         boost::mp11::mp_pop_back<types<Classes...>>>>::type;
