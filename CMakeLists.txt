@@ -62,5 +62,6 @@ endif()
 if(BUILD_TESTING)
 
   add_subdirectory(test)
+  set_property(TARGET tests PROPERTY EXCLUDE_FROM_ALL FALSE)
 
 endif()
