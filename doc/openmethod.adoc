@@ -1,0 +1,4539 @@
+:last-update-label!:
+:icons: font
+:prewrap!:
+:docinfo: shared
+:stylesheet: zajo-dark.css
+:source-highlighter: rouge
+
+ifdef::backend-pdf[]
+= OpenMethod
+endif::[]
+ifndef::backend-pdf[]
+= OpenMethodpass:[<div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div>]
+endif::[]
+Emulation of Open Multi-Methods as proposed by N2216 | Jean-Louis Leroy
+ifndef::backend-pdf[]
+:toc: left
+:toclevels: 3
+:toc-title:
+
+[.text-right]
+https://github.com/boostorg/OpenMethod[GitHub] | https://boostorg.github.io/OpenMethod/OpenMethod.pdf[PDF]
+endif::[]
+
+[abstract]
+== Abstract
+
+Boost OpenMethod implements Open Multi-Methods.
+Features:
+
+====
+* Header-only C++17 library.
+
+* Closely emulates the N2216 standards committee paper, and extend beyond it.
+
+* Fast dispatch, close or equal in performance to native virtual functions.
+
+* Interoperable with other C++ constructs: templates, friends, namespaces, etc.
+
+* Can be used with or without exception handling.
+
+* Can be used with standard RTTI, or interfaced with custom RTTI.
+====
+
+ifndef::backend-pdf[]
+[grid=none, frame=none]
+|====
+| <<tutorial>> \| <<synopsis>> \| https://github.com/boostorg/OpenMethod/blob/master/doc/whitepaper.md[Whitepaper] \| https://github.com/boostorg/OpenMethod/blob/master/benchmark/benchmark.md[Benchmark] >| Reference: <<functions,Functions>> \| <<types,Types>> \| <<predicates,Predicates>> \| <<traits,Traits>> \| <<macros,Macros>>
+|====
+endif::[]
+
+[[support]]
+== Support
+
+* https://github.com/boostorg/OpenMethod/issues[Report issues] on GitHub
+
+[[distribution]]
+== Distribution
+
+OpenMethod is distributed under the http://www.boost.org/LICENSE_1_0.txt[Boost Software License, Version 1.0].
+
+There are three distribution channels:
+
+* OpenMethod is included in official https://www.boost.org/[Boost] releases (starting with Boost 1.75), and therefore available via most package managers.
+* The source code is hosted on https://github.com/boostorg/OpenMethod[GitHub].
+* For maximum portability, the latest OpenMethod release is also available in single-header format: link:https://raw.githubusercontent.com/boostorg/OpenMethod/gh-pages/OpenMethod.hpp[OpenMethod.hpp] (direct download link).
+
+== Motivation
+
+Open-methods are similar to virtual functions, but they are not required to be
+members of a class. By being simultaneously free _and_ virtual, they provide a
+solution to the Expression Problem:
+
+> Given a set of types, and a set of operations on these types, is it possible
+to add new operations on the existing types, and new types to the existing
+operations, without modifying existing code?
+
+As a bonus, open-methods can take more than one argument into account when
+selecting the appropriate function to call. This solves the problem of multiple
+dispatch.
+
+Open-methods are part of Lisp, Clojure, Julia, Cecil, Dylan, TADS, and other
+languages. Bjarne Stroustrup wanted open-methods in C++ almost from the
+beginning. He writes about it in D&E. Circa 2007, with his PhD students Peter
+Pirkelbauer and Yuriy Solodkyy, they wrote a series of papers and an
+implementation based on the EDG compiler. Their design fit perfectly with othe
+parts of the language. They proposed it for adoption in the standard. It did not
+happen.
+
+This library implements the proposal, as closely as possible within the C++17
+standard.
+
+[[tutorial]]
+
+== Tutorial
+
+
+=== Hello World
+
+Here is a side-by-side implementation of the same program, using virtual
+functions (on the left side) and open-methods (on the right side):
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+#include <iostream>
+
+
+
+struct Animal {
+  virtual ~Animal() = default;
+  virtual void name(std::ostream&) const = 0;
+};
+
+
+
+
+struct Cat : Animal {
+  void name(std::ostream& os) const override;
+};
+
+struct Dog : Animal {
+  void name(std::ostream& os) const override;
+};
+
+void Cat::name(std::ostream& os) const override {
+  os << "cat";
+}
+
+
+void Dog::name(std::ostream& os) const override {
+  os << "dog";
+}
+
+
+
+
+int main() {
+
+
+    Animal&& a = Cat();
+    Animal&& b = Dog();
+
+    a.name(std::cout); // prints "cat"
+    a.name(std::cout); // prints "dog"
+
+    return 0;
+}
+----
+
+|
+[source,c++]
+----
+#include <iostream>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
+
+struct Animal {
+  virtual ~Animal() = default;
+};
+
+BOOST_OPENMETHOD(
+  name, (virtual_<const Animal&>, std::ostream&), void);
+
+
+struct Cat : Animal {
+};
+
+
+struct Dog : Animal {
+};
+
+
+BOOST_OPENMETHOD_OVERRIDE(
+  name, (const Cat& cat, std::ostream& os), void) {
+    os << "cat";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(
+  name, (const Dog& dog, std::ostream& os), void) {
+    os << "dog";
+}
+
+BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog);
+
+int main() {
+    boost::openmethod::setup();
+
+    Animal&& a = Cat();
+    Animal&& b = Dog();
+
+    name(a, std::cout); // prints "cat"
+    name(b, std::cout); // prints "dog"
+
+    return 0;
+}
+----
+|===
+
+Let's go over it step by step.
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+#include <iostream>
+----
+
+|
+[source,c++]
+----
+#include <iostream>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
+----
+|===
+
+`<boost/openmethod.hpp>` needs to be included by any translation unit prior
+using open-methods.
+`<boost/openmethod/compiler.hpp>` is typically needed only in the translation
+unit that defines `main`.
+
+
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+struct Animal {
+  virtual ~Animal() = default;
+  virtual void name(std::ostream&) const = 0;
+};
+----
+
+|
+[source,c++]
+----
+struct Animal {
+  virtual ~Animal() = default;
+};
+
+BOOST_OPENMETHOD(
+  name, (virtual_<const Animal&>, std::ostream&), void);
+----
+|===
+
+
+
+
+
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+struct Cat : Animal {
+  void name(std::ostream& os) const override;
+};
+
+struct Dog : Animal {
+  void name(std::ostream& os) const override;
+};
+----
+
+|
+[source,c++]
+----
+struct Cat : Animal {
+};
+
+
+struct Dog : Animal {
+};
+----
+|===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+[cols="a,a", options="header"]
+|===
+| virtual function
+| open-method
+
+|
+[source,c++]
+----
+----
+
+|
+[source,c++]
+----
+----
+|===
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Consider the following program:
+
+[source,c++]
+----
+#include <iostream>
+
+struct Animal {
+  virtual ~Animal() = default;
+  virtual void name(std::ostream&) const = 0;
+};
+
+struct Cat : Animal {
+  void name(std::ostream& os) const override {
+    os << "cat";
+  }
+};
+
+struct Dog : Animal {
+  void name(std::ostream& os) const override {
+    os << "dog";
+  }
+};
+
+int main() {
+    Animal&& a = Cat();
+    Animal&& b = Dog();
+
+    a.name(std::cout); // prints "cat"
+    a.name(std::cout); // prints "dog"
+
+    return 0;
+}
+----
+
+Let's rewrite it to use open-methods.
+
+Firstly, we remove the `name` virtual functions:
+
+[source,c++]
+----
+struct Animal { virtual ~Animal() = default; };
+struct Cat : Animal { };
+struct Dog : Animal { };
+----
+
+The pure virtual function in the base class becomes a _base method_. It is
+defined pretty much like an ordinary functionswrapped in macro
+`BOOST_OPENMETHOD`:
+
+[source,c++]
+----
+BOOST_OPENMETHOD(name, (virtual_<const Animal&>, std::ostream&), void);
+----
+
+The first macro parameter of the macro is the open-method's name.
+
+The second macro parameter is the method's signature. The `virtual_` decorators
+specify which arguments are considered for picking the appropriate override.
+They are removed when forming the method's parameter list.
+
+WARNING: parameter names may _not_ be specified in the parameter list.
+
+The final macro parameter is the return type.
+
+Now we can add two overrides to `name`, equivalent to the virtual function
+overrides in the original program:
+
+[source,c++]
+----
+BOOST_OPENMETHOD_OVERRIDE(name, (const Cat& cat, std::ostream& os), void) {
+    os << "cat";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(name, (const Dog& dog, std::ostream& os), void) {
+    os << "dog";
+}
+----
+
+We need to register the classes involved in definitions must be registered,
+along with their derived classes:
+
+[source,c++]
+----
+BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog);
+----
+
+Open-methods are dispatched using tables of pointers to functions, very much
+like ordinary virtual functions. These tables must be initialized prior making
+an method calls. This is done by calling `boost::openmethod::setup()`, provided
+by header `<boost/openmethod/compiler.hpp>`. This is typically done in `main()`.
+
+Putting it all gotether:
+
+[source,c++]
+----
+#include <boost/openmethod.hpp>           <1>
+#include <boost/openmethod/compiler.hpp>  <2>
+
+#include <iostream>
+
+struct Animal { virtual ~Animal() = default; };
+struct Cat : Animal { };
+struct Dog : Animal { };
+
+BOOST_OPENMETHOD(name, (virtual_<const Animal&>, std::ostream&), void); <3>
+
+BOOST_OPENMETHOD_OVERRIDE(name, (const Cat& cat, std::ostream& os), void) {  <4>
+    os << "cat";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(name, (const Dog& dog, std::ostream& os), void) { <4>
+    os << "dog";
+}
+
+BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog); <5>
+
+int main() {
+    boost::openmethod::setup(); <6>
+
+    Animal&& a = Cat(); <7>
+    Animal&& b = Dog(); <7>
+
+    name(a, std::cout); // prints "cat" <8>
+    name(b, std::cout); // prints "dog" <8>
+
+    return 0;
+}
+----
+<1> Include the main OpenMethod header.
+<2> Include the compiler header, which provides `boost::openmethod::setup()`
+<3> Declare the open-method.
+<4> Provide overrides.
+<5> Register classes.
+<6> Initialize the dispatch tables - only needed in `main`
+<7> Create a `Cat` and a `Dog`, and bind them to references to `Animal` (i.e. erase the dynamic type)
+<8> Call `name`.
+
+
+
+
+
+
+
+
+[source,c++]
+----
+struct Animal {
+    // ...
+    virtual auto kick(std::ostream&) const -> void = 0;
+};
+----
+
+If we break it down, we see that the same information is present in both, only
+it has moved around in the method version:
+
+* The implicit `this` parameter is explicit in the method signature. The virtual
+function's cv-qualifier is now applied to the virtual parameter.
+
+* `virtual` has moved to the is replaced by `virtual_<const Animal&>` has become
+a `virtual_` decorator
+
+Incidentally, there is no obligation for the `const Animal&` to be the first
+method parameter. `virtual_` can appear anywhere, any number of times. At least
+one parameter must be  `virtual_`.
+
+At this point, we can neither call the method, nor the virtual function. We need
+to provide overrides.
+
+There are a couple of differences between the two though.
+
+* The open-method is not a member of `Animal`. We can add as many methods about
+Animals as we please, without chaning the classes.
+
+ * Adding a pure virtual function to a class makes it abstract - it cananot be
+ instantiated. It is not the case with open-methods. Whether or not an
+ implementation exists cannot be checked by looking at one translation unit at a
+ time. Calling a method with a combination of arguments that does not match any
+ method override is a run-time error.
+
+=== Method overrides
+
+
+----
+BOOST_OPENMETHOD_OVERRIDE(name, (const Animal&, std::ostream& os), auto);
+----
+
+[source,c++]
+----
+BOOST_OPENMETHOD(name, (virtual_<const Animal&>, std::ostream& os), void);
+----
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[[example]]
+== Examples
+
+See https://github.com/boostorg/OpenMethod/tree/master/example[github].
+
+[[synopsis]]
+== Synopsis
+
+This section lists each public header file in OpenMethod, documenting the definitions it provides.
+
+OpenMethod headers are designed to minimize coupling:
+
+* Headers needed to report or forward but not handle errors are lighter than headers providing error handling functionality.
+* Headers that provide exception handling or throwing functionality are separate from headers that provide error handling or reporting but do not use exceptions.
+
+A standalone single-header option is available; please see <<distribution>>.
+
+'''
+
+[[synopsis-reporting]]
+=== Error Reporting
+
+[[common.hpp]]
+==== `common.hpp`
+
+====
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_api_function { char const * value; };
+
+  struct e_file_name { std::string value; };
+
+  struct e_type_info_name { char const * value; };
+
+  struct e_at_line { int value; };
+
+  struct e_errno
+  {
+    int value;
+    explicit e_errno(int value=errno);
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_errno const &);
+  };
+
+  namespace windows
+  {
+    struct e_LastError
+    {
+      unsigned value;
+
+      explicit e_LastError(unsigned value);
+
+#if BOOST_OpenMethod_CFG_WIN32
+      e_LastError();
+
+      template <class CharT, class Traits>
+      friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_LastError const &);
+#endif
+    };
+  }
+
+} }
+----
+
+[.text-right]
+Reference: <<e_api_function>> | <<e_file_name>> | <<e_at_line>> | <<e_type_info_name>> | <<e_source_location>> | <<e_errno>> | <<e_LastError>>
+====
+
+[[error.hpp]]
+==== `error.hpp`
+
+====
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class error_id
+  {
+  public:
+
+    error_id() noexcept;
+
+    template <class Enum>
+    error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    error_id( std::error_code const & ec ) noexcept;
+
+    int value() const noexcept;
+    explicit operator bool() const noexcept;
+
+    std::error_code to_error_code() const noexept;
+
+    friend bool operator==( error_id a, error_id b ) noexcept;
+    friend bool operator!=( error_id a, error_id b ) noexcept;
+    friend bool operator<( error_id a, error_id b ) noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) const noexcept;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_id );
+  };
+
+  bool is_error_id( std::error_code const & ec ) noexcept;
+
+  template <class... Item>
+  error_id new_error( Item && ... item ) noexcept;
+
+  error_id current_error() noexcept;
+
+  //////////////////////////////////////////
+
+  template <class Ctx>
+  class context_activator
+  {
+    context_activator( context_activator const & ) = delete;
+    context_activator & operator=( context_activator const & ) = delete;
+
+  public:
+
+    explicit context_activator( Ctx & ctx ) noexcept;
+    context_activator( context_activator && ) noexcept;
+    ~context_activator() noexcept;
+  };
+
+  template <class Ctx>
+  context_activator<Ctx> activate_context( Ctx & ctx ) noexcept;
+
+  template <class R>
+  struct is_result_type: std::false_type
+  {
+  };
+
+  template <class R>
+  struct is_result_type<R const>: is_result_type<R>
+  {
+  };
+
+} }
+
+#define BOOST_OpenMethod_ASSIGN(v, r)\
+  auto && <<temp>> = r;\
+  if( !<<temp>> )\
+    return <<temp>>.error();\
+  v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
+
+#define BOOST_OpenMethod_AUTO(v, r)\
+  BOOST_OpenMethod_ASSIGN(auto v, r)
+
+#if BOOST_OpenMethod_CFG_GNUC_STMTEXPR
+
+#define BOOST_OpenMethod_CHECK(r)\
+  ({\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+        return <<temp>>.error();\
+    std::move(<<temp>>);\
+  }).value()
+
+#else
+
+#define BOOST_OpenMethod_CHECK(r)\
+  {\
+    auto && <<temp>> = r;\
+    if( !<<temp>> )\
+      return <<temp>>.error()\
+  }
+
+#endif
+
+#define BOOST_OpenMethod_NEW_ERROR <<exact-definition-unspecified>>
+----
+
+[.text-right]
+Reference: <<error_id>> | <<is_error_id>> | <<new_error>> | <<current_error>> | <<context_activator>> | <<activate_context>> | <<is_result_type>> | <<BOOST_OpenMethod_ASSIGN>> | <<BOOST_OpenMethod_AUTO>> | <<BOOST_OpenMethod_CHECK>> | <<BOOST_OpenMethod_NEW_ERROR>>
+====
+
+[[exception.hpp]]
+==== `exception.hpp`
+
+====
+.#include <boost/OpenMethod/exception.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class Ex, class... E> <1>
+  [[noreturn]] void throw_exception( Ex &&, E && ... );
+
+  template <class E1, class... E> <2>
+  [[noreturn]] void throw_exception( E1 &&, E && ... );
+
+  [[noreturn]] void throw_exception();
+
+  template <class Ex, class... E> <1>
+  [[noreturn]] void throw_exception( error_id id, Ex &&, E && ... );
+
+  template <class E1, class... E> <2>
+  [[noreturn]] void throw_exception( error_id id, E1 &&, E && ... );
+
+  [[noreturn]] void throw_exception( error_id id );
+
+  template <class... Ex, class F>
+  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
+
+} }
+
+#define BOOST_OpenMethod_THROW_EXCEPTION <<exact-definition-unspecified>>
+----
+
+[.text-right]
+Reference: <<throw_exception>> | <<BOOST_OpenMethod_THROW_EXCEPTION>>
+
+<1> Only enabled if std::is_base_of<std::exception, Ex>::value.
+<2> Only enabled if !std::is_base_of<std::exception, E1>::value.
+====
+
+[[on_error.hpp]]
+==== `on_error.hpp`
+
+====
+[source,c++]
+.#include <boost/OpenMethod/on_error.hpp>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Item>
+  <<unspecified-type>> on_error( Item && ... e ) noexcept;
+
+  class error_monitor
+  {
+  public:
+
+    error_monitor() noexcept;
+
+    error_id check() const noexcept;
+    error_id assigned_error_id() const noexcept;
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<on_error>> | <<error_monitor>>
+====
+
+[[result.hpp]]
+==== `result.hpp`
+
+====
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  class result
+  {
+  public:
+
+    using value_type = T;
+
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( result<U> && r ) noexcept;
+
+    result() noexcept;
+
+    result( T && v ) noexcept;
+
+    result( T const & v );
+
+    result( error_id err ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( U && u );
+
+#if BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+
+    result( std::error_code const & ec ) noexcept;
+
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept;
+
+#endif
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && r ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result & operator=( result<U> && r ) noexcept;
+
+    bool has_value() const noexcept;
+    bool has_error() const noexcept;
+    explicit operator bool() const noexcept;
+
+    T const & value() const &;
+    T & value() &;
+    T const && value() const &&;
+    T && value() &&;
+
+    T const * operator->() const noexcept;
+    T * operator->() noexcept;
+
+    T const & operator*() const & noexcept;
+    T & operator*() & noexcept;
+    T const && operator*() const && noexcept;
+    T && operator*() && noexcept;
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    using value_type = void;
+
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+
+#if BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+
+    result( std::error_code const & ec ) noexcept;
+
+    template <class Enum, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type>
+    result( Enum e ) noexcept;
+
+#endif
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
+
+    void const * operator->() const noexcept;
+    void * operator->() noexcept;
+
+    void operator*() const noexcept;
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
+  };
+
+  struct bad_result: std::exception { };
+
+  template <class T>
+  struct is_result_type<result<T>>: std::true_type
+  {
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<result>> | <<is_result_type>>
+====
+
+'''
+
+[[synopsis-handling]]
+
+=== Error Handling
+
+[[context.hpp]]
+==== `context.hpp`
+
+====
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  class context
+  {
+    context( context const & ) = delete;
+    context & operator=( context const & ) = delete;
+
+  public:
+
+    context() noexcept;
+    context( context && x ) noexcept;
+    ~context() noexcept;
+
+    void activate() noexcept;
+    void deactivate() noexcept;
+    bool is_active() const noexcept;
+
+    void unload( error_id ) noexcept;
+
+    void print( std::ostream & os ) const;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, context const & );
+
+    template <class R, class... H>
+    R handle_error( R &, H && ... ) const;
+  };
+
+  template <class... H>
+  using context_type_from_handlers = typename <<unspecified>>::type;
+
+  template <class...  H>
+  BOOST_OpenMethod_CONSTEXPR context_type_from_handlers<H...> make_context() noexcept;
+
+  template <class...  H>
+  BOOST_OpenMethod_CONSTEXPR context_type_from_handlers<H...> make_context( H && ... ) noexcept;
+
+} }
+----
+
+[.text-right]
+Reference: <<context>> | <<context_type_from_handlers>> | <<make_context>>
+====
+
+[[diagnostics.hpp]]
+==== `diagnostics.hpp`
+
+====
+.#include <boost/OpenMethod/diagnostics.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class diagnostic_info: public error_info
+  {
+    //No public constructors
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
+  };
+
+  class diagnostic_details: public error_info
+  {
+    //No public constructors
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<diagnostic_info>> | <<diagnostic_details>>
+====
+
+[[handle_errors.hpp]]
+==== `handle_errors.hpp`
+
+====
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+  try_handle_all( TryBlock && try_block, H && ... h );
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_handle_some( TryBlock && try_block, H && ... h );
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_catch( TryBlock && try_block, H && ... h );
+
+#if BOOST_OpenMethod_CFG_CAPTURE
+  template <class TryBlock>
+  result<T> // T deduced depending on TryBlock return type
+  try_capture_all( TryBlock && try_block );
+#endif
+
+  class error_info
+  {
+    //No public constructors
+
+  public:
+
+    error_id error() const noexcept;
+
+    bool exception_caught() const noexcept;
+    std::exception const * exception() const noexcept;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_info const & );
+  };
+
+} }
+----
+
+[.text-right]
+Reference: <<try_handle_all>> | <<try_handle_some>> | <<try_catch>> | <<try_capture_all>> | <<error_info>>
+====
+
+[[pred.hpp]]
+==== `pred.hpp`
+
+====
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  struct is_predicate: std::false_type
+  {
+  };
+
+  template <class E, auto... V>
+  struct match
+  {
+    E matched;
+
+    // Other members not specified
+  };
+
+  template <class E, auto... V>
+  struct is_predicate<match<E, V...>>: std::true_type
+  {
+  };
+
+  template <class E, auto... V>
+  struct match_value
+  {
+    E matched;
+
+    // Other members not specified
+  };
+
+  template <class E, auto... V>
+  struct is_predicate<match_value<E, V...>>: std::true_type
+  {
+  };
+
+  template <auto, auto...>
+  struct match_member;
+
+  template <class E, class T, T E::* P, auto... V>
+  struct member<P, V...>
+  {
+    E matched;
+
+    // Other members not specified
+  };
+
+  template <auto P, auto... V>
+  struct is_predicate<match_member<P, V...>>: std::true_type
+  {
+  };
+
+  template <class... Ex>
+  struct catch_
+  {
+    std::exception const & matched;
+
+    // Other members not specified
+  };
+
+  template <class Ex>
+  struct catch_<Ex>
+  {
+    Ex const & matched;
+
+    // Other members not specified
+  };
+
+  template <class... Ex>
+  struct is_predicate<catch_<Ex...>>: std::true_type
+  {
+  };
+
+  template <class Pred>
+  struct if_not
+  {
+    E matched;
+
+    // Other members not specified
+  };
+
+  template <class Pred>
+  struct is_predicate<if_not<Pred>>: std::true_type
+  {
+  };
+
+  template <class ErrorCodeEnum>
+  bool category( std::error_code const & ec ) noexcept;
+
+  template <class Enum, class EnumType = Enum>
+  struct condition;
+
+} }
+----
+
+[.text-right]
+Reference: <<match>> | <<match_value>> | <<match_member>> | <<catch_>> | <<if_not>> | <<category,`category`>> | <<condition,`condition`>>
+====
+
+[[to_variant.hpp]]
+==== `to_variant.hpp`
+
+====
+.#include <boost/OpenMethod/to_variant.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  // Requires at least C++17
+  template <class... E, class TryBlock>
+  std::variant<
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    std::tuple<
+      std::optional<E>...>>
+  to_variant( TryBlock && try_block );
+
+} }
+----
+
+[.text-right]
+Reference: <<to_variant>>
+====
+
+[[functions]]
+== Reference: Functions
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+'''
+
+[[activate_context]]
+=== `activate_context`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class Ctx>
+  context_activator<Ctx> activate_context( Ctx & ctx ) noexcept
+  {
+    return context_activator<Ctx>(ctx);
+  }
+
+} }
+----
+
+[.text-right]
+<<context_activator>>
+
+.Example:
+[source,c++]
+----
+OpenMethod::context<E1, E2, E3> ctx;
+
+{
+  auto active_context = activate_context(ctx); <1>
+} <2>
+----
+<1> Activate `ctx`.
+<2> Automatically deactivate `ctx`.
+
+'''
+
+[[context_type_from_handlers]]
+=== `context_type_from_handlers`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... H>
+  using context_type_from_handlers = typename <<unspecified>>::type;
+
+} }
+----
+
+.Example:
+[source,c++]
+----
+auto error_handlers = std::make_tuple(
+
+  [](e_this const & a, e_that const & b)
+  {
+    ....
+  },
+
+  [](OpenMethod::diagnostic_info const & info)
+  {
+    ....
+  },
+  .... );
+
+OpenMethod::context_type_from_handlers<decltype(error_handlers)> ctx; <1>
+----
+<1> `ctx` will be of type `context<e_this, e_that>`, deduced automatically from the specified error handlers.
+
+TIP: Alternatively, a suitable context may be created by calling <<make_context>>, or allocated dynamically by calling <<make_shared_context>>.
+
+'''
+
+[[current_error]]
+=== `current_error`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  error_id current_error() noexcept;
+
+} }
+----
+
+Returns: :: The `error_id` value returned the last time <<new_error>> was invoked from the calling thread.
+
+TIP: See also <<on_error>>.
+
+'''
+
+[[exception_to_result]]
+=== `exception_to_result`
+
+[source,c++]
+.#include <boost/OpenMethod/exception.hpp>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Ex, class F>
+  <<result<T>-deduced>> exception_to_result( F && f ) noexcept;
+
+} }
+----
+
+This function can be used to catch exceptions from a lower-level library and convert them to `<<result>><T>`.
+
+Returns: :: Where `f` returns a type `T`, `exception_to_result` returns `OpenMethod::result<T>`.
+
+Effects: ::
+
+. Catches all exceptions, then captures `std::current_exception` in a `std::exception_ptr` object, which is <<tutorial-loading,loaded>> with the returned `result<T>`.
+. Attempts to convert the caught exception, using `dynamic_cast`, to each type `Ex~i~` in `Ex...`. If the cast to `Ex~i~` succeeds, the `Ex~i~` slice of the caught exception is loaded with the returned `result<T>`.
+
+TIP: An error handler that takes an argument of an exception type (that is, of a type that derives from `std::exception`) will work correctly whether the object is thrown as an exception or communicated via <<new_error>> (or converted using `exception_to_result`).
+
+.Example:
+[source,c++]
+----
+int compute_answer_throws();
+
+//Call compute_answer, convert exceptions to result<int>
+OpenMethod::result<int> compute_answer()
+{
+  return OpenMethod::exception_to_result<ex_type1, ex_type2>(compute_answer_throws());
+}
+----
+
+At a later time we can invoke <<try_handle_some>> / <<try_handle_all>> as usual, passing handlers that take `ex_type1` or `ex_type2`, for example by reference:
+
+[source,c++]
+----
+return OpenMethod::try_handle_some(
+
+  [] -> OpenMethod::result<void>
+  {
+    BOOST_OpenMethod_AUTO(answer, compute_answer());
+    //Use answer
+    ....
+    return { };
+  },
+
+  [](ex_type1 & ex1)
+  {
+    //Handle ex_type1
+    ....
+    return { };
+  },
+
+  [](ex_type2 & ex2)
+  {
+    //Handle ex_type2
+    ....
+    return { };
+  },
+
+  [](std::exception_ptr const & p)
+  {
+    //Handle any other exception from compute_answer.
+    ....
+    return { };
+  } );
+----
+
+[.text-right]
+<<try_handle_some>> | <<result>> | <<BOOST_OpenMethod_AUTO>>
+
+WARNING: When a handler takes an argument of an exception type (that is, a type that derives from `std::exception`), if the object is thrown, the argument will be matched dynamically (using `dynamic_cast`); otherwise (e.g. after being converted by `exception_to_result`) it will be matched based on its static type only (which is the same behavior used for types that do not derive from `std::exception`).
+
+TIP: See also <<tutorial-exception_to_result>> from the tutorial.
+
+'''
+
+[[make_context]]
+=== `make_context`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class...  H>
+  context_type_from_handlers<H...> make_context() noexcept
+  {
+    return { };
+  }
+
+  template <class...  H>
+  context_type_from_handlers<H...> make_context( H && ... ) noexcept
+  {
+    return { };
+  }
+
+} }
+----
+
+[.text-right]
+<<context_type_from_handlers>>
+
+.Example:
+[source,c++]
+----
+auto ctx = OpenMethod::make_context( <1>
+  []( e_this ) { .... },
+  []( e_that ) { .... } );
+----
+<1> `decltype(ctx)` is `OpenMethod::context<e_this, e_that>`.
+
+'''
+
+[[new_error]]
+=== `new_error`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Item>
+  error_id new_error(Item && ... item) noexcept;
+
+} }
+----
+
+Requires: :: Each of the `Item...` types must be no-throw movable.
+
+Effects: :: As if:
++
+[source,c++]
+----
+error_id id = <<generate-new-unique-id>>;
+return id.load(std::forward<Item>(item)...);
+----
+
+Returns: :: A new `error_id` value, which is unique across the entire program.
+
+Ensures: :: `id.value()!=0`, where `id` is the returned `error_id`.
+
+NOTE: `new_error` discards error objects which are not used in any active error handling calling scope.
+
+CAUTION: When loaded into a `context`, an error object of a type `E` will overwrite the previously loaded object of type `E`, if any.
+
+'''
+
+[[on_error]]
+=== `on_error`
+
+.#include <boost/OpenMethod/on_error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Item>
+  <<unspecified-type>> on_error(Item && ... item) noexcept;
+
+} }
+----
+
+Requires: :: Each of the `Item...` types must be no-throw movable.
+
+Effects: :: All `item...` objects are forwarded and stored, together with the value returned from `std::unhandled_exceptions`, into the returned object of unspecified type, which should be captured by `auto` and kept alive in the calling scope. When that object is destroyed, if an error has occurred since `on_error` was invoked, OpenMethod will process the stored items to obtain error objects to be associated with the failure.
++
+On error, OpenMethod first needs to deduce an `error_id` value `err` to associate error objects with. This is done using the following logic:
++
+--
+* If <<new_error>> was invoked (by the calling thread) since the object returned by `on_error` was created, `err` is initialized with the value returned by <<current_error>>;
+* Otherwise, if `std::unhandled_exceptions` returns a greater value than it returned during initialization, `err` is initialized with the value returned by <<new_error>>;
+* Otherwise, the stored `item...` objects are discarded and no further action is taken (no error has occurred).
+--
++
+Next, OpenMethod proceeds similarly to:
++
+[source,c++]
+----
+err.load(std::forward<Item>(item)...);
+----
++
+The difference is that unlike <<error_id::load>>, `on_error` will not overwrite any error objects already associated with `err`.
+
+TIP: See <<tutorial-on_error>> from the Tutorial.
+
+'''
+
+[[throw_exception]]
+=== `throw_exception`
+
+[source,c++]
+.#include <boost/OpenMethod/exception.hpp>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class Ex, class... E> <1>
+  [[noreturn]] void throw_exception( Ex && ex, E && ... e );
+
+  template <class E1, class... E> <2>
+  [[noreturn]] void throw_exception( E1 && e1, E && ... e );
+
+  [[noreturn]] void throw_exception(); <3>
+
+  template <class Ex, class... E> <4>
+  [[noreturn]] void throw_exception( error_id id, Ex && ex, E && ... e );
+
+  template <class E1, class... E> <5>
+  [[noreturn]] void throw_exception( error_id id, E1 && e1, E && ... e );
+
+  [[noreturn]] void throw_exception( error_id id ); <6>
+
+} }
+----
+The `throw_exception` function is overloaded: it can be invoked with no arguments, or else there are several alternatives, selected using `std::enable_if` based on the type of the passed arguments. All overloads throw an exception:
+
+<1> Selected if the first argument is not of type `error_id` and is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+* its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
+* its `error_id` subobject is initialized by `<<new_error>>(std::forward<E>(e)...`).
+
+<2> Selected if the first argument is not of type `error_id` and is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `<<new_error>>(std::forward<E1>(e1), std::forward<E>(e)...`).
+
+<3> If the fuction is invoked without arguments, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `<<new_error>>()`.
+
+<4> Selected if the first argument is of type `error_id` and the second argument is an exception object, that is, iff `Ex` derives publicly from `std::exception`. In this case the thrown exception is of unspecified type which derives publicly from `Ex` *and* from class <<error_id>>, such that:
+** its `Ex` subobject is initialized by `std::forward<Ex>(ex)`;
+** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E>(e)...)`.
+
+<5> Selected if the first argument is of type `error_id` and the second argument is not an exception object. In this case the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by `id.<<error_id::load>>(std::forward<E1>(e1), std::forward<E>(e)...`).
+
+<6> If `exception` is invoked with just an `error_id` object, the thrown exception is of unspecified type which derives publicly from `std::exception` *and* from class `error_id`, such that:
+** its `std::exception` subobject is default-initialized;
+** its `error_id` subobject is initialized by copying from `id`.
+
+NOTE: The first three overloads throw an exception object that is associated with a new `error_id`. The second three overloads throw an exception object that is associated with the specified `error_id`.
+
+.Example 1:
+[source,c++]
+----
+struct my_exception: std::exception { };
+
+OpenMethod::throw_exception(my_exception{}); <1>
+----
+<1> Throws an exception of a type that derives from `error_id` and from `my_exception` (because `my_exception` derives from `std::exception`).
+
+.Example 2:
+[source,c++]
+----
+enum class my_error { e1=1, e2, e3 }; <1>
+
+OpenMethod::throw_exception(my_error::e1);
+----
+<1> Throws an exception of a type that derives from `error_id` and from `std::exception` (because `my_error` does not derive from `std::exception`).
+
+NOTE: To automatically capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` with the returned object, use <<BOOST_OpenMethod_THROW_EXCEPTION>> instead of `OpenMethod::throw_exception`.
+
+'''
+
+[[to_variant]]
+=== `to_variant`
+
+.#include <boost/OpenMethod/to_variant.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E, class TryBlock>
+  std::variant<
+    typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+    std::tuple<
+      std::optional<E>...>>
+  to_variant( TryBlock && try_block );
+
+} }
+----
+
+Requires: ::
+
+* This function is only available under {CPP}-17 or newer.
+* The `try_block` function may not take any arguments.
+* The type returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `OpenMethod::<<result>><T>`, however this is not a requirement.
+
+The `to_variant` function uses <<try_handle_all>> internally to invoke the `try_block` and capture the result in a `std::variant`. On success, the variant contains the `T` object from the produced `result<T>`. Otherwise, the variant contains a `std::tuple` where each `std::optional` element contains an object of type `E~i~` from the user-supplied sequence `E...`, or is empty if the failure did not produce an error object of that type.
+
+.Example:
+[source,c++]
+----
+enum class E1 { e11, e12, e13 };
+enum class E2 { e21, e22, e23 };
+enum class E3 { e31, e32, e33 };
+
+....
+
+auto v = OpenMethod::to_variant<E1, E2, E3>(
+  []() -> OpenMethod::result<int>
+  {
+    return OpenMethod::new_error( E1::e12, E3::e33 );
+  } );
+
+assert(v.index() == 1); <1>
+auto t = std::get<1>(v); <2>
+
+assert(std::get<0>(t).value() == E1::e12); <3>
+assert(!std::get<1>(t).has_value()); <4>
+assert(std::get<2>(t).value() == E3::e33); <3>
+----
+<1> We report a failure, so the variant must contain the error object tuple, rather than an `int`.
+<2> Grab the error tuple.
+<3> We communicated an `E1` and an `E3` error object...
+<4> ...but not an `E2` error object.
+
+'''
+
+[[try_capture_all]]
+=== `try_capture_all`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+#if BOOST_OpenMethod_CFG_CAPTURE
+
+namespace boost { namespace OpenMethod {
+
+  template <class TryBlock>
+  result<T> // T deduced depending on TryBlock return type
+  try_capture_all( TryBlock && try_block ) noexcept;
+
+} }
+
+#endif
+----
+
+Return type: :: An instance of `OpenMethod::<<result>><T>`, where T is deduced depending on the return type `R` of the `TryBlock`:
+* If `R` is a some type `Result<T>` for which <<is_result_type>> is true, `try_capture_all` returns `OpenMethod::<<result>><T>`.
+* Otherwise it is assumed that the `TryBlock` reports errors by throwing exceptions, and the return value of `try_capture_all` is deduced as `OpenMethod::result<R>`.
+
+Effects: :: `try_capture_all` executes `try_block`, catching and capturing all exceptions and all communicated error objects in the returned `OpenMethod::result` object. The error objects are allocated dynamically.
+
+WARNING: Calls to `try_capture_all` must not be nested in `try_handle_all`/`try_handle_some`/`try_catch` or in another `try_capture_all`.
+
+NOTE: Under `BOOST_OpenMethod_CFG_CAPTURE=0`, `try_capture_all` is unavailable.
+
+See also: :: <<tutorial-async>>.
+
+'''
+
+[[try_catch]]
+=== `try_catch`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_catch( TryBlock && try_block, H && ... h );
+
+} }
+----
+
+The `try_catch` function works similarly to <<try_handle_some>>, except that it does not use or understand the semantics of `result<T>` types; instead:
+
+* It assumes that the `try_block` throws to indicate a failure, in which case `try_catch` will attempt to find a suitable handler among `h...`;
+* If a suitable handler isn't found, the original exception is re-thrown using `throw;`.
+
+TIP: See <<tutorial-exception_handling>>.
+
+'''
+
+[[try_handle_all]]
+=== `try_handle_all`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()().value())>::type
+  try_handle_all( TryBlock && try_block, H && ... h );
+
+} }
+----
+
+The `try_handle_all` function works similarly to <<try_handle_some>>, except:
+
+* In addition, it requires that at least one of  `h...` can be used to handle any error (this requirement is enforced at compile time);
+* If the `try_block` returns some `result<T>` type, it must be possible to initialize a value of type `T` with the value returned by each of `h...`, and
+* Because it is required to handle all errors, `try_handle_all` unwraps the `result<T>` object `r` returned by the `try_block`, returning `r.value()` instead of `r`.
+
+TIP: See <<tutorial-error_handling>>.
+
+'''
+
+[[try_handle_some]]
+=== `try_handle_some`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class TryBlock, class... H>
+  typename std::decay<decltype(std::declval<TryBlock>()())>::type
+  try_handle_some( TryBlock && try_block, H && ... h );
+
+} }
+----
+
+Requires: ::
+* The `try_block` function may not take any arguments.
+* The type `R` returned by the `try_block` function must be a `result<T>` type (see <<is_result_type>>). It is valid for the `try_block` to return `OpenMethod::<<result>><T>`, however this is not a requirement.
+* Each of the `h...` functions:
+** must return a type that can be used to initialize an object of the type `R`; in case R is a `result<void>` (that is, in case of success it does not communicate a value), handlers that return `void` are permitted. If such a handler is selected, the `try_handle_some` return value is initialized by `{}`;
+** may take any error objects, by value, by (`const`) reference, or as pointer (to `const`);
+** may take arguments, by value, of any predicate type: <<catch_>>, <<match>>, <<match_value>>, <<match_member>>, <<if_not>>, or of any user-defined predicate type `Pred` for which `<<is_predicate>><Pred>::value` is `true`;
+** may take an <<error_info>> argument by `const &`;
+** may take a <<diagnostic_info>> argument by `const &`;
+** may take a <<diagnostic_details>> argument by `const &`.
+
+Effects: ::
+
+* Creates a local `<<context>><E...>` object `ctx`, where the `E...` types are automatically deduced from the types of arguments taken by each of `h...`, which guarantees that `ctx` is able to store all of the types required to handle errors.
+* Invokes the `try_block`:
+** if the returned object `r` indicates success [.underline]#and# the `try_block` did not throw, `r` is forwarded to the caller.
+** otherwise, OpenMethod  considers each of the `h...` handlers, in order, until it finds one that it can supply with arguments using the error objects currently stored in `ctx`, associated with `r.error()`. The first such handler is invoked and its return value is used to initialize the return value of `try_handle_some`, which can indicate success if the handler was able to handle the error, or failure if it was not.
++
+** if `try_handle_some` is unable to find a suitable handler, it returns `r`.
+
+NOTE: `try_handle_some` is exception-neutral: it does not throw exceptions, however the `try_block` and any of `h...` are permitted to throw.
+
+[[handler_selection_procedure]]
+Handler Selection Procedure: ::
++
+A handler `h` is suitable to handle the failure reported by `r` iff `try_handle_some` is able to produce values to pass as its arguments, using the error objects currently available in `ctx`, associated with the error ID obtained by calling `r.error()`. As soon as it is determined that an argument value can not be produced, the current handler is dropped and the selection process continues with the next handler, if any.
++
+The return value of `r.error()` must be implicitly convertible to <<error_id>>. Naturally, the `OpenMethod::result` template satisfies this requirement. If an external `result` type is used instead, usually `r.error()` would return a `std::error_code`, which is able to communicate OpenMethod error IDs; see <<tutorial-interoperability>>.
++
+If `err` is the `error_id` obtained from `r.error()`, each argument `a~i~` taken by the handler currently under consideration is produced as follows:
++
+* If `a~i~` is of type `A~i~`, `A~i~ const&` or `A~i~&`:
++
+--
+** If an error object of type `A~i~`, associated with `err`, is currently available in `ctx`, `a~i~` is initialized with a reference to that object; otherwise
+** If `A~i~` derives from `std::exception`, and the `try_block` throws an object `ex` of type that derives from `std::exception`, OpenMethod obtains `A~i~* p = dynamic_cast<A~i~*>(&ex)`. The handler is dropped if `p` is null, otherwise `a~i~` is initialized with `*p`.
+** Otherwise the handler is dropped.
+--
++
+.Example:
+[source,c++]
+----
+....
+auto r = OpenMethod::try_handle_some(
+
+  []() -> OpenMethod::result<int>
+  {
+    return f();
+  },
+
+  [](OpenMethod::e_file_name const & fn) <1>
+  {
+    std::cerr << "File Name: \"" << fn.value << '"' << std::endl; <2>
+
+    return 1;
+  } );
+----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
+<1> In case the `try_block` indicates a failure, this handler will be selected if `ctx` stores an `e_file_name` associated with the error. Because this is the only supplied handler, if an `e_file_name` is not available, `try_handle_some` will return the `OpenMethod::result<int>` returned by `f`.
+<2> Print the file name, handle the error.
++
+* If `a~i~` is of type `A~i~` `const*` or `A~i~*`, `try_handle_some` is always able to produce it: first it attempts to produce it as if it is taken by reference; if that fails, rather than dropping the handler, `a~i~` is initialized with `0`.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+
+  []() -> OpenMethod::result<int>
+  {
+    return f();
+  },
+
+  [](OpenMethod::e_file_name const * fn) <1>
+  {
+    if( fn ) <2>
+      std::cerr << "File Name: \"" << fn->value << '"' << std::endl;
+
+    return 1;
+  } );
+}
+----
++
+[.text-right]
+<<result>> | <<e_file_name>>
++
+<1> This handler can be selected to handle any error, because it takes `e_file_name` as a `const *` (and nothing else).
+<2> If an `e_file_name` is available with the current error, print it.
++
+* If `a~i~` is of a predicate type `Pred` (for which `<<is_predicate>><Pred>::value` is `true`), `E` is deduced as `typename Pred::error_type`, and then:
+** If `E` is not `void`, and an error object `e` of type `E`, associated with `err`, is not currently stored in `ctx`, the handler is dropped; otherwise the handler is dropped  if the expression `Pred::evaluate(e)` returns `false`.
+** if `E` is `void`, and a `std::exception` was not caught, the handler is dropped; otherwise the handler is dropped if the expression `Pred::evaluate(e)`, where `e` is of type `std::exception const &`, returns `false`.
+** To invoke the handler, the `Pred` argument `a~i~` is initialized with `Pred{e}`.
++
+NOTE: See also: <<predicates,Predicates>>.
++
+* If `a~i~` is of type `error_info const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  [](OpenMethod::error_info const & info) <1>
+  {
+    std::cerr << "OpenMethod::error_info:\n" << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<error_info>>
++
+<1> This handler matches any error.
+<2> Print error information.
+<3> Return the original error, which will be returned out of `try_handle_some`.
++
+* If `a~i~` is of type `diagnostic_info const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+
+  []
+  {
+    return f(); // throws
+  },
+
+  [](OpenMethod::diagnostic_info const & info) <1>
+  {
+    std::cerr << "OpenMethod::diagnostic_information:\n" << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<diagnostic_info>>
++
+<1> This handler matches any error.
+<2> Print diagnostic information, including limited information about dropped error objects.
+<3> Return the original error, which will be returned out of `try_handle_some`.
++
+* If `a~i~` is of type `diagnostic_details const &`,  `try_handle_some` is always able to produce it.
++
+.Example:
+[source,c++]
+----
+....
+try_handle_some(
+
+  []
+  {
+    return f(); // throws
+  },
+
+  [](OpenMethod::diagnostic_details const & info) <1>
+  {
+    std::cerr << "OpenMethod::diagnostic_details\n" << info; <2>
+    return info.error(); <3>
+  } );
+----
++
+[.text-right]
+<<result>> | <<diagnostic_details>>
++
+<1> This handler matches any error.
+<2> Print verbose diagnostic information, including values of dropped error objects.
+<3> Return the original error, which will be returned out of `try_handle_some`.
+
+[[types]]
+
+== Reference: Types
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+'''
+
+[[context]]
+=== `context`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  class context
+  {
+    context( context const & ) = delete;
+    context & operator=( context const & ) = delete;
+
+  public:
+
+    context() noexcept;
+    context( context && x ) noexcept;
+    ~context() noexcept;
+
+    void activate() noexcept;
+    void deactivate() noexcept;
+    bool is_active() const noexcept;
+
+    void unload( error_id ) noexcept;
+
+    void print( std::ostream & os ) const;
+
+    template <class R, class... H>
+    R handle_error( error_id, H && ... ) const;
+
+  };
+
+  template <class... H>
+  using context_type_from_handlers = typename <<unspecified>>::type;
+
+} }
+----
+[.text-right]
+<<context::context>> | <<context::activate>> | <<context::deactivate>> | <<context::is_active>> | <<context::unload>> | <<context::print>> | <<context::handle_error>> | <<context_type_from_handlers>>
+
+The `context` class template provides storage for each of the specified `E...` types. Typically, `context` objects are not used directly; they're created internally when the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> functions are invoked, instantiated with types that are automatically deduced from the types of the arguments of the passed handlers.
+
+Independently, users can create `context` objects if they need to capture error objects and then transport them, by moving the `context` object itself.
+
+Even in that case it is recommended that users do not instantiate the `context` template by explicitly listing the `E...` types they want it to be able to store. Instead, use <<context_type_from_handlers>> or call the <<make_context>> function template, which deduce the correct `E...` types from a captured list of handler function objects.
+
+To be able to load up error objects in a `context` object, it must be activated. Activating a `context` object `ctx` binds it to the calling thread, setting thread-local pointers of the stored `E...` types to point to the corresponding storage within `ctx`. It is possible, even likely, to have more than one active `context` in any given thread. In this case, activation/deactivation must happen in a LIFO manner. For this reason, it is best to use a <<context_activator>>, which relies on RAII to activate and deactivate a `context`.
+
+When a `context` is deactivated, it detaches from the calling thread, restoring the thread-local pointers to their pre-`activate` values. Typically, at this point the stored error objects, if any, are either discarded (by default) or moved to corresponding storage in other `context` objects active in the calling thread (if available), by calling <<context::unload>>.
+
+While error handling typically uses <<try_handle_some>>, <<try_handle_all>> or <<try_catch>>, it is also possible to handle errors by calling the member function <<context::handle_error>>. It takes an <<error_id>>, and attempts to select an error handler based on the error objects stored in `*this`, associated with the passed `error_id`.
+
+TIP: `context` objects can be moved, as long as they aren't active.
+
+WARNING: Moving an active `context` results in undefined behavior.
+
+'''
+
+[[context::context]]
+==== Constructors
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  context<E...>::context() noexcept;
+
+  template <class... E>
+  context<E...>::context( context && x ) noexcept;
+
+} }
+----
+
+The default constructor initializes an empty `context` object: it provides storage for, but does not contain any error objects.
+
+The move constructor moves the stored error objects from one `context` to the other.
+
+WARNING: Moving an active `context` object results in undefined behavior.
+
+'''
+
+[[context::activate]]
+==== `activate`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  void context<E...>::activate() noexcept;
+
+} }
+----
+
+Requires: :: `!<<context::is_active>>()`.
+
+Effects: :: Associates `*this` with the calling thread.
+
+Ensures: :: `<<context::is_active>>()`.
+
+When a context is associated with a thread, thread-local pointers are set to point each `E...` type in its store, while the previous value of each such pointer is preserved in the `context` object, so that the effect of `activate` can be undone by calling `deactivate`.
+
+When an error object is <<tutorial-loading,loaded>>, it is moved in the last activated (in the calling thread) `context` object that provides storage for its type (note that this may or may not be the last activated `context` object). If no such storage is available, the error object is discarded.
+
+'''
+
+[[context::deactivate]]
+==== `deactivate`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  void context<E...>::deactivate() noexcept;
+
+} }
+----
+
+Requires: ::
+* `<<context::is_active>>()`;
+* `*this` must be the last activated `context` object in the calling thread.
+
+Effects: :: Un-associates `*this` with the calling thread.
+
+Ensures: :: `!<<context::is_active>>()`.
+
+When a context is deactivated, the thread-local pointers that currently point to each individual error object storage in it are restored to their original value prior to calling <<context::activate>>.
+
+'''
+
+[[context::handle_error]]
+==== `handle_error`
+
+[source,c++]
+.#include <boost/OpenMethod/handle_errors.hpp>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  template <class R, class... H>
+  R context<E...>::handle_error( error_id err, H && ... h ) const;
+
+} }
+----
+
+This function works similarly to <<try_handle_all>>, but rather than calling a `try_block` and obtaining the <<error_id>> from a returned `result` type, it matches error objects (stored in `*this`, associated with `err`) with a suitable error handler from the `h...` pack.
+
+NOTE: The caller is required to specify the return type `R`. This is because in general the supplied handlers may return different types (which must all be convertible to `R`).
+
+'''
+
+[[context::is_active]]
+==== `is_active`
+
+[source,c++]
+.#include <boost/OpenMethod/context.hpp>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  bool context<E...>::is_active() const noexcept;
+
+} }
+----
+
+Returns: :: `true` if the `*this` is active in any thread, `false` otherwise.
+
+'''
+
+[[context::print]]
+==== `print`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  void context<E...>::print( std::ostream & os ) const;
+
+  template <class CharT, class Traits>
+  friend std::ostream & context<E...>::operator<<( std::basic_ostream<CharT, Traits> &, context const & )
+  {
+      ctx.print(os);
+      return os;
+  }
+
+} }
+----
+
+Effects: :: Prints all error objects currently stored in `*this`, together with the unique error ID each individual error object is associated with.
+
+'''
+
+[[context::unload]]
+==== `unload`
+
+.#include <boost/OpenMethod/context.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  void context<E...>::unload( error_id id ) noexcept;
+
+} }
+----
+
+Requires: ::
+`!<<context::is_active>>()`.
+
+Effects: ::
+
+Each stored error object of some type `E` is moved into another `context` object active in the call stack that provides storage for objects of type `E`, if any, or discarded. Target objects are not overwritten if they are associated with the specified `id`, except if `id.value() == 0`.
+
+'''
+
+[[context_activator]]
+=== `context_activator`
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class Ctx>
+  class context_activator
+  {
+    context_activator( context_activator const & ) = delete;
+    context_activator & operator=( context_activator const & ) = delete;
+
+  public:
+
+    explicit context_activator( Ctx & ctx ) noexcept;
+    context_activator( context_activator && ) noexcept;
+    ~context_activator() noexcept;
+  };
+
+} }
+----
+
+`context_activator` is a simple class that activates and deactivates a <<context>> using RAII:
+
+If `<<context::is_active,ctx.is_active>>`() is `true` at the time the `context_activator` is initialized, the constructor and the destructor have no effects. Otherwise:
+
+* The constructor stores a reference to `ctx` in `*this` and calls `<<context::activate,ctx.activate>>`().
+* The destructor:
+** Has no effects if `ctx.is_active()` is `false` (that is, it is valid to call <<context::deactivate>> manually, before the `context_activator` object expires);
+** Otherwise, calls `<<context::deactivate,ctx.deactivate>>`().
+
+For automatic deduction of `Ctx`, use <<activate_context>>.
+
+'''
+
+[[diagnostic_details]]
+=== `diagnostic_details`
+
+.#include <boost/OpenMethod/diagnostics.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class diagnostic_details: public error_info
+  {
+    //Constructors unspecified
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_details const & );
+  };
+
+} }
+----
+
+Handlers passed to error handling functions such as <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `diagnostic_details const &` if they need to print diagnostic information about the error.
+
+The message printed by `operator<<` includes the message printed by `error_info`, followed by information about error objects that were communicated to OpenMethod (to be associated with the error) for which there was no storage available in any active <<context>> (these error objects were discarded by OpenMethod, because no handler needed them).
+
+The additional information includes the types and the values of all such error objects (but see  <<show_in_diagnostics>>).
+
+[NOTE]
+--
+The behavior of `diagnostic_details` (and <<diagnostic_info>>) is affected by the value of the macro `BOOST_OpenMethod_CFG_DIAGNOSTICS`:
+
+* If it is 1 (the default), OpenMethod produces `diagnostic_details` but only if an active error handling context on the call stack takes an argument of type `diagnostic_details`;
+* If it is 0, the `diagnostic_details` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_details`. This could save some cycles on the error path in some programs (but is probably not worth it).
+--
+
+WARNING: Using `diagnostic_details` may allocate memory dynamically, but only if an active error handler takes an argument of type `diagnostic_details`.
+
+'''
+
+[[diagnostic_info]]
+=== `diagnostic_info`
+
+.#include <boost/OpenMethod/diagnostics.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class diagnostic_info: public error_info
+  {
+    //Constructors unspecified
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, diagnostic_info const & );
+  };
+
+} }
+----
+
+Handlers passed to <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `diagnostic_info const &` if they need to print diagnostic information about the error.
+
+The message printed by `operator<<` includes the message printed by `error_info`, followed by basic information about error objects that were communicated to OpenMethod (to be associated with the error) for which there was no storage available in any active <<context>> (these error objects were discarded by OpenMethod, because no handler needed them).
+
+The additional information is limited to the type name of the first such error object, as well as their total count.
+
+[NOTE]
+--
+The behavior of `diagnostic_info` (and <<diagnostic_details>>) is affected by the value of the macro `BOOST_OpenMethod_CFG_DIAGNOSTICS`:
+
+* If it is 1 (the default), OpenMethod produces `diagnostic_info` but only if an active error handling context on the call stack takes an argument of type `diagnostic_info`;
+* If it is 0, the `diagnostic_info` functionality is stubbed out even for error handling contexts that take an argument of type `diagnostic_info`. This could shave a few cycles off the error path in some programs (but it is probably not worth it).
+--
+
+[[error_id]]
+=== `error_id`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class error_id
+  {
+  public:
+
+    error_id() noexcept;
+
+    template <class Enum>
+    result( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+    error_id( std::error_code const & ec ) noexcept;
+
+    int value() const noexcept;
+    explicit operator bool() const noexcept;
+
+    std::error_code to_error_code() const noexcept;
+
+    friend bool operator==( error_id a, error_id b ) noexcept;
+    friend bool operator!=( error_id a, error_id b ) noexcept;
+    friend bool operator<( error_id a, error_id b ) noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) const noexcept;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_id );
+  };
+
+  bool is_error_id( std::error_code const & ec ) noexcept;
+
+  template <class... E>
+  error_id new_error( E && ... e ) noexcept;
+
+  error_id current_error() noexcept;
+
+} }
+----
+
+[.text-right]
+<<error_id::error_id>> | <<error_id::value>> | <<error_id::operator_bool>> | <<error_id::to_error_code>> | <<error_id::comparison_operators>> | <<error_id::load>> | <<is_error_id>> | <<new_error>> | <<current_error>>
+
+Values of type `error_id` identify a specific occurrence of a failure across the entire program. They can be copied, moved, assigned to, and compared to other `error_id` objects. They're as efficient as an `int`.
+
+'''
+
+[[error_id::error_id]]
+==== Constructors
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  error_id::error_id() noexcept = default;
+
+  template <class Enum>
+  error_id::error_id( Enum e, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type * = 0 ) noexcept;
+
+  error_id::error_id( std::error_code const & ec ) noexcept;
+
+} }
+----
+
+A default-initialized `error_id` object does not represent a specific failure. It compares equal to any other default-initialized `error_id` object. All other `error_id` objects identify a specific occurrence of a failure.
+
+CAUTION: When using an object of type `error_id` to initialize a `result<T>` object, it will be initialized in error state, even when passing a default-initialized `error_id` value.
+
+Converting an `error_id` object to `std::error_code` uses an unspecified `std::error_category` which OpenMethod recognizes. This allows an `error_id` to be transported through interfaces that work with `std::error_code`. The `std::error_code` constructor allows the original `error_id` to be restored.
+
+TIP: To check if a given `std::error_code` is actually carrying an `error_id`, use <<is_error_id>>.
+
+Typically, users create new `error_id` objects by invoking <<new_error>>. The constructor that takes `std::error_code`, and the one that takes a type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`, have the following effects:
+
+* If `ec.value()` is `0`, the effect is the same as using the default constructor.
+* Otherwise, if `<<is_error_id>>(ec)` is `true`, the original `error_id` value is used to initialize `*this`;
+* Otherwise, `*this` is initialized by the value returned by <<new_error>>, while `ec` is passed to `load`, which enables handlers used with `try_handle_some`, `try_handle_all` or `try_catch` to receive it as an argument of type `std::error_code`.
+
+'''
+
+[[is_error_id]]
+==== `is_error_id`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  bool is_error_id( std::error_code const & ec ) noexcept;
+
+} }
+----
+
+Returns: :: `true` if `ec` uses the OpenMethod-specific `std::error_category` that identifies it as carrying an error ID rather than another error code; otherwise returns `false`.
+
+'''
+
+[[error_id::load]]
+==== `load`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Item>
+  error_id error_id::load( Item && ... item ) const noexcept;
+
+} }
+----
+
+Requires: :: Each of the `Item...` types must be no-throw movable.
+
+Effects: ::
+* If `thispass:[->]value()==0`, all of `item...` are discarded and no further action is taken.
+* Otherwise, what happens with each `item` depends on its type:
+** If it is a function that takes a single argument of some type `E &`, that function is called with the object of type `E` currently associated with `*this`. If no such object exists, a default-initialized object is associated with `*this` and then passed to the function.
+** If it is a function that takes no arguments, that function is called to obtain an error object which is associated with `*this`, except in the special case of a `void` function, in which case it is invoked and no error object is obtained/loaded.
+** Otherwise, the `item` itself is assumed to be an error object, which is associated with `*this`.
+
+Returns: :: `*this`.
+
+NOTE: `load` discards error objects which are not used in any active error handling calling scope.
+
+CAUTION: When loaded into a `context`, an error object of a type `E` will overwrite the previously loaded object of type `E`, if any.
+
+See also: :: <<tutorial-loading>>.
+
+'''
+
+[[error_id::comparison_operators]]
+==== `operator==`, `!=`, `<`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  friend bool operator==( error_id a, error_id b ) noexcept;
+  friend bool operator!=( error_id a, error_id b ) noexcept;
+  friend bool operator<( error_id a, error_id b ) noexcept;
+
+} }
+----
+
+These functions have the usual semantics, comparing `a.value()` and `b.value()`.
+
+NOTE: The exact strict weak ordering implemented by `operator<` is not specified. In particular, if for two `error_id` objects `a` and `b`, `a < b` is true, it does not follow that the failure identified by `a` ocurred earlier than the one identified by `b`.
+
+'''
+
+[[error_id::operator_bool]]
+==== `operator bool`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+    explicit error_id::operator bool() const noexcept;
+
+} }
+----
+
+Effects: :: As if `return value()!=0`.
+
+'''
+
+[[error_id::to_error_code]]
+==== `to_error_code`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+    std::error_code error_id::to_error_code() const noexcept;
+
+} }
+----
+
+Effects: :: Returns a `std::error_code` with the same `value()` as `*this`, using an unspecified `std::error_category`.
+
+NOTE: The returned object can be used to initialize an `error_id`, in which case the original `error_id` value will be restored.
+
+TIP: Use <<is_error_id>> to check if a given `std::error_code` carries an `error_id`.
+
+'''
+
+[[error_id::value]]
+==== `value`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+    int error_id::value() const noexcept;
+
+} }
+----
+
+Effects: ::
+* If `*this` was initialized using the default constructor, returns 0.
+* Otherwise returns an `int` that is guaranteed to not be 0: a program-wide unique identifier of the failure.
+
+'''
+
+[[error_monitor]]
+=== `error_monitor`
+
+.#include <boost/OpenMethod/on_error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class error_monitor
+  {
+  public:
+
+    error_monitor() noexcept;
+
+    error_id check() const noexcept;
+
+    error_id assigned_error_id( E && ... e ) const noexcept;
+  };
+
+} }
+----
+
+This class helps obtain an <<error_id>> to associate error objects with, when augmenting failures communicated using OpenMethod through uncooperative APIs that do not use OpenMethod to report errors (and therefore do not return an `error_id` on error).
+
+The common usage of this class is as follows:
+
+[source,c++]
+----
+error_code compute_value( int * out_value ) noexcept; <1>
+
+OpenMethod::error<int> augmenter() noexcept
+{
+  OpenMethod::error_monitor cur_err; <2>
+
+  int val;
+  auto ec = compute_value(&val);
+
+  if( failure(ec) )
+    return cur_err.assigned_error_id().load(e1, e2, ...); <3>
+  else
+    return val; <4>
+}
+----
+<1> Uncooperative third-party API that does not use OpenMethod, but may result in calling a user callback that does use OpenMethod. In case our callback reports a failure, we'll augment it with error objects available in the calling scope, even though `compute_value` can not communicate an <<error_id>>.
+<2> Initialize an `error_monitor` object.
+<3> The call to `compute_value` has failed:
+- If <<new_error>> was invoked (by the calling thread) after the `augment` object was initialized, `assigned_error_id` returns the last `error_id` returned by `new_error`. This would be the case if the failure originates in our callback (invoked internally by `compute_value`).
+- Else, `assigned_error_id` invokes `new_error` and returns that `error_id`.
+<4> The call was successful, return the computed value.
+
+The `check` function works similarly, but instead of invoking `new_error` it returns a default-initialized `error_id`.
+
+TIP: See <<tutorial-on_error_in_c_callbacks>>.
+
+'''
+
+[[e_api_function]]
+=== `e_api_function`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_api_function {char const * value;};
+
+} }
+----
+
+
+The `e_api_function` type is designed to capture the name of the API function that failed. For example, if you're reporting an error from `fread`, you could use `OpenMethod::e_api_function {"fread"}`.
+
+WARNING: The passed value is stored as a C string (`char const *`), so `value` should only be initialized with a string literal.
+
+'''
+
+[[e_at_line]]
+=== `e_at_line`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_at_line { int value; };
+
+} }
+----
+
+`e_at_line` can be used to communicate the line number when reporting errors (for example parse errors) about a text file.
+
+'''
+
+[[e_errno]]
+=== `e_errno`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_errno
+  {
+    int value;
+    explicit e_errno(int value=errno);
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_errno const & );
+  };
+
+} }
+----
+
+By default, the constructor initializes `value` with `errno`, but the caller can pass a specific error code instead. When printed in automatically-generated diagnostic messages, `e_errno` objects use `strerror` to convert the error code to string.
+
+'''
+
+[[e_file_name]]
+=== `e_file_name`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_file_name { std::string value; };
+
+} }
+----
+
+When a file operation fails, you could use `e_file_name` to store the name of the file.
+
+TIP: It is probably better to define your own file name wrappers to avoid clashes if different modules all use `OpenMethod::e_file_name`. It is best to use a descriptive name that clarifies what kind of file name it is (e.g. `e_source_file_name`, `e_destination_file_name`), or at least define `e_file_name` in a given module's namespace.
+
+'''
+
+[[e_LastError]]
+=== `e_LastError`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  namespace windows
+  {
+    struct e_LastError
+    {
+      unsigned value;
+
+      explicit e_LastError(unsigned value);
+
+#if BOOST_OpenMethod_CFG_WIN32
+      e_LastError();
+
+      template <class CharT, class Traits>
+      friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_LastError const & );
+#endif
+    };
+  }
+
+} }
+----
+
+`e_LastError` is designed to communicate `GetLastError()` values on Windows. The default constructor initializes `value` via `GetLastError()`. See <<configuration>>.
+
+'''
+
+[[e_source_location]]
+=== `e_source_location`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_source_location
+  {
+    char const * file;
+    int line;
+    char const * function;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, e_source_location const & );
+  };
+
+} }
+----
+
+The <<BOOST_OpenMethod_NEW_ERROR>> and <<BOOST_OpenMethod_THROW_EXCEPTION>> macros capture `pass:[__FILE__]`, `pass:[__LINE__]` and `pass:[__FUNCTION__]` into a `e_source_location` object.
+
+'''
+
+[[e_type_info_name]]
+=== `e_type_info_name`
+
+.#include <boost/OpenMethod/common.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  struct e_type_info_name { char const * value; };
+
+} }
+----
+
+`e_type_info_name` is designed to store the return value of `std::type_info::name`.
+
+'''
+
+[[error_info]]
+=== `error_info`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  class error_info
+  {
+    //Constructors unspecified
+
+  public:
+
+    error_id error() const noexcept;
+
+    bool exception_caught() const noexcept;
+    std::exception const * exception() const noexcept;
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, error_info const & );
+  };
+
+} }
+----
+
+Handlers passed to error handling functions such as <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> may take an argument of type `error_info const &` to receive generic information about the error being handled.
+
+The `error` member function returns the program-wide unique <<error_id>> of the error.
+
+The `exception_caught` member function returns `true` if the handler that received `*this` is being invoked to handle an exception, `false` otherwise.
+
+If handling an exception, the `exception` member function returns a pointer to the `std::exception` subobject of the caught exception, or `0` if that exception could not be converted to `std::exception`.
+
+WARNING: It is illegal to call the `exception` member function unless `exception_caught()` is `true`.
+
+The `operator<<` overload prints diagnostic information about each error object currently stored in the <<context>> local to the <<try_handle_some>>, <<try_handle_all>> or <<try_catch>> scope that invoked the handler, but only if it is associated with the <<error_id>> returned by `error()`.
+
+'''
+
+[[result]]
+=== `result`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  class result
+  {
+  public:
+
+    using value_type = T;
+
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( result<U> && r ) noexcept;
+
+    result() noexcept;
+
+    result( T && v ) noexcept;
+
+    result( T const & v );
+
+    result( error_id err ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result( U && u );
+
+#if BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+
+    result( std::error_code const & ec ) noexcept;
+
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result( Enum e ) noexcept;
+
+#endif
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && r ) noexcept;
+
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result & operator=( result<U> && r ) noexcept;
+
+    bool has_value() const noexcept;
+    bool has_error() const noexcept;
+    explicit operator bool() const noexcept;
+
+    T const & value() const &;
+    T & value() &;
+    T const && value() const &&;
+    T && value() &&;
+
+    T const * operator->() const noexcept;
+    T * operator->() noexcept;
+
+    T const & operator*() const & noexcept;
+    T & operator*() & noexcept;
+    T const && operator*() const && noexcept;
+    T && operator*() && noexcept;
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const & );
+  };
+
+  template <>
+  class result<void>
+  {
+  public:
+
+    using value_type = void;
+
+    // NOTE: Copy constructor implicitly deleted.
+    result( result && r ) noexcept;
+
+    result() noexcept;
+
+    result( error_id err ) noexcept;
+
+#if BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+
+    result( std::error_code const & ec ) noexcept;
+
+    template <class Enum, typename std::enable_if<std::is_error_code_enum<Enum>::value, Enum>::type>
+    result( Enum e ) noexcept;
+
+#endif
+
+    // NOTE: Assignment operator implicitly deleted.
+    result & operator=( result && r ) noexcept;
+
+    explicit operator bool() const noexcept;
+
+    void value() const;
+
+    void const * operator->() const noexcept;
+    void * operator->() noexcept;
+
+    void operator*() const noexcept;
+
+    <<unspecified-type>> error() noexcept;
+
+    template <class... Item>
+    error_id load( Item && ... item ) noexcept;
+
+    void unload();
+
+    template <class CharT, class Traits>
+    friend std::ostream & operator<<( std::basic_ostream<CharT, Traits> &, result const &);
+  };
+
+  struct bad_result: std::exception { };
+
+  template <class T>
+  struct is_result_type<result<T>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<result::result>> | <<result::operator_eq>> | <<result::has_value>> | <<result::has_error>> | <<result::operator_bool>> | <<result::value>> | <<result::operator_ptr>> | <<result::operator_deref>> | <<result::error>> | <<result::load>>
+
+The `result<T>` type can be returned by functions which produce a value of type `T` but may fail doing so.
+
+Requires: :: `T` must be movable, and its move constructor may not throw.
+
+Invariant: :: A `result<T>` object is in one of three states:
+* Value state, in which case it contains an object of type `T`, and <<result::value>> / <<result::operator_deref>> / <<result::operator_ptr>> can be used to access the contained value.
+* Error state, in which case it contains an error ID, and calling <<result::value>> throws `OpenMethod::bad_result`.
+* Dynamic capture state, which is the same as the Error state, but in addition to the error ID, it holds a list of dynamically captured error objects; see <<try_capture_all>>.
+
+`result<T>` objects are nothrow-moveable but are not copyable.
+
+'''
+
+[[result::result]]
+==== Constructors
+
+--
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+    // NOTE: Copy constructor implicitly deleted.
+
+    template <class T>
+    result<T>::result( result && r ) noexcept;
+
+    template <class T>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result<T>::result( result<U> && r ) noexcept;
+
+    template <class T>
+    result<T>::result() noexcept;
+
+    template <class T>
+    result<T>::result( T && v ) noexcept;
+
+    template <class T>
+    result<T>::result( T const & v );
+
+    template <class T>
+    result<T>::result( error_id err ) noexcept;
+
+    template <class T>
+    template <class U, class = typename std::enable_if<std::is_convertible<U, T>::value>::type>
+    result<T>::result( U && u );
+
+#if BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+
+    template <class T>
+    result<T>::result( std::error_code const & ec ) noexcept;
+
+    template <class T>
+    template <class Enum, class = typename std::enable_if<std::is_error_code_enum<Enum>::value, int>::type>
+    result<T>::result( Enum e ) noexcept;
+
+#endif
+
+} }
+----
+--
+
+Requires: :: `T` must be movable, and its move constructor may not throw; or `void`.
+
+Effects: ::
+
+Establishes the `result<T>` invariants:
++
+--
+* To get a `result<T>` in <<result,Value state>>, initialize it with an object of type `T` or use the default constructor.
+* To get a `result<T>` in <<result,Error state>>, initialize it with:
+** an <<error_id>> object.
++
+CAUTION: Initializing a `result<T>` with a default-initialized `error_id` object (for which `.value()` returns `0`) will still result in <<result,Error state>>!
++
+** a `std::error_code` object.
+** an object of type `Enum` for which `std::is_error_code_enum<Enum>::value` is `true`.
+* To get a `result<T>` in <<result,dynamic capture state>>, call <<try_capture_all>>.
+--
++
+When a `result` object is initialized with a `std::error_code` object, it is used to initialize an `error_id` object, then the behavior is the same as if initialized with `error_id`.
+
+Throws: ::
+* Initializing the `result<T>` in Value state may throw, depending on which constructor of `T` is invoked;
+* Other constructors do not throw.
+
+TIP: A `result` that is in value state converts to `true` in boolean contexts. A `result` that is not in value state converts to `false` in boolean contexts.
+
+NOTE: `result<T>` objects are nothrow-moveable but are not copyable.
+
+'''
+
+[[result::error]]
+==== `error`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... E>
+  <<unspecified-type>> result<T>::error() noexcept;
+
+} }
+----
+
+Returns: A proxy object of unspecified type, implicitly convertible to any instance of the `result` class template, as well as to <<error_id>>.
+
+* If the proxy object is converted to some `result<U>`:
+** If `*this` is in <<result,Value state>>, returns `result<U>(error_id())`.
+** Otherwise the state of `*this` is moved into the returned `result<U>`.
+* If the proxy object is converted to an `error_id`:
+** If `*this` is in <<result,Value state>>, returns a default-initialized <<error_id>> object.
+** If `*this` is in <<result,Error capture state>>, all captured error objects are <<tutorial-loading,loaded>> in the calling thread, and the captured `error_id` value is returned.
+** If `*this` is in <<result,Error state>>, returns the stored `error_id`.
+* If the proxy object is not used, the state of `*this` is not modified.
+
+WARNING: The returned proxy object refers to `*this`; avoid holding on to it.
+
+'''
+
+[[result::load]]
+==== `load`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  template <class... Item>
+  error_id result<T>::load( Item && ... item ) noexcept;
+
+} }
+----
+
+This member function is designed for use in `return` statements in functions that return `result<T>` to forward additional error objects to the caller.
+
+Effects: :: As if `error_id(thispass:[->]error()).load(std::forward<Item>(item)...)`.
+
+Returns: :: `*this`.
+
+'''
+
+[[result::operator_eq]]
+==== `operator=`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  result<T> & result<T>::operator=( result && ) noexcept;
+
+  template <class T>
+  template <class U>
+  result<T> & result<T>::operator=( result<U> && ) noexcept;
+
+} }
+----
+
+Effects: :: Destroys `*this`, then re-initializes it as if using the appropriate `result<T>` constructor. Basic exception-safety guarantee.
+
+'''
+
+[[result::has_value]]
+==== `has_value`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  bool result<T>::has_value() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+
+'''
+
+[[result::has_error]]
+==== `has_error`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  bool result<T>::has_error() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `false`, otherwise returns `true`.
+
+'''
+
+[[result::operator_bool]]
+==== `operator bool`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  result<T>::operator bool() const noexcept;
+
+} }
+----
+
+Returns: :: If `*this` is in <<result,value state>>, returns `true`, otherwise returns `false`.
+
+'''
+
+[[result::value]]
+==== `value`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  void result<void>::value() const;
+
+  template <class T>
+  T const & result<T>::value() const;
+
+  template <class T>
+  T & result<T>::value();
+
+  struct bad_result: std::exception { };
+
+} }
+----
+
+Effects:
+
+* If `*this` is in <<result,value state>>, returns a reference to the stored value.
+* If `*this` is in <<result,dynamic capture state>>, the captured error objects are unloaded, and:
+** If `*this` contains a captured exception object `ex`, the behavior is equivalent to `<<throw_exception>>(ex)`.
+** Otherwise, the behavior is equivalent to `<<throw_exception>>(bad_result{})`.
+* If `*this` is in any other state, the behavior is equivalent to `<<throw_exception>>(bad_result{})`.
+
+'''
+
+[[result::value_type]]
+==== `value_type`
+
+A member type of `result<T>`, defined as a synonim for `T`.
+
+'''
+
+[[result::bad_result]]
+Effects: :: If `*this` is in <<result,value state>>, returns a reference to the stored value, otherwise throws `bad_result`.
+
+'''
+
+[[result::operator_ptr]]
+==== `operatorpass:[->]`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  T const * result<T>::operator->() const noexcept;
+
+  template <class T>
+  T * result<T>::operator->() noexcept;
+
+} }
+----
+
+Returns :: If `*this` is in <<result,value state>>, returns a pointer to the stored value; otherwise returns 0.
+
+'''
+
+[[result::operator_deref]]
+==== `operator*`
+
+.#include <boost/OpenMethod/result.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  T const & result<T>::operator*() const noexcept;
+
+  template <class T>
+  T & result<T>::operator*() noexcept;
+
+} }
+----
+
+Requires: :: `*this` must be in <<result,value state>>.
+
+Returns :: a reference to the stored value.
+
+'''
+
+[[show_in_diagnostics]]
+=== `show_in_diagnostics`
+
+.#include <boost/OpenMethod/handle_errors.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+template <class E>
+struct show_in_diagnostics: std::true_type
+{
+};
+
+} }
+----
+
+This template can be specialized to prevent error objects of sensitive types from appearing in automatically generated diagnostic messages. Example:
+
+[source,c++]
+----
+struct e_user_name
+{
+  std::string value;
+};
+
+namespace boost { namespace OpenMethod {
+
+  template <>
+  struct show_in_diagnostics<e_user_name>: std::false_type
+  {
+  };
+
+} }
+----
+
+[[predicates]]
+== Reference: Predicates
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+A predicate is a special type of error handler argument which enables the <<handler_selection_procedure,handler selection procedure>> to consider the _value_ of available error objects, not only their type; see <<tutorial-predicates>>.
+
+The following predicates are available:
+
+* <<match>>
+* <<match_value>>
+* <<match_member>>
+* <<catch_>>
+* <<if_not>>
+
+In addition, any user-defined type `Pred` for which `<<is_predicate>><Pred>::value` is `true` is treated as a predicate. In this case, it is required that:
+
+* `Pred` defines an accessible member type `error_type` to specify the error object type it requires;
+* `Pred` defines an accessible static member function `evaluate`, which returns a boolean type, and can be invoked with an object of type `error_type const &`;
+* A `Pred` instance can be initialized with an object of type `error_type`.
+
+When an error handler takes an argument of a predicate type `Pred`, the <<handler_selection_procedure,handler selection procedure>> drops the handler if an error object `e` of type `Pred::error_type` is not available. Otherwise, the handler is dropped if `Pred::evaluate(e)` returns `false`. If the handler is invoked, the `Pred` argument is initialized with `Pred{e}`.
+
+NOTE: Predicates are evaluated before the error handler is invoked, and so they may not access dynamic state (of course the error handler itself can access dynamic state, e.g. by means of lambda expression captures).
+
+.Example 1:
+[source,c++]
+----
+enum class my_error { e1 = 1, e2, e3 };
+
+struct my_pred
+{
+  using error_type = my_error; <1>
+
+  static bool evaluate(my_error) noexcept; <2>
+
+  my_error matched; <3>
+}
+
+namespace boost { namespace OpenMethod {
+
+  template <>
+  struct is_predicate<my_pred>: std::true_type
+  {
+  };
+
+} }
+----
+<1> This predicate requires an error object of type `my_error`.
+<2> The handler selection procedure will call this function with an object `e` of type `my_error` to evaluate the predicate...
+<3> ...and if successful, initialize the `my_pred` error handler argument with `my_pred{e}`.
+
+.Example 2:
+[source,c++]
+----
+struct my_pred
+{
+  using error_type = OpenMethod::e_errno; <1>
+
+  static bool evaluate(OpenMethod::e_errno const &) noexcept; <2>
+
+  OpenMethod::e_errno const & matched; <3>
+}
+
+namespace boost { namespace OpenMethod {
+
+  template <>
+  struct is_predicate<my_pred>: std::true_type
+  {
+  };
+
+} }
+----
+<1> This predicate requires an error object of type <<e_errno>>.
+<2> The handler selection procedure will call this function with an object `e` of type `e_errno` to evaluate the predicate...
+<3> ...and if successful, initialize the `my_pred` error handler argument with `my_pred{e}`.
+
+'''
+
+[[catch_]]
+=== `catch_`
+
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class... Ex>
+  struct catch_
+  {
+    std::exception const & matched;
+
+    // Other members not specified
+  };
+
+  template <class Ex>
+  struct catch_<Ex>
+  {
+    Ex const & matched;
+
+    // Other members not specified
+  };
+
+  template <class... Ex>
+  struct is_predicate<catch_<Ex...>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<is_predicate>>
+
+When an error handler takes an argument of type that is an instance of the `catch_` template, the <<handler_selection_procedure,handler selection procedure>> first checks if a `std::exception` was caught. If not, the handler is dropped. Otherwise, the handler is dropped if the caught `std::exception` can not be `dynamic_cast` to any of the specified types `Ex...`.
+
+If the error handler is invoked, the `matched` member can be used to access the exception object.
+
+NOTE: See also: <<tutorial-predicates>>.
+
+TIP: While `catch_` requires that the caught exception object is of type that derives from `std::exception`, it is not required that the `Ex...` types derive from `std::exception`.
+
+.Example 1:
+[source,c++]
+----
+struct ex1: std::exception { };
+struct ex2: std::exception { };
+
+OpenMethod::try_catch(
+
+  []
+  {
+    return f(); // throws
+  },
+
+  [](OpenMethod::catch_<ex1, ex2> c)
+  { <1>
+    assert(dynamic_cast<ex1 const *>(&c.matched) || dynamic_cast<ex2 const *>(&c.matched));
+    ....
+  } );
+----
+<1> The handler is selected if `f` throws an exception of type `ex1` or `ex2`.
+
+.Example 2:
+[source,c++]
+----
+struct ex1: std::exception { };
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  [](ex1 & e)
+  { <1>
+    ....
+  } );
+----
+<1> The handler is selected if `f` throws an exception of type `ex1`. Notice that if we're interested in only one exception type, as long as that type derives from `std::exception`, the use of `catch_` is not required.
+
+'''
+
+[[if_not]]
+=== `if_not`
+
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class P>
+  struct if_not
+  {
+    <<deduced>> matched;
+
+    // Other members not specified
+  };
+
+  template <class P>
+  struct is_predicate<if_not<P>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<is_predicate>>
+
+
+When an error handler takes an argument of type `if_not<P>`, where `P` is another predicate type, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object of the type `E` required by `P` is available. If not, the handler is dropped. Otherwise, the handler is dropped if `P` evaluates to `true`.
+
+If the error handler is invoked, `matched` can be used to access the matched object `E`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+.Example:
+[source,c++]
+----
+enum class my_enum { e1, e2, e3 };
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::if_not<OpenMethod::match<my_enum, my_enum::e1, my_enum::e2>> )
+  { <1>
+    ....
+  } );
+----
+
+[.text-right]
+<<try_handle_some>> | <<match>>
+
+<1> The handler is selected if an object of type `my_enum`, which [.underline]#*does not*# compare equal to `e1` or to `e2`, [.underline]#*is*# associated with the detected error.
+
+'''
+
+[[match]]
+=== `match`
+
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class E, auto... V>
+  class match
+  {
+    <<deduced>> matched;
+
+    // Other members not specified
+  };
+
+  template <class E, auto... V>
+  struct is_predicate<match<E, V...>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<is_predicate>>
+
+
+When an error handler takes an argument of type `match<E, V...>`, the <<handler_selection_procedure,handler selection procedure>> first checks if an error object `e` of type `E` is available. If it is not available, the handler is dropped. Otherwise, the handler is dropped if the following condition is not met:
+
+[.text-center]
+`p~1~ || p~2~ || ... p~n~`.
+
+Where `p~i~` is equivalent to `e == V~i~`, except if `V~i~` is pointer to a function
+
+[.text-center]
+`bool (*V~i~)(T x)`.
+
+In this case it is required that `V~i~ != 0` and that `x` can be initialized with `E const &`, and then `p~i~` is equivalent to:
+
+[.text-center]
+`V~i~(e)`.
+
+[[category]]
+In particular, it is valid to pass pointer to the function `OpenMethod::category<Enum>` for any `V~i~`, where:
+
+[.text-center]
+`std::is_error_code_enum<Enum>::value || std::is_error_condition_enum<Enum>::value`.
+
+In this case, `p~i~` is equivalent to:
+
+[.text-center]
+`&e.category() == &std::error_code(Enum{}).category()`.
+
+If the error handler is invoked, `matched` can be used to access `e`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+.Example 1: Handling of a subset of enum values.
+[source,c++]
+----
+enum class my_enum { e1, e2, e3 };
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match<my_enum, my_enum::e1, my_enum::e2> m )
+  { <1>
+    static_assert(std::is_same<my_enum, decltype(m.matched)>::value);
+    assert(m.matched == my_enum::e1 || m.matched == my_enum::e2);
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `my_enum`, which compares equal to `e1` or to `e2`, is associated with the detected error.
+
+.Example 2: Handling of a subset of std::error_code enum values (requires at least {CPP}17, see Example 4 for a {CPP}11-compatible workaround).
+[source,c++]
+----
+enum class my_enum { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_enum>: std::true_type { };
+}
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match<std::error_code, my_enum::e1, my_enum::e2> m )
+  { <1>
+    static_assert(std::is_same<std::error_code const &, decltype(m.matched)>::value);
+    assert(m.matched == my_enum::e1 || m.matched == my_enum::e2);
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `std::error_code`, which compares equal to `e1` or to `e2`, is associated with the detected error.
+
+.Example 3: Handling of a specific std::error_code::category (requires at least {CPP}17).
+[source,c++]
+----
+enum class enum_a { a1=1, a2, a3 };
+enum class enum_b { b1=1, b2, b3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<enum_a>: std::true_type { };
+  template <> struct is_error_code_enum<enum_b>: std::true_type { };
+}
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match<std::error_code, OpenMethod::category<enum_a>, enum_b::b2> m )
+  { <1>
+    static_assert(std::is_same<std::error_code const &, decltype(m.matched)>::value);
+    assert(&m.matched.category() == &std::error_code(enum_{}).category() || m.matched == enum_b::b2);
+    ....
+  } );
+----
+<1> The handler is selected if an object of type `std::error_code`, which either has the same `std::error_category` as that of `enum_a` or compares equal to `enum_b::b2`, is associated with the detected error.
+
+[[condition]]
+The use of the `OpenMethod::category` template requires automatic deduction of the type of each `V~i~`, which in turn requires {CPP}17 or newer. The same applies to the use of `std::error_code` as `E`, but OpenMethod provides a compatible {CPP}11 workaround for this case, using the template `condition`. The following is equivalent to Example 2:
+
+.Example 4: Handling of a subset of std::error_code enum values using the {CPP}11-compatible API.
+[source,c++]
+----
+enum class my_enum { e1=1, e2, e3 };
+
+namespace std
+{
+  template <> struct is_error_code_enum<my_enum>: std::true_type { };
+}
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match<OpenMethod::condition<my_enum>, my_enum::e1, my_enum::e2> m )
+  {
+    static_assert(std::is_same<std::error_code const &, decltype(m.matched)>::value);
+    assert(m.matched == my_enum::e1 || m.matched == my_enum::e2);
+    ....
+  } );
+----
+
+Instead of a set of values, the `match` template can be given pointers to functions that implement a custom comparison. In the following example, we define a handler which will be selected to handle any error that communicates an object of the user-defined type `severity` with value greater than 4:
+
+.Example 5: Handling of failures with severity::value greater than a specified threshold (requires at least {CPP}17).
+[source,c++]
+----
+struct severity { int value; }
+
+template <int S>
+constexpr bool severity_greater_than( severity const & e ) noexcept
+{
+  return e.value > S;
+}
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match<severity, severity_greater_than<4>> m )
+  {
+    static_assert(std::is_same<severity const &, decltype(m.matched)>::value);
+    assert(m.matched.value > 4);
+    ....
+  } );
+
+----
+
+'''
+
+[[match_member]]
+=== `match_member`
+
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <auto, auto... V>
+  struct match_member;
+
+  template <class E, class T, T E::* P, auto... V>
+  struct match_member<P, V...>
+  {
+    E const & matched;
+
+    // Other members not specified
+  };
+
+  template <auto P, auto... V>
+  struct is_predicate<match_member<P, V...>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<is_predicate>>
+
+
+This predicate is similar to <<match_value>>, but able to bind any accessible data member of `E`; e.g. `match_member<&E::value, V...>` is equivalent to `match_value<E, V...>`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+WARNING: `match_member` requires at least {CPP}17, whereas `match_value` does not.
+
+'''
+
+[[match_value]]
+=== `match_value`
+
+.#include <boost/OpenMethod/pred.hpp>
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+  template <class E, auto... V>
+  struct match_value
+  {
+    E const & matched;
+
+    // Other members not specified
+  };
+
+  template <class E, auto... V>
+  struct is_predicate<match_value<E, V...>>: std::true_type
+  {
+  };
+
+} }
+----
+[.text-right]
+<<is_predicate>>
+
+
+This predicate is similar to <<match>>, but where `match` compares the available error object `e` of type `E` to the specified values `V...`, `match_value` works with `e.value`.
+
+NOTE: See also <<tutorial-predicates>>.
+
+.Example:
+[source,c++]
+----
+struct e_errno { int value; }
+
+OpenMethod::try_handle_some(
+
+  []
+  {
+    return f(); // returns OpenMethod::result<T>
+  },
+
+  []( OpenMethod::match_value<e_errno, ENOENT> m )
+  { <1>
+    static_assert(std::is_same<e_errno const &, decltype(m.matched)>::value);
+    assert(m.matched.value == ENOENT);
+    ....
+  } );
+----
+<1> The handler is selected if an object of type <<e_errno>>, with `.value` equal to `ENOENT`, is associated with the detected error.
+
+[[traits]]
+== Reference: Traits
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+[[is_predicate]]
+=== `is_predicate`
+
+[source,c++]
+.#include <boost/OpenMethod/pred.hpp>>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class T>
+  struct is_predicate: std::false_type
+  {
+  };
+
+} }
+----
+
+The `is_predicate` template is used by the <<handler_selection_procedure,handler selection procedure>> to detect predicate types. See <<tutorial-predicates>>.
+
+'''
+
+[[is_result_type]]
+=== `is_result_type`
+
+[source,c++]
+.#include <boost/OpenMethod/error.hpp>>
+----
+namespace boost { namespace OpenMethod {
+
+  template <class R>
+  struct is_result_type: std::false_type
+  {
+  };
+
+} }
+----
+
+The error handling functionality provided by <<try_handle_some>> and <<try_handle_all>> -- including the ability to <<tutorial-loading,load>> error objects of arbitrary types -- is compatible with any external `result<T>` type R, as long as for a given object `r` of type `R`:
+
+* If `bool(r)` is `true`, `r` indicates success, in which case it is valid to call `r.value()` to recover the `T` value.
+* Otherwise `r` indicates a failure, in which case it is valid to call `r.error()`. The returned value is used to initialize an `error_id` (note: `error_id` can be initialized by `std::error_code`).
+
+To use an external `result<T>`  type R, you must specialize the `is_result_type` template so that `is_result_type<R>::value` evaluates to `true`.
+
+Naturally, the provided `OpenMethod::<<result>><T>` class template satisfies these requirements. In addition, it allows error objects to be transported across thread boundaries, using a <<try_capture_all>>.
+
+[[macros]]
+== Reference: Macros
+
+TIP: The contents of each Reference section are organized alphabetically.
+
+'''
+
+[[BOOST_OpenMethod_ASSIGN]]
+=== `BOOST_OpenMethod_ASSIGN`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+#define BOOST_OpenMethod_ASSIGN(v, r)\
+  auto && <<temp>> = r;\
+  if( !<<temp>> )\
+    return <<temp>>.error();\
+  v = std::forward<decltype(<<temp>>)>(<<temp>>).value()
+----
+
+`BOOST_OpenMethod_ASSIGN` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
+
+In case of success, the result `value()` of type `T` is assigned to the specified variable `v`, which must have been declared prior to invoking `BOOST_OpenMethod_ASSIGN`. However, it is possible to use `BOOST_OpenMethod_ASSIGN` to declare a new variable, by passing in `v` its type together with its name, e.g. `BOOST_OpenMethod_ASSIGN(auto && x, f())` calls `f`, forwards errors to the caller, while capturing successful values in `x`.
+
+NOTE: See also <<BOOST_OpenMethod_AUTO>>.
+
+'''
+
+[[BOOST_OpenMethod_AUTO]]
+=== `BOOST_OpenMethod_AUTO`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+#define BOOST_OpenMethod_AUTO(v, r)\
+  BOOST_OpenMethod_ASSIGN(auto v, r)
+----
+[.text-right]
+<<BOOST_OpenMethod_ASSIGN>>
+
+`BOOST_OpenMethod_AUTO` is useful when calling a function that returns `result<T>` (other than `result<void>`), if the desired behavior is to forward any errors to the caller verbatim.
+
+.Example:
+[source,c++]
+----
+OpenMethod::result<int> compute_value();
+
+OpenMethod::result<float> add_values()
+{
+  BOOST_OpenMethod_AUTO(v1, compute_value()); <1>
+  BOOST_OpenMethod_AUTO(v2, compute_value()); <2>
+  return v1 + v2;
+}
+----
+<1> Call `compute_value`, bail out on failure, define a local variable `v1` on success.
+<2> Call `compute_value` again, bail out on failure, define a local variable `v2` on success.
+
+Of course, we could write `add_value` without using `BOOST_OpenMethod_AUTO`. This is equivalent:
+
+----
+OpenMethod::result<float> add_values()
+{
+  auto v1 = compute_value();
+  if( !v1 )
+    return v1.error();
+
+  auto v2 = compute_value();
+  if( !v2 )
+    return v2.error();
+
+  return v1.value() + v2.value();
+}
+----
+
+NOTE: See also <<BOOST_OpenMethod_ASSIGN>>.
+
+'''
+
+[[BOOST_OpenMethod_CHECK]]
+=== `BOOST_OpenMethod_CHECK`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+#if BOOST_OpenMethod_CFG_GNUC_STMTEXPR
+
+#define BOOST_OpenMethod_CHECK(r)\
+  ({\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+      return <<temp>>.error();\
+    std::move(<<temp>>);\
+  }).value()
+
+#else
+
+#define BOOST_OpenMethod_CHECK(r)\
+  {\
+    auto && <<temp>> = (r);\
+    if( !<<temp>> )\
+      return <<temp>>.error();\
+  }
+
+#endif
+----
+
+`BOOST_OpenMethod_CHECK` is useful when calling a function that returns `result<void>`, if the desired behavior is to forward any errors to the caller verbatim.
+
+.Example:
+[source,c++]
+----
+OpenMethod::result<void> send_message( char const * msg );
+
+OpenMethod::result<int> compute_value();
+
+OpenMethod::result<int> say_hello_and_compute_value()
+{
+  BOOST_OpenMethod_CHECK(send_message("Hello!")); <1>
+  return compute_value();
+}
+----
+
+<1> Try to send a message, then compute a value, report errors using BOOST_OpenMethod_CHECK.
+
+Equivalent implementation without `BOOST_OpenMethod_CHECK`:
+
+----
+OpenMethod::result<float> add_values()
+{
+  auto r = send_message("Hello!");
+  if( !r )
+    return r.error();
+
+  return compute_value();
+}
+----
+
+If `BOOST_OpenMethod_CFG_GNUC_STMTEXPR` is `1` (which is the default under `pass:[__GNUC__]`), `BOOST_OpenMethod_CHECK` expands to a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which allows its use with non-`void` result types in any expression; see <<checking_for_errors>>.
+
+'''
+
+[[BOOST_OpenMethod_THROW_EXCEPTION]]
+=== `BOOST_OpenMethod_THROW_EXCEPTION`
+
+[source,c++]
+.#include <boost/OpenMethod/exception.hpp>
+----
+#define BOOST_OpenMethod_THROW_EXCEPTION <<exact-dedfinition-unspecified>>
+----
+
+Effects: :: `BOOST_OpenMethod_THROW_EXCEPTION(e...)` is equivalent to `OpenMethod::<<throw_exception>>(e...)`, except the current source location is automatically communicated with the thrown exception, in a `<<e_source_location>>` object (in addition to all `e...` objects).
+
+'''
+
+[[BOOST_OpenMethod_NEW_ERROR]]
+=== `BOOST_OpenMethod_NEW_ERROR`
+
+.#include <boost/OpenMethod/error.hpp>
+[source,c++]
+----
+#define BOOST_OpenMethod_NEW_ERROR <<exact-definition-unspecified>>
+----
+
+Effects: :: `BOOST_OpenMethod_NEW_ERROR(e...)` is equivalent to `OpenMethod::<<new_error>>(e...)`, except the current source location is automatically passed, in a `<<e_source_location>>` object (in addition to all `e...` objects).
+
+[[configuration]]
+== Configuration
+
+The following configuration macros are recognized:
+
+* `BOOST_OpenMethod_CFG_DIAGNOSTICS`: Defining this macro as `0` stubs out both <<diagnostic_info>> and <<diagnostic_details>> (if the macro is left undefined, OpenMethod defines it as `1`).
+
+* `BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR`: Defining this macro as `0` disables the `std::error_code` / `std::error_condition` integration. In this case OpenMethod does not `#include <system_error>`, which may be too heavy for embedded platforms (if the macro is left undefined, OpenMethod defines it as `1`).
+
+* `BOOST_OpenMethod_CFG_STD_STRING`: Defining this macro as `0` disables all use of `std::string` (this requires `BOOST_OpenMethod_CFG_DIAGNOSTICS=0` as well). In this case OpenMethod does not `#include <string>` which may be too heavy for embedded platforms (if the macro is left undefined, OpenMethod defines it as `1`).
+
+* `BOOST_OpenMethod_CFG_CAPTURE`: Defining this macro as `0` disables <<try_capture_all>>, which (only if used) allocates memory dynamically (if the macro is left undefined, OpenMethod defines it as `1`).
+
+* `BOOST_OpenMethod_CFG_GNUC_STMTEXPR`: This macro controls whether or not <<BOOST_OpenMethod_CHECK>> is defined in terms of a https://gcc.gnu.org/onlinedocs/gcc/Statement-Exprs.html[GNU C statement expression], which enables its use to check for errors similarly to how the questionmark operator works in some languages (see <<checking_for_errors>>). By default the macro is defined as `1` under `pass:[__GNUC__]`, otherwise as `0`.
+
+* `BOOST_OpenMethod_CFG_WIN32`: Defining this macro as 1 enables the default constructor in <<e_LastError>>, and the automatic conversion to string (via `FormatMessageA`) when <<diagnostic_details>> is printed. If the macro is left undefined, OpenMethod defines it as `0` (even on windows, since including `windows.h` is generally not desirable). Note that the `e_LastError` type itself is available on all platforms, there is no need for conditional compilation in error handlers that use it.
+
+* `BOOST_OpenMethod_NO_EXCEPTIONS`: Disables all exception handling support. If left undefined, OpenMethod defines it automatically based on the compiler configuration (e.g. `-fno-exceptions`).
+
+* `BOOST_OpenMethod_NO_THREADS`: Disables all thread safety in OpenMethod.
+
+[[configuring_tls_access]]
+=== Configuring TLS Access
+
+OpenMethod requires support for thread-local `void` pointers. By default, this is implemented by means of the {CPP}11 `thread_local` keyword, but in order to support <<embedded_platforms,embedded platforms>>, it is possible to configure OpenMethod to use an array of thread local pointers instead, by defining `BOOST_OpenMethod_USE_TLS_ARRAY`. In this case, the user is required to define the following two functions to implement the required TLS access:
+
+[source,c++]
+----
+namespace boost { namespace OpenMethod {
+
+namespace tls
+{
+    void * read_void_ptr( int tls_index ) noexcept;
+    void write_void_ptr( int tls_index, void * p ) noexcept;
+}
+
+} }
+----
+
+TIP: For efficiency, `read_void_ptr` and `write_void_ptr` should be defined `inline`.
+
+Under `BOOST_OpenMethod_USE_TLS_ARRAY` the following additional configuration macros are recognized:
+
+* `BOOST_OpenMethod_CFG_TLS_ARRAY_START_INDEX` specifies the start TLS array index available to OpenMethod (if the macro is left undefined, OpenMethod defines it as `0`).
+
+* `BOOST_OpenMethod_CFG_TLS_ARRAY_SIZE` may be defined to specify the size of the TLS array. In this case TLS indices are validated via `BOOST_OpenMethod_ASSERT` before being passed to `read_void_ptr` / `write_void_ptr`.
+
+* `BOOST_OpenMethod_CFG_TLS_INDEX_TYPE` may be defined to specify the integral type used to store assigned TLS indices (if the macro is left undefined, OpenMethod defines it as `unsigned char`).
+
+TIP: Reporting error objects of types that are not used by the program to handle failures does not consume TLS pointers. The minimum size of the TLS pointer array required by OpenMethod is the total number of different types used as arguments to error handlers (in the entire program), plus one.
+
+WARNING: Beware of `read_void_ptr`/`write_void_ptr` accessing thread local pointers beyond the static boundaries of the thread local pointer array; this will likely result in undefined behavior.
+
+[[embedded_platforms]]
+=== Embedded Platforms
+
+Defining `BOOST_OpenMethod_EMBEDDED` is equivalent to the following:
+
+[source,c++]
+----
+#ifndef BOOST_OpenMethod_CFG_DIAGNOSTICS
+#   define BOOST_OpenMethod_CFG_DIAGNOSTICS 0
+#endif
+
+#ifndef BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR
+#   define BOOST_OpenMethod_CFG_STD_SYSTEM_ERROR 0
+#endif
+
+#ifndef BOOST_OpenMethod_CFG_STD_STRING
+#   define BOOST_OpenMethod_CFG_STD_STRING 0
+#endif
+
+#ifndef BOOST_OpenMethod_CFG_CAPTURE
+#   define BOOST_OpenMethod_CFG_CAPTURE 0
+#endif
+----
+
+OpenMethod supports FreeRTOS out of the box, please define `BOOST_OpenMethod_TLS_FREERTOS` (in which case OpenMethod automatically defines `BOOST_OpenMethod_EMBEDDED`, if it is not defined already).
+
+For other embedded platforms, please define `BOOST_OpenMethod_USE_TLS_ARRAY`, see <<configuring_tls_access>>.
+
+If your program does not use concurrency at all, simply define `BOOST_OpenMethod_NO_THREADS`, which requires no TLS support at all (but is NOT thread-safe).
+
+TIP: Contrary to popular belief, exception handling works great on embedded platforms. In https://www.youtube.com/watch?v=BGmzMuSDt-Y[this talk] Khalil Estell demonstrates that using exceptions to handle errors leads to a significant reduction in firmware code size (of course OpenMethod works with or without exception handling).
+
+[[portability]]
+== Portability
+
+The source code is compatible with {CPP}11 or newer.
+
+OpenMethod uses thread-local storage (only for pointers). By default, this is implemented via the {CPP}11 `thread_local` storage class specifier, but the library is easily configurable to use any platform-specific TLS API instead (it ships with built-in support for FreeRTOS). See <<configuration>>.
+
+== Running the Unit Tests
+
+The unit tests can be run with https://mesonbuild.com[Meson Build] or with Boost Build. To run the unit tests:
+
+=== Meson Build
+
+Clone OpenMethod into any local directory and execute:
+
+[source,sh]
+----
+cd OpenMethod
+meson bld/debug
+cd bld/debug
+meson test
+----
+
+See `meson_options.txt` found in the root directory for available build options.
+
+=== Boost Build
+
+Assuming the current working directory is `<boostroot>/libs/OpenMethod`:
+
+[source,sh]
+----
+../../b2 test
+----
+
+== Benchmark
+
+https://github.com/boostorg/OpenMethod/blob/master/benchmark/benchmark.md[This benchmark] compares the performance of OpenMethod, Boost Outcome and `tl::expected`.
+
+[[rationale]]
+== Design Rationale
+
+Definition: :: Objects that carry information about error conditions are called error objects. For example, objects of type `std::error_code` are error objects.
+
+NOTE: The following reasoning is independent of the mechanism used to transport error objects, whether it is exception handling or anything else.
+
+Definition: :: Depending on their interaction with error objects, functions can be classified as follows:
+* *Error initiating*: functions that initiate error conditions by creating new error objects.
+* *Error neutral*: functions that forward to the caller error objects communicated by lower-level functions they call.
+* *Error handling*: functions that dispose of error objects they have received, recovering normal program operation.
+
+A crucial observation is that _error initiating_ functions are typically low-level functions that lack any context and can not determine, much less dictate, the correct program behavior in response to the errors they may initiate. Error conditions which (correctly) lead to termination in some programs may (correctly) be ignored in others; yet other programs may recover from them and resume normal operation.
+
+The same reasoning applies to _error neutral_ functions, but in this case there is the additional issue that the errors they need to communicate, in general, are initiated by functions multiple levels removed from them in the call chain, functions which usually are -- and should be treated as -- implementation details. An _error neutral_ function should not be coupled with error object types communicated by _error initiating_ functions, for the same reason it should not be coupled with any other aspect of their interface.
+
+Finally, _error handling_ functions, by definition, have the full context they need to deal with at least some, if not all, failures. In their scope it is an absolute necessity that the author knows exactly what information must be communicated by lower level functions in order to recover from each error condition. Specifically, none of this necessary information can be treated as implementation details; in this case, the coupling which is to be avoided in _error neutral_ functions is in fact desirable.
+
+We're now ready to define our
+
+Design goals: ::
+* *Error initiating* functions should be able to communicate [underline]#all# information available to them that is relevant to the failure being reported.
+* *Error neutral* functions should not be coupled with error types communicated by lower-level _error initiating_ functions. They should be able to augment any failure with additional relevant information available to them.
+* *Error handling* functions should be able to access all the information communicated by _error initiating_ or _error neutral_ functions that is needed in order to deal with failures.
+
+The design goal that _error neutral_ functions are not coupled with the static type of error objects that pass through them seems to require dynamic polymorphism and therefore dynamic memory allocations (the Boost Exception library meets this design goal at the cost of dynamic memory allocation).
+
+As it turns out, dynamic memory allocation is not necessary due to the following
+
+Fact: ::
+* *Error handling* functions "know" which of the information _error initiating_ and _error neutral_ functions are [.underline]#able# to communicate is [.underline]#actually needed# in order to deal with failures in a particular program. Ideally, no resources should be [.line-through]#used# wasted storing or communicating information which is not currently needed to handle errors, [.underline]#even if it is relevant to the failure#.
+
+For example, if a library function is able to communicate an error code but the program does not need to know the exact error code, then that information may be ignored at the time the library function attempts to communicate it. On the other hand, if an _error handling_ function needs that information, the memory needed to store it can be reserved statically in its scope.
+
+The OpenMethod functions <<try_handle_some>>, <<try_handle_all>> and <<try_catch>> implement this idea. Users provide error handling lambda functions, each taking arguments of the types it needs in order to recover from a particular error condition. OpenMethod simply provides the space needed to store these types (in the form of a `std::tuple`, using automatic storage duration) until they are passed to a suitable handler.
+
+At the time this space is reserved in the scope of an error handling function, `thread_local` pointers of the required error types are set to point to the corresponding objects within it. Later on, _error initiating_ or _error neutral_ functions wanting to communicate an error object of a given type `E` use the corresponding `thread_local` pointer to detect if there is currently storage available for this type:
+
+* If the pointer is not null, storage is available and the object is moved into the pointed storage, exactly once -- regardless of how many levels of function calls must unwind before an _error handling_ function is reached.
+* If the pointer is null, storage is not available and the error object is discarded, since no error handling function makes any use of it in this program -- saving resources.
+
+This almost works, except we need to make sure that _error handling_ functions are protected from accessing stale error objects stored in response to previous failures, which would be a serious logic error. To this end, each occurrence of an error is assigned a unique <<error_id>>. Each of the `E...` objects stored in error handling scopes is assigned an `error_id` as well, permanently associating it with a particular failure.
+
+Thus, to handle a failure we simply match the available error objects (associated with its unique `error_id`) with the argument types required by each user-provided error handling function. In terms of {CPP} exception handling, it is as if we could write something like:
+
+[source,c++]
+----
+try
+{
+  auto r = process_file();
+
+  //Success, use r:
+  ....
+}
+
+catch(file_read_error &, e_file_name const & fn, e_errno const & err)
+{
+  std::cerr <<
+    "Could not read " << fn << ", errno=" << err << std::endl;
+}
+
+catch(file_read_error &, e_errno const & err)
+{
+  std::cerr <<
+    "File read error, errno=" << err << std::endl;
+}
+
+catch(file_read_error &)
+{
+  std::cerr << "File read error!" << std::endl;
+}
+----
+
+Of course this syntax is not valid, so OpenMethod uses lambda functions to express the same idea:
+
+[source,c++]
+----
+OpenMethod::try_catch(
+
+  []
+  {
+    auto r = process_file(); //Throws in case of failure, error objects stored inside the try_catch scope
+
+    //Success, use r:
+    ....
+  }
+
+  [](file_read_error &, e_file_name const & fn, e_errno const & err)
+  {
+    std::cerr <<
+      "Could not read " << fn << ", errno=" << err << std::endl;
+  },
+
+  [](file_read_error &, e_errno const & err)
+  {
+    std::cerr <<
+      "File read error, errno=" << err << std::endl;
+  },
+
+  [](file_read_error &)
+  {
+    std::cerr << "File read error!" << std::endl;
+  } );
+----
+
+[.text-right]
+<<try_catch>> | <<e_file_name>> | <<e_errno>>
+
+Similar syntax works without exception handling as well. Below is the same snippet, written using `<<result>><T>`:
+
+[source,c++]
+----
+return OpenMethod::try_handle_some(
+
+  []() -> OpenMethod::result<void>
+  {
+    BOOST_OpenMethod_AUTO(r, process_file()); //In case of errors, error objects are stored inside the try_handle_some scope
+
+    //Success, use r:
+    ....
+
+    return { };
+  }
+
+  [](OpenMethod::match<error_enum, file_read_error>, e_file_name const & fn, e_errno const & err)
+  {
+    std::cerr <<
+      "Could not read " << fn << ", errno=" << err << std::endl;
+  },
+
+  [](OpenMethod::match<error_enum, file_read_error>, e_errno const & err)
+  {
+    std::cerr <<
+      "File read error, errno=" << err << std::endl;
+  },
+
+  [](OpenMethod::match<error_enum, file_read_error>)
+  {
+    std::cerr << "File read error!" << std::endl;
+  } );
+----
+
+[.text-right]
+<<result>> | <<try_handle_some>> | <<match>> | <<e_file_name>> | <<e_errno>>
+
+== Limitations
+
+When using dynamic linking, it is required that error types are declared with `default` visibility, e.g.:
+
+[source,c++]
+----
+struct __attribute__ ((visibility ("default"))) my_error_info
+{
+    int value;
+};
+----
+
+This works as expected except on Windows, where thread-local storage is not shared between the individual binary modules. For this reason, to transport error objects across DLL boundaries, it is required that they're captured in a <<polymorphic_context>>, just like when <<tutorial-async>>.
+
+TIP: When using dynamic linking, it is always best to define module interfaces in terms of C (and implement them in {CPP} if appropriate).
+
+== Alternatives to OpenMethod
+
+* https://www.boost.org/doc/libs/release/libs/exception/doc/boost-exception.html[Boost Exception]
+* https://ned14.github.io/outcome[Boost Outcome]
+* https://github.com/TartanLlama/expected[`tl::expected`]
+
+Below we offer a comparison of Boost OpenMethod to Boost Exception and to Boost Outcome.
+
+[[boost_exception]]
+=== Comparison to Boost Exception
+
+While OpenMethod can be used without exception handling, in the use case when errors are communicated by throwing exceptions, it can be viewed as a better, more efficient alternative to Boost Exception. OpenMethod has the following advantages over Boost Exception:
+
+* OpenMethod does not allocate memory dynamically;
+* OpenMethod does not waste system resources communicating error objects not used by specific error handling functions;
+* OpenMethod does not store the error objects in the exception object, and therefore it is able to augment exceptions thrown by external libraries (Boost Exception can only augment exceptions of types that derive from `boost::exception`).
+
+The following tables outline the differences between the two libraries which should be considered when code that uses Boost Exception is refactored to use OpenMethod instead.
+
+NOTE: It is possible to access Boost Exception error information using the OpenMethod error handling interface. See <<tutorial-boost_exception_integration>>.
+
+.Defining a custom type for transporting values of type T
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+|
+[source,c++,options="nowrap"]
+----
+typedef error_info<struct my_info_,T> my_info;
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`]
+|
+[source,c++,options="nowrap"]
+----
+struct my_info { T value; };
+----
+|====
+
+.Passing arbitrary info at the point of the throw
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+|
+[source,c++,options="nowrap"]
+----
+throw my_exception() <<
+  my_info(x) <<
+  my_info(y);
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
+|
+[source,c++,options="nowrap"]
+----
+OpenMethod::throw_exception( my_exception(),
+  my_info{x},
+  my_info{y} );
+----
+[.text-right]
+<<throw_exception>>
+|====
+
+.Augmenting exceptions in error neutral contexts
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+|
+[source,c++,options="nowrap"]
+----
+try
+{
+  f();
+}
+catch( boost::exception & e )
+{
+  e << my_info(x);
+  throw;
+}
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] \| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_operator_shl.html[`operator<<`]
+|
+[source,c++,options="nowrap"]
+----
+auto load = OpenMethod::on_error( my_info{x} );
+
+f();
+----
+[.text-right]
+<<on_error>>
+|====
+
+.Obtaining arbitrary info at the point of the catch
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+|
+[source,c++,options="nowrap"]
+----
+try
+{
+  f();
+}
+catch( my_exception & e )
+{
+  if( T * v = get_error_info<my_info>(e) )
+  {
+    //my_info is available in e.
+  }
+}
+----
+[.text-right]
+https://www.boost.org/doc/libs/release/libs/exception/doc/get_error_info.html[`boost::get_error_info`]
+|
+[source,c++,options="nowrap"]
+----
+OpenMethod::try_catch(
+  []
+  {
+    f(); // throws
+  }
+  [](my_exception &, my_info const & x)
+  {
+    //my_info is available with
+    //the caught exception.
+  } );
+----
+[.text-right]
+<<try_catch>>
+|====
+
+.Transporting of error objects
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+| All supplied https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects are allocated dynamically and stored in the https://www.boost.org/doc/libs/release/libs/exception/doc/exception.html[`boost::exception`] subobject of exception objects.
+|  User-defined error objects are stored statically in the scope of <<try_catch>>, but only if their types are needed to handle errors; otherwise they are discarded.
+|====
+
+.Transporting of error objects across thread boundaries
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+| https://www.boost.org/doc/libs/release/libs/exception/doc/exception_ptr.html[`boost::exception_ptr`] automatically captures https://www.boost.org/doc/libs/release/libs/exception/doc/error_info.html[`boost::error_info`] objects stored in a `boost::exception` and can transport them across thread boundaries.
+| Transporting error objects across thread boundaries requires the use of <<capture>>.
+|====
+
+.Printing of error objects in automatically-generated diagnostic information messages
+[cols="1a,1a",options="header",stripes=none]
+|====
+| Boost Exception | OpenMethod
+| `boost::error_info` types may define conversion to `std::string` by providing `to_string` overloads *or* by overloading `operator<<` for `std::ostream`.
+| OpenMethod does not use `to_string`. Error types may define `operator<<` overloads for `std::ostream`.
+|====
+
+[WARNING]
+====
+The fact that Boost Exception stores all supplied `boost::error_info` objects -- while OpenMethod discards them if they aren't needed -- affects the completeness of the message we get when we print `OpenMethod::<<diagnostic_info>` objects, compared to the string returned by https://www.boost.org/doc/libs/release/libs/exception/doc/diagnostic_information.html[`boost::diagnostic_information`].
+
+If the user requires a complete diagnostic message, the solution is to use `OpenMethod::<<diagnostic_details>>`. In this case, before unused error objects are discarded by OpenMethod, they are converted to string and printed. Note that this allocates memory dynamically.
+====
+
+'''
+
+[[boost_outcome]]
+=== Comparison to Boost Outcome
+
+==== Design Differences
+
+Like OpenMethod, the https://ned14.github.io/outcome[Boost Outcome] library is designed to work in low latency environments. It provides two class templates, `result<>` and `outcome<>`:
+
+* `result<T,EC,NVP>` can be used as the return type in `noexcept` functions which may fail, where `T` specifies the type of the return value in case of success, while `EC` is an "error code" type. Semantically, `result<T,EC>` is similar to `std::variant<T,EC>`. Naturally, `EC` defaults to `std::error_code`.
+* `outcome<T,EC,EP,NVP>` is similar to `result<>`, but in case of failure, in addition to the "error code" type `EC` it can hold a "pointer" object of type `EP`, which defaults to `std::exception_ptr`.
+
+NOTE: `NVP` is a policy type used to customize the behavior of `.value()` when the `result<>` or the `outcome<>` object contains an error.
+
+The idea is to use `result<>` to communicate failures which can be fully specified by an "error code", and `outcome<>` to communicate failures that require additional information.
+
+Another way to name this design is that `result<>` is used when it suffices to return an error object of some static type `EC`, while `outcome<>` can also transport a polymorphic error object, using the pointer type `EP`.
+
+NOTE: In the default configuration of `outcome<T>` the additional information -- or the additional polymorphic object -- is an exception object held by `std::exception_ptr`. This targets the use case when an exception thrown by a lower-level library function needs to be transported through some intermediate contexts that are not exception-safe, to a higher-level context able to handle it. OpenMethod directly supports this use as well, see <<exception_to_result>>.
+
+Similar reasoning drives the design of OpenMethod as well. The difference is that while both libraries recognize the need to transport "something else" in addition to an "error code", OpenMethod provides an efficient solution to this problem, while Outcome shifts this burden to the user.
+
+The `OpenMethod::result<>` template deletes both `EC` and `EP`, which decouples it from the type of the error objects that are transported in case of a failure. This enables lower-level functions to freely communicate anything and everything they "know" about the failure: error code, even multiple error codes, file names, URLs, port numbers, etc. At the same time, the higher-level error handling functions control which of this information is needed in a specific client program and which is not. This is ideal, because:
+
+* Authors of lower-level library functions lack context to determine which of the information that is both relevant to the error _and_ naturally available to them needs to be communicated in order for a particular client program to recover from that error;
+* Authors of higher-level error handling functions can easily and confidently make this determination, which they communicate naturally to OpenMethod, by simply writing the different error handlers. OpenMethod will transport the needed error objects while discarding the ones handlers don't care to use, saving resources.
+
+TIP: The OpenMethod examples include an adaptation of the program from the https://ned14.github.io/outcome/tutorial/essential/result/[Boost Outcome `result<>` tutorial]. You can https://github.com/boostorg/OpenMethod/blob/master/example/print_half.cpp?ts=4[view it on GitHub].
+
+NOTE: Programs using OpenMethod for error handling are not required to use `OpenMethod::result<T>`; for example, it is possible to use `outcome::result<T>` with OpenMethod.
+
+[[interoperability]]
+==== The Interoperability Problem
+
+The Boost Outcome documentation discusses the important problem of bringing together multiple libraries -- each using its own error reporting mechanism -- and incorporating them in a robust error handling infrastructure in a client program.
+
+Users are advised that whenever possible they should use a common error handling system throughout their entire codebase, but because this is not practical, both the `result<>` and the `outcome<>` templates can carry user-defined "payloads".
+
+The following analysis is from the Boost Outcome documentation:
+====
+If library A uses `result<T, libraryA::failure_info>`, and library B uses `result<T, libraryB::error_info>` and so on, there becomes a problem for the application writer who is bringing in these third party dependencies and tying them together into an application. As a general rule, each third party library author will not have built in explicit interoperation support for unknown other third party libraries. The problem therefore lands with the application writer.
+
+The application writer has one of three choices:
+
+. In the application, the form of result used is `result<T, std::variant<E1, E2, ...>>` where `E1, E2 …` are the failure types for every third party library in use in the application. This has the advantage of preserving the original information exactly, but comes with a certain amount of use inconvenience and maybe excessive coupling between high level layers and implementation detail.
+
+. One can translate/map the third party’s failure type into the application’s failure type at the point of the failure exiting the third party library and entering the application. One might do this, say, with a C preprocessor macro wrapping every invocation of the third party API from the application. This approach may lose the original failure detail, or mis-map under certain circumstances if the mapping between the two systems is not one-one.
+
+. One can type erase the third party’s failure type into some application failure type, which can later be reconstituted if necessary. *This is the cleanest solution with the least coupling issues and no problems with mis-mapping*, but it almost certainly requires the use of `malloc` which the previous two did not.
+====
+
+The analysis above (emphasis added) is clear and precise, but OpenMethod and Boost Outcome tackle the interoperability problem differently:
+
+* The Boost Outcome design asserts that the "cleanest" solution based on type-erasure is suboptimal ("almost certainly requires the use of `malloc`pass:[]"), and instead provides a system for injecting custom converters into the `outcome::convert` namespace, used to translate between library-specific and program-wide error types, even though this approach "may lose the original failure detail".
+
+* The OpenMethod design asserts that coupling the signatures of <<rationale,error neutral>> functions with the static types of the error objects they need to forward to the caller <<translation,does not scale>>, and instead transports error objects directly to error handling scopes where they are stored statically, effectively implementing the third choice outlined above (without the use of `malloc`).
+
+Further, consider that Outcome aims to hopefully become _the_ one error handling API all libraries would use, and in theory everyone would benefit from uniformity and standardization. But the reality is that this is wishful thinking. In fact, that reality is reflected in the design of `outcome::result<>`, in its lack of commitment to using `std::error_code` for its intended purpose: to be _the_ standard type for transporting error codes. The fact is that `std::error_code` became _yet another_ error code type programmers need to understand and support.
+
+In contrast, the design of OpenMethod acknowledges that {CPP} programmers don't even agree on what a string is. If your project uses 10 different libraries, this probably means 15 different ways to report errors, sometimes across uncooperative interfaces (e.g. C APIs). OpenMethod helps you get the job done.
+
+== Acknowledgements
+
+Documentation rendered by https://asciidoctor.org/[Asciidoctor] with https://github.com/zajo/asciidoctor_skin[these customizations].
