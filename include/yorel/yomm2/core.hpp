@@ -1,17 +1,18 @@
-#ifndef YOREL_YOMM2_CORE_INCLUDED
-#define YOREL_YOMM2_CORE_INCLUDED
+#ifndef YOREL_YOMM2_CORE_HPP
+#define YOREL_YOMM2_CORE_HPP
 
 #include <functional>
 #include <memory>
 
-#include <yorel/yomm2/policy.hpp>
+#include <boost/assert.hpp>
 
-#pragma push_macro("min")
-#undef min
+#include <yorel/yomm2/policy.hpp>
 
 #ifndef YOMM2_DEFAULT_POLICY
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
+
+#include <yorel/yomm2/detail.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -21,14 +22,6 @@ struct virtual_;
 
 template<class Class, class Policy>
 struct virtual_ptr;
-
-} // namespace yomm2
-} // namespace yorel
-
-#include <yorel/yomm2/detail.hpp>
-
-namespace yorel {
-namespace yomm2 {
 
 // -----------------------------------------------------------------------------
 // Method
@@ -40,7 +33,7 @@ template<typename Key, typename R, class Policy, typename... A>
 struct method<Key, R(A...), Policy> : detail::method_info {
     using self_type = method;
     using policy_type = Policy;
-    using declared_argument_types = boost::mp11::mp_list<A...>;
+    using declared_argument_types = detail::types<A...>;
     using call_argument_types = boost::mp11::mp_transform<
         detail::remove_virtual, declared_argument_types>;
     using virtual_argument_types =
@@ -53,7 +46,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     static constexpr auto arity = detail::arity<A...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
 
-    static size_t slots_strides[2 * arity - 1];
+    static std::size_t slots_strides[2 * arity - 1];
     // Slots followed by strides. No stride for first virtual argument.
     // For 1-method: the offset of the method in the method table, which
     // contains a pointer to a function.
@@ -75,20 +68,20 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     const std::uintptr_t* vptr(const ArgType& arg) const;
 
     template<class Error>
-    void check_static_offset(size_t actual, size_t expected) const;
+    void check_static_offset(std::size_t actual, std::size_t expected) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     std::uintptr_t
     resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
-        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     std::uintptr_t resolve_multi_first(
         const ArgType& arg, const MoreArgTypes&... more_args) const;
 
     template<
-        size_t VirtualArg, typename MethodArgList, typename ArgType,
+        std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     std::uintptr_t resolve_multi_next(
         const std::uintptr_t* dispatch, const ArgType& arg,
@@ -99,9 +92,10 @@ struct method<Key, R(A...), Policy> : detail::method_info {
 
     return_type operator()(detail::remove_virtual<A>... args) const;
 
-    static return_type
+    static BOOST_NORETURN return_type
     not_implemented_handler(detail::remove_virtual<A>... args);
-    static return_type ambiguous_handler(detail::remove_virtual<A>... args);
+    static BOOST_NORETURN return_type
+    ambiguous_handler(detail::remove_virtual<A>... args);
 
     template<typename Container>
     using next = detail::next_aux<method, Container>;
@@ -113,7 +107,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
             static detail::definition_info info;
 
             if (info.method) {
-                assert(info.method == &fn);
+                BOOST_ASSERT(info.method == &fn);
                 return;
             }
 
@@ -122,7 +116,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
             info.next = reinterpret_cast<void**>(next);
             using parameter_types =
                 detail::parameter_type_list_t<decltype(Function)>;
-            info.pf = (void*)detail::wrapper<
+            info.pf = (void*)detail::thunk<
                 Policy, signature_type, Function, parameter_types>::fn;
             using spec_type_ids = detail::type_id_list<
                 Policy,
@@ -130,7 +124,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
                     Policy, declared_argument_types, parameter_types>>;
             info.vp_begin = spec_type_ids::begin;
             info.vp_end = spec_type_ids::end;
-            fn.specs.push_front(info);
+            fn.specs.push_back(info);
         }
     };
 
@@ -158,7 +152,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
 
     template<auto F>
     struct add_member_function
-        : add_function<detail::member_function_wrapper<F, decltype(F)>::fn> {};
+        : add_function<detail::member_function_thunk<F, decltype(F)>::fn> {};
 
     template<auto... F>
     struct add_member_functions {
@@ -188,7 +182,7 @@ struct class_declaration
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
 template<class... Classes>
-struct class_declaration<boost::mp11::mp_list<Classes...>>
+struct class_declaration<detail::types<Classes...>>
     : detail::class_declaration_aux<
           detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
 
@@ -272,8 +266,7 @@ class virtual_ptr {
                         Policy, Other&>::polymorphic_type>;
             } else {
                 vptr = Policy::template static_vptr<
-                    typename detail::virtual_traits<
-                        Policy, Other&>::polymorphic_type>;
+                    typename virtual_traits<Policy, Other&>::polymorphic_type>;
             }
         } else {
             auto index = dynamic_id;
@@ -424,11 +417,11 @@ method<Key, R(A...), Policy>::method() {
     this->not_implemented = (void*)not_implemented_handler;
     this->ambiguous = (void*)ambiguous_handler;
     this->method_type = Policy::template static_type<method>();
-    Policy::methods.push_front(*this);
+    Policy::methods.push_back(*this);
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-size_t method<Key, R(A...), Policy>::slots_strides[2 * arity - 1];
+std::size_t method<Key, R(A...), Policy>::slots_strides[2 * arity - 1];
 
 template<typename Key, typename R, class Policy, typename... A>
 method<Key, R(A...), Policy>::~method() {
@@ -452,9 +445,9 @@ method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     std::uintptr_t pf;
 
     if constexpr (arity == 1) {
-        pf = resolve_uni<boost::mp11::mp_list<A...>, ArgType...>(args...);
+        pf = resolve_uni<types<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, boost::mp11::mp_list<A...>, ArgType...>(
+        pf = resolve_multi_first<0, types<A...>, ArgType...>(
             args...);
     }
 
@@ -477,7 +470,7 @@ method<Key, R(A...), Policy>::vptr(const ArgType& arg) const {
 template<typename Key, typename R, class Policy, typename... A>
 template<class Error>
 inline void method<Key, R(A...), Policy>::check_static_offset(
-    size_t actual, size_t expected) const {
+    std::size_t actual, std::size_t expected) const {
     using namespace detail;
 
     if (actual != expected) {
@@ -526,7 +519,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
 
 template<typename Key, typename R, class Policy, typename... A>
 template<
-    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
@@ -543,7 +536,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
             vtbl = vptr<ArgType>(arg);
         }
 
-        size_t slot;
+        std::size_t slot;
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[0];
@@ -570,7 +563,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
 
 template<typename Key, typename R, class Policy, typename... A>
 template<
-    size_t VirtualArg, typename MethodArgList, typename ArgType,
+    std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
@@ -588,7 +581,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
             vtbl = vptr<ArgType>(arg);
         }
 
-        size_t slot, stride;
+        std::size_t slot, stride;
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[VirtualArg];
@@ -617,7 +610,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_next(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::not_implemented_handler(
     detail::remove_virtual<A>... args) {
 
@@ -630,7 +623,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::min(sizeof...(args), resolution_error::max_types),
+            types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -639,7 +632,7 @@ method<Key, R(A...), Policy>::not_implemented_handler(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-typename method<Key, R(A...), Policy>::return_type
+BOOST_NORETURN typename method<Key, R(A...), Policy>::return_type
 method<Key, R(A...), Policy>::ambiguous_handler(
     detail::remove_virtual<A>... args) {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
@@ -651,7 +644,7 @@ method<Key, R(A...), Policy>::ambiguous_handler(
         auto ti_iter = types;
         (..., (*ti_iter++ = detail::get_tip<Policy, A>(args)));
         std::copy_n(
-            types, std::min(sizeof...(args), resolution_error::max_types),
+            types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
         Policy::error(error_type(std::move(error)));
     }
@@ -659,28 +652,18 @@ method<Key, R(A...), Policy>::ambiguous_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
-#ifdef YOMM2_SHARED
-
-yOMM2_API error_handler_type set_error_handler(error_handler_type handler);
-
-#else
-
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
 
 inline error_handler_type set_error_handler(error_handler_type handler) {
     auto p = &default_policy::error;
-    auto prev= default_policy::error;
+    auto prev = default_policy::error;
     default_policy::error = handler;
     return prev;
 }
 
 #endif
 
-#endif
-
 } // namespace yomm2
 } // namespace yorel
-
-#pragma pop_macro("min")
 
 #endif

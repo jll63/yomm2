@@ -59,7 +59,7 @@ struct Cat : Animal {
         yomm2_vptr = intrusive::static_vptr<Cat>;
     }
 
-    void pet_vf() override{/*purr*/};
+    void pet_vf() override { /*purr*/ };
 };
 
 struct YOMM2_SYMBOL(pet_ref);
@@ -84,7 +84,7 @@ struct Cat : Animal {
         yomm2_vptr = intrusive::static_vptr<Cat>;
     }
 
-    void pet_vf() override{/*purr*/};
+    void pet_vf() override { /*purr*/ };
 };
 
 } // namespace dyn
@@ -92,8 +92,9 @@ struct Cat : Animal {
 template<class Policy>
 struct use_policy {
     use_policy() {
-        YOMM2_STATIC(use_classes<
-                     dyn::Animal, dyn::Cat, stat::Animal, stat::Cat, Policy>);
+        YOMM2_STATIC(
+            use_classes<
+                dyn::Animal, dyn::Cat, stat::Animal, stat::Cat, Policy>);
         update<Policy>();
     }
 };
@@ -187,7 +188,7 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(iptr, pet_iptr(dyn_ref));
 
 // -----------------------------------------------------------------------------
-// std::std_unordered_map
+// std_unordered_map
 
 declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 
@@ -261,7 +262,7 @@ YOMM2_STATIC(use_policy<intrusive>);
 BENCHMARK(stat_iptr, pet_iptr(stat_ref));
 
 // -----------------------------------------------------------------------------
-// std::std_unordered_map
+// std_unordered_map
 
 declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
 

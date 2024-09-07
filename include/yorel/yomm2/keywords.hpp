@@ -1,5 +1,5 @@
-#ifndef YOREL_YOMM2_KEYWORDS_INCLUDED
-#define YOREL_YOMM2_KEYWORDS_INCLUDED
+#ifndef YOREL_YOMM2_KEYWORDS_HPP
+#define YOREL_YOMM2_KEYWORDS_HPP
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>

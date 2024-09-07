@@ -1,9 +1,9 @@
-#ifndef YOREL_YOMM2_DETAIL_INCLUDED
-#define YOREL_YOMM2_DETAIL_INCLUDED
+#ifndef YOREL_YOMM2_DETAIL_HPP
+#define YOREL_YOMM2_DETAIL_HPP
 
-#include <boost/mp11/algorithm.hpp>
-#include <boost/mp11/bind.hpp>
-#include <boost/dynamic_bitset.hpp>
+#include <yorel/yomm2/detail/static_list.hpp>
+
+#include <boost/assert.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -22,7 +22,7 @@ template<class Policy, class TypeList>
 struct type_id_list;
 
 template<class Policy, typename... T>
-struct type_id_list<Policy, boost::mp11::mp_list<T...>> {
+struct type_id_list<Policy, types<T...>> {
     // If using deferred 'static_type', add an extra element in 'value',
     // default-initialized to zero, indicating the ids need to be resolved. Set
     // to 1 after this is done.
@@ -34,18 +34,18 @@ struct type_id_list<Policy, boost::mp11::mp_list<T...>> {
 };
 
 template<class Policy, typename... T>
-type_id type_id_list<Policy, boost::mp11::mp_list<T...>>::value[values] = {
+type_id type_id_list<Policy, types<T...>>::value[values] = {
     collect_static_type_id<Policy, T>()...};
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::begin = value;
+type_id* type_id_list<Policy, types<T...>>::begin = value;
 
 template<class Policy, typename... T>
-type_id* type_id_list<Policy, boost::mp11::mp_list<T...>>::end =
+type_id* type_id_list<Policy, types<T...>>::end =
     value + sizeof...(T);
 
 template<class Policy>
-struct type_id_list<Policy, boost::mp11::mp_list<>> {
+struct type_id_list<Policy, types<>> {
     static constexpr type_id* const begin = nullptr;
     static constexpr auto end = begin;
 };
@@ -60,27 +60,19 @@ struct dump_type {
 template<class Policy>
 struct runtime;
 
-enum { TRACE_RUNTIME = 1, TRACE_CALLS = 2 };
-
-#if defined(YOMM2_SHARED)
-extern yOMM2_API std::ostream* logs;
-extern yOMM2_API unsigned trace_flags;
-#else
-inline std::ostream* logs;
-inline unsigned trace_flags;
-#endif
+namespace mp11 = boost::mp11;
 
 template<typename>
 struct parameter_type_list;
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType(ParameterTypes...)> {
-    using type = boost::mp11::mp_list<ParameterTypes...>;
+    using type = types<ParameterTypes...>;
 };
 
 template<typename ReturnType, typename... ParameterTypes>
 struct parameter_type_list<ReturnType (*)(ParameterTypes...)> {
-    using type = boost::mp11::mp_list<ParameterTypes...>;
+    using type = types<ParameterTypes...>;
 };
 
 template<typename T>
@@ -131,85 +123,28 @@ using type_next_t = decltype(type_next(std::declval<Container>()));
 template<typename Container, typename Next>
 constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
 
-// ----------
-// has_trace
-
-template<typename Container>
-auto type_trace(Container t) -> decltype(t.trace);
-
-auto type_trace(...) -> void;
-
-template<typename Container>
-constexpr bool has_trace =
-    !std::is_same_v<decltype(type_trace(std::declval<Container>())), void>;
-
 template<typename T>
 const char* default_method_name() {
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
+#ifndef BOOST_NO_RTTI
     return typeid(T).name();
 #else
     return "method";
 #endif
 }
 
-// -----------------------------------------------------------------------------
-// iterator adapter for passing range from external_vpt to fast_perfect_hash
-
-template<class PairIterator>
-class pair_first_iterator {
-    PairIterator iter;
-
-  public:
-    using iterator_category = typename std::forward_iterator_tag;
-    using difference_type = typename PairIterator::difference_type;
-    using value_type = decltype(std::declval<PairIterator>()->first);
-    using pointer = const value_type*;
-    using reference = const value_type&;
-
-    explicit pair_first_iterator(PairIterator iter) : iter(iter) {
-    }
-
-    reference operator*() const {
-        return iter->first;
-    }
-
-    pointer operator->() const {
-        return &iter->first;
-    }
-
-    pair_first_iterator& operator++() {
-        ++iter;
-        return *this;
-    }
-
-    pair_first_iterator operator++(int) const {
-        return pair_first_iterator(iter++);
-    }
-
-    friend bool
-    operator==(const pair_first_iterator& a, const pair_first_iterator& b) {
-        return a.iter == b.iter;
-    }
-
-    friend bool
-    operator!=(const pair_first_iterator& a, const pair_first_iterator& b) {
-        return a.iter != b.iter;
-    }
-};
-
 template<class...>
 struct class_declaration_aux;
 
 template<class Policy, class Class, typename... Bases>
-struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
+struct class_declaration_aux<Policy, types<Class, Bases...>>
     : class_info {
     class_declaration_aux() {
         this->type = collect_static_type_id<Policy, Class>();
         this->first_base =
-            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::begin;
+            type_id_list<Policy, types<Bases...>>::begin;
         this->last_base =
-            type_id_list<Policy, boost::mp11::mp_list<Bases...>>::end;
-        Policy::classes.push_front(*this);
+            type_id_list<Policy, types<Bases...>>::end;
+        Policy::classes.push_back(*this);
         this->is_abstract = std::is_abstract_v<Class>;
         this->static_vptr = &Policy::template static_vptr<Class>;
     }
@@ -219,23 +154,9 @@ struct class_declaration_aux<Policy, boost::mp11::mp_list<Class, Bases...>>
     }
 };
 
-// -----------
-// method info
-
-struct method_info;
-
-struct definition_info : static_chain<definition_info>::static_link {
-    ~definition_info();
-    method_info* method; // for the destructor, to remove definition
-    type_id type;        // of the function, for trace
-    void** next;
-    type_id *vp_begin, *vp_end;
-    void* pf;
-};
-
 template<typename... Ts>
 constexpr auto arity =
-    boost::mp11::mp_count_if<boost::mp11::mp_list<Ts...>, is_virtual>::value;
+    boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
 
 inline definition_info::~definition_info() {
     if (method) {
@@ -247,7 +168,7 @@ template<typename T>
 struct is_policy_aux : std::is_base_of<policy::abstract_policy, T> {};
 
 template<typename... T>
-struct is_policy_aux<boost::mp11::mp_list<T...>> : std::false_type {};
+struct is_policy_aux<types<T...>> : std::false_type {};
 
 template<typename T>
 constexpr bool is_policy = is_policy_aux<T>::value;
@@ -276,16 +197,16 @@ template<typename Method, typename Signature>
 inline typename next_ptr_t<Signature>::type next;
 
 template<typename B, typename D, typename = void>
-struct requires_dynamic_cast_refaux : std::true_type {};
+struct requires_dynamic_cast_ref_aux : std::true_type {};
 
 template<typename B, typename D>
-struct requires_dynamic_cast_refaux<
+struct requires_dynamic_cast_ref_aux<
     B, D, std::void_t<decltype(static_cast<D>(std::declval<B>()))>>
     : std::false_type {};
 
 template<class B, class D>
 constexpr bool requires_dynamic_cast =
-    requires_dynamic_cast_refaux<B, D>::value;
+    requires_dynamic_cast_ref_aux<B, D>::value;
 
 template<class Policy, class D, class B>
 decltype(auto) optimal_cast(B&& obj) {
@@ -416,8 +337,8 @@ constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
 template<class... Ts>
 using virtual_ptr_class = std::conditional_t<
     sizeof...(Ts) == 2,
-    boost::mp11::mp_second<boost::mp11::mp_list<Ts..., void>>,
-    boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>>;
+    boost::mp11::mp_second<types<Ts..., void>>,
+    boost::mp11::mp_first<types<Ts...>>>;
 
 template<class Policy, typename T>
 struct argument_traits {
@@ -576,37 +497,38 @@ inline uintptr_t get_tip(const T& arg) {
 
 template<typename... Classes>
 using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_back<types<Classes...>>,
     YOMM2_DEFAULT_POLICY>;
 
 template<typename... Classes>
 using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>>,
-    boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>,
-    boost::mp11::mp_list<Classes...>>;
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_pop_back<types<Classes...>>,
+    types<Classes...>>;
 
 template<class... Ts>
 using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_first<boost::mp11::mp_list<Ts...>>,
+    sizeof...(Ts) == 2, boost::mp11::mp_first<types<Ts...>>,
     YOMM2_DEFAULT_POLICY>;
-// -------
-// wrapper
+
+// -----------------------------------------------------------------------------
+// thunk
 
 template<class Policy, typename, auto, typename>
-struct wrapper;
+struct thunk;
 
 template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
-struct wrapper<
+struct thunk<
     Policy, BASE_RETURN(BASE_PARAM...), SPEC,
-    boost::mp11::mp_list<SPEC_PARAM...>> {
+    types<SPEC_PARAM...>> {
     static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
         using base_type =
-            boost::mp11::mp_first<boost::mp11::mp_list<BASE_PARAM...>>;
+            boost::mp11::mp_first<types<BASE_PARAM...>>;
         using spec_type =
-            boost::mp11::mp_first<boost::mp11::mp_list<SPEC_PARAM...>>;
+            boost::mp11::mp_first<types<SPEC_PARAM...>>;
         return SPEC(
             argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
                 remove_virtual<BASE_PARAM>(arg))...);
@@ -622,10 +544,10 @@ template<typename Method, typename Container>
 typename Method::next_type next_aux<Method, Container>::next;
 
 template<auto F, typename T>
-struct member_function_wrapper;
+struct member_function_thunk;
 
 template<auto F, class R, class C, typename... Args>
-struct member_function_wrapper<F, R (C::*)(Args...)> {
+struct member_function_thunk<F, R (C::*)(Args...)> {
     static R fn(C* this_, Args&&... args) {
         return (this_->*F)(args...);
     }
@@ -638,40 +560,40 @@ struct member_function_wrapper<F, R (C::*)(Args...)> {
 // base. The direct and its direct and indirect proper bases are included. The
 // runtime will extract the direct proper bases. See unit tests for an example.
 template<typename... Cs>
-using inheritance_map = boost::mp11::mp_list<boost::mp11::mp_push_front<
+using inheritance_map = types<boost::mp11::mp_push_front<
     boost::mp11::mp_filter_q<
         boost::mp11::mp_bind_back<std::is_base_of, Cs>,
-        boost::mp11::mp_list<Cs...>>,
+        types<Cs...>>,
     Cs>...>;
 
 template<class Policy, class... Classes>
 struct use_classes_aux;
 
 template<class Policy, class... Classes>
-struct use_classes_aux<Policy, boost::mp11::mp_list<Classes...>> {
+struct use_classes_aux<Policy, types<Classes...>> {
     using type = boost::mp11::mp_apply<
         std::tuple,
         boost::mp11::mp_transform_q<
             boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
             boost::mp11::mp_apply<
-                inheritance_map, boost::mp11::mp_list<Classes...>>>>;
+                inheritance_map, types<Classes...>>>>;
 };
 
 template<class Policy, class... Classes, class... MoreClassLists>
 struct use_classes_aux<
     Policy,
-    boost::mp11::mp_list<boost::mp11::mp_list<Classes...>, MoreClassLists...>>
+    types<types<Classes...>, MoreClassLists...>>
     : use_classes_aux<
           Policy,
           boost::mp11::mp_append<
-              boost::mp11::mp_list<Classes...>, MoreClassLists...>>
+              types<Classes...>, MoreClassLists...>>
 
 {};
 
 template<typename... Ts>
 using second_last = boost::mp11::mp_at_c<
-    boost::mp11::mp_list<Ts...>,
-    boost::mp11::mp_size<boost::mp11::mp_list<Ts...>>::value - 2>;
+    types<Ts...>,
+    boost::mp11::mp_size<types<Ts...>>::value - 2>;
 
 template<class... Classes>
 using use_classes_macro = typename std::conditional_t<
@@ -679,225 +601,10 @@ using use_classes_macro = typename std::conditional_t<
     use_classes_aux<
         second_last<Classes...>,
         boost::mp11::mp_pop_back<
-            boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>,
+            boost::mp11::mp_pop_back<types<Classes...>>>>,
     use_classes_aux<
-        boost::mp11::mp_back<boost::mp11::mp_list<Classes...>>,
-        boost::mp11::mp_pop_back<boost::mp11::mp_list<Classes...>>>>::type;
-
-std::ostream* log_on(std::ostream* os);
-std::ostream* log_off();
-
-// -----------------------------------------------------------------------------
-// tracing
-
-struct rflush {
-    std::size_t width;
-    std::size_t value;
-    explicit rflush(std::size_t width, std::size_t value)
-        : width(width), value(value) {
-    }
-};
-
-struct type_name {
-    type_name(type_id type) : type(type) {
-    }
-    type_id type;
-};
-
-template<class Policy>
-struct trace_type {
-    static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::trace_output>;
-
-    std::size_t indentation_level{0};
-
-    trace_type& operator++() {
-        if constexpr (trace_enabled) {
-            if (Policy::trace_enabled) {
-                for (int i = 0; i < indentation_level; ++i) {
-                    Policy::trace_stream << "  ";
-                }
-            }
-        }
-
-        return *this;
-    }
-
-    struct indent {
-        trace_type& trace;
-        int by;
-
-        explicit indent(trace_type& trace, int by = 2) : trace(trace), by(by) {
-            trace.indentation_level += by;
-        }
-
-        ~indent() {
-            trace.indentation_level -= by;
-        }
-    };
-};
-
-template<class Policy, typename T, typename F>
-auto& write_range(trace_type<Policy>& trace, detail::range<T> range, F fn) {
-    if constexpr (trace_type<Policy>::trace_enabled) {
-        if (Policy::trace_enabled) {
-            trace << "(";
-            const char* sep = "";
-            for (auto value : range) {
-                trace << sep << fn(value);
-                sep = ", ";
-            }
-
-            trace << ")";
-        }
-    }
-
-    return trace;
-}
-
-template<class Policy, typename T>
-auto& operator<<(trace_type<Policy>& trace, const T& value) {
-    if constexpr (trace_type<Policy>::trace_enabled) {
-        if (Policy::trace_enabled) {
-            Policy::trace_stream << value;
-        }
-    }
-    return trace;
-}
-
-template<class Policy>
-auto& operator<<(trace_type<Policy>& trace, const rflush& rf) {
-    if constexpr (trace_type<Policy>::trace_enabled) {
-        if (Policy::trace_enabled) {
-            auto pad = rf.width;
-            auto remain = rf.value;
-
-            int digits = 1;
-            auto tmp = rf.value / 10;
-
-            while (tmp) {
-                ++digits;
-                tmp /= 10;
-            }
-
-            while (digits < rf.width) {
-                trace << " ";
-                ++digits;
-            }
-
-            trace << rf.value;
-        }
-    }
-
-    return trace;
-}
-
-template<class Policy>
-auto& operator<<(
-    trace_type<Policy>& trace, const boost::dynamic_bitset<>& bits) {
-    if constexpr (trace_type<Policy>::trace_enabled) {
-        if (Policy::trace_enabled) {
-            if (Policy::trace_enabled) {
-                auto i = bits.size();
-                while (i != 0) {
-                    --i;
-                    Policy::trace_stream << bits[i];
-                }
-            }
-        }
-    }
-
-    return trace;
-}
-
-template<class Policy>
-auto& operator<<(
-    trace_type<Policy>& trace, const detail::range<type_id*>& tips) {
-    return write_range(trace, tips, [](auto tip) { return type_name(tip); });
-}
-
-template<class Policy, typename T>
-auto& operator<<(trace_type<Policy>& trace, const detail::range<T>& range) {
-    return write_range(trace, range, [](auto value) { return value; });
-}
-
-template<class Policy>
-auto& operator<<(trace_type<Policy>& trace, const type_name& manip) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
-        Policy::type_name(manip.type, trace);
-    }
-
-    return trace;
-}
-
-// -----------------------------------------------------------------------------
-// lightweight ostream
-
-struct ostdstream {
-    FILE* stream = nullptr;
-
-    ostdstream(FILE* stream = nullptr) : stream(stream) {
-    }
-
-    void on(FILE* stream = stderr) {
-        this->stream = stream;
-    }
-
-    void off() {
-        this->stream = nullptr;
-    }
-
-    bool is_on() const {
-        return stream != nullptr;
-    }
-};
-
-struct ostderr : ostdstream {
-    ostderr() : ostdstream(stderr) {
-    }
-};
-
-inline ostdstream cerr;
-
-inline ostdstream& operator<<(ostdstream& os, const char* str) {
-    if (os.stream) {
-        fputs(str, os.stream);
-    }
-
-    return os;
-}
-
-inline ostdstream& operator<<(ostdstream& os, const std::string_view& view) {
-    if (os.stream) {
-        fwrite(view.data(), sizeof(*view.data()), view.length(), os.stream);
-    }
-
-    return os;
-}
-
-inline ostdstream& operator<<(ostdstream& os, const void* value) {
-    if (os.stream) {
-        std::array<char, 20> str;
-        auto end = std::to_chars(
-                       str.data(), str.data() + str.size(),
-                       reinterpret_cast<uintptr_t>(value), 16)
-                       .ptr;
-        os << std::string_view(str.data(), end - str.data());
-    }
-
-    return os;
-}
-
-inline ostdstream& operator<<(ostdstream& os, std::size_t value) {
-    if (os.stream) {
-        std::array<char, 20> str;
-        auto end =
-            std::to_chars(str.data(), str.data() + str.size(), value).ptr;
-        os << std::string_view(str.data(), end - str.data());
-    }
-
-    return os;
-}
+        boost::mp11::mp_back<types<Classes...>>,
+        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
 
 struct empty_base {};
 
@@ -914,206 +621,6 @@ template<class Method>
 struct has_static_offsets<
     Method, std::void_t<decltype(static_offsets<Method>::slots)>>
     : std::true_type {};
-
-// -----------------------------------------------------------------------------
-// encode/decode dispatch data
-
-constexpr std::uint16_t stop_bit = 1 << (sizeof(uint16_t) * 8 - 1);
-constexpr std::uint16_t index_bit = stop_bit >> 1;
-
-template<class Policy, typename Data>
-void decode_dispatch_data(Data& init) {
-    using namespace yorel::yomm2::detail;
-
-    constexpr auto pointer_size = sizeof(std::uintptr_t);
-
-    trace_type<Policy> trace;
-    using indent = typename trace_type<Policy>::indent;
-
-    trace << "Decoding dispatch data for "
-          << type_name(Policy::template static_type<Policy>()) << "\n";
-
-    auto method_count = 0, multi_method_count = 0;
-
-    for (auto& method : Policy::methods) {
-        ++method_count;
-
-        if (method.arity() >= 2) {
-            ++multi_method_count;
-        }
-    }
-
-    ++trace << method_count << " methods, " << multi_method_count
-            << " multi-methods\n";
-
-    // First copy the slots and strides to the static arrays in methods. Also
-    // build an array of arrays of pointer to method definitions. Methods and
-    // definitions are in reverse order, because of how 'chain' works. While
-    // building the array of array of defintions, we put them back in the order
-    // in which the compiler saw them.
-    auto packed_slots_iter = init.encoded.slots;
-    auto methods = (method_info**)alloca(method_count * pointer_size);
-    auto methods_iter = methods;
-    auto method_defs = (uintptr_t**)alloca(method_count * pointer_size);
-    auto method_defs_iter = method_defs;
-    auto dispatch_tables =
-        (std::uintptr_t**)alloca(method_count * pointer_size);
-    auto multi_method_to_method =
-        (std::size_t*)alloca(multi_method_count * sizeof(std::size_t));
-    auto multi_method_to_method_iter = multi_method_to_method;
-
-    {
-        auto method_index = 0;
-
-        for (auto& method : Policy::methods) {
-            ++trace << "method " << method.name << "\n";
-            indent _(trace);
-
-            *methods_iter++ = &method;
-
-            ++trace << "specializations:\n";
-
-            for (auto& spec : method.specs) {
-                indent _(trace);
-                ++trace << spec.pf << " " << type_name(spec.type) << "\n";
-            }
-
-            auto slots_strides_count = 2 * method.arity() - 1;
-
-            // copy slots and strides into the method's static
-            ++trace << "installing " << slots_strides_count
-                    << " slots and strides\n";
-            std::copy_n(
-                packed_slots_iter, slots_strides_count,
-                method.slots_strides_ptr);
-            packed_slots_iter += slots_strides_count;
-
-            auto specs =
-                (uintptr_t*)alloca((method.specs.size() + 2) * pointer_size);
-            *method_defs_iter++ = specs;
-            ++trace << "specs index: " << specs << "\n";
-            specs = std::transform(
-                method.specs.begin(), method.specs.end(), specs,
-                [](auto& spec) { return (uintptr_t)spec.pf; });
-            *specs++ = (uintptr_t)method.ambiguous;
-            *specs++ = (uintptr_t)method.not_implemented;
-            ++method_index;
-        }
-    }
-
-    // Decode dispatch tables for multi-methods, in place, and keep track of
-    // them in an array. We will use it when we fill the vtables.
-
-    ++trace << "decoding multi-method dispatch tables\n";
-    {
-        std::size_t method_index = 0;
-        auto dtbl_iter = init.dtbls;
-
-        for (auto& method : Policy::methods) {
-            // Resist the temptation to use 'continue' to skip uni-methods, as
-            // 'method_index' needs to be incremented.
-            if (method.arity() > 1) {
-                indent _(trace);
-
-                dispatch_tables[method_index] = dtbl_iter;
-                ++trace << "multi-method " << method_index
-                        << " dispatch table at " << dtbl_iter << "\n";
-
-                indent __(trace);
-                ++trace << "specs:";
-
-                auto defs = method_defs[method_index];
-                bool more = true;
-
-                while (more) {
-                    more = !(*dtbl_iter & stop_bit);
-                    auto spec_index = *dtbl_iter & ~stop_bit;
-                    trace << " " << spec_index;
-                    *dtbl_iter++ = defs[spec_index];
-                };
-
-                trace << "\n";
-            }
-
-            ++method_index;
-        }
-    }
-
-    ++trace << "decoding v-tables\n";
-
-    auto encode_iter = init.encoded.vtbls;
-    auto decode_iter = init.vtbls;
-    bool last;
-
-    auto fetch = [&]() {
-        assert((char*)(encode_iter + 1) >= (char*)decode_iter);
-        auto code = *encode_iter++;
-        last = code & stop_bit;
-        return code & ~stop_bit;
-    };
-
-    for (auto& cls : Policy::classes) {
-        if (*cls.static_vptr != nullptr) {
-            continue;
-        }
-
-        indent _1(trace);
-        ++trace << "class " << type_name(cls.type) << "\n";
-
-        indent _2(trace);
-
-        auto first_slot = fetch();
-        ++trace << "first slot: " << first_slot << "\n";
-
-        *cls.static_vptr = decode_iter - first_slot;
-
-        do {
-            auto code = fetch();
-
-            if (code & index_bit) {
-                auto index = code & ~index_bit;
-                ++trace << "multi-method group " << index << "\n";
-                *decode_iter++ = index;
-            } else {
-                auto method_index = code;
-                auto method = methods[method_index];
-                auto group_index = fetch(); // spec or group
-
-                if (method->arity() == 1) {
-                    ++trace << "uni-method " << method_index << " spec "
-                            << group_index;
-                    *decode_iter++ = method_defs[method_index][group_index];
-                } else {
-                    ++trace << "multi-method " << method_index << " group "
-                            << group_index;
-                    indent _(trace);
-                    trace << type_name(method->method_type);
-                    *decode_iter++ =
-                        (std::uintptr_t)(dispatch_tables[method_index] +
-                                         group_index);
-                }
-
-                trace << "\n";
-                indent _(trace);
-                ++trace << type_name(method->method_type) << "\n";
-            }
-        } while (!last);
-    }
-
-    ++trace << decode_iter << " " << encode_iter << "\n";
-
-    auto waste = sizeof(init.encoded) - sizeof(init.vtbls);
-
-    if (waste > 0) {
-        ++trace << waste << " bytes wasted\n";
-    }
-
-    using namespace policy;
-
-    if constexpr (Policy::template has_facet<policy::external_vptr>) {
-        Policy::publish_vptrs(Policy::classes.begin(), Policy::classes.end());
-    }
-}
 
 // -----------------------------------------------------------------------------
 // report

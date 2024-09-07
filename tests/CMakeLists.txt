@@ -3,54 +3,54 @@
 # See accompanying file LICENSE_1_0.txt
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-add_executable(chain chain.cpp)
-target_link_libraries(chain YOMM2::yomm2)
-add_test(NAME chain COMMAND chain)
+add_executable(test_static_list test_static_list.cpp)
+target_link_libraries(test_static_list YOMM2::yomm2)
+add_test(NAME test_static_list COMMAND test_static_list)
 
 add_executable(test_core test_core.cpp)
 target_link_libraries(test_core YOMM2::yomm2)
 add_test(NAME test_core COMMAND test_core)
 
-add_executable(templates templates.cpp)
-target_link_libraries(templates YOMM2::yomm2)
-add_test(NAME templates COMMAND templates)
+add_executable(test_templates test_templates.cpp)
+target_link_libraries(test_templates YOMM2::yomm2)
+add_test(NAME test_templates COMMAND test_templates)
 
-add_executable(compiler compiler.cpp)
-target_link_libraries(compiler YOMM2::yomm2)
-add_test(NAME compiler COMMAND compiler)
+add_executable(test_compiler test_compiler.cpp)
+target_link_libraries(test_compiler YOMM2::yomm2)
+add_test(NAME test_compiler COMMAND test_compiler)
 
-add_executable(blackbox blackbox.cpp)
-target_link_libraries(blackbox YOMM2::yomm2)
-add_test(NAME blackbox COMMAND blackbox)
+add_executable(test_blackbox test_blackbox.cpp)
+target_link_libraries(test_blackbox YOMM2::yomm2)
+add_test(NAME test_blackbox COMMAND test_blackbox)
 
 if (NOT WIN32)
-add_executable(manual_call manual_call.cpp)
-target_link_libraries(manual_call YOMM2::yomm2)
-add_test(NAME manual_call COMMAND manual_call)
+add_executable(test_manual_call test_manual_call.cpp)
+target_link_libraries(test_manual_call YOMM2::yomm2)
+add_test(NAME test_manual_call COMMAND test_manual_call)
 endif()
 
-add_executable(lab lab.cpp)
-target_link_libraries(lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME lab COMMAND lab)
+add_executable(test_lab test_lab.cpp)
+target_link_libraries(test_lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_lab COMMAND test_lab)
 
-add_executable(member_method member_method.cpp)
-target_link_libraries(member_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME member_method COMMAND member_method)
+add_executable(test_member_method test_member_method.cpp)
+target_link_libraries(test_member_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_member_method COMMAND test_member_method)
 
-add_executable(namespaces namespaces.cpp)
-target_link_libraries(namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME namespaces COMMAND namespaces)
+add_executable(test_namespaces test_namespaces.cpp)
+target_link_libraries(test_namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_namespaces COMMAND test_namespaces)
 
-add_executable(pointer_to_method pointer_to_method.cpp)
-target_link_libraries(pointer_to_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
-add_test(NAME pointer_to_method COMMAND pointer_to_method)
+add_executable(test_pointer_to_method test_pointer_to_method.cpp)
+target_link_libraries(test_pointer_to_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_pointer_to_method COMMAND test_pointer_to_method)
 
 if(YOMM2_ENABLE_BENCHMARKS AND NOT (WIN32 OR APPLE))
   add_executable(benchmarks benchmarks.cpp)
   target_link_libraries(
     benchmarks YOMM2::yomm2 benchmark::benchmark ${CMAKE_THREAD_LIBS_INIT})
-  add_executable(rdtsc-benchmark rdtsc-benchmark.cpp)
-  target_link_libraries(rdtsc-benchmark YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+  add_executable(benchmark_rdtsc benchmark_rdtsc.cpp)
+  target_link_libraries(benchmark_rdtsc YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
 add_executable(test_virtual_ptr_basic test_virtual_ptr_basic.cpp)
@@ -85,46 +85,46 @@ if (NOT MSVC)
 
   # Thanks to https://stackoverflow.com/users/3440745/tsyvarev for providing the
   # following cmake incantations.
+
+  if(CMAKE_CONFIGURATION_TYPES)
+    # Multi-configuration generator
+    #
+    # Explicitly use generator expression,
+    # so CMake won't automatically append the subdirectory with a config name.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
+  else()
+    # Single-configuration generator
+    #
+    # While it is allowable to create config-specific directory,
+    # we don't do that: every configuration already has its own build tree.
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+  endif()
+
+  add_library(test_generator_lib OBJECT test_generator_domain.cpp)
+  target_link_libraries(test_generator_lib YOMM2::yomm2)
+
+  add_executable(test_generator_gen test_generator_gen.cpp)
+  add_dependencies(test_generator_gen test_generator_lib)
+  target_link_libraries(test_generator_gen test_generator_lib YOMM2::yomm2)
+
+  set(GENERATED_FILES
+      "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_slots.hpp"
+      "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_tables.hpp"
+  )
+
+  add_custom_command(
+      OUTPUT ${GENERATED_FILES}
+      COMMAND test_generator_gen
+      DEPENDS test_generator_gen
+      WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+  )
+  add_custom_target(test_generator_generate DEPENDS ${GENERATED_FILES})
+  add_library(test_generator_generated_lib INTERFACE)
+  add_dependencies(test_generator_generated_lib test_generator_generate)
+  target_include_directories(test_generator_generated_lib INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+
+  add_executable(test_generator test_generator.cpp)
+  target_include_directories(test_generator PRIVATE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+  target_link_libraries(test_generator PRIVATE test_generator_generated_lib test_generator_lib YOMM2::yomm2)
+  add_test(NAME test_generator COMMAND test_generator)
 endif()
-
-if(CMAKE_CONFIGURATION_TYPES)
-  # Multi-configuration generator
-  #
-  # Explicitly use generator expression,
-  # so CMake won't automatically append the subdirectory with a config name.
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/$<CONFIG>)
-else()
-  # Single-configuration generator
-  #
-  # While it is allowable to create config-specific directory,
-  # we don't do that: every configuration already has its own build tree.
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-endif()
-
-add_library(test_generator_lib OBJECT test_generator_domain.cpp)
-target_link_libraries(test_generator_lib YOMM2::yomm2)
-
-add_executable(test_generator_gen test_generator_gen.cpp)
-add_dependencies(test_generator_gen test_generator_lib)
-target_link_libraries(test_generator_gen test_generator_lib YOMM2::yomm2)
-
-set(GENERATED_FILES
-    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_slots.hpp"
-    "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test_generator_tables.hpp"
-)
-
-add_custom_command(
-    OUTPUT ${GENERATED_FILES}
-    COMMAND test_generator_gen
-    DEPENDS test_generator_gen
-    WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-)
-add_custom_target(test_generator_generate DEPENDS ${GENERATED_FILES})
-add_library(test_generator_generated_lib INTERFACE)
-add_dependencies(test_generator_generated_lib test_generator_generate)
-target_include_directories(test_generator_generated_lib INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-
-add_executable(test_generator test_generator.cpp)
-target_include_directories(test_generator PRIVATE ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-target_link_libraries(test_generator PRIVATE test_generator_generated_lib test_generator_lib YOMM2::yomm2)
-add_test(NAME test_generator COMMAND test_generator)

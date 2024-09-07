@@ -3,16 +3,14 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
-#define YOREL_YOMM2_GENERATOR_GENERATE_INCLUDED
+#ifndef YOREL_YOMM2_GENERATOR_GENERATE_HPP
+#define YOREL_YOMM2_GENERATOR_GENERATE_HPP
 
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/decode.hpp>
 
 #include <boost/core/demangle.hpp>
 
-#include <cassert>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -25,6 +23,7 @@ namespace yomm2 {
 
 class generator {
   public:
+#ifndef _MSC_VER
     generator& add_forward_declaration(const std::type_info& type);
     template<typename T>
     generator& add_forward_declaration();
@@ -32,6 +31,7 @@ class generator {
     template<class Policy = YOMM2_DEFAULT_POLICY>
     generator& add_forward_declarations();
     const generator& write_forward_declarations(std::ostream& os) const;
+#endif
     template<class Policy = YOMM2_DEFAULT_POLICY>
     const generator& write_static_offsets(std::ostream& os) const;
     template<class Compiler>
@@ -82,6 +82,8 @@ inline std::unordered_set<std::string_view> generator::keywords = {
     "class", "struct", "enum",
 };
 // clang-format on
+
+#ifndef _MSC_VER
 
 inline generator& generator::add_forward_declaration(std::string_view type) {
     using namespace detail;
@@ -208,6 +210,8 @@ generator::write_forward_declarations(std::ostream& os) const {
     return *this;
 }
 
+#endif
+
 template<class T>
 const generator& generator::write_static_offsets(std::ostream& os) const {
     using namespace detail;
@@ -231,19 +235,19 @@ void generator::write_static_offsets(
     auto method_name = boost::core::demangle(
         reinterpret_cast<const std::type_info*>(method.method_type)->name());
     os << "template<> struct yorel::yomm2::detail::static_offsets<"
-       << method_name << "> {static constexpr size_t slots[] = {";
+       << method_name << "> {static constexpr std::size_t slots[] = {";
 
     os << method.slots_strides_ptr[0];
 
     if (method.arity() > 1) {
-        for (size_t i = 1; i < method.arity(); i++) {
+        for (std::size_t i = 1; i < method.arity(); i++) {
             os << ", " << method.slots_strides_ptr[i * 2 - 1];
         }
 
-        os << "}; static constexpr size_t strides[] = {";
+        os << "}; static constexpr std::size_t strides[] = {";
         auto comma = "";
 
-        for (size_t i = 1; i < method.arity(); i++) {
+        for (std::size_t i = 1; i < method.arity(); i++) {
             os << comma << method.slots_strides_ptr[i * 2];
             comma = ", ";
         }
@@ -291,10 +295,10 @@ void generator::encode_dispatch_data(
     // Calculate data sizes.
 
     auto slots_and_strides_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), size_t(0),
+        compiler.methods.begin(), compiler.methods.end(), std::size_t(0),
         [](auto sum, auto& method) { return sum + 2 * method.arity() - 1; });
     auto dispatch_tables_size = std::accumulate(
-        compiler.methods.begin(), compiler.methods.end(), size_t(0),
+        compiler.methods.begin(), compiler.methods.end(), std::size_t(0),
         [](auto sum, auto& method) {
             if (method.arity() == 1) {
                 return sum;
@@ -303,13 +307,12 @@ void generator::encode_dispatch_data(
             }
         });
 
-    size_t encode_vtbl_size = 0, decode_vtbl_size = 0;
+    std::size_t encode_vtbl_size = 0, decode_vtbl_size = 0;
 
     for (auto& cls : compiler.classes) {
         ++encode_vtbl_size; // for first slot index
 
-        for (auto& entry :
-             range(cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end())) {
+        for (auto& entry : cls.vtbl) {
             if (entry.vp_index != 0) {
                 // It's a multi-method, and not the first virtual parameter.
                 // Encode the index, it will be decoded as is.
@@ -321,7 +324,7 @@ void generator::encode_dispatch_data(
             }
         }
 
-        decode_vtbl_size += cls.vtbl.size() - cls.first_used_slot;
+        decode_vtbl_size += cls.vtbl.size() - cls.first_slot;
     }
 
     // -------------------------------------------------------------------------
@@ -401,7 +404,7 @@ void generator::encode_dispatch_data(
                       ->name())
            << "\n";
 
-        os << indent << cls.first_used_slot << ", // first used slot\n";
+        os << indent << cls.first_slot << ", // first used slot\n";
 
         for (auto& entry : cls.vtbl) {
             os << indent;
@@ -467,7 +470,7 @@ void generator::encode_dispatch_data(
 
     // -------------------------------------------------------------------------
     // Write call to decoder.
-    os << "    yorel::yomm2::detail::decode_dispatch_data<"
+    os << "    yorel::yomm2::decode_dispatch_data<"
        << (policy.empty() ? "YOMM2_DEFAULT_POLICY" : policy)
        << ">(yomm2_dispatch_data);\n\n";
 }

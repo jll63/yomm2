@@ -50,7 +50,7 @@ It provides the following static member functions:
     Writes a representation of `type` to `stream`. Used to format error
     messages, and by `update` if trace is enabled. `Stream` is a lighweight
     version of `std::ostream` with reduced functionality. It only supports
-    insertion of `const char*`, `std::string_view`, pointers and `size_t`. This
+    insertion of `const char*`, `std::string_view`, pointers and `std::size_t`. This
     function is optional; if not provided, "type_id(_type_)" is used.
 
 * `static (unspecified) type_index(type_id type);`<br>
@@ -321,26 +321,26 @@ namespace no_projection {
 //***
 
 struct Animal {
-    Animal(const char* name, size_t type) : name(name), type(type) {
+    Animal(const char* name, std::size_t type) : name(name), type(type) {
     }
 
     const char* name;
-    size_t type;
-    static constexpr size_t static_type = 1;
+    std::size_t type;
+    static constexpr std::size_t static_type = 1;
 };
 
 struct Dog : Animal {
-    Dog(const char* name, size_t type = static_type) : Animal(name, type) {
+    Dog(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static constexpr size_t static_type = 2;
+    static constexpr std::size_t static_type = 2;
 };
 
 struct Cat : Animal {
-    Cat(const char* name, size_t type = static_type) : Animal(name, type) {
+    Cat(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static constexpr size_t static_type = 3;
+    static constexpr std::size_t static_type = 3;
 };
 
 //***
@@ -465,35 +465,35 @@ namespace defered_type_id {
 //***
 
 struct Animal {
-    Animal(const char* name, size_t type) : name(name), type(type) {
+    Animal(const char* name, std::size_t type) : name(name), type(type) {
     }
 
     const char* name;
-    static size_t last_type_id;
-    static size_t static_type;
-    size_t type;
+    static std::size_t last_type_id;
+    static std::size_t static_type;
+    std::size_t type;
 };
 
-size_t Animal::last_type_id;
-size_t Animal::static_type = ++Animal::last_type_id;
+std::size_t Animal::last_type_id;
+std::size_t Animal::static_type = ++Animal::last_type_id;
 
 struct Dog : Animal {
-    Dog(const char* name, size_t type = static_type) : Animal(name, type) {
+    Dog(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static size_t static_type;
+    static std::size_t static_type;
 };
 
-size_t Dog::static_type = ++Animal::last_type_id;
+std::size_t Dog::static_type = ++Animal::last_type_id;
 
 struct Cat : Animal {
-    Cat(const char* name, size_t type = static_type) : Animal(name, type) {
+    Cat(const char* name, std::size_t type = static_type) : Animal(name, type) {
     }
 
-    static size_t static_type;
+    static std::size_t static_type;
 };
 
-size_t Cat::static_type = ++Animal::last_type_id;
+std::size_t Cat::static_type = ++Animal::last_type_id;
 
 //***
 

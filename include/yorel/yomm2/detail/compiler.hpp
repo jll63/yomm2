@@ -3,75 +3,85 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef YOREL_YOMM2_COMPILER_INCLUDED
-#define YOREL_YOMM2_COMPILER_INCLUDED
-
-#include <algorithm> // for max, transform, copy
-#include <cassert>   // for assert
-#include <cstdint>   // for uintptr_t
-#include <cstdio>
-#include <cstdlib> // for abort, getenv
-#include <deque>
-#include <list>          // for list, _List_iterator
-#include <map>           // for map
-#include <memory>        // for allocator_traits<...
-#include <stdexcept>     // for runtime_error
-#include <string>        // for char_traits, allo...
-#include <unordered_map> // for _Node_iterator
-#include <unordered_set> // for unordered_set<>::...
-#include <utility>       // for pair
-#include <vector>        // for vector, vector<>:...
-
-#include <boost/dynamic_bitset.hpp>
+#ifndef YOREL_YOMM2_DETAIL_COMPILER_HPP
+#define YOREL_YOMM2_DETAIL_COMPILER_HPP
 
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/detail/ostdstream.hpp>
+#include <yorel/yomm2/detail/trace.hpp>
+
+#include <algorithm>
+#include <cstdint>
+#include <deque>
+#include <map>
+#include <memory>
+#include <numeric>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include <boost/assert.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<class Facet, typename>
-struct has_report_aux : std::false_type {};
-
-template<class Facet>
-struct has_report_aux<Facet, std::void_t<typename Facet::report>>
-    : std::true_type {};
-
-template<class Facet>
-constexpr bool has_report = has_report_aux<Facet, void>::value;
+struct update_report : update_method_report {};
 
 template<class Reports, class Facets, typename = void>
 struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>,
+    types<Reports...>,
+    types<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports..., typename Facet::report>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
+        types<Reports..., typename Facet::report>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>,
-    boost::mp11::mp_list<Facet, MoreFacets...>, Void> {
+    types<Reports...>,
+    types<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        boost::mp11::mp_list<Reports...>,
-        boost::mp11::mp_list<MoreFacets...>>::type;
+        types<Reports...>,
+        types<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
 struct aggregate_reports<
-    boost::mp11::mp_list<Reports...>, boost::mp11::mp_list<>, Void> {
+    types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
 
-// template<class Policy>
-// using report_type = typename aggregate_reports<
-//     boost::mp11::mp_list<update_report>, typename Policy::facets>::type;
+template<class Policy>
+using report_type = typename aggregate_reports<
+    types<update_report>, typename Policy::facets>::type;
+
+inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
+    if (b.size() < a.size()) {
+        b.resize(a.size());
+    }
+
+    for (std::size_t i = 0; i < a.size(); ++i) {
+        if (a[i]) {
+            b[i] = true;
+        }
+    }
+}
+
+inline void set_bit(boost::dynamic_bitset<>& mask, std::size_t bit) {
+    if (bit >= mask.size()) {
+        mask.resize(bit + 1);
+    }
+
+    mask[bit] = true;
+}
 
 struct generic_compiler {
 
@@ -87,18 +97,18 @@ struct generic_compiler {
     };
 
     struct class_ {
-        bool is_abstract{false};
+        bool is_abstract = false;
         std::vector<type_id> type_ids;
         std::vector<class_*> transitive_bases;
         std::vector<class_*> direct_bases;
         std::vector<class_*> direct_derived;
-        std::unordered_set<class_*> compatible_classes;
+        std::unordered_set<class_*> covariant_classes;
         std::vector<parameter> used_by_vp;
-        int next_slot{0};
-        int first_used_slot{-1};
-        int layer{0};
-        std::size_t mark{0};   // temporary mark to detect cycles
-        std::size_t weight{0}; // number of proper direct or indirect bases
+        boost::dynamic_bitset<> used_slots;
+        boost::dynamic_bitset<> reserved_slots;
+        std::size_t first_slot = 0;
+        std::size_t mark = 0;   // temporary mark to detect cycles
+        std::size_t weight = 0; // number of proper direct or indirect bases
         std::vector<vtbl_entry> vtbl;
         std::uintptr_t** static_vptr;
 
@@ -169,7 +179,7 @@ struct generic_compiler {
 
     std::deque<class_> classes;
     std::vector<method> methods;
-    std::size_t class_visit = 0;
+    std::size_t class_mark = 0;
     bool compilation_done = false;
 };
 
@@ -200,6 +210,30 @@ trace_type<Policy>& operator<<(
 
     return trace;
 }
+
+struct spec_name {
+    spec_name(
+        const detail::generic_compiler::method& method,
+        const detail::generic_compiler::definition* def)
+        : method(method), def(def) {
+    }
+    const detail::generic_compiler::method& method;
+    const detail::generic_compiler::definition* def;
+};
+
+template<class Policy>
+trace_type<Policy>& operator<<(trace_type<Policy>& trace, const spec_name& sn) {
+    if (sn.def == &sn.method.ambiguous) {
+        trace << "ambiguous";
+    } else if (sn.def == &sn.method.not_implemented) {
+        trace << "not implemented";
+    } else {
+        trace << type_name(sn.def->info->type);
+    }
+
+    return trace;
+}
+
 } // namespace detail
 
 template<class Policy>
@@ -208,7 +242,7 @@ struct compiler : detail::generic_compiler {
     using type_index_type = decltype(Policy::type_index(0));
 
     typename detail::aggregate_reports<
-        boost::mp11::mp_list<update_report>, typename Policy::facets>::type
+        detail::types<update_report>, typename Policy::facets>::type
         report;
 
     std::unordered_map<type_index_type, class_*> class_map;
@@ -221,19 +255,17 @@ struct compiler : detail::generic_compiler {
 
     void resolve_static_type_ids();
     void augment_classes();
-    void calculate_compatible_classes(class_& cls);
+    void calculate_covariant_classes(class_& cls);
     void augment_methods();
-    std::vector<class_*> layer_classes();
-    void allocate_slots();
-    void allocate_slot_down(class_* cls, std::size_t slot);
-    void allocate_slot_up(class_* cls, std::size_t slot);
+    void assign_slots();
+    void assign_tree_slots(class_& cls, std::size_t base_slot);
+    void assign_lattice_slots(class_& cls);
     void build_dispatch_tables();
     void build_dispatch_table(
         method& m, std::size_t dim,
         std::vector<group_map>::const_iterator group, const bitvec& candidates,
         bool concrete);
     void install_gv();
-    void optimize();
     void print(const update_method_report& report) const;
     static std::vector<const definition*>
     best(std::vector<const definition*>& candidates);
@@ -253,11 +285,6 @@ struct compiler : detail::generic_compiler {
     static constexpr bool trace_enabled =
         Policy::template has_facet<policy::trace_output>;
     using indent = typename detail::trace_type<Policy>::indent;
-
-    template<class Stream>
-    static void write_spec_name(
-        const generic_compiler::method& method,
-        const generic_compiler::definition* def, Stream& trace);
 };
 
 compiler() -> compiler<default_policy>;
@@ -269,7 +296,6 @@ void compiler<Policy>::install_global_tables() {
     }
 
     install_gv();
-    optimize();
 
     print(report);
     ++trace << "Finished\n";
@@ -280,7 +306,7 @@ auto compiler<Policy>::compile() {
     resolve_static_type_ids();
     augment_classes();
     augment_methods();
-    allocate_slots();
+    assign_slots();
     build_dispatch_tables();
 
     compilation_done = true;
@@ -302,6 +328,8 @@ compiler<Policy>::compiler() {
 
 template<class Policy>
 void compiler<Policy>::resolve_static_type_ids() {
+    using namespace detail;
+
     auto resolve = [](type_id* p) {
         auto pf = reinterpret_cast<type_id (*)()>(*p);
         *p = pf();
@@ -313,8 +341,7 @@ void compiler<Policy>::resolve_static_type_ids() {
                 resolve(&ci.type);
 
                 if (*ci.last_base == 0) {
-                    for (auto& ti :
-                         detail::range{ci.first_base, ci.last_base}) {
+                    for (auto& ti : range{ci.first_base, ci.last_base}) {
                         resolve(&ti);
                     }
 
@@ -324,7 +351,7 @@ void compiler<Policy>::resolve_static_type_ids() {
 
         if (!Policy::methods.empty())
             for (auto& method : Policy::methods) {
-                for (auto& ti : detail::range{method.vp_begin, method.vp_end}) {
+                for (auto& ti : range{method.vp_begin, method.vp_end}) {
                     if (*method.vp_end == 0) {
                         resolve(&ti);
                         *method.vp_end = 1;
@@ -333,7 +360,7 @@ void compiler<Policy>::resolve_static_type_ids() {
                     if (!method.specs.empty())
                         for (auto& definition : method.specs) {
                             if (*definition.vp_end == 0) {
-                                for (auto& ti : detail::range{
+                                for (auto& ti : range{
                                          definition.vp_begin,
                                          definition.vp_end}) {
                                     resolve(&ti);
@@ -359,14 +386,10 @@ void compiler<Policy>::augment_classes() {
         // type_info object per class. However, it guarantees that the
         // type_index for a class has a unique value.
         for (auto& cr : Policy::classes) {
-            if constexpr (trace_enabled) {
-                {
-                    indent _(trace);
-                    ++trace << type_name(cr.type) << ": "
-                            << range{cr.first_base, cr.last_base};
-
-                    ++trace << "\n";
-                }
+            {
+                indent _(trace);
+                ++trace << type_name(cr.type) << ": "
+                        << range{cr.first_base, cr.last_base} << "\n";
             }
 
             auto& rtc = class_map[Policy::type_index(cr.type)];
@@ -423,11 +446,11 @@ void compiler<Policy>::augment_classes() {
     // At this point bases may contain duplicates, and also indirect
     // bases. Clean that up.
 
-    std::size_t mark = ++class_visit;
+    std::size_t mark = ++class_mark;
 
     for (auto& rtc : classes) {
         decltype(rtc.transitive_bases) bases;
-        mark = ++class_visit;
+        mark = ++class_mark;
 
         for (auto rtb : rtc.transitive_bases) {
             if (rtb->mark != mark) {
@@ -448,7 +471,7 @@ void compiler<Policy>::augment_classes() {
         std::sort(
             rtc.transitive_bases.begin(), rtc.transitive_bases.end(),
             [](auto a, auto b) { return a->weight > b->weight; });
-        mark = ++class_visit;
+        mark = ++class_mark;
 
         // Collect the direct base classes. The first base is certainly a
         // direct one. Remove *its* bases from the candidates, by marking
@@ -475,11 +498,12 @@ void compiler<Policy>::augment_classes() {
     }
 
     for (auto& rtc : classes) {
-        calculate_compatible_classes(rtc);
+        calculate_covariant_classes(rtc);
     }
 
     if constexpr (trace_enabled) {
         ++trace << "Inheritance lattice:\n";
+
         for (auto& rtc : classes) {
             indent _(trace);
             ++trace << rtc << "\n";
@@ -488,30 +512,29 @@ void compiler<Policy>::augment_classes() {
                 indent _(trace);
                 ++trace << "bases:      " << rtc.direct_bases << "\n";
                 ++trace << "derived:    " << rtc.direct_derived << "\n";
-                ++trace << "compatible: " << rtc.compatible_classes << "\n";
+                ++trace << "covariant: " << rtc.covariant_classes << "\n";
             }
         }
     }
 }
 
 template<class Policy>
-void compiler<Policy>::calculate_compatible_classes(class_& cls) {
-    if (!cls.compatible_classes.empty()) {
+void compiler<Policy>::calculate_covariant_classes(class_& cls) {
+    if (!cls.covariant_classes.empty()) {
         return;
     }
 
-    cls.compatible_classes.insert(&cls);
+    cls.covariant_classes.insert(&cls);
 
     for (auto derived : cls.direct_derived) {
-        if (derived->compatible_classes.empty()) {
-            calculate_compatible_classes(*derived);
+        if (derived->covariant_classes.empty()) {
+            calculate_covariant_classes(*derived);
         }
 
         std::copy(
-            derived->compatible_classes.begin(),
-            derived->compatible_classes.end(),
-            std::inserter(
-                cls.compatible_classes, cls.compatible_classes.end()));
+            derived->covariant_classes.begin(),
+            derived->covariant_classes.end(),
+            std::inserter(cls.covariant_classes, cls.covariant_classes.end()));
     }
 }
 
@@ -528,15 +551,14 @@ void compiler<Policy>::augment_methods() {
     auto meth_iter = methods.begin();
 
     for (auto& meth_info : Policy::methods) {
-        if constexpr (trace_enabled) {
-            ++trace << meth_info.name << " "
-                    << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
-        }
+        ++trace << meth_info.name << " "
+                << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
 
         indent _(trace);
 
         meth_iter->info = &meth_info;
         meth_iter->vp.reserve(meth_info.arity());
+        meth_iter->slots.resize(meth_info.arity());
         std::size_t param_index = 0;
 
         for (auto ti : range{meth_info.vp_begin, meth_info.vp_end}) {
@@ -562,12 +584,14 @@ void compiler<Policy>::augment_methods() {
         meth_iter->ambiguous.pf =
             reinterpret_cast<uintptr_t>(meth_iter->info->ambiguous);
         meth_iter->ambiguous.method_index = method_index;
-        meth_iter->ambiguous.spec_index = meth_info.specs.size();
+        auto spec_size = meth_info.specs.size();
+        meth_iter->ambiguous.spec_index = spec_size;
         meth_iter->not_implemented.pf =
             reinterpret_cast<uintptr_t>(meth_iter->info->not_implemented);
         meth_iter->not_implemented.method_index = method_index;
-        meth_iter->not_implemented.spec_index = meth_info.specs.size() + 1;
-        meth_iter->specs.resize(meth_info.specs.size());
+        meth_iter->not_implemented.spec_index = spec_size + 1;
+
+        meth_iter->specs.resize(spec_size);
         auto spec_iter = meth_iter->specs.begin();
 
         for (auto& definition_info : meth_info.specs) {
@@ -617,149 +641,145 @@ void compiler<Policy>::augment_methods() {
 }
 
 template<class Policy>
-std::vector<detail::generic_compiler::class_*> compiler<Policy>::layer_classes() {
-    ++trace << "Layering classes...\n";
+void compiler<Policy>::assign_slots() {
+    ++trace << "Allocating slots...\n";
 
-    std::vector<class_*> input;
-    input.reserve(classes.size());
-    std::transform(
-        classes.begin(), classes.end(), std::back_inserter(input),
-        [](class_& cls) { return &cls; });
+    {
+        indent _(trace);
 
-    std::vector<class_*> layered;
-    layered.reserve(classes.size());
+        ++class_mark;
 
-    for (int layer = 1; !input.empty(); ++layer) {
-        indent _(trace, 1);
-        ++trace;
-
-        for (auto class_iter = input.begin(); class_iter != input.end();) {
-            auto seen_all_bases = true;
-            auto in_this_layer = (*class_iter)->direct_bases.empty();
-
-            for (auto base : (*class_iter)->direct_bases) {
-                if (!base->layer) {
-                    seen_all_bases = false;
-                    break;
-                } else if (base->layer == layer) {
-                    in_this_layer = false;
-                    break;
+        for (auto& cls : classes) {
+            if (cls.direct_bases.size() == 0) {
+                if (std::find_if(
+                        cls.covariant_classes.begin(),
+                        cls.covariant_classes.end(), [](auto cls) {
+                            return cls->direct_bases.size() > 1;
+                        }) == cls.covariant_classes.end()) {
+                    indent _(trace);
+                    assign_tree_slots(cls, 0);
+                } else {
+                    assign_lattice_slots(cls);
                 }
-                if (base->layer == layer - 1) {
-                    in_this_layer = true;
-                }
-            }
-
-            if (seen_all_bases && in_this_layer) {
-                layered.push_back(*class_iter);
-                (*class_iter)->layer = layer;
-
-                if constexpr (trace_enabled) {
-                    trace << " " << **class_iter;
-                }
-
-                class_iter = input.erase(class_iter);
-            } else {
-                ++class_iter;
             }
         }
-        trace << "\n";
     }
 
-    return std::move(layered);
+    ++trace << "Allocating MI v-tables...\n";
+
+    {
+        indent _(trace);
+
+        for (auto& cls : classes) {
+            if (cls.used_slots.empty()) {
+                // not involved in multiple inheritance
+                continue;
+            }
+
+            auto first_slot = cls.used_slots.find_first();
+            cls.first_slot =
+                first_slot == boost::dynamic_bitset<>::npos ? 0 : first_slot;
+            cls.vtbl.resize(cls.used_slots.size() - cls.first_slot);
+            ++trace << cls << " vtbl: " << cls.first_slot << "-"
+                    << cls.used_slots.size() << " slots " << cls.used_slots
+                    << "\n";
+        }
+    }
 }
 
 template<class Policy>
-void compiler<Policy>::allocate_slots() {
-    auto layered = layer_classes();
+void compiler<Policy>::assign_tree_slots(class_& cls, std::size_t base_slot) {
+    auto next_slot = base_slot;
+    using namespace detail;
 
-    ++trace << "Allocating slots...\n";
-    indent _(trace);
+    for (const auto& mp : cls.used_by_vp) {
+        ++trace << " in " << cls << " for "
+                << type_name(mp.method->info->method_type) << " parameter "
+                << mp.param << ": " << next_slot << "\n";
+        mp.method->slots[mp.param] = next_slot++;
+    }
 
-    for (auto cls : layered) {
-        for (const auto& mp : cls->used_by_vp) {
-            std::size_t slot = cls->next_slot++;
+    cls.first_slot = 0;
+    cls.vtbl.resize(next_slot);
 
-            ++trace << mp.method->info->name << "#" << mp.param << ": slot "
-                    << slot << "\n";
+    for (auto pd : cls.direct_derived) {
+        assign_tree_slots(*pd, next_slot);
+    }
+}
+
+template<class Policy>
+void compiler<Policy>::assign_lattice_slots(class_& cls) {
+    using namespace detail;
+
+    if (cls.mark == class_mark) {
+        return;
+    }
+
+    cls.mark = class_mark;
+
+    if (!cls.used_by_vp.empty()) {
+        for (const auto& mp : cls.used_by_vp) {
+            ++trace << " in " << cls << " for "
+                    << type_name(mp.method->info->method_type) << " parameter "
+                    << mp.param << "\n";
+
             indent _(trace);
-            ++trace << *cls;
 
-            if (mp.method->slots.size() <= mp.param) {
-                mp.method->slots.resize(mp.param + 1);
+            ++trace << "reserved slots: " << cls.reserved_slots
+                    << " used slots: " << cls.used_slots << "\n";
+
+            auto unavailable_slots = cls.used_slots;
+            detail::merge_into(cls.reserved_slots, unavailable_slots);
+
+            ++trace << "unavailable slots: " << unavailable_slots << "\n";
+
+            std::size_t slot = 0;
+
+            for (; slot < unavailable_slots.size(); ++slot) {
+                if (!unavailable_slots[slot]) {
+                    break;
+                }
             }
+
+            ++trace << "first available slot: " << slot << "\n";
 
             mp.method->slots[mp.param] = slot;
+            detail::set_bit(cls.used_slots, slot);
+            detail::set_bit(cls.reserved_slots, slot);
 
-            if (cls->first_used_slot == -1) {
-                cls->first_used_slot = slot;
+            {
+                ++trace << "reserve slots " << cls.used_slots << " in:\n";
+                indent _(trace);
+
+                for (auto base : cls.transitive_bases) {
+                    ++trace << *base << "\n";
+                    detail::merge_into(cls.used_slots, base->reserved_slots);
+                }
             }
 
-            cls->mark = ++class_visit;
+            {
+                ++trace << "assign slots " << cls.used_slots << " in:\n";
+                indent _(trace);
 
-            for (auto derived : cls->direct_derived) {
-                allocate_slot_down(derived, slot);
+                for (auto covariant : cls.covariant_classes) {
+                    if (&cls != covariant) {
+                        ++trace << *covariant << "\n";
+                        detail::merge_into(
+                            cls.used_slots, covariant->used_slots);
+
+                        for (auto base : covariant->transitive_bases) {
+                            ++trace << *base << "\n";
+                            detail::merge_into(
+                                cls.used_slots, base->reserved_slots);
+                        }
+                    }
+                }
             }
-
-            ++trace << "\n";
         }
     }
 
-    for (auto& c : classes) {
-        c.vtbl.resize(c.next_slot);
-    }
-}
-
-template<class Policy>
-void compiler<Policy>::allocate_slot_down(class_* cls, std::size_t slot) {
-
-    if (cls->mark == class_visit)
-        return;
-
-    cls->mark = class_visit;
-
-    trace << " " << *cls;
-
-    assert(slot >= cls->next_slot);
-
-    cls->next_slot = slot + 1;
-
-    if (cls->first_used_slot == -1) {
-        cls->first_used_slot = slot;
-    }
-
-    for (auto b : cls->direct_bases) {
-        allocate_slot_up(b, slot);
-    }
-
-    for (auto d : cls->direct_derived) {
-        allocate_slot_down(d, slot);
-    }
-}
-
-template<class Policy>
-void compiler<Policy>::allocate_slot_up(class_* cls, std::size_t slot) {
-
-    if (cls->mark == class_visit)
-        return;
-
-    cls->mark = class_visit;
-
-    trace << " " << *cls;
-
-    assert(slot >= cls->next_slot);
-    cls->next_slot = slot + 1;
-
-    if (cls->first_used_slot == -1) {
-        cls->first_used_slot = slot;
-    }
-
-    for (auto b : cls->direct_bases) {
-        allocate_slot_up(b, slot);
-    }
-
-    for (auto d : cls->direct_derived) {
-        allocate_slot_down(d, slot);
+    for (auto pd : cls.direct_derived) {
+        assign_lattice_slots(*pd);
     }
 }
 
@@ -768,7 +788,8 @@ void compiler<Policy>::build_dispatch_tables() {
     using namespace detail;
 
     for (auto& m : methods) {
-        ++trace << "Building dispatch table for " << m.info->name << "\n";
+        ++trace << "Building dispatch table for "
+                << type_name(m.info->method_type) << "\n";
         indent _(trace);
 
         auto dims = m.arity();
@@ -785,8 +806,8 @@ void compiler<Policy>::build_dispatch_tables() {
                         << "\n";
                 indent _(trace);
 
-                for (auto compatible_class : vp->compatible_classes) {
-                    ++trace << "specs applicable to " << *compatible_class
+                for (auto covariant_class : vp->covariant_classes) {
+                    ++trace << "specs applicable to " << *covariant_class
                             << "\n";
                     bitvec mask;
                     mask.resize(m.specs.size());
@@ -795,9 +816,9 @@ void compiler<Policy>::build_dispatch_tables() {
                     indent _(trace);
 
                     for (auto& spec : m.specs) {
-                        if (spec.vp[dim]->compatible_classes.find(
-                                compatible_class) !=
-                            spec.vp[dim]->compatible_classes.end()) {
+                        if (spec.vp[dim]->covariant_classes.find(
+                                covariant_class) !=
+                            spec.vp[dim]->covariant_classes.end()) {
                             ++trace << type_name(spec.info->type) << "\n";
                             mask[group_index] = 1;
                         }
@@ -805,9 +826,9 @@ void compiler<Policy>::build_dispatch_tables() {
                     }
 
                     auto& group = dim_group[mask];
-                    group.classes.push_back(compatible_class);
+                    group.classes.push_back(covariant_class);
                     group.has_concrete_classes = group.has_concrete_classes ||
-                        !compatible_class->is_abstract;
+                        !covariant_class->is_abstract;
 
                     ++trace << "-> mask: " << mask << "\n";
                 }
@@ -829,24 +850,23 @@ void compiler<Policy>::build_dispatch_tables() {
         }
 
         for (std::size_t dim = 0; dim < m.arity(); ++dim) {
-            ++trace << "groups for dim " << dim << ":\n";
             indent _(trace);
             std::size_t group_num = 0;
+
             for (auto& [mask, group] : groups[dim]) {
+                ++trace << "groups for dim " << dim << ":\n";
+                indent _(trace);
+                ++trace << group_num << " mask " << mask << ":\n";
+
                 for (auto cls : group.classes) {
-                    auto& entry = cls->vtbl[m.slots[dim]];
+                    indent _(trace);
+                    ++trace << type_name(cls->type_ids[0]) << "\n";
+                    auto& entry = cls->vtbl[m.slots[dim] - cls->first_slot];
                     entry.method_index = &m - &methods[0];
                     entry.vp_index = dim;
                     entry.group_index = group_num;
                 }
-                if constexpr (trace_enabled) {
-                    ++trace << group_num << " mask " << mask << "\n";
-                    indent _(trace);
-                    for (auto cls :
-                         range{group.classes.begin(), group.classes.end()}) {
-                        ++trace << type_name(cls->type_ids[0]) << "\n";
-                    }
-                }
+
                 ++group_num;
             }
         }
@@ -1029,174 +1049,109 @@ inline void detail::generic_compiler::accumulate(
 }
 
 template<class Policy>
-template<class Stream>
-void compiler<Policy>::write_spec_name(
-    const generic_compiler::method& method,
-    const generic_compiler::definition* def, Stream& trace) {
-
-    if (def == &method.ambiguous) {
-        trace << "ambiguous";
-    } else if (def == &method.not_implemented) {
-        trace << "not implemented";
-    } else {
-        Policy::type_name(def->info->type, trace);
-    }
-}
-
-template<class Policy>
 void compiler<Policy>::install_gv() {
     using namespace policy;
     using namespace detail;
 
-    for (std::size_t pass = 0; pass != 2; ++pass) {
-        Policy::dispatch_data.resize(0);
+    auto dispatch_data_size = std::accumulate(
+        methods.begin(), methods.end(), std::size_t(0),
+        [](auto sum, auto& m) { return sum + m.dispatch_table.size(); });
+    dispatch_data_size = std::accumulate(
+        classes.begin(), classes.end(), dispatch_data_size,
+        [](auto sum, auto& cls) { return sum + cls.vtbl.size(); });
+
+    Policy::dispatch_data.resize(dispatch_data_size);
+    auto gv_first = Policy::dispatch_data.data();
+    auto gv_last = gv_first + Policy::dispatch_data.size();
+    auto gv_iter = gv_first;
+
+    ++trace << "Initializing multi-method dispatch tables at " << gv_iter
+            << "\n";
+
+    for (auto& m : methods) {
+        if (m.info->arity() == 1) {
+            // Uni-methods just need an index in the method table.
+            m.info->slots_strides_ptr[0] = m.slots[0];
+            continue;
+        }
+
+        // multi-methods only
+
+        auto strides_iter = std::copy(
+            m.slots.begin(), m.slots.end(), m.info->slots_strides_ptr);
+        std::copy(m.strides.begin(), m.strides.end(), strides_iter);
 
         if constexpr (trace_enabled) {
-            if (pass) {
-                ++trace << "Initializing multi-method dispatch tables at "
-                        << Policy::dispatch_data.data() << "\n";
+            ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+                    << " method #" << m.dispatch_table[0]->method_index << " "
+                    << type_name(m.info->method_type) << "\n";
+            indent _(trace);
+
+            for (auto& entry : m.dispatch_table) {
+                ++trace << "spec #" << entry->spec_index << " "
+                        << spec_name(m, entry) << "\n";
             }
         }
 
-        for (auto& m : methods) {
-            if (m.info->arity() == 1) {
-                // Uni-methods just need an index in the method table.
-                m.info->slots_strides_ptr[0] = m.slots[0];
-                continue;
-            }
+        m.gv_dispatch_table = gv_iter;
+        BOOST_ASSERT(gv_iter + m.dispatch_table.size() <= gv_last);
+        gv_iter = std::transform(
+            m.dispatch_table.begin(), m.dispatch_table.end(), gv_iter,
+            [](auto spec) { return spec->pf; });
+    }
 
-            // multi-methods only
+    ++trace << "Initializing v-tables at " << gv_iter << "\n";
 
-            auto strides_iter = std::copy(
-                m.slots.begin(), m.slots.end(), m.info->slots_strides_ptr);
-            std::copy(m.strides.begin(), m.strides.end(), strides_iter);
-
-            if constexpr (trace_enabled) {
-                if (pass) {
-                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                            << " method #" << m.dispatch_table[0]->method_index
-                            << " " << m.info->name << "\n";
-                    indent _(trace);
-                    for (auto& entry : m.dispatch_table) {
-                        ++trace << "spec #" << entry->spec_index << " ";
-                        write_spec_name(m, entry, trace);
-                        trace << "\n";
-                    }
-                }
-            }
-
-            m.gv_dispatch_table =
-                Policy::dispatch_data.data() + Policy::dispatch_data.size();
-            std::transform(
-                m.dispatch_table.begin(), m.dispatch_table.end(),
-                std::back_inserter(Policy::dispatch_data),
-                [](auto spec) { return spec->pf; });
+    for (auto& cls : classes) {
+        if (cls.first_slot == -1) {
+            // corner case: no methods for this class
+            *cls.static_vptr = gv_iter;
+            continue;
         }
 
-        if constexpr (trace_enabled) {
-            if (pass) {
-                ++trace << "Initializing v-tables at "
-                        << (Policy::dispatch_data.data() +
-                            Policy::dispatch_data.size())
-                        << "\n";
-            }
-        }
+        *cls.static_vptr = gv_iter - cls.first_slot;
 
-        for (auto& cls : classes) {
-            if (cls.first_used_slot == -1) {
-                // corner case: no methods for this class
-                *cls.static_vptr =
-                    Policy::dispatch_data.data() + Policy::dispatch_data.size();
+        ++trace << rflush(4, gv_iter - gv_first) << " " << gv_iter
+                << " vtbl for " << cls << " slots " << cls.first_slot << "-"
+                << (cls.first_slot + cls.vtbl.size() - 1) << "\n";
+        indent _(trace);
+
+        for (auto& entry : cls.vtbl) {
+            ++trace << "method #" << entry.method_index << " ";
+            auto& method = methods[entry.method_index];
+
+            if (method.arity() == 1) {
+                auto spec = method.dispatch_table[entry.group_index];
+                trace << "spec #" << spec->spec_index << "\n";
+                indent _(trace);
+                ++trace << type_name(method.info->method_type) << "\n";
+                ++trace << spec_name(method, spec);
+                BOOST_ASSERT(gv_iter + 1 <= gv_last);
+                *gv_iter++ = spec->pf;
             } else {
-                *cls.static_vptr = Policy::dispatch_data.data() +
-                    Policy::dispatch_data.size() - cls.first_used_slot;
-            }
+                trace << "vp #" << entry.vp_index << " group #"
+                      << entry.group_index << "\n";
+                indent _(trace);
+                ++trace << type_name(method.info->method_type);
+                BOOST_ASSERT(gv_iter + 1 <= gv_last);
 
-            if constexpr (trace_enabled) {
-                if (pass) {
-                    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                            << *cls.static_vptr << " vtbl for " << cls
-                            << " slots " << cls.first_used_slot << "-"
-                            << cls.vtbl.size() << "\n";
-                    indent _(trace);
-
-                    for (auto& entry : cls.vtbl) {
-                        ++trace << "method #" << entry.method_index << " ";
-                        auto& method = methods[entry.method_index];
-
-                        if (method.arity() == 1) {
-                            auto spec =
-                                method.dispatch_table[entry.group_index];
-                            trace << "spec #" << spec->spec_index << "\n";
-                            indent _(trace);
-                            Policy::type_name(
-                                method.info->method_type, ++trace);
-                            trace << "\n";
-                            write_spec_name(method, spec, ++trace);
-                        } else {
-                            trace << "vp #" << entry.vp_index << " group #"
-                                  << entry.group_index << "\n";
-                            indent _(trace);
-                            Policy::type_name(
-                                method.info->method_type, ++trace);
-                        }
-
-                        trace << "\n";
-                    }
+                if (entry.vp_index == 0) {
+                    *gv_iter++ = std::uintptr_t(
+                        method.gv_dispatch_table + entry.group_index);
+                } else {
+                    *gv_iter++ = entry.group_index;
                 }
             }
 
-            if (cls.first_used_slot != -1) {
-                std::transform(
-                    cls.vtbl.begin() + cls.first_used_slot, cls.vtbl.end(),
-                    std::back_inserter(Policy::dispatch_data),
-                    [](auto entry) { return entry.group_index; });
-            }
+            trace << "\n";
         }
     }
 
-    ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-            << Policy::dispatch_data.data() + Policy::dispatch_data.size()
+    ++trace << rflush(4, Policy::dispatch_data.size()) << " " << gv_iter
             << " end\n";
 
     if constexpr (has_facet<Policy, external_vptr>) {
         Policy::publish_vptrs(classes.begin(), classes.end());
-    }
-}
-
-template<class Policy>
-void compiler<Policy>::optimize() {
-    ++trace << "Optimizing\n";
-
-    for (auto& m : methods) {
-        ++trace << "  " << m.info->name << "\n";
-        indent _(trace);
-        auto slot = m.slots[0];
-
-        if (m.arity() == 1) {
-            for (auto cls : m.vp[0]->compatible_classes) {
-                auto spec = m.dispatch_table[(*cls->static_vptr)[slot]];
-                if constexpr (trace_enabled) {
-                    ++trace << *cls << " vtbl[" << slot
-                            << "] = " << spec->method_index << "/"
-                            << spec->spec_index << " function "
-                            << (void*)spec->pf << "\n";
-                }
-                (*cls->static_vptr)[slot] = spec->pf;
-            }
-        } else {
-            for (auto cls : m.vp[0]->compatible_classes) {
-                auto pw = m.gv_dispatch_table + (*cls->static_vptr)[slot];
-
-                if constexpr (trace_enabled) {
-                    ++trace << *cls << " vtbl[" << slot << "] = gv+"
-                            << (pw - Policy::dispatch_data.data()) << "\n";
-                }
-
-                (*cls->static_vptr)[slot] =
-                    reinterpret_cast<std::uintptr_t>(pw);
-            }
-        }
     }
 }
 
@@ -1236,12 +1191,12 @@ bool compiler<Policy>::is_more_specific(
 
     for (; a_iter != a_last; ++a_iter, ++b_iter) {
         if (*a_iter != *b_iter) {
-            if ((*b_iter)->compatible_classes.find(*a_iter) !=
-                (*b_iter)->compatible_classes.end()) {
+            if ((*b_iter)->covariant_classes.find(*a_iter) !=
+                (*b_iter)->covariant_classes.end()) {
                 result = true;
             } else if (
-                (*a_iter)->compatible_classes.find(*b_iter) !=
-                (*a_iter)->compatible_classes.end()) {
+                (*a_iter)->covariant_classes.find(*b_iter) !=
+                (*a_iter)->covariant_classes.end()) {
                 return false;
             }
         }
@@ -1258,8 +1213,8 @@ bool compiler<Policy>::is_base(const definition* a, const definition* b) {
 
     for (; a_iter != a_last; ++a_iter, ++b_iter) {
         if (*a_iter != *b_iter) {
-            if ((*a_iter)->compatible_classes.find(*b_iter) ==
-                (*a_iter)->compatible_classes.end()) {
+            if ((*a_iter)->covariant_classes.find(*b_iter) ==
+                (*a_iter)->covariant_classes.end()) {
                 return false;
             } else {
                 result = true;

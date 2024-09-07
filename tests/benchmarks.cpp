@@ -19,7 +19,8 @@ int main() {
 
 #if __has_include(<boost/unordered/unordered_flat_map.hpp>)
 #include <boost/unordered/unordered_flat_map.hpp>
-#define UNORDERED_FLAT_MAP_AVAILABLE __has_include(<boost/unordered/unordered_flat_map.hpp>)
+#define UNORDERED_FLAT_MAP_AVAILABLE                                           \
+    __has_include(<boost/unordered/unordered_flat_map.hpp>)
 #endif
 
 #include <benchmark/benchmark.h>
@@ -45,14 +46,14 @@ enum { NH = YOMM2_BENCHMARK_HIERARCHIES };
 enum { NH = 100 };
 #endif
 
-#define mb()	asm volatile("mfence":::"memory")
-#define rmb()	asm volatile("lfence":::"memory")
-#define wmb()	asm volatile("sfence" ::: "memory")
+#define mb() asm volatile("mfence" ::: "memory")
+#define rmb() asm volatile("lfence" ::: "memory")
+#define wmb() asm volatile("sfence" ::: "memory")
 
 const std::string yomm2_ = "yomm2_";
 
 auto OBJECTS() {
-    static size_t n = 1000;
+    static std::size_t n = 1000;
 
     if (auto objects_from_env = getenv("YOMM2_BENCHMARKS_OBJECTS")) {
         n = std::stoi(objects_from_env);
@@ -228,8 +229,8 @@ using dispatch_types = mp_append<
     std::tuple<no_dispatch, virtual_dispatch, direct_virtual_ptr_dispatch>,
     method_dispatch_types, method_dispatch_types>;
 
-using arity_1 = std::integral_constant<size_t, 1>;
-using arity_2 = std::integral_constant<size_t, 2>;
+using arity_1 = std::integral_constant<std::size_t, 1>;
+using arity_2 = std::integral_constant<std::size_t, 2>;
 using arity_types = std::tuple<arity_1, arity_2>;
 
 struct abstract_population;
@@ -346,7 +347,7 @@ struct population : abstract_population {
         }
     };
 
-    static constexpr size_t num_leaf_classes = 10;
+    static constexpr std::size_t num_leaf_classes = 10;
 
     using leaf_classes = mp_rename<
         mp_append<
@@ -669,7 +670,7 @@ int main(int argc, char** argv) {
 #if !defined(NDEBUG)
     mp_for_each<dispatch_types>([](auto D_value) {
         using Dispatch = decltype(D_value);
-        if constexpr (true ||!std::is_same_v<Dispatch, no_dispatch>) {
+        if constexpr (true || !std::is_same_v<Dispatch, no_dispatch>) {
             mp_for_each<arity_types>([](auto A_value) {
                 using Arity = decltype(A_value);
                 mp_for_each<inheritance_types>([](auto I_value) {
@@ -697,18 +698,18 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-// void call_hash_factors_in_globals_1(population<std::integral_constant<size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::Animal& a) {
-//     population<std::integral_constant<size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::dispatcher::kick(a);
+// void call_hash_factors_in_globals_1(population<std::integral_constant<std::size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::Animal& a) {
+//     population<std::integral_constant<std::size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::dispatcher::kick(a);
 // }
 
-// void call_direct_intrusive_1(population<std::integral_constant<size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::Animal& a) {
-//     population<std::integral_constant<size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::dispatcher::kick(a);
+// void call_direct_intrusive_1(population<std::integral_constant<std::size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::Animal& a) {
+//     population<std::integral_constant<std::size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::dispatcher::kick(a);
 // 	// movq	  8(%rdi),                       %rax
 // 	// movslq method.fn.slots_strides(%rip), %rcx
 // 	// jmpq	*(%rax,%rcx,8)
 // }
 
-using _0 = std::integral_constant<size_t, 0>;
+using _0 = std::integral_constant<std::size_t, 0>;
 using leaf = population<_0>::leaf0<_0>;
 
 void call_project_1(leaf& obj) {

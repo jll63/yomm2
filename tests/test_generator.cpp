@@ -8,6 +8,8 @@
 
 #include "test_generator_domain.hpp"
 
+#include <yorel/yomm2/decode.hpp>
+
 using namespace yorel::yomm2;
 
 static_assert(detail::has_static_offsets<method_class(
@@ -16,8 +18,9 @@ static_assert(
     detail::has_static_offsets<method_class(
         void, meet,
         (virtual_<Animal&>, virtual_<Animal&>, std::ostream&))>::value);
-static_assert(detail::has_static_offsets<method_class(
-                  void, identify, (virtual_<Property&>, std::ostream&))>::value);
+static_assert(
+    detail::has_static_offsets<method_class(
+        void, identify, (virtual_<Property&>, std::ostream&))>::value);
 
 #define BOOST_TEST_MODULE test_generator
 #include <boost/test/included/unit_test.hpp>
@@ -26,7 +29,7 @@ static_assert(detail::has_static_offsets<method_class(
 using namespace yorel::yomm2;
 
 BOOST_AUTO_TEST_CASE(test_generator) {
-    #include "test_generator_tables.hpp"
+#include "test_generator_tables.hpp"
 
     std::ostringstream os;
 
