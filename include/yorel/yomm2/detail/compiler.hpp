@@ -29,8 +29,6 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-struct update_report : update_method_report {};
-
 template<class Reports, class Facets, typename = void>
 struct aggregate_reports;
 
@@ -52,10 +50,6 @@ template<class... Reports, typename Void>
 struct aggregate_reports<types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
-
-template<class Policy>
-using report_type = typename aggregate_reports<
-    types<update_report>, typename Policy::facets>::type;
 
 inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
     if (b.size() < a.size()) {
@@ -140,12 +134,9 @@ struct generic_compiler {
     using group_map = std::map<bitvec, group>;
 
     struct update_method_report {
-        size_t cells = 0;
-        size_t concrete_cells = 0;
-        size_t not_implemented = 0;
-        size_t concrete_not_implemented = 0;
-        size_t ambiguous = 0;
-        size_t concrete_ambiguous = 0;
+        std::size_t cells = 0;
+        std::size_t not_implemented = 0;
+        std::size_t ambiguous = 0;
     };
 
     struct update_report : update_method_report {};
@@ -882,7 +873,6 @@ void compiler<Policy>::build_dispatch_tables() {
                     prefix = " x ";
                 }
 
-                m.report.concrete_cells = 1;
                 prefix = ", concrete only: ";
 
                 for (const auto& dim_groups : groups) {
@@ -891,7 +881,6 @@ void compiler<Policy>::build_dispatch_tables() {
                         [](const auto& group) {
                             return group.second.has_concrete_classes;
                         });
-                    m.report.concrete_cells *= cells;
                     trace << prefix << cells;
                     prefix = " x ";
                 }
@@ -1004,17 +993,11 @@ void compiler<Policy>::build_dispatch_table(
                 ++trace << "ambiguous\n";
                 m.dispatch_table.push_back(&m.ambiguous);
                 ++m.report.ambiguous;
-                if (concrete) {
-                    ++m.report.concrete_ambiguous;
-                }
             } else if (specs.empty()) {
                 indent _(trace);
                 ++trace << "not implemented\n";
                 m.dispatch_table.push_back(&m.not_implemented);
                 ++m.report.not_implemented;
-                if (concrete && group.has_concrete_classes) {
-                    ++m.report.concrete_not_implemented;
-                }
             } else {
                 auto spec = specs[0];
                 m.dispatch_table.push_back(spec);
@@ -1034,11 +1017,8 @@ void compiler<Policy>::build_dispatch_table(
 inline void detail::generic_compiler::accumulate(
     const update_method_report& partial, update_report& total) {
     total.cells += partial.cells;
-    total.concrete_cells += partial.concrete_cells;
     total.not_implemented += partial.not_implemented != 0;
-    total.concrete_not_implemented += partial.concrete_not_implemented != 0;
     total.ambiguous += partial.ambiguous != 0;
-    total.concrete_ambiguous += partial.concrete_ambiguous != 0;
 }
 
 template<class Policy>
@@ -1229,13 +1209,6 @@ void compiler<Policy>::print(const update_method_report& report) const {
 
     trace << report.not_implemented << " not implemented, ";
     trace << report.ambiguous << " ambiguities, concrete only: ";
-
-    if (report.cells) {
-        trace << report.concrete_cells << ", ";
-    }
-
-    trace << report.concrete_not_implemented << ", ";
-    trace << report.concrete_ambiguous << "\n";
 }
 
 template<class Policy>

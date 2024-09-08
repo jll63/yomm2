@@ -26,6 +26,277 @@ struct virtual_ptr;
 // -----------------------------------------------------------------------------
 // Method
 
+namespace detail {
+
+template<typename T>
+struct is_virtual : std::false_type {};
+
+template<typename T>
+struct is_virtual<virtual_<T>> : std::true_type {};
+
+template<typename... Ts>
+constexpr auto arity =
+    boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
+
+template<typename T>
+struct remove_virtual_ {
+    using type = T;
+};
+
+template<typename T>
+struct remove_virtual_<virtual_<T>> {
+    using type = T;
+};
+
+template<typename T>
+using remove_virtual = typename remove_virtual_<T>::type;
+
+template<typename>
+struct parameter_type_list;
+
+template<typename ReturnType, typename... ParameterTypes>
+struct parameter_type_list<ReturnType(ParameterTypes...)> {
+    using type = types<ParameterTypes...>;
+};
+
+template<typename ReturnType, typename... ParameterTypes>
+struct parameter_type_list<ReturnType (*)(ParameterTypes...)> {
+    using type = types<ParameterTypes...>;
+};
+
+template<typename MethodArgList>
+using polymorphic_types = boost::mp11::mp_transform<
+    remove_virtual, boost::mp11::mp_filter<detail::is_virtual, MethodArgList>>;
+
+template<class Policy, typename ArgType, typename T>
+inline uintptr_t get_tip(const T& arg) {
+    if constexpr (is_virtual<ArgType>::value) {
+        return Policy::dynamic_type(virtual_traits<Policy, ArgType>::rarg(arg));
+    } else {
+        return Policy::dynamic_type(arg);
+    }
+}
+
+template<typename B, typename D, typename = void>
+struct requires_dynamic_cast_ref_aux : std::true_type {};
+
+template<typename B, typename D>
+struct requires_dynamic_cast_ref_aux<
+    B, D, std::void_t<decltype(static_cast<D>(std::declval<B>()))>>
+    : std::false_type {};
+
+template<class B, class D>
+constexpr bool requires_dynamic_cast =
+    requires_dynamic_cast_ref_aux<B, D>::value;
+
+template<class Policy, class D, class B>
+decltype(auto) optimal_cast(B&& obj) {
+    if constexpr (requires_dynamic_cast<B, D>) {
+        return Policy::template dynamic_cast_ref<D>(obj);
+    } else {
+        return static_cast<D>(obj);
+    }
+}
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T&> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T& arg) {
+        return arg;
+    }
+
+    template<typename D>
+    static D& cast(T& obj) {
+        return optimal_cast<Policy, D&>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T&&> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T& arg) {
+        return arg;
+    }
+
+    template<typename D>
+    static D&& cast(T&& obj) {
+        return optimal_cast<Policy, D&&>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T*> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T* arg) {
+        return *arg;
+    }
+
+    template<typename D>
+    static D cast(T* obj) {
+        return &optimal_cast<Policy, std::remove_pointer_t<D>&>(*obj);
+    }
+};
+
+template<class Policy, typename T>
+struct argument_traits {
+    static const T& rarg(const T& arg) {
+        return arg;
+    }
+
+    template<typename>
+    static T cast(T obj) {
+        return std::forward<T>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct argument_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
+
+template<class Policy, class Class>
+struct argument_traits<Policy, virtual_ptr<Class, Policy>>
+    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
+
+template<class Policy, class Class>
+struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
+    : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
+
+template<typename T>
+struct shared_ptr_traits {
+    static const bool is_shared_ptr = false;
+};
+
+template<typename T>
+struct shared_ptr_traits<std::shared_ptr<T>> {
+    static const bool is_shared_ptr = true;
+    static const bool is_const_ref = false;
+    using polymorphic_type = T;
+};
+
+template<typename T>
+struct shared_ptr_traits<const std::shared_ptr<T>&> {
+    static const bool is_shared_ptr = true;
+    static const bool is_const_ref = true;
+    using polymorphic_type = T;
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, const std::shared_ptr<T>&> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const std::shared_ptr<T>& arg) {
+        return *arg;
+    }
+
+    template<class DERIVED>
+    static void check_cast() {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            shared_ptr_traits<DERIVED>::is_const_ref,
+            "cannot cast from 'const shared_ptr<base>&' to "
+            "'shared_ptr<derived>'");
+        static_assert(std::is_class_v<
+                      typename shared_ptr_traits<DERIVED>::polymorphic_type>);
+    }
+
+    template<class DERIVED>
+    static auto cast(const std::shared_ptr<T>& obj) {
+        check_cast<DERIVED>();
+
+        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
+            return std::dynamic_pointer_cast<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        } else {
+            return std::static_pointer_cast<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        }
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, std::shared_ptr<T>> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const std::shared_ptr<T>& arg) {
+        return *arg;
+    }
+
+    template<class DERIVED>
+    static void check_cast() {
+        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
+        static_assert(
+            !shared_ptr_traits<DERIVED>::is_const_ref,
+            "cannot cast from 'const shared_ptr<base>&' to "
+            "'shared_ptr<derived>'");
+        static_assert(std::is_class_v<
+                      typename shared_ptr_traits<DERIVED>::polymorphic_type>);
+    }
+    template<class DERIVED>
+    static auto cast(const std::shared_ptr<T>& obj) {
+        check_cast<DERIVED>();
+
+        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
+            return std::dynamic_pointer_cast<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        } else {
+            return std::static_pointer_cast<
+                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
+        }
+    }
+};
+
+// -----------------------------------------------------------------------------
+// thunk
+
+template<class Policy, typename, auto, typename>
+struct thunk;
+
+template<
+    class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
+    typename... SPEC_PARAM>
+struct thunk<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
+    static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
+        using base_type = boost::mp11::mp_first<types<BASE_PARAM...>>;
+        using spec_type = boost::mp11::mp_first<types<SPEC_PARAM...>>;
+        return SPEC(
+            argument_traits<Policy, BASE_PARAM>::template cast<SPEC_PARAM>(
+                remove_virtual<BASE_PARAM>(arg))...);
+    }
+};
+
+void type_next(...);
+
+template<typename Container>
+auto type_next(Container t) -> decltype(t.next);
+
+template<typename Container>
+using type_next_t = decltype(type_next(std::declval<Container>()));
+
+template<typename Container, typename Next>
+constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
+
+template<typename Method, typename Container>
+struct next_aux {
+    static typename Method::next_type next;
+};
+
+template<typename Method, typename Container>
+typename Method::next_type next_aux<Method, Container>::next;
+
+template<auto F, typename T>
+struct member_function_thunk;
+
+template<auto F, class ReturnType, class C, typename... Args>
+struct member_function_thunk<F, ReturnType (C::*)(Args...)> {
+    static ReturnType fn(C* this_, Args&&... args) {
+        return (this_->*F)(args...);
+    }
+};
+
+} // namespace detail
+
 template<typename Name, typename Signature, class Policy = YOMM2_DEFAULT_POLICY>
 struct method;
 
@@ -72,14 +343,15 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
     void check_static_offset(std::size_t actual, std::size_t expected) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-    auto
-    resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t;
+    auto resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const
+        -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     auto resolve_multi_first(
-        const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t;
+        const ArgType& arg, const MoreArgTypes&... more_args) const
+        -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
@@ -94,7 +366,8 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
     auto operator()(detail::remove_virtual<Args>... args) const -> return_type;
 
     static BOOST_NORETURN auto
-    not_implemented_handler(detail::remove_virtual<Args>... args) -> return_type;
+    not_implemented_handler(detail::remove_virtual<Args>... args)
+        -> return_type;
     static BOOST_NORETURN auto
     ambiguous_handler(detail::remove_virtual<Args>... args) -> return_type;
 
@@ -116,7 +389,7 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
             info.type = Policy::template static_type<decltype(Function)>();
             info.next = reinterpret_cast<void**>(next);
             using parameter_types =
-                detail::parameter_type_list_t<decltype(Function)>;
+                typename detail::parameter_type_list<decltype(Function)>::type;
             info.pf = (void*)detail::thunk<
                 Policy, signature_type, Function, parameter_types>::fn;
             using spec_type_ids = detail::type_id_list<
@@ -175,8 +448,79 @@ template<typename Container>
 typename method<Name, ReturnType(Args...), Policy>::next_type
     method<Name, ReturnType(Args...), Policy>::use_next<Container>::next;
 
+template<typename T>
+constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
+
 // -----------------------------------------------------------------------------
 // class_declaration
+
+namespace detail {
+
+template<class...>
+struct class_declaration_aux;
+
+template<class Policy, class Class, typename... Bases>
+struct class_declaration_aux<Policy, types<Class, Bases...>> : class_info {
+    class_declaration_aux() {
+        this->type = collect_static_type_id<Policy, Class>();
+        this->first_base = type_id_list<Policy, types<Bases...>>::begin;
+        this->last_base = type_id_list<Policy, types<Bases...>>::end;
+        Policy::classes.push_back(*this);
+        this->is_abstract = std::is_abstract_v<Class>;
+        this->static_vptr = &Policy::template static_vptr<Class>;
+    }
+
+    ~class_declaration_aux() {
+        Policy::classes.remove(*this);
+    }
+};
+
+// Collect the base classes of a list of classes. The result is a mp11 map that
+// associates each class to a list starting with the class itself, followed by
+// all its bases, as per std::is_base_of. Thus the list includes the class
+// itself at least twice: at the front, and down the list, as its own improper
+// base. The direct and its direct and indirect proper bases are included. The
+// runtime will extract the direct proper bases. See unit tests for an example.
+template<typename... Cs>
+using inheritance_map = types<boost::mp11::mp_push_front<
+    boost::mp11::mp_filter_q<
+        boost::mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
+    Cs>...>;
+
+template<class Policy, class... Classes>
+struct use_classes_aux;
+
+template<class Policy, class... Classes>
+struct use_classes_aux<Policy, types<Classes...>> {
+    using type = boost::mp11::mp_apply<
+        std::tuple,
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
+            boost::mp11::mp_apply<inheritance_map, types<Classes...>>>>;
+};
+
+template<class Policy, class... Classes, class... MoreClassLists>
+struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
+    : use_classes_aux<
+          Policy, boost::mp11::mp_append<types<Classes...>, MoreClassLists...>>
+
+{};
+
+template<typename... Ts>
+using second_last = boost::mp11::mp_at_c<
+    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
+
+template<class... Classes>
+using use_classes_macro = typename std::conditional_t<
+    is_policy<second_last<Classes...>>,
+    use_classes_aux<
+        second_last<Classes...>,
+        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
+    use_classes_aux<
+        boost::mp11::mp_back<types<Classes...>>,
+        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
+
+} // namespace detail
 
 template<class... Classes>
 struct class_declaration
@@ -194,6 +538,82 @@ using use_classes = typename detail::use_classes_aux<
 
 // -----------------------------------------------------------------------------
 // virtual_ptr
+
+namespace detail {
+
+// -----------------------------------------------------------------------------
+// virtual_ptr
+
+template<class Class, class Policy>
+struct is_virtual<virtual_ptr<Class, Policy>> : std::true_type {};
+
+template<class Class, class Policy>
+struct is_virtual<const virtual_ptr<Class, Policy>&> : std::true_type {};
+
+template<class Class, class Policy>
+struct virtual_ptr_traits {
+    static bool constexpr is_smart_ptr = false;
+    using polymorphic_type = Class;
+};
+
+template<class Class, class Policy>
+struct virtual_ptr_traits<std::shared_ptr<Class>, Policy> {
+    static bool constexpr is_smart_ptr = true;
+    using polymorphic_type = Class;
+
+    template<typename OtherPtrRef>
+    static decltype(auto) cast(const std::shared_ptr<Class>& ptr) {
+        using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
+        using OtherClass = typename OtherPtr::box_type::element_type;
+
+        if constexpr (requires_dynamic_cast<Class&, OtherClass&>) {
+            return std::dynamic_pointer_cast<OtherClass>(ptr);
+        } else {
+            return std::static_pointer_cast<OtherClass>(ptr);
+        }
+    }
+};
+
+template<class Policy, class Class>
+struct virtual_traits<Policy, virtual_ptr<Class, Policy>> {
+    using ptr_traits = virtual_ptr_traits<Class, Policy>;
+    using polymorphic_type = typename ptr_traits::polymorphic_type;
+
+    static const virtual_ptr<Class, Policy>&
+    rarg(const virtual_ptr<Class, Policy>& ptr) {
+        return ptr;
+    }
+
+    template<typename Derived>
+    static decltype(auto) cast(const virtual_ptr<Class, Policy>& ptr) {
+        return ptr.template cast<Derived>();
+    }
+};
+
+template<class Policy, class Class>
+struct virtual_traits<Policy, const virtual_ptr<Class, Policy>&>
+    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
+
+template<typename>
+struct is_virtual_ptr_aux : std::false_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
+};
+
+template<typename T>
+constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
+
+template<class... Ts>
+using virtual_ptr_class = std::conditional_t<
+    sizeof...(Ts) == 2, boost::mp11::mp_second<types<Ts..., void>>,
+    boost::mp11::mp_first<types<Ts...>>>;
+
+
+}
 
 template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr {
@@ -408,7 +828,13 @@ inline auto final_virtual_ptr(Class& obj) {
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 method<Name, ReturnType(Args...), Policy>::method() {
     this->slots_strides_ptr = slots_strides;
-    this->name = detail::default_method_name<method>();
+
+#ifndef BOOST_NO_RTTI
+    this->name = typeid(method).name();
+#else
+    this->name = "method";
+#endif
+
     using virtual_type_ids = detail::type_id_list<
         Policy,
         boost::mp11::mp_transform_q<
@@ -432,9 +858,9 @@ method<Name, ReturnType(Args...), Policy>::~method() {
 }
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-auto inline method<
-    Name, ReturnType(Args...),
-    Policy>::operator()(detail::remove_virtual<Args>... args) const -> typename method<Name, ReturnType(Args...), Policy>::return_type {
+auto inline method<Name, ReturnType(Args...), Policy>::operator()(
+    detail::remove_virtual<Args>... args) const ->
+    typename method<Name, ReturnType(Args...), Policy>::return_type {
     using namespace detail;
     auto pf = resolve(argument_traits<Policy, Args>::rarg(args)...);
     return pf(std::forward<remove_virtual<Args>>(args)...);
@@ -461,7 +887,8 @@ method<Name, ReturnType(Args...), Policy>::resolve(
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename ArgType>
 inline auto
-method<Name, ReturnType(Args...), Policy>::vptr(const ArgType& arg) const -> const std::uintptr_t* {
+method<Name, ReturnType(Args...), Policy>::vptr(const ArgType& arg) const
+    -> const std::uintptr_t* {
     if constexpr (detail::is_virtual_ptr<ArgType>) {
         return arg._vptr();
         // No need to check the method pointer: this was done when the
@@ -493,7 +920,8 @@ inline void method<Name, ReturnType(Args...), Policy>::check_static_offset(
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
 inline auto method<Name, ReturnType(Args...), Policy>::resolve_uni(
-    const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t {
+    const ArgType& arg, const MoreArgTypes&... more_args) const
+    -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -525,9 +953,9 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto
-method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
-    const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t {
+inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
+    const ArgType& arg, const MoreArgTypes&... more_args) const
+    -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -570,8 +998,7 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto
-method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
+inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const -> std::uintptr_t {
 
@@ -618,7 +1045,8 @@ method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 BOOST_NORETURN auto
 method<Name, ReturnType(Args...), Policy>::not_implemented_handler(
-    detail::remove_virtual<Args>... args) -> typename method<Name, ReturnType(Args...), Policy>::return_type {
+    detail::remove_virtual<Args>... args) ->
+    typename method<Name, ReturnType(Args...), Policy>::return_type {
 
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
@@ -640,7 +1068,8 @@ method<Name, ReturnType(Args...), Policy>::not_implemented_handler(
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 BOOST_NORETURN auto
 method<Name, ReturnType(Args...), Policy>::ambiguous_handler(
-    detail::remove_virtual<Args>... args) -> typename method<Name, ReturnType(Args...), Policy>::return_type {
+    detail::remove_virtual<Args>... args) ->
+    typename method<Name, ReturnType(Args...), Policy>::return_type {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
         error.status = resolution_error::ambiguous;
@@ -660,7 +1089,8 @@ method<Name, ReturnType(Args...), Policy>::ambiguous_handler(
 
 #ifndef BOOST_NO_RTTI
 
-inline auto set_error_handler(error_handler_type handler) -> error_handler_type {
+inline auto set_error_handler(error_handler_type handler)
+    -> error_handler_type {
     auto p = &default_policy::error;
     auto prev = default_policy::error;
     default_policy::error = handler;

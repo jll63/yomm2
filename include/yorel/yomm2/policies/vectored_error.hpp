@@ -8,7 +8,6 @@
 #define YOREL_YOMM2_POLICY_VECTORED_ERROR_HPP
 
 #include <yorel/yomm2/policies/core.hpp>
-#include <yorel/yomm2/detail/range.hpp>
 
 namespace yorel {
 namespace yomm2 {

@@ -34,7 +34,6 @@ int main() {
 
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::policy;
-using yorel::yomm2::detail::dump_type;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)

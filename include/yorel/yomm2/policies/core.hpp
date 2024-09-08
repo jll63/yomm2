@@ -7,72 +7,16 @@
 #define YOREL_YOMM2_POLICIES_CORE_HPP
 
 #include <yorel/yomm2/detail/types.hpp>
-#include <yorel/yomm2/detail/static_list.hpp>
 
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 
 #include <functional>
-#include <string_view>
 #include <variant>
 
 namespace yorel {
 namespace yomm2 {
 namespace detail {
-
-// -----------------------------------------------------------------------------
-// class info
-
-struct class_info : static_list<class_info>::static_link {
-    type_id type;
-    std::uintptr_t** static_vptr;
-    type_id *first_base, *last_base;
-    bool is_abstract{false};
-
-    auto vptr() const -> const std::uintptr_t* {
-        return *static_vptr;
-    }
-
-    auto indirect_vptr() const -> const std::uintptr_t* const* {
-        return static_vptr;
-    }
-
-    auto type_id_begin() const {
-        return &type;
-    }
-
-    auto type_id_end() const {
-        return &type + 1;
-    }
-};
-
-// -----------
-// method info
-
-struct definition_info;
-
-struct yOMM2_API method_info : static_list<method_info>::static_link {
-    std::string_view name;
-    type_id *vp_begin, *vp_end;
-    static_list<definition_info> specs;
-    void* ambiguous;
-    void* not_implemented;
-    type_id method_type;
-    std::size_t* slots_strides_ptr;
-
-    auto arity() const {
-        return std::distance(vp_begin, vp_end);
-    }
-};
-
-struct definition_info : static_list<definition_info>::static_link {
-    ~definition_info();
-    method_info* method; // for the destructor, to remove definition
-    type_id type;        // of the function, for trace
-    void** next;
-    type_id *vp_begin, *vp_end;
-    void* pf;
-};
 
 template<class Name>
 struct yOMM2_API_gcc yOMM2_API_msc method_tables {
@@ -91,18 +35,6 @@ using method_catalog = detail::static_list<detail::method_info>;
 struct domain {};
 
 } // namespace detail
-
-template<class Class, class Policy>
-struct virtual_ptr;
-
-template<typename T>
-struct virtual_;
-
-template<class Policy, typename Name, typename Signature>
-struct method;
-
-template<class... Classes>
-struct class_declaration;
 
 // -----------------------------------------------------------------------------
 // Error handling

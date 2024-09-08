@@ -13,7 +13,6 @@
 
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
-using namespace boost::mp11;
 
 // clang-format off
 
@@ -32,7 +31,7 @@ struct f : base {};
 
 static_assert(
     std::is_same_v<
-        mp_filter<
+        boost::mp11::mp_filter<
             is_virtual,
             types< virtual_<a&>, b, virtual_<c&> >
         >,
@@ -53,7 +52,7 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform<
+        boost::mp11::mp_transform<
             remove_virtual,
             types< virtual_<a&>, virtual_<c&> >
         >,
@@ -62,9 +61,9 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform_q<
-            mp_bind_front<polymorphic_type, default_policy>,
-            mp_transform<
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<polymorphic_type, default_policy>,
+            boost::mp11::mp_transform<
                 remove_virtual,
                 types< virtual_<a&>, virtual_<c&> >
             >
@@ -74,11 +73,11 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform_q<
-            mp_bind_front<polymorphic_type, default_policy>,
-            mp_transform<
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<polymorphic_type, default_policy>,
+            boost::mp11::mp_transform<
                 remove_virtual,
-                mp_filter<
+                boost::mp11::mp_filter<
                     is_virtual,
                     types< virtual_<a&>, b, virtual_<c&> >
                 >
@@ -317,7 +316,7 @@ static_assert(std::is_same_v<
 void f(char, int) {}
 
 static_assert(std::is_same_v<
-    parameter_type_list_t<decltype(f)>,
+    typename detail::parameter_type_list<decltype(f)>::type,
     types<char, int>
 >);
 

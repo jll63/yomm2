@@ -387,39 +387,30 @@ BOOST_AUTO_TEST_CASE(update_report) {
 
     auto report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 3);
-    BOOST_TEST(report.concrete_not_implemented == 3);
     BOOST_TEST(report.ambiguous == 0);
-    BOOST_TEST(report.concrete_ambiguous == 0);
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
-    BOOST_TEST(report.concrete_cells == 1);
 
     YOMM2_STATIC(kick::add_function<fn<Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
-    BOOST_TEST(report.concrete_not_implemented == 2);
 
     YOMM2_STATIC(pet::add_function<fn<Cat>>);
     YOMM2_STATIC(pet::add_function<fn<Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
-    BOOST_TEST(report.concrete_not_implemented == 1);
 
     // create ambiguity
     YOMM2_STATIC(meet::add_function<fn<Animal, Cat>>);
     YOMM2_STATIC(meet::add_function<fn<Dog, Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 4);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 1);
-    BOOST_TEST(report.concrete_ambiguous == 1);
 
     YOMM2_STATIC(meet::add_function<fn<Cat, Cat>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 6);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 1);
-    BOOST_TEST(report.concrete_ambiguous == 1);
 
     // shadow ambiguity
     YOMM2_STATIC(meet::add_function<fn<Dog, Dog>>);
@@ -427,9 +418,7 @@ BOOST_AUTO_TEST_CASE(update_report) {
     YOMM2_STATIC(meet::add_function<fn<Cat, Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 9);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 0);
-    BOOST_TEST(report.concrete_ambiguous == 0);
 }
 
 } // namespace report
