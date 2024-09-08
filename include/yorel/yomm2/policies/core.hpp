@@ -12,7 +12,9 @@
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 
+#include <functional>
 #include <string_view>
+#include <variant>
 
 namespace yorel {
 namespace yomm2 {
@@ -27,11 +29,11 @@ struct class_info : static_list<class_info>::static_link {
     type_id *first_base, *last_base;
     bool is_abstract{false};
 
-    const std::uintptr_t* vptr() const {
+    auto vptr() const -> const std::uintptr_t* {
         return *static_vptr;
     }
 
-    const std::uintptr_t* const* indirect_vptr() const {
+    auto indirect_vptr() const -> const std::uintptr_t* const* {
         return static_vptr;
     }
 
@@ -234,7 +236,7 @@ template<class Policy, class Facet>
 constexpr bool has_facet = Policy::template has_facet<Facet>;
 
 struct rtti {
-    static type_id type_index(type_id type) {
+    static auto type_index(type_id type) -> type_id {
         return type;
     }
 

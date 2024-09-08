@@ -15,7 +15,7 @@ namespace policy {
 
 struct minimal_rtti : virtual rtti {
     template<typename T>
-    static type_id static_type() {
+    static auto static_type() -> type_id {
         static char id;
         return reinterpret_cast<type_id>(&id);
     }

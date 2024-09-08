@@ -125,7 +125,7 @@ struct yOMM2_API_gcc debug_shared
 
 struct yOMM2_API_gcc release_shared : debug_shared {
     template<class Class>
-    static const std::uintptr_t* dynamic_vptr(const Class& arg) {
+    static auto dynamic_vptr(const Class& arg) -> const std::uintptr_t* {
         auto index = dynamic_type(arg);
         index = fast_perfect_hash<debug_shared>::hash_type_id(index);
         return vptrs[index];

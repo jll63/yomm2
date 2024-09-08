@@ -8,6 +8,7 @@
 #define YOREL_YOMM2_POLICY_BASIC_ERROR_OUTPUT_HPP
 
 #include <yorel/yomm2/policies/core.hpp>
+#include <yorel/yomm2/detail/ostdstream.hpp>
 
 namespace yorel {
 namespace yomm2 {
