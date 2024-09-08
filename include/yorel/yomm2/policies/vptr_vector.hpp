@@ -64,7 +64,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     }
 
     template<class Class>
-    static const std::uintptr_t* dynamic_vptr(const Class& arg) {
+    static auto dynamic_vptr(const Class& arg) -> const std::uintptr_t* {
         auto index = Policy::dynamic_type(arg);
 
         if constexpr (has_facet<Policy, type_hash>) {

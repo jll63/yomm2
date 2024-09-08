@@ -15,6 +15,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-18",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -29,6 +30,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-18",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -43,6 +45,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-19",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -57,6 +60,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-19",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -71,6 +75,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-20",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -85,6 +90,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "clang++-20",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -99,6 +105,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-11",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -113,6 +120,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-11",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -127,6 +135,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-12",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -141,6 +150,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-12",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -155,6 +165,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-13",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -169,6 +180,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "g++-13",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -183,6 +195,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "c++",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -197,6 +210,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "c++",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -211,6 +225,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -225,6 +240,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -239,6 +255,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"
@@ -258,6 +275,7 @@
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": "cl",
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON"

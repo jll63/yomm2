@@ -31,8 +31,8 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
 #ifdef _MSC_VER
     __forceinline
 #endif
-        static type_id
-        hash_type_id(type_id type) {
+        static auto
+        hash_type_id(type_id type) -> type_id {
         return (hash_mult * type) >> hash_shift;
     }
 
@@ -165,7 +165,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
                                             virtual runtime_checks {
     static std::vector<type_id> control;
 
-    static type_id hash_type_id(type_id type) {
+    static auto hash_type_id(type_id type) -> type_id {
         auto index = fast_perfect_hash<Policy>::hash_type_id(type);
 
         if (index >= fast_perfect_hash<Policy>::hash_length ||

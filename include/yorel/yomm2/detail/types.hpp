@@ -33,6 +33,22 @@ namespace detail {
 template<typename... Types>
 struct types;
 
+template<typename Iterator>
+struct range {
+    range(Iterator first, Iterator last) : first(first), last(last) {
+    }
+
+    Iterator first, last;
+
+    auto begin() const -> Iterator {
+        return first;
+    }
+
+    auto end() const -> Iterator {
+        return last;
+    }
+};
+
 }
 } // namespace yomm2
 } // namespace yorel

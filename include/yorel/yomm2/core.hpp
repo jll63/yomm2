@@ -66,37 +66,37 @@ struct method<Name, ReturnType(Args...), Policy> : detail::method_info {
     ~method();
 
     template<typename ArgType>
-    const std::uintptr_t* vptr(const ArgType& arg) const;
+    auto vptr(const ArgType& arg) const -> const std::uintptr_t*;
 
     template<class Error>
     void check_static_offset(std::size_t actual, std::size_t expected) const;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-    std::uintptr_t
-    resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
+    auto
+    resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
-    std::uintptr_t resolve_multi_first(
-        const ArgType& arg, const MoreArgTypes&... more_args) const;
+    auto resolve_multi_first(
+        const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
-    std::uintptr_t resolve_multi_next(
+    auto resolve_multi_next(
         const std::uintptr_t* dispatch, const ArgType& arg,
-        const MoreArgTypes&... more_args) const;
+        const MoreArgTypes&... more_args) const -> std::uintptr_t;
 
     template<typename... ArgType>
     function_pointer_type resolve(const ArgType&... args) const;
 
-    return_type operator()(detail::remove_virtual<Args>... args) const;
+    auto operator()(detail::remove_virtual<Args>... args) const -> return_type;
 
-    static BOOST_NORETURN return_type
-    not_implemented_handler(detail::remove_virtual<Args>... args);
-    static BOOST_NORETURN return_type
-    ambiguous_handler(detail::remove_virtual<Args>... args);
+    static BOOST_NORETURN auto
+    not_implemented_handler(detail::remove_virtual<Args>... args) -> return_type;
+    static BOOST_NORETURN auto
+    ambiguous_handler(detail::remove_virtual<Args>... args) -> return_type;
 
     template<typename Container>
     using next = detail::next_aux<method, Container>;
@@ -232,7 +232,7 @@ class virtual_ptr {
         }
     }
 
-    auto& unbox() const {
+    auto unbox() const -> auto& {
         if constexpr (IsSmartPtr) {
             return obj;
         } else {
@@ -308,7 +308,7 @@ class virtual_ptr {
         return get();
     }
 
-    decltype(auto) operator*() const noexcept {
+    auto operator*() const noexcept -> decltype(auto) {
         return *get();
     }
 
@@ -432,9 +432,9 @@ method<Name, ReturnType(Args...), Policy>::~method() {
 }
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-typename method<Name, ReturnType(Args...), Policy>::return_type inline method<
+auto inline method<
     Name, ReturnType(Args...),
-    Policy>::operator()(detail::remove_virtual<Args>... args) const {
+    Policy>::operator()(detail::remove_virtual<Args>... args) const -> typename method<Name, ReturnType(Args...), Policy>::return_type {
     using namespace detail;
     auto pf = resolve(argument_traits<Policy, Args>::rarg(args)...);
     return pf(std::forward<remove_virtual<Args>>(args)...);
@@ -460,8 +460,8 @@ method<Name, ReturnType(Args...), Policy>::resolve(
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename ArgType>
-inline const std::uintptr_t*
-method<Name, ReturnType(Args...), Policy>::vptr(const ArgType& arg) const {
+inline auto
+method<Name, ReturnType(Args...), Policy>::vptr(const ArgType& arg) const -> const std::uintptr_t* {
     if constexpr (detail::is_virtual_ptr<ArgType>) {
         return arg._vptr();
         // No need to check the method pointer: this was done when the
@@ -492,8 +492,8 @@ inline void method<Name, ReturnType(Args...), Policy>::check_static_offset(
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-inline std::uintptr_t method<Name, ReturnType(Args...), Policy>::resolve_uni(
-    const ArgType& arg, const MoreArgTypes&... more_args) const {
+inline auto method<Name, ReturnType(Args...), Policy>::resolve_uni(
+    const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -525,9 +525,9 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t
+inline auto
 method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
-    const ArgType& arg, const MoreArgTypes&... more_args) const {
+    const ArgType& arg, const MoreArgTypes&... more_args) const -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -570,10 +570,10 @@ template<typename Name, typename ReturnType, class Policy, typename... Args>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline std::uintptr_t
+inline auto
 method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
-    const MoreArgTypes&... more_args) const {
+    const MoreArgTypes&... more_args) const -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -616,9 +616,9 @@ method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
 }
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-BOOST_NORETURN typename method<Name, ReturnType(Args...), Policy>::return_type
+BOOST_NORETURN auto
 method<Name, ReturnType(Args...), Policy>::not_implemented_handler(
-    detail::remove_virtual<Args>... args) {
+    detail::remove_virtual<Args>... args) -> typename method<Name, ReturnType(Args...), Policy>::return_type {
 
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
@@ -638,9 +638,9 @@ method<Name, ReturnType(Args...), Policy>::not_implemented_handler(
 }
 
 template<typename Name, typename ReturnType, class Policy, typename... Args>
-BOOST_NORETURN typename method<Name, ReturnType(Args...), Policy>::return_type
+BOOST_NORETURN auto
 method<Name, ReturnType(Args...), Policy>::ambiguous_handler(
-    detail::remove_virtual<Args>... args) {
+    detail::remove_virtual<Args>... args) -> typename method<Name, ReturnType(Args...), Policy>::return_type {
     if constexpr (Policy::template has_facet<policy::error_handler>) {
         resolution_error error;
         error.status = resolution_error::ambiguous;
@@ -660,7 +660,7 @@ method<Name, ReturnType(Args...), Policy>::ambiguous_handler(
 
 #ifndef BOOST_NO_RTTI
 
-inline error_handler_type set_error_handler(error_handler_type handler) {
+inline auto set_error_handler(error_handler_type handler) -> error_handler_type {
     auto p = &default_policy::error;
     auto prev = default_policy::error;
     default_policy::error = handler;

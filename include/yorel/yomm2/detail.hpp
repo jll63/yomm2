@@ -2,6 +2,7 @@
 #define YOREL_YOMM2_DETAIL_HPP
 
 #include <yorel/yomm2/detail/static_list.hpp>
+#include <yorel/yomm2/detail/types.hpp>
 
 #include <boost/assert.hpp>
 
@@ -9,14 +10,10 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<class Policy, class Class>
-type_id collect_static_type_id() {
-    if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
-        return reinterpret_cast<type_id>(Policy::template static_type<Class>);
-    } else {
-        return Policy::template static_type<Class>();
-    }
-}
+struct ostderr;
+
+template<typename... Types>
+struct types;
 
 template<class Policy, class TypeList>
 struct type_id_list;
@@ -32,6 +29,15 @@ struct type_id_list<Policy, types<T...>> {
     static type_id* begin;
     static type_id* end;
 };
+
+template<class Policy, class Class>
+type_id collect_static_type_id() {
+    if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
+        return reinterpret_cast<type_id>(Policy::template static_type<Class>);
+    } else {
+        return Policy::template static_type<Class>();
+    }
+}
 
 template<class Policy, typename... T>
 type_id type_id_list<Policy, types<T...>>::value[values] = {
