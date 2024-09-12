@@ -1,7 +1,8 @@
 // clang-format off
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>
@@ -11,7 +12,7 @@ entry: virtual_ptr
 entry: virtual_shared_ptr
 entry: make_virtual_shared
 hrefs: virtual_ptr-final
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp, yorel/yomm2.hpp
 
 ```c++
 template<class Class, class Policy = YOMM2_DEFAULT_POLICY>

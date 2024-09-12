@@ -19,7 +19,7 @@ struct animals_policy : yorel::yomm2::policy::basic_policy<
 #define YOMM2_DEFAULT_POLICY animals_policy
 #endif
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 
 using yorel::yomm2::virtual_ptr;
 

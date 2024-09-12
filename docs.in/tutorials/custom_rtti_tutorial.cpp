@@ -7,7 +7,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/utility/identity_type.hpp>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 using namespace yorel::yomm2;
 

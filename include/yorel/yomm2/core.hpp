@@ -12,18 +12,107 @@
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
+#include <yorel/yomm2/cast.hpp>
+#include <yorel/yomm2/detail/types.hpp>
 #include <yorel/yomm2/detail.hpp>
 
 namespace yorel {
 namespace yomm2 {
 
-template<typename T>
-struct virtual_;
+// =============================================================================
+// virtual_traits
 
-template<class Class, class Policy>
-struct virtual_ptr;
+template<class Policy, typename T>
+struct virtual_traits;
 
-// -----------------------------------------------------------------------------
+template<class Policy, typename T>
+struct virtual_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T&> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T& arg) {
+        return arg;
+    }
+
+    template<typename D>
+    static D& cast(T& obj) {
+        return optimal_cast<Policy, D&>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T&&> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T& arg) {
+        return arg;
+    }
+
+    template<typename D>
+    static D&& cast(T&& obj) {
+        return optimal_cast<Policy, D&&>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T*> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static const T& rarg(const T* arg) {
+        return *arg;
+    }
+
+    template<typename D>
+    static D cast(T* obj) {
+        return &optimal_cast<Policy, std::remove_pointer_t<D>&>(*obj);
+    }
+};
+
+namespace detail {
+
+template<class Policy, typename T>
+using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux {
+    using type = void;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<Policy, virtual_<P>, Q> {
+    using type = polymorphic_type<Policy, Q>;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<
+    Policy, virtual_ptr<P, Policy>, virtual_ptr<Q, Policy>> {
+    using type = typename virtual_traits<
+        Policy, virtual_ptr<Q, Policy>>::polymorphic_type;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<
+    Policy, const virtual_ptr<P, Policy>&, const virtual_ptr<Q, Policy>&> {
+    using type = typename virtual_traits<
+        Policy, const virtual_ptr<Q, Policy>&>::polymorphic_type;
+};
+
+template<class Policy, typename P, typename Q>
+using select_spec_polymorphic_type =
+    typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
+
+template<class Policy, typename MethodArgList, typename SpecArgList>
+using spec_polymorphic_types = boost::mp11::mp_remove<
+    boost::mp11::mp_transform_q<
+        boost::mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
+        MethodArgList, SpecArgList>,
+    void>;
+
+} // namespace detail
+
+// =============================================================================
 // Method
 
 namespace detail {
@@ -77,69 +166,6 @@ inline uintptr_t get_tip(const T& arg) {
     }
 }
 
-template<typename B, typename D, typename = void>
-struct requires_dynamic_cast_ref_aux : std::true_type {};
-
-template<typename B, typename D>
-struct requires_dynamic_cast_ref_aux<
-    B, D, std::void_t<decltype(static_cast<D>(std::declval<B>()))>>
-    : std::false_type {};
-
-template<class B, class D>
-constexpr bool requires_dynamic_cast =
-    requires_dynamic_cast_ref_aux<B, D>::value;
-
-template<class Policy, class D, class B>
-decltype(auto) optimal_cast(B&& obj) {
-    if constexpr (requires_dynamic_cast<B, D>) {
-        return Policy::template dynamic_cast_ref<D>(obj);
-    } else {
-        return static_cast<D>(obj);
-    }
-}
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, T&> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static const T& rarg(const T& arg) {
-        return arg;
-    }
-
-    template<typename D>
-    static D& cast(T& obj) {
-        return optimal_cast<Policy, D&>(obj);
-    }
-};
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, T&&> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static const T& rarg(const T& arg) {
-        return arg;
-    }
-
-    template<typename D>
-    static D&& cast(T&& obj) {
-        return optimal_cast<Policy, D&&>(obj);
-    }
-};
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, T*> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static const T& rarg(const T* arg) {
-        return *arg;
-    }
-
-    template<typename D>
-    static D cast(T* obj) {
-        return &optimal_cast<Policy, std::remove_pointer_t<D>&>(*obj);
-    }
-};
-
 template<class Policy, typename T>
 struct argument_traits {
     static const T& rarg(const T& arg) {
@@ -162,90 +188,6 @@ struct argument_traits<Policy, virtual_ptr<Class, Policy>>
 template<class Policy, class Class>
 struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
     : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
-
-template<typename T>
-struct shared_ptr_traits {
-    static const bool is_shared_ptr = false;
-};
-
-template<typename T>
-struct shared_ptr_traits<std::shared_ptr<T>> {
-    static const bool is_shared_ptr = true;
-    static const bool is_const_ref = false;
-    using polymorphic_type = T;
-};
-
-template<typename T>
-struct shared_ptr_traits<const std::shared_ptr<T>&> {
-    static const bool is_shared_ptr = true;
-    static const bool is_const_ref = true;
-    using polymorphic_type = T;
-};
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, const std::shared_ptr<T>&> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static const T& rarg(const std::shared_ptr<T>& arg) {
-        return *arg;
-    }
-
-    template<class DERIVED>
-    static void check_cast() {
-        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
-        static_assert(
-            shared_ptr_traits<DERIVED>::is_const_ref,
-            "cannot cast from 'const shared_ptr<base>&' to "
-            "'shared_ptr<derived>'");
-        static_assert(std::is_class_v<
-                      typename shared_ptr_traits<DERIVED>::polymorphic_type>);
-    }
-
-    template<class DERIVED>
-    static auto cast(const std::shared_ptr<T>& obj) {
-        check_cast<DERIVED>();
-
-        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
-            return std::dynamic_pointer_cast<
-                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
-        } else {
-            return std::static_pointer_cast<
-                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
-        }
-    }
-};
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, std::shared_ptr<T>> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static const T& rarg(const std::shared_ptr<T>& arg) {
-        return *arg;
-    }
-
-    template<class DERIVED>
-    static void check_cast() {
-        static_assert(shared_ptr_traits<DERIVED>::is_shared_ptr);
-        static_assert(
-            !shared_ptr_traits<DERIVED>::is_const_ref,
-            "cannot cast from 'const shared_ptr<base>&' to "
-            "'shared_ptr<derived>'");
-        static_assert(std::is_class_v<
-                      typename shared_ptr_traits<DERIVED>::polymorphic_type>);
-    }
-    template<class DERIVED>
-    static auto cast(const std::shared_ptr<T>& obj) {
-        check_cast<DERIVED>();
-
-        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
-            return std::dynamic_pointer_cast<
-                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
-        } else {
-            return std::static_pointer_cast<
-                typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
-        }
-    }
-};
 
 // -----------------------------------------------------------------------------
 // thunk
@@ -541,37 +483,28 @@ using use_classes = typename detail::use_classes_aux<
 
 namespace detail {
 
-// -----------------------------------------------------------------------------
-// virtual_ptr
-
 template<class Class, class Policy>
 struct is_virtual<virtual_ptr<Class, Policy>> : std::true_type {};
 
 template<class Class, class Policy>
 struct is_virtual<const virtual_ptr<Class, Policy>&> : std::true_type {};
 
+template<typename>
+struct is_virtual_ptr_aux : std::false_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
+};
+
+} // namespace detail
+
 template<class Class, class Policy>
 struct virtual_ptr_traits {
     static bool constexpr is_smart_ptr = false;
     using polymorphic_type = Class;
-};
-
-template<class Class, class Policy>
-struct virtual_ptr_traits<std::shared_ptr<Class>, Policy> {
-    static bool constexpr is_smart_ptr = true;
-    using polymorphic_type = Class;
-
-    template<typename OtherPtrRef>
-    static decltype(auto) cast(const std::shared_ptr<Class>& ptr) {
-        using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
-        using OtherClass = typename OtherPtr::box_type::element_type;
-
-        if constexpr (requires_dynamic_cast<Class&, OtherClass&>) {
-            return std::dynamic_pointer_cast<OtherClass>(ptr);
-        } else {
-            return std::static_pointer_cast<OtherClass>(ptr);
-        }
-    }
 };
 
 template<class Policy, class Class>
@@ -594,26 +527,8 @@ template<class Policy, class Class>
 struct virtual_traits<Policy, const virtual_ptr<Class, Policy>&>
     : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
 
-template<typename>
-struct is_virtual_ptr_aux : std::false_type {};
-
-template<class Class, class Policy>
-struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
-
-template<class Class, class Policy>
-struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
-};
-
 template<typename T>
-constexpr bool is_virtual_ptr = is_virtual_ptr_aux<T>::value;
-
-template<class... Ts>
-using virtual_ptr_class = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_second<types<Ts..., void>>,
-    boost::mp11::mp_first<types<Ts...>>>;
-
-
-}
+constexpr bool is_virtual_ptr = detail::is_virtual_ptr_aux<T>::value;
 
 template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
 class virtual_ptr {
@@ -621,13 +536,11 @@ class virtual_ptr {
     friend class virtual_ptr;
 
     template<class, typename>
-    friend struct detail::virtual_traits;
-    template<class, typename>
-    friend struct detail::virtual_ptr_traits;
+    friend struct virtual_traits;
 
   protected:
     constexpr static bool IsSmartPtr =
-        detail::virtual_ptr_traits<Class, Policy>::is_smart_ptr;
+        virtual_ptr_traits<Class, Policy>::is_smart_ptr;
     using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
     static constexpr bool is_indirect =
         Policy::template has_facet<policy::indirect_vptr>;
@@ -684,7 +597,7 @@ class virtual_ptr {
         if (dynamic_id == static_id) {
             if constexpr (has_facet<Policy, indirect_vptr>) {
                 vptr = &Policy::template static_vptr<
-                    typename detail::virtual_traits<
+                    typename virtual_traits<
                         Policy, Other&>::polymorphic_type>;
             } else {
                 vptr = Policy::template static_vptr<
@@ -803,15 +716,6 @@ class virtual_ptr {
 template<class Class>
 virtual_ptr(Class&) -> virtual_ptr<Class, YOMM2_DEFAULT_POLICY>;
 
-template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
-using virtual_shared_ptr = virtual_ptr<std::shared_ptr<Class>, Policy>;
-
-template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
-inline auto make_virtual_shared() {
-    return virtual_shared_ptr<Class, Policy>::final(
-        std::make_shared<detail::virtual_ptr_class<Class>>());
-}
-
 template<class Policy, class Class>
 inline auto final_virtual_ptr(Class& obj) {
     return virtual_ptr<Class, Policy>::final(obj);
@@ -889,7 +793,7 @@ template<typename ArgType>
 inline auto
 method<Name, ReturnType(Args...), Policy>::vptr(const ArgType& arg) const
     -> const std::uintptr_t* {
-    if constexpr (detail::is_virtual_ptr<ArgType>) {
+    if constexpr (is_virtual_ptr<ArgType>) {
         return arg._vptr();
         // No need to check the method pointer: this was done when the
         // virtual_ptr was created.

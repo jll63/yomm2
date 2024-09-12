@@ -3,7 +3,7 @@
 hrefs: YOMM2_DEFINE
 
 macro: define_method
-headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp></sub
+headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp></sub
 
 ```c++
 #define_method(/*unspecified*/) /*unspecified*/
@@ -54,7 +54,7 @@ documentation of ->`method_container` for more information on method containers.
 #ifdef YOMM2_CODE
 
 #include <string>
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Animal { virtual ~Animal() {} };

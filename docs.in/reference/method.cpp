@@ -1,7 +1,7 @@
 /***
 entry: method
 hrefs: method-fn, method-next_type, method-add_function, method-add_definition, method-use_next
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
 template<

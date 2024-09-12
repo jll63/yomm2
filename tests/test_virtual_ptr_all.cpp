@@ -3,9 +3,10 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 #include "test_util.hpp"
 

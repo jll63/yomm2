@@ -91,34 +91,6 @@ static_assert(
         polymorphic_types<types<virtual_<a&>, b, virtual_<c&>>>,
         types<a&, c&>>);
 
-static_assert(
-    std::is_same_v<
-        polymorphic_types<types<
-            virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>>,
-        types<std::shared_ptr<a>, std::shared_ptr<c>>>);
-
-static_assert(
-    std::is_same_v<
-        spec_polymorphic_types<
-            default_policy,
-            types<virtual_<a&>, b, virtual_<c&>>,
-            types<d&, e, f&>>,
-        types<d, f>>);
-
-static_assert(
-    std::is_same_v<
-        polymorphic_type<default_policy, std::shared_ptr<a>>,
-    a>);
-
-static_assert(
-    std::is_same_v<
-        spec_polymorphic_types<
-            default_policy,
-            types<
-                virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>,
-            types<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
-        types<d, f>>);
-
 BOOST_AUTO_TEST_CASE(test_type_id_list) {
     type_id expected[] = {type_id(&typeid(a)), type_id(&typeid(b))};
     auto iter = type_id_list<default_policy, types<a&, b&>>::begin;

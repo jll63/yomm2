@@ -1,7 +1,7 @@
 #ifdef YOMM2_MD
 
 entry: aggregate
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
 template<typename... T> struct aggregate;
@@ -25,7 +25,7 @@ int main() {}
 
 #ifdef YOMM2_CODE
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
 

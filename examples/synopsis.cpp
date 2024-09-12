@@ -25,7 +25,7 @@ class Dolphin : public Animal {};
 // =============================================================================
 // Add behavior to existing classes, without modifying them.
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 // Classes must be registered:

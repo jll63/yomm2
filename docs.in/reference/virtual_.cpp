@@ -1,7 +1,7 @@
 #ifdef YOMM2_MD
 
 entry: virtual_
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp, yorel/yomm2.hpp
 ```
 template<class C>
 struct virtual_;
@@ -19,8 +19,9 @@ int main() {}
 
 #ifdef YOMM2_CODE
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 struct Animal {
     virtual ~Animal() {}

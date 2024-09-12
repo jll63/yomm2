@@ -25,10 +25,10 @@ int main() {
 
 #include <benchmark/benchmark.h>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/detail/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 #include "benchmarks_parameters.hpp"
 
@@ -126,9 +126,9 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct use_basic_policy : virtual_by_reference {
-    struct policy
-        : default_static::rebind<policy>::remove<yomm2::policy::trace_output>,
-          yomm2::policy::basic_trace_output<policy> {};
+    struct policy : default_static::rebind<policy>::remove<
+                        yorel::yomm2::policy::trace_output>,
+                    yorel::yomm2::policy::basic_trace_output<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -138,9 +138,9 @@ struct use_basic_policy : virtual_by_reference {
 
 struct std_map_policy : virtual_by_reference {
     struct policy : default_static::rebind<policy>::
-                        remove<yomm2::policy::type_hash>::replace<
-                            yomm2::policy::external_vptr,
-                            yomm2::policy::vptr_map<policy>> {};
+                        remove<yorel::yomm2::policy::type_hash>::replace<
+                            yorel::yomm2::policy::external_vptr,
+                            yorel::yomm2::policy::vptr_map<policy>> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -151,9 +151,9 @@ struct std_map_policy : virtual_by_reference {
 #if UNORDERED_FLAT_MAP_AVAILABLE
 struct flat_map_policy : virtual_by_reference {
     struct policy : default_static::rebind<policy>::
-                        remove<yomm2::policy::type_hash>::replace<
-                            yomm2::policy::external_vptr,
-                            yomm2::policy::vptr_map<
+                        remove<yorel::yomm2::policy::type_hash>::replace<
+                            yorel::yomm2::policy::external_vptr,
+                            yorel::yomm2::policy::vptr_map<
                                 policy,
                                 boost::unordered_flat_map<
                                     type_id, const std::uintptr_t*>>> {};
@@ -166,8 +166,8 @@ struct flat_map_policy : virtual_by_reference {
 #endif
 
 struct direct_intrusive_dispatch : virtual_by_reference {
-    struct policy
-        : default_static::rebind<policy>::remove<yomm2::policy::external_vptr> {
+    struct policy : default_static::rebind<policy>::remove<
+                        yorel::yomm2::policy::external_vptr> {
         template<class Class>
         static auto dynamic_vptr(const Class& arg) {
             return arg.yomm2_vptr();
@@ -208,7 +208,7 @@ struct indirect_virtual_ptr_dispatch {
         return pop.ivptr_draw();
     }
     struct policy : default_static::rebind<policy>,
-                    yomm2::policy::basic_indirect_vptr<policy> {};
+                    yorel::yomm2::policy::basic_indirect_vptr<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {

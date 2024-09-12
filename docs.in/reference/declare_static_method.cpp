@@ -1,7 +1,7 @@
 #ifdef YOMM2_MD
 
 macro: declare_static_method
-headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp
 hrefs: YOMM2_STATIC_DECLARE
 
 ```c++
@@ -26,7 +26,7 @@ create functions that can be picked via ADL.
 
 #include <string>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Engineer { virtual ~Engineer() {} };

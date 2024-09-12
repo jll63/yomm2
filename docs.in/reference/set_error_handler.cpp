@@ -1,5 +1,5 @@
 #ifdef YOMM2_MD
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp, yorel/yomm2.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp, yorel/yomm2.hpp
 
 ```c++
 error_handler_type set_error_handler(error_handler_type handler);
@@ -27,7 +27,7 @@ message to `stderr` in debug mode.
 #ifdef YOMM2_CODE
 
 #include <stdexcept>
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Animal {

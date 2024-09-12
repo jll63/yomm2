@@ -95,7 +95,7 @@ struct diagonal_matrix : matrix { /* ... */
 // application code
 
 #include <memory>
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 register_classes(matrix, dense_matrix, diagonal_matrix);
@@ -126,7 +126,7 @@ int main() {
 
 /***
 
-`<yorel/yomm2/keywords.hpp>` is the library's main entry point. It declares a
+`<yorel/yomm2.hpp>` is the library's main entry point. It declares a
 set of macros, and injects a single name, ->`virtual_`, in the global
 namespace. The purpose of the header is to make it look as if open methods
 are part of the language.

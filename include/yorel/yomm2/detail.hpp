@@ -62,50 +62,6 @@ constexpr bool is_policy = is_policy_aux<T>::value;
 template<typename T>
 constexpr bool is_not_policy = !is_policy<T>;
 
-template<class Policy, typename T>
-struct virtual_traits;
-
-template<class Policy, typename T>
-struct virtual_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
-
-template<class Policy, typename T>
-using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux {
-    using type = void;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<Policy, virtual_<P>, Q> {
-    using type = polymorphic_type<Policy, Q>;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<
-    Policy, virtual_ptr<P, Policy>, virtual_ptr<Q, Policy>> {
-    using type = typename virtual_traits<
-        Policy, virtual_ptr<Q, Policy>>::polymorphic_type;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<
-    Policy, const virtual_ptr<P, Policy>&, const virtual_ptr<Q, Policy>&> {
-    using type = typename virtual_traits<
-        Policy, const virtual_ptr<Q, Policy>&>::polymorphic_type;
-};
-
-template<class Policy, typename P, typename Q>
-using select_spec_polymorphic_type =
-    typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
-
-template<class Policy, typename MethodArgList, typename SpecArgList>
-using spec_polymorphic_types = boost::mp11::mp_remove<
-    boost::mp11::mp_transform_q<
-        boost::mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
-        MethodArgList, SpecArgList>,
-    void>;
-
 template<typename... Classes>
 using get_policy = std::conditional_t<
     is_policy<boost::mp11::mp_back<types<Classes...>>>,

@@ -3,7 +3,7 @@
 
 /***
 entry: policy::vptr_placement, policy::external_vptr
-headers: yorel/yomm2/policy.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/policy.hpp, yorel/yomm2.hpp
 ```
 struct vptr_placement;
 struct external_vptr;
@@ -154,7 +154,7 @@ struct number_aware_policy : default_static::replace<vptr_placement, vptr_page> 
 
 // Make it the default policy.
 #define YOMM2_DEFAULT_POLICY number_aware_policy
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 //***

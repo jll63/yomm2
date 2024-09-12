@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2.hpp>
 
 #include "geometries.hpp"
 #include "painter.hpp"

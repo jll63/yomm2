@@ -11,8 +11,9 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 struct Animal {
     virtual ~Animal() {

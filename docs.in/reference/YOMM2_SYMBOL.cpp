@@ -1,7 +1,7 @@
 #ifdef YOMM2_MD
 
 macro: YOMM2_SYMBOL
-headers: yorel/yomm2/symbols.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/symbols.hpp, yorel/yomm2.hpp
 
 ```c++
 #define YOMM2_SYMBOL(seed) /*unspecified*/

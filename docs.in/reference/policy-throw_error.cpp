@@ -1,6 +1,6 @@
 /***
 entry: policy::throw_error
-location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
+location: policy;yorel/yomm2/core.hpp,yorel/yomm2.hpp
 
     struct throw_error;
 
@@ -31,7 +31,7 @@ Extract the value of `error_variant`, and throw it as an exception.
 
 //***
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 namespace yomm2 = yorel::yomm2;

@@ -1,6 +1,8 @@
 #ifndef YOREL_YOMM2_DECODE_HPP
 #define YOREL_YOMM2_DECODE_HPP
 
+#include <yorel/yomm2/detail/trace.hpp>
+
 namespace yorel {
 namespace yomm2 {
 

@@ -4,7 +4,7 @@ entry: use_classes
 headers: yorel/yomm2/core.hpp
 
 macro: register_classes, YOMM2_CLASSES
-headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp
 
 macro: YOMM2_CLASSES
 headers: yorel/yomm2/macros.hpp, yorel/yomm2/yomm2.hpp
@@ -64,7 +64,7 @@ Given the following hierarchy:
 
 #define BOOST_TEST_MODULE runtime
 #include <boost/test/included/unit_test.hpp>
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 BOOST_AUTO_TEST_CASE(ref_dummy) {}

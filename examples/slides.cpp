@@ -116,7 +116,7 @@ struct Init {
 } init;
 }
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 namespace openmethods {

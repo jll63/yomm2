@@ -15,7 +15,9 @@
 #include <utility>
 
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/macros.hpp>
+
+using yorel::yomm2::virtual_;
+using yorel::yomm2::virtual_ptr;
 
 #endif

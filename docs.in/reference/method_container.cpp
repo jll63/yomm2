@@ -3,7 +3,7 @@
 hrefs: YOMM2_DECLARE_METHOD_CONTAINER
 
 macro: method_container
-headers: yorel/yomm2/cute.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp
 
 ```
 #define method_container(container)
@@ -39,7 +39,7 @@ the same namespace as the container itself.
 
 #include <string>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 method_container(kicks);

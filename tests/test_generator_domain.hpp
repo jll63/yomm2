@@ -11,7 +11,7 @@ struct throw_policy
 
 #define YOMM2_DEFAULT_POLICY throw_policy
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 
 #ifndef _MSC_VER
 // Because MSC is believes that forward declaring with 'struct' or 'class' makes

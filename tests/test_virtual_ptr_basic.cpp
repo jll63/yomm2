@@ -3,8 +3,9 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 #include <iostream>
 #include <memory>
@@ -21,6 +22,45 @@ using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
 auto debug_handler = &default_policy::error;
+
+struct base {
+    virtual ~base() {}
+};
+
+struct a : base {};
+struct b : base {};
+struct c : base {};
+struct d : base {};
+struct e : base {};
+struct f : base {};
+
+static_assert(
+    std::is_same_v<
+        polymorphic_types<types<
+            virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>>,
+        types<std::shared_ptr<a>, std::shared_ptr<c>>>);
+
+static_assert(
+    std::is_same_v<
+        spec_polymorphic_types<
+            default_policy,
+            types<virtual_<a&>, b, virtual_<c&>>,
+            types<d&, e, f&>>,
+        types<d, f>>);
+
+static_assert(
+    std::is_same_v<
+        polymorphic_type<default_policy, std::shared_ptr<a>>,
+    a>);
+
+static_assert(
+    std::is_same_v<
+        spec_polymorphic_types<
+            default_policy,
+            types<
+                virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>,
+            types<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
+        types<d, f>>);
 
 namespace YOMM2_GENSYM {
 

@@ -6,7 +6,7 @@
 <sub>/ ->home / ->reference </sub>
 
 entry: yorel::yomm2::CLASS
-headers: yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ---
 ```
@@ -50,7 +50,7 @@ TODO.
 ***/
 
 //***
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 // for brevity
