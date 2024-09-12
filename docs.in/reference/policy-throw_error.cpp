@@ -45,7 +45,7 @@ struct Animal {
 struct Dog : Animal {};
 
 using throw_policy = yomm2::default_policy::replace<
-    yomm2::policy::error_handler, yomm2::policy::throw_error>;
+    yorel::yomm2::policies::error_handler, yorel::yomm2::policies::throw_error>;
 
 register_classes(Animal, Dog, throw_policy);
 

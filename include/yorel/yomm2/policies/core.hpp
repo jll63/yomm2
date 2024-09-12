@@ -89,7 +89,7 @@ struct method_call_error {
 using method_call_error_handler =
     void (*)(const method_call_error& error, std::size_t arity, type_id* types);
 
-namespace policy {
+namespace policies {
 
 struct abstract_policy {};
 
@@ -194,7 +194,7 @@ struct rtti {
 
 struct deferred_static_rtti : virtual rtti {};
 
-} // namespace policy
+} // namespace policies
 
 } // namespace yomm2
 } // namespace yorel

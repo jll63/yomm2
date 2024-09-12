@@ -33,7 +33,7 @@ int main() {
 #include "benchmarks_parameters.hpp"
 
 using namespace yorel::yomm2;
-using namespace yorel::yomm2::policy;
+using namespace yorel::yomm2::policies;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)
@@ -126,9 +126,9 @@ struct virtual_dispatch : virtual_by_reference {
 };
 
 struct use_basic_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::remove<
-                        yorel::yomm2::policy::trace_output>,
-                    yorel::yomm2::policy::basic_trace_output<policy> {};
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::trace_output>,
+          policies::basic_trace_output<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -137,10 +137,9 @@ struct use_basic_policy : virtual_by_reference {
 };
 
 struct std_map_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::
-                        remove<yorel::yomm2::policy::type_hash>::replace<
-                            yorel::yomm2::policy::external_vptr,
-                            yorel::yomm2::policy::vptr_map<policy>> {};
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::type_hash>::replace<
+              policies::external_vptr, policies::vptr_map<policy>> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -150,13 +149,13 @@ struct std_map_policy : virtual_by_reference {
 
 #if UNORDERED_FLAT_MAP_AVAILABLE
 struct flat_map_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::
-                        remove<yorel::yomm2::policy::type_hash>::replace<
-                            yorel::yomm2::policy::external_vptr,
-                            yorel::yomm2::policy::vptr_map<
-                                policy,
-                                boost::unordered_flat_map<
-                                    type_id, const std::uintptr_t*>>> {};
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::type_hash>::replace<
+              policies::external_vptr,
+              policies::vptr_map<
+                  policy,
+                  boost::unordered_flat_map<type_id, const std::uintptr_t*>>> {
+    };
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -166,8 +165,8 @@ struct flat_map_policy : virtual_by_reference {
 #endif
 
 struct direct_intrusive_dispatch : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::remove<
-                        yorel::yomm2::policy::external_vptr> {
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::external_vptr> {
         template<class Class>
         static auto dynamic_vptr(const Class& arg) {
             return arg.yomm2_vptr();
@@ -181,7 +180,7 @@ struct direct_intrusive_dispatch : virtual_by_reference {
 };
 
 struct indirect_intrusive_dispatch : virtual_by_reference {
-    struct policy : default_static::rebind<policy> {};
+    struct policy : default_policy::rebind<policy> {};
     template<typename Inheritance>
     using base_type = indirect_intrusive_base<Inheritance>;
     static std::string name() {
@@ -194,7 +193,7 @@ struct direct_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.vptr_draw();
     }
-    struct policy : default_static::rebind<policy> {};
+    struct policy : default_policy::rebind<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -207,8 +206,8 @@ struct indirect_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.ivptr_draw();
     }
-    struct policy : default_static::rebind<policy>,
-                    yorel::yomm2::policy::basic_indirect_vptr<policy> {};
+    struct policy : default_policy::rebind<policy>,
+                    policies::basic_indirect_vptr<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {

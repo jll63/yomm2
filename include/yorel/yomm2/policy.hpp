@@ -29,7 +29,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 struct yOMM2_API_gcc release
     : basic_policy<
@@ -42,15 +42,14 @@ struct yOMM2_API_gcc debug
           basic_error_output<debug>, basic_trace_output<debug>,
           vectored_error<debug>> {};
 
+} // namespace policies
+
+
 #ifdef NDEBUG
-using default_static = policy::release;
+using default_policy = policies::release;
 #else
-using default_static = policy::debug;
+using default_policy = policies::debug;
 #endif
-
-} // namespace policy
-
-using default_policy = policy::default_static;
 
 } // namespace yomm2
 } // namespace yorel

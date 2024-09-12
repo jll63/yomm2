@@ -11,7 +11,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 struct minimal_rtti : virtual rtti {
     template<typename T>
@@ -21,7 +21,7 @@ struct minimal_rtti : virtual rtti {
     }
 };
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

@@ -171,7 +171,7 @@ struct generic_compiler {
 template<class Policy>
 trace_type<Policy>&
 operator<<(trace_type<Policy>& trace, const generic_compiler::class_& cls) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
+    if constexpr (Policy::template has_facet<policies::trace_output>) {
         trace << type_name(cls.type_ids[0]);
     }
 
@@ -182,7 +182,7 @@ template<class Policy, template<typename...> typename Container, typename... T>
 trace_type<Policy>& operator<<(
     trace_type<Policy>& trace,
     Container<generic_compiler::class_*, T...>& classes) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
+    if constexpr (Policy::template has_facet<policies::trace_output>) {
         trace << "(";
         const char* sep = "";
         for (auto cls : classes) {
@@ -258,7 +258,7 @@ struct compiler : detail::generic_compiler {
 
     static type_id static_type(type_id type) {
         if constexpr (std::is_base_of_v<
-                          policy::deferred_static_rtti, policy::rtti>) {
+                          policies::deferred_static_rtti, policies::rtti>) {
             return reinterpret_cast<type_id (*)()>(type)();
         } else {
             return type;
@@ -267,7 +267,7 @@ struct compiler : detail::generic_compiler {
 
     mutable detail::trace_type<Policy> trace;
     static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::trace_output>;
+        Policy::template has_facet<policies::trace_output>;
     using indent = typename detail::trace_type<Policy>::indent;
 };
 
@@ -319,7 +319,7 @@ void compiler<Policy>::resolve_static_type_ids() {
         *p = pf();
     };
 
-    if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
+    if constexpr (std::is_base_of_v<policies::deferred_static_rtti, Policy>) {
         if (!Policy::classes.empty())
             for (auto& ci : Policy::classes) {
                 resolve(&ci.type);
@@ -412,7 +412,7 @@ void compiler<Policy>::augment_classes() {
                 error.type = *base_iter;
 
                 if constexpr (Policy::template has_facet<
-                                  policy::error_handler>) {
+                                  policies::error_handler>) {
                     Policy::error(error_type(error));
                 }
 
@@ -524,7 +524,7 @@ void compiler<Policy>::calculate_covariant_classes(class_& cls) {
 
 template<class Policy>
 void compiler<Policy>::augment_methods() {
-    using namespace policy;
+    using namespace policies;
     using namespace detail;
 
     methods.resize(Policy::methods.size());
@@ -1023,7 +1023,7 @@ inline void detail::generic_compiler::accumulate(
 
 template<class Policy>
 void compiler<Policy>::install_gv() {
-    using namespace policy;
+    using namespace policies;
     using namespace detail;
 
     auto dispatch_data_size = std::accumulate(
@@ -1222,7 +1222,7 @@ auto update() -> compiler<Policy> {
 #ifdef YOMM2_SHARED
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-yOMM2_API auto update() -> compiler<policy::debug_shared>;
+yOMM2_API auto update() -> compiler<policies::debug_shared>;
 #endif
 
 #else

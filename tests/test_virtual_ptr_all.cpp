@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     BOOST_TEST(
         (virtual_cat_ptr._vptr() == Policy::template static_vptr<Bear>) ==
-        Policy::template has_facet<policy::indirect_vptr>);
+        Policy::template has_facet<policies::indirect_vptr>);
 }
 } // namespace YOMM2_GENSYM
 

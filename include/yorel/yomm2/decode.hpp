@@ -196,9 +196,9 @@ void decode_dispatch_data(Data& init) {
         ++trace << waste << " bytes wasted\n";
     }
 
-    using namespace policy;
+    using namespace policies;
 
-    if constexpr (Policy::template has_facet<policy::external_vptr>) {
+    if constexpr (Policy::template has_facet<policies::external_vptr>) {
         Policy::publish_vptrs(Policy::classes.begin(), Policy::classes.end());
     }
 }

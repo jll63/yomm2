@@ -19,7 +19,7 @@ struct type_id_list<Policy, types<T...>> {
     // default-initialized to zero, indicating the ids need to be resolved. Set
     // to 1 after this is done.
     static constexpr std::size_t values =
-        sizeof...(T) + std::is_base_of_v<policy::deferred_static_rtti, Policy>;
+        sizeof...(T) + std::is_base_of_v<policies::deferred_static_rtti, Policy>;
     static type_id value[values];
     static type_id* begin;
     static type_id* end;
@@ -27,7 +27,7 @@ struct type_id_list<Policy, types<T...>> {
 
 template<class Policy, class Class>
 type_id collect_static_type_id() {
-    if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
+    if constexpr (std::is_base_of_v<policies::deferred_static_rtti, Policy>) {
         return reinterpret_cast<type_id>(Policy::template static_type<Class>);
     } else {
         return Policy::template static_type<Class>();
@@ -51,7 +51,7 @@ struct type_id_list<Policy, types<>> {
 };
 
 template<typename T>
-struct is_policy_aux : std::is_base_of<policy::abstract_policy, T> {};
+struct is_policy_aux : std::is_base_of<policies::abstract_policy, T> {};
 
 template<typename... T>
 struct is_policy_aux<types<T...>> : std::false_type {};

@@ -12,7 +12,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy, typename Stream = detail::ostderr>
 struct yOMM2_API_gcc basic_trace_output : virtual trace_output {
@@ -29,7 +29,7 @@ bool basic_trace_output<Policy, Stream>::trace_enabled([]() {
     return env && *env++ == '1' && *env++ == 0;
 }());
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

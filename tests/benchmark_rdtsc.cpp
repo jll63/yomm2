@@ -14,7 +14,7 @@
 using std::cout;
 using std::setw;
 using namespace yorel::yomm2;
-using namespace policy;
+using namespace policies;
 
 struct intrusive : default_policy::rebind<intrusive>::remove<
                        external_vptr>::remove<type_hash> {

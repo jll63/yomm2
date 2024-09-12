@@ -136,21 +136,22 @@ void* aligned_alloc(std::size_t alignment, std::size_t size) {
 
 // for brevity
 using namespace yorel::yomm2;
-using namespace policy;
+using namespace policies;
 
-struct vptr_page : virtual default_static::use_facet<vptr_placement> {
+struct vptr_page : virtual default_policy::use_facet<vptr_placement> {
     template<class Class>
     static auto dynamic_vptr(Class& arg) {
         if constexpr (std::is_base_of_v<Number, std::remove_const_t<Class>>) {
             auto page = reinterpret_cast<std::uintptr_t>(&arg) & ~1023;
             return *reinterpret_cast<std::uintptr_t**>(page);
         } else {
-            return default_static::use_facet<vptr_placement>::dynamic_vptr(arg);
+            return default_policy::use_facet<vptr_placement>::dynamic_vptr(arg);
         }
     }
 };
 
-struct number_aware_policy : default_static::replace<vptr_placement, vptr_page> {};
+struct number_aware_policy
+    : default_policy::replace<vptr_placement, vptr_page> {};
 
 // Make it the default policy.
 #define YOMM2_DEFAULT_POLICY number_aware_policy

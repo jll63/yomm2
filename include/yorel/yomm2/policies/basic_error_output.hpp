@@ -12,7 +12,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy, typename Stream = detail::ostderr>
 struct yOMM2_API_gcc basic_error_output : virtual error_output {
@@ -22,7 +22,7 @@ struct yOMM2_API_gcc basic_error_output : virtual error_output {
 template<class Policy, typename Stream>
 Stream basic_error_output<Policy, Stream>::error_stream;
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

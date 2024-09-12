@@ -17,7 +17,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 struct std_rtti : virtual rtti {
 #ifndef BOOST_NO_RTTI
@@ -50,7 +50,7 @@ struct std_rtti : virtual rtti {
 #endif
 };
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

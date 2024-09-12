@@ -13,7 +13,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy>
 struct yOMM2_API_gcc basic_indirect_vptr : virtual indirect_vptr {
@@ -24,7 +24,7 @@ template<class Policy>
 std::vector<std::uintptr_t const* const*>
     basic_indirect_vptr<Policy>::indirect_vptrs;
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

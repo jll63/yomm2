@@ -11,7 +11,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy, typename DefaultHandlerProvider = void>
 struct yOMM2_API_gcc vectored_error : virtual error_handler {
@@ -19,7 +19,7 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
 
     static void default_error_handler(const error_type& error_v) {
         using namespace detail;
-        using namespace policy;
+        using namespace policies;
 
         if constexpr (Policy::template has_facet<error_output>) {
             if (auto error = std::get_if<resolution_error>(&error_v)) {
@@ -63,7 +63,7 @@ error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
         std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
         DefaultHandlerProvider>::default_error_handler;
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

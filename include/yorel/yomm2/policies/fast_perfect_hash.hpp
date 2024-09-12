@@ -13,7 +13,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
@@ -53,7 +53,7 @@ template<typename ForwardIterator>
 void fast_perfect_hash<Policy>::hash_initialize(
     ForwardIterator first, ForwardIterator last,
     std::vector<type_id>& buckets) {
-    using namespace policy;
+    using namespace policies;
 
     constexpr bool trace_enabled = Policy::template has_facet<trace_output>;
     const auto N = std::distance(first, last);
@@ -170,7 +170,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 
         if (index >= fast_perfect_hash<Policy>::hash_length ||
             control[index] != type) {
-            using namespace policy;
+            using namespace policies;
 
             if constexpr (Policy::template has_facet<error_handler>) {
                 unknown_class_error error;
@@ -195,7 +195,7 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 template<class Policy>
 std::vector<type_id> checked_perfect_hash<Policy>::control;
 
-} // namespace policy
+} // namespace policies
 } // namespace yomm2
 } // namespace yorel
 

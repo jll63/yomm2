@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         return;
     }
 
-    if constexpr (default_policy::has_facet<policy::runtime_checks>) {
+    if constexpr (default_policy::has_facet<policies::runtime_checks>) {
         if (!threw) {
             BOOST_FAIL("should have thrown");
         }

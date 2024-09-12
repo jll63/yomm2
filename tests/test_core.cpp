@@ -227,7 +227,7 @@ static_assert(
         >
 >);
 
-struct my_policy : policy::abstract_policy {};
+struct my_policy : policies::abstract_policy {};
 
 static_assert(
     std::is_same_v<
@@ -250,7 +250,7 @@ static_assert(
 
 namespace facets {
 
-using namespace policy;
+using namespace policies;
 
 struct key1;
 struct key2;
@@ -261,8 +261,8 @@ static_assert(std::is_same_v<
     basic_domain<key2>
 >);
 
-// yorel::yomm2::policy::basic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
-// yorel::yomm2::policy::basic_policy<yorel::yomm2::policy::basic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
+// yorel::yomm2::policies::basic_policy<facets::key2, yorel::yomm2::policies::std_rtti>,
+// yorel::yomm2::policies::basic_policy<yorel::yomm2::policies::basic_domain<facets::key2>, yorel::yomm2::policies::std_rtti>
 
 struct policy1 : basic_policy<policy1, std_rtti> {};
 struct policy2 : policy1::rebind<policy2> {};

@@ -543,7 +543,7 @@ class virtual_ptr {
         virtual_ptr_traits<Class, Policy>::is_smart_ptr;
     using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
     static constexpr bool is_indirect =
-        Policy::template has_facet<policy::indirect_vptr>;
+        Policy::template has_facet<policies::indirect_vptr>;
 
     using vptr_type = std::conditional_t<
         is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
@@ -581,7 +581,7 @@ class virtual_ptr {
     virtual_ptr(Other&& other) {
         box(other);
 
-        using namespace policy;
+        using namespace policies;
         using namespace detail;
 
         static_assert(
@@ -648,7 +648,7 @@ class virtual_ptr {
     template<class Other>
     static auto final(Other&& obj) {
         using namespace detail;
-        using namespace policy;
+        using namespace policies;
 
         using other_virtual_traits = virtual_traits<Policy, Other>;
         using polymorphic_type =
@@ -809,7 +809,7 @@ inline void method<Name, ReturnType(Args...), Policy>::check_static_offset(
     using namespace detail;
 
     if (actual != expected) {
-        if (Policy::template has_facet<policy::error_handler>) {
+        if (Policy::template has_facet<policies::error_handler>) {
             Error error;
             error.method = Policy::template static_type<method>();
             error.expected = this->slots_strides[0];
@@ -840,7 +840,7 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_uni(
         }
 
         if constexpr (has_static_offsets<method>::value) {
-            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     static_offsets<method>::slots[0], this->slots_strides[0]);
             }
@@ -877,7 +877,7 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[0];
-            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     static_offsets<method>::slots[0], this->slots_strides[0]);
             }
@@ -923,7 +923,7 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[VirtualArg];
             stride = static_offsets<method>::strides[VirtualArg - 1];
-            if constexpr (Policy::template has_facet<policy::runtime_checks>) {
+            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     this->slots_strides[VirtualArg], slot);
                 check_static_offset<static_stride_error>(
@@ -952,7 +952,7 @@ method<Name, ReturnType(Args...), Policy>::not_implemented_handler(
     detail::remove_virtual<Args>... args) ->
     typename method<Name, ReturnType(Args...), Policy>::return_type {
 
-    if constexpr (Policy::template has_facet<policy::error_handler>) {
+    if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::no_definition;
         error.method_name = fn.name;
@@ -974,7 +974,7 @@ BOOST_NORETURN auto
 method<Name, ReturnType(Args...), Policy>::ambiguous_handler(
     detail::remove_virtual<Args>... args) ->
     typename method<Name, ReturnType(Args...), Policy>::return_type {
-    if constexpr (Policy::template has_facet<policy::error_handler>) {
+    if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::ambiguous;
         error.method_name = fn.name;
