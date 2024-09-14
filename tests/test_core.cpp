@@ -219,32 +219,43 @@ static_assert(
         >
 >);
 
-static_assert(
-    std::is_same_v<
-        use_classes_macro<Animal, default_policy>,
-        std::tuple<
-            class_declaration_aux<default_policy, types<Animal, Animal>>
-        >
->);
-
 struct my_policy : policies::abstract_policy {};
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, my_policy, default_policy>,
-        std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
-        >
+        get_policy<Animal, Dog>,
+        default_policy
 >);
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, my_policy>,
-        std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
-        >
+        get_policy<Animal, Dog, my_policy>,
+        my_policy
 >);
 
+static_assert(
+    std::is_same_v<
+        remove_policy<Animal, Dog, my_policy>,
+        types<Animal, Dog>
+>);
+
+static_assert(
+    std::is_same_v<
+        remove_policy<Animal, Dog, my_policy, default_policy>,
+        types<Animal, Dog>
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, Dog>,
+        use_classes_aux<default_policy, types<Animal, Dog>>::type
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, Dog, my_policy, default_policy>,
+        use_classes_aux<my_policy, types<Animal, Dog>>::type
+    >);
 
 } // namespace test_use_classes
 

@@ -88,9 +88,7 @@ enum Subtype {
     DIAGONAL_DIAGONAL
 };
 
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
-YOMM2_CLASS(diagonal_matrix, matrix);
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix);
 
 YOMM2_DECLARE(
     Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>));
@@ -215,9 +213,7 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
-YOMM2_CLASS(diagonal_matrix, matrix);
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, matrix);
 
 YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
@@ -294,9 +290,7 @@ struct base {
     }
 };
 
-struct derived : base {};
-
-YOMM2_STATIC(class_declaration<derived, base, test_policy>);
+YOMM2_DECLARE(void, foo, (virtual_<base&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
     auto prev_handler = test_policy::error;
@@ -326,8 +320,6 @@ class Animal {
     }
 };
 
-YOMM2_CLASS(Animal);
-
 YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>));
 
 } // namespace animals
@@ -336,7 +328,7 @@ namespace more_animals {
 
 class Dog : public animals::Animal {};
 
-YOMM2_CLASS(Dog, animals::Animal);
+YOMM2_CLASSES(Dog, animals::Animal);
 
 YOMM2_DEFINE(std::string, kick, (const Dog& dog)) {
     return "bark";

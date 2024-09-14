@@ -12,11 +12,54 @@
 #define YOMM2_DEFAULT_POLICY ::yorel::yomm2::default_policy
 #endif
 
-#include <yorel/yomm2/cast.hpp>
 #include <yorel/yomm2/detail/types.hpp>
 
 namespace yorel {
 namespace yomm2 {
+
+namespace detail {
+
+template<typename T>
+struct is_policy_fn : std::is_base_of<policies::abstract_policy, T> {};
+
+template<typename... T>
+struct is_policy_fn<types<T...>> : std::false_type {};
+
+template<typename T>
+constexpr bool is_policy = is_policy_fn<T>::value;
+
+template<typename... Classes>
+using get_policy = boost::mp11::mp_at<
+    types<Classes..., YOMM2_DEFAULT_POLICY>,
+    boost::mp11::mp_find_if<
+        types<Classes..., YOMM2_DEFAULT_POLICY>, is_policy_fn>>;
+
+template<typename... Classes>
+using remove_policy =
+    boost::mp11::mp_remove_if<types<Classes...>, is_policy_fn>;
+
+template<typename B, typename D, typename = void>
+struct requires_dynamic_cast_ref_aux : std::true_type {};
+
+template<typename B, typename D>
+struct requires_dynamic_cast_ref_aux<
+    B, D, std::void_t<decltype(static_cast<D>(std::declval<B>()))>>
+    : std::false_type {};
+
+} // namespace detail
+
+template<class B, class D>
+constexpr bool requires_dynamic_cast =
+    detail::requires_dynamic_cast_ref_aux<B, D>::value;
+
+template<class Policy, class D, class B>
+auto optimal_cast(B&& obj) -> decltype(auto) {
+    if constexpr (requires_dynamic_cast<B, D>) {
+        return Policy::template dynamic_cast_ref<D>(obj);
+    } else {
+        return static_cast<D>(obj);
+    }
+}
 
 // =============================================================================
 // virtual_traits
@@ -140,8 +183,8 @@ struct type_id_list<Policy, types<T...>> {
     // If using deferred 'static_type', add an extra element in 'value',
     // default-initialized to zero, indicating the ids need to be resolved. Set
     // to 1 after this is done.
-    static constexpr std::size_t values =
-        sizeof...(T) + std::is_base_of_v<policies::deferred_static_rtti, Policy>;
+    static constexpr std::size_t values = sizeof...(T) +
+        std::is_base_of_v<policies::deferred_static_rtti, Policy>;
     static type_id value[values];
     static type_id* begin;
     static type_id* end;
@@ -220,46 +263,9 @@ struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
 
 {};
 
-template<typename... Ts>
-using second_last = boost::mp11::mp_at_c<
-    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
-
-template<typename T>
-struct is_policy_aux : std::is_base_of<policies::abstract_policy, T> {};
-
-template<typename... T>
-struct is_policy_aux<types<T...>> : std::false_type {};
-
-template<typename T>
-constexpr bool is_policy = is_policy_aux<T>::value;
-
-template<typename T>
-constexpr bool is_not_policy = !is_policy<T>;
-
-template<typename... Classes>
-using get_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_back<types<Classes...>>, YOMM2_DEFAULT_POLICY>;
-
-template<typename... Classes>
-using remove_policy = std::conditional_t<
-    is_policy<boost::mp11::mp_back<types<Classes...>>>,
-    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
-
-template<class... Ts>
-using virtual_ptr_policy = std::conditional_t<
-    sizeof...(Ts) == 2, boost::mp11::mp_first<types<Ts...>>,
-    YOMM2_DEFAULT_POLICY>;
-
 template<class... Classes>
-using use_classes_macro = typename std::conditional_t<
-    is_policy<second_last<Classes...>>,
-    use_classes_aux<
-        second_last<Classes...>,
-        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
-    use_classes_aux<
-        boost::mp11::mp_back<types<Classes...>>,
-        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
+using use_classes_macro = typename use_classes_aux<
+    get_policy<Classes...>, remove_policy<Classes...>>::type;
 
 } // namespace detail
 

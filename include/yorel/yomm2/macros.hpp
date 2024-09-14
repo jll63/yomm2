@@ -215,9 +215,7 @@
     Container<ReturnType Args>::fn
 
 #define YOMM2_CLASSES(...)                                                     \
-    static ::yorel::yomm2::detail::use_classes_macro<                          \
-        __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
-        YOMM2_GENSYM;
+    YOMM2_STATIC(::yorel::yomm2::detail::use_classes_macro<__VA_ARGS__>);
 
 #if !BOOST_PP_VARIADICS_MSVC
 #define YOMM2_METHOD_CLASS(...)                                                \
@@ -234,7 +232,6 @@
 
 #define YOMM2_METHOD_CLASS_4(ReturnType, Name, Args, Policy)                   \
     ::yorel::yomm2::method<YOMM2_SYMBOL(Name), ReturnType Args, Policy>
-
 
 #define register_classes YOMM2_CLASSES
 
