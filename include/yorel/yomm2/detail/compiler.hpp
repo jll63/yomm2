@@ -1207,8 +1207,8 @@ void compiler<Policy>::print(const update_method_report& report) const {
         ++trace << report.cells << " dispatch table cells, ";
     }
 
-    trace << report.not_implemented << " not implemented, ";
-    trace << report.ambiguous << " ambiguities, concrete only: ";
+    trace << report.not_implemented << " not implemented, " << report.ambiguous
+          << " ambiguous\n";
 }
 
 template<class Policy>

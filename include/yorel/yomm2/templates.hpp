@@ -97,7 +97,7 @@ struct use_definition {
 
     template<typename First, typename... Rest>
     struct impl<false, Definition<First, Rest...>> {
-        using type = typename First::self_type::template add_definition<Definition<First, Rest...>>;
+        using type = typename First::template add_definition<Definition<First, Rest...>>;
     };
 
     template<typename TypeList>

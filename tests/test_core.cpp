@@ -8,6 +8,8 @@
 
 #include <yorel/yomm2.hpp>
 
+#include "test_util.hpp"
+
 #define BOOST_TEST_MODULE core
 #include <boost/test/included/unit_test.hpp>
 
@@ -163,26 +165,6 @@ BOOST_AUTO_TEST_CASE(casts) {
     static_assert(std::is_same_v<virtual_animal_t, Animal>, "animal");
     using virtual_mammal_t = polymorphic_type<default_policy, const Mammal&>;
     static_assert(std::is_same_v<virtual_mammal_t, Mammal>, "mammal");
-
-    voidp base_address;
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), mammal_this,
-        types<const Mammal&>>::fn(animal);
-    BOOST_TEST(base_address == &mammal);
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), carnivore_this,
-        types<const Carnivore&>>::fn(animal);
-    BOOST_TEST(base_address == &carnivore);
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), mammal_this,
-        types<const Dog&>>::fn(animal);
-    BOOST_TEST(base_address == &dog);
 }
 
 } // namespace casts
@@ -296,13 +278,6 @@ static_assert(std::is_same_v<
 
 }
 
-void f(char, int) {}
-
-static_assert(std::is_same_v<
-    typename detail::parameter_type_list<decltype(f)>::type,
-    types<char, int>
->);
-
 // -----------------------------------------------------------------------------
 // static_slots
 
@@ -340,5 +315,31 @@ static_assert(!has_static_offsets<kick>::value);
 
 using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);
+
+}
+
+// -----------------------------------------------------------------------------
+// noexcept
+
+namespace test_noexcept {
+
+struct Animal {};
+struct Cat : public Animal {};
+
+struct policy : test_policy_<__COUNTER__> {};
+
+register_classes(Animal, Cat, policy);
+
+using name = method<void, const char*(virtual_<Animal&>), noexcept_, policy>;
+
+static_assert(noexcept(name::fn));
+
+const char* name_cat(Cat&) {
+    throw 0;
+    return "cat";
+}
+
+// should not compile:
+// YOMM2_STATIC(name::add_function<name_cat>);
 
 }

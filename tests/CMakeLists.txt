@@ -23,12 +23,6 @@ add_executable(test_blackbox test_blackbox.cpp)
 target_link_libraries(test_blackbox YOMM2::yomm2)
 add_test(NAME test_blackbox COMMAND test_blackbox)
 
-if (NOT WIN32)
-add_executable(test_manual_call test_manual_call.cpp)
-target_link_libraries(test_manual_call YOMM2::yomm2)
-add_test(NAME test_manual_call COMMAND test_manual_call)
-endif()
-
 add_executable(test_lab test_lab.cpp)
 target_link_libraries(test_lab YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME test_lab COMMAND test_lab)
