@@ -20,7 +20,6 @@ namespace detail {
 
 template<class Name>
 struct yOMM2_API_gcc yOMM2_API_msc method_tables {
-    // Why is yOMM2_API_msc needed here???
     template<class Class>
     static std::uintptr_t* static_vptr;
 };

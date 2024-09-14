@@ -14,7 +14,6 @@
 
 #include <yorel/yomm2/cast.hpp>
 #include <yorel/yomm2/detail/types.hpp>
-#include <yorel/yomm2/detail.hpp>
 
 namespace yorel {
 namespace yomm2 {
@@ -32,12 +31,12 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, T&> {
     using polymorphic_type = std::remove_cv_t<T>;
 
-    static const T& rarg(const T& arg) {
+    static auto rarg(const T& arg) -> const T& {
         return arg;
     }
 
     template<typename D>
-    static D& cast(T& obj) {
+    static auto cast(T& obj) -> D& {
         return optimal_cast<Policy, D&>(obj);
     }
 };
@@ -46,12 +45,12 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, T&&> {
     using polymorphic_type = std::remove_cv_t<T>;
 
-    static const T& rarg(const T& arg) {
+    static auto rarg(const T& arg) -> const T& {
         return arg;
     }
 
     template<typename D>
-    static D&& cast(T&& obj) {
+    static auto cast(T&& obj) -> D&& {
         return optimal_cast<Policy, D&&>(obj);
     }
 };
@@ -60,57 +59,15 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, T*> {
     using polymorphic_type = std::remove_cv_t<T>;
 
-    static const T& rarg(const T* arg) {
+    static auto rarg(const T* arg) -> const T& {
         return *arg;
     }
 
     template<typename D>
-    static D cast(T* obj) {
+    static auto cast(T* obj) -> D {
         return &optimal_cast<Policy, std::remove_pointer_t<D>&>(*obj);
     }
 };
-
-namespace detail {
-
-template<class Policy, typename T>
-using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux {
-    using type = void;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<Policy, virtual_<P>, Q> {
-    using type = polymorphic_type<Policy, Q>;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<
-    Policy, virtual_ptr<P, Policy>, virtual_ptr<Q, Policy>> {
-    using type = typename virtual_traits<
-        Policy, virtual_ptr<Q, Policy>>::polymorphic_type;
-};
-
-template<class Policy, typename P, typename Q>
-struct select_spec_polymorphic_type_aux<
-    Policy, const virtual_ptr<P, Policy>&, const virtual_ptr<Q, Policy>&> {
-    using type = typename virtual_traits<
-        Policy, const virtual_ptr<Q, Policy>&>::polymorphic_type;
-};
-
-template<class Policy, typename P, typename Q>
-using select_spec_polymorphic_type =
-    typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
-
-template<class Policy, typename MethodArgList, typename SpecArgList>
-using spec_polymorphic_types = boost::mp11::mp_remove<
-    boost::mp11::mp_transform_q<
-        boost::mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
-        MethodArgList, SpecArgList>,
-    void>;
-
-} // namespace detail
 
 // =============================================================================
 // Method
@@ -158,7 +115,7 @@ using polymorphic_types = boost::mp11::mp_transform<
     remove_virtual, boost::mp11::mp_filter<detail::is_virtual, MethodArgList>>;
 
 template<class Policy, typename ArgType, typename T>
-inline uintptr_t get_tip(const T& arg) {
+inline auto get_tip(const T& arg) -> uintptr_t {
     if constexpr (is_virtual<ArgType>::value) {
         return Policy::dynamic_type(virtual_traits<Policy, ArgType>::rarg(arg));
     } else {
@@ -166,14 +123,448 @@ inline uintptr_t get_tip(const T& arg) {
     }
 }
 
+template<class Policy, class Class>
+auto collect_static_type_id() -> type_id {
+    if constexpr (std::is_base_of_v<policies::deferred_static_rtti, Policy>) {
+        return reinterpret_cast<type_id>(Policy::template static_type<Class>);
+    } else {
+        return Policy::template static_type<Class>();
+    }
+}
+
+template<class Policy, class TypeList>
+struct type_id_list;
+
+template<class Policy, typename... T>
+struct type_id_list<Policy, types<T...>> {
+    // If using deferred 'static_type', add an extra element in 'value',
+    // default-initialized to zero, indicating the ids need to be resolved. Set
+    // to 1 after this is done.
+    static constexpr std::size_t values =
+        sizeof...(T) + std::is_base_of_v<policies::deferred_static_rtti, Policy>;
+    static type_id value[values];
+    static type_id* begin;
+    static type_id* end;
+};
+
+template<class Policy, typename... T>
+type_id type_id_list<Policy, types<T...>>::value[values] = {
+    collect_static_type_id<Policy, T>()...};
+
+template<class Policy, typename... T>
+type_id* type_id_list<Policy, types<T...>>::begin = value;
+
+template<class Policy, typename... T>
+type_id* type_id_list<Policy, types<T...>>::end = value + sizeof...(T);
+
+template<class Policy>
+struct type_id_list<Policy, types<>> {
+    static constexpr type_id* const begin = nullptr;
+    static constexpr auto end = begin;
+};
+
+} // namespace detail
+
+// =============================================================================
+// Registering classes
+
+namespace detail {
+
+template<class...>
+struct class_declaration_aux;
+
+template<class Policy, class Class, typename... Bases>
+struct class_declaration_aux<Policy, types<Class, Bases...>> : class_info {
+    class_declaration_aux() {
+        this->type = collect_static_type_id<Policy, Class>();
+        this->first_base = type_id_list<Policy, types<Bases...>>::begin;
+        this->last_base = type_id_list<Policy, types<Bases...>>::end;
+        Policy::classes.push_back(*this);
+        this->is_abstract = std::is_abstract_v<Class>;
+        this->static_vptr = &Policy::template static_vptr<Class>;
+    }
+
+    ~class_declaration_aux() {
+        Policy::classes.remove(*this);
+    }
+};
+
+// Collect the base classes of a list of classes. The result is a mp11 map that
+// associates each class to a list starting with the class itself, followed by
+// all its bases, as per std::is_base_of. Thus the list includes the class
+// itself at least twice: at the front, and down the list, as its own improper
+// base. The direct and its direct and indirect proper bases are included. The
+// runtime will extract the direct proper bases. See unit tests for an example.
+template<typename... Cs>
+using inheritance_map = types<boost::mp11::mp_push_front<
+    boost::mp11::mp_filter_q<
+        boost::mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
+    Cs>...>;
+
+template<class Policy, class... Classes>
+struct use_classes_aux;
+
+template<class Policy, class... Classes>
+struct use_classes_aux<Policy, types<Classes...>> {
+    using type = boost::mp11::mp_apply<
+        std::tuple,
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
+            boost::mp11::mp_apply<inheritance_map, types<Classes...>>>>;
+};
+
+template<class Policy, class... Classes, class... MoreClassLists>
+struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
+    : use_classes_aux<
+          Policy, boost::mp11::mp_append<types<Classes...>, MoreClassLists...>>
+
+{};
+
+template<typename... Ts>
+using second_last = boost::mp11::mp_at_c<
+    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
+
+template<typename T>
+struct is_policy_aux : std::is_base_of<policies::abstract_policy, T> {};
+
+template<typename... T>
+struct is_policy_aux<types<T...>> : std::false_type {};
+
+template<typename T>
+constexpr bool is_policy = is_policy_aux<T>::value;
+
+template<typename T>
+constexpr bool is_not_policy = !is_policy<T>;
+
+template<typename... Classes>
+using get_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_back<types<Classes...>>, YOMM2_DEFAULT_POLICY>;
+
+template<typename... Classes>
+using remove_policy = std::conditional_t<
+    is_policy<boost::mp11::mp_back<types<Classes...>>>,
+    boost::mp11::mp_pop_back<types<Classes...>>, types<Classes...>>;
+
+template<class... Ts>
+using virtual_ptr_policy = std::conditional_t<
+    sizeof...(Ts) == 2, boost::mp11::mp_first<types<Ts...>>,
+    YOMM2_DEFAULT_POLICY>;
+
+template<class... Classes>
+using use_classes_macro = typename std::conditional_t<
+    is_policy<second_last<Classes...>>,
+    use_classes_aux<
+        second_last<Classes...>,
+        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
+    use_classes_aux<
+        boost::mp11::mp_back<types<Classes...>>,
+        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
+
+} // namespace detail
+
+template<class... Classes>
+using use_classes = typename detail::use_classes_aux<
+    detail::get_policy<Classes...>, detail::remove_policy<Classes...>>::type;
+
+// -----------------------------------------------------------------------------
+// virtual_ptr
+
+namespace detail {
+
+template<class Policy, typename T>
+using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
+
+template<class Class, class Policy>
+struct is_virtual<virtual_ptr<Class, Policy>> : std::true_type {};
+
+template<class Class, class Policy>
+struct is_virtual<const virtual_ptr<Class, Policy>&> : std::true_type {};
+
+template<typename>
+struct is_virtual_ptr_aux : std::false_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
+
+template<class Class, class Policy>
+struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
+};
+
+} // namespace detail
+
+template<class Class, class Policy>
+struct virtual_ptr_traits {
+    static bool constexpr is_smart_ptr = false;
+    using polymorphic_type = Class;
+};
+
+template<class Policy, class Class>
+struct virtual_traits<Policy, virtual_ptr<Class, Policy>> {
+    using ptr_traits = virtual_ptr_traits<Class, Policy>;
+    using polymorphic_type = typename ptr_traits::polymorphic_type;
+
+    static auto rarg(const virtual_ptr<Class, Policy>& ptr)
+        -> const virtual_ptr<Class, Policy>& {
+        return ptr;
+    }
+
+    template<typename Derived>
+    static auto cast(const virtual_ptr<Class, Policy>& ptr) -> decltype(auto) {
+        return ptr.template cast<Derived>();
+    }
+};
+
+template<class Policy, class Class>
+struct virtual_traits<Policy, const virtual_ptr<Class, Policy>&>
+    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
+
+template<typename T>
+constexpr bool is_virtual_ptr = detail::is_virtual_ptr_aux<T>::value;
+
+template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
+class virtual_ptr {
+    template<class, class>
+    friend class virtual_ptr;
+
+    template<class, typename>
+    friend struct virtual_traits;
+
+  protected:
+    constexpr static bool IsSmartPtr =
+        virtual_ptr_traits<Class, Policy>::is_smart_ptr;
+    using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
+    static constexpr bool is_indirect =
+        Policy::template has_facet<policies::indirect_vptr>;
+
+    using vptr_type = std::conditional_t<
+        is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
+
+    Box obj;
+    vptr_type vptr;
+
+    template<typename Other>
+    void box(Other&& value) {
+        if constexpr (IsSmartPtr) {
+            if constexpr (std::is_rvalue_reference_v<Other>) {
+                obj = std::move(value);
+            } else {
+                obj = value;
+            }
+        } else {
+            static_assert(std::is_lvalue_reference_v<Other>);
+            obj = &value;
+        }
+    }
+
+    auto unbox() const -> auto& {
+        if constexpr (IsSmartPtr) {
+            return obj;
+        } else {
+            return *obj;
+        }
+    }
+
+  public:
+    using element_type = Class;
+    using box_type = Box;
+
+    template<class Other>
+    virtual_ptr(Other&& other) {
+        box(other);
+
+        using namespace policies;
+        using namespace detail;
+
+        static_assert(
+            std::is_polymorphic_v<polymorphic_type<
+                Policy, const std::remove_reference_t<Other>&>>,
+            "use 'final' if intended");
+
+        auto dynamic_id =
+            Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(other));
+        auto static_id = Policy::template static_type<
+            typename virtual_traits<Policy, Other&>::polymorphic_type>();
+
+        if (dynamic_id == static_id) {
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = &Policy::template static_vptr<
+                    typename virtual_traits<Policy, Other&>::polymorphic_type>;
+            } else {
+                vptr = Policy::template static_vptr<
+                    typename virtual_traits<Policy, Other&>::polymorphic_type>;
+            }
+        } else {
+            auto index = dynamic_id;
+
+            if constexpr (has_facet<Policy, type_hash>) {
+                index = Policy::hash_type_id(index);
+            }
+
+            if constexpr (has_facet<Policy, indirect_vptr>) {
+                vptr = Policy::indirect_vptrs[index];
+            } else {
+                vptr = Policy::vptrs[index];
+            }
+        }
+    }
+
+    template<class Other>
+    virtual_ptr(virtual_ptr<Other, Policy>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    virtual_ptr(const virtual_ptr<Other, Policy>& other)
+        : obj(other.obj), vptr(other.vptr) {
+    }
+
+    template<class Other>
+    virtual_ptr(virtual_ptr<Other, Policy>&& other)
+        : obj(std::move(other.obj)), vptr(other.vptr) {
+    }
+
+    auto get() const noexcept {
+        return obj;
+    }
+
+    auto operator->() const noexcept {
+        return get();
+    }
+
+    auto operator*() const noexcept -> decltype(auto) {
+        return *get();
+    }
+
+    template<class Other>
+    static auto final(Other&& obj) {
+        using namespace detail;
+        using namespace policies;
+
+        using other_virtual_traits = virtual_traits<Policy, Other>;
+        using polymorphic_type =
+            typename other_virtual_traits::polymorphic_type;
+
+        vptr_type vptr;
+
+        if constexpr (has_facet<Policy, indirect_vptr>) {
+            vptr = &Policy::template static_vptr<polymorphic_type>;
+        } else {
+            vptr = Policy::template static_vptr<polymorphic_type>;
+        }
+
+        if constexpr (has_facet<Policy, runtime_checks>) {
+            // check that dynamic type == static type
+            auto dynamic_type =
+                Policy::dynamic_type(other_virtual_traits::rarg(obj));
+            auto static_type = Policy::template static_type<polymorphic_type>();
+
+            if (dynamic_type != static_type) {
+                method_table_error error;
+                error.type = dynamic_type;
+                Policy::error(error);
+                abort();
+            }
+        }
+
+        virtual_ptr result;
+        result.box(obj);
+        result.vptr = vptr;
+
+        return result;
+    }
+
+    template<typename Other>
+    auto cast() const {
+        using namespace detail;
+        std::remove_cv_t<std::remove_reference_t<Other>> result;
+        result.vptr = vptr;
+
+        if constexpr (IsSmartPtr) {
+            result.obj =
+                virtual_ptr_traits<Class, Policy>::template cast<Other>(obj);
+        } else {
+            result.obj =
+                &optimal_cast<Policy, typename Other::element_type&>(*obj);
+        }
+
+        return result;
+    }
+
+    // consider as private, public for tests only
+    auto _vptr() const noexcept {
+        if constexpr (is_indirect) {
+            return *vptr;
+        } else {
+            return vptr;
+        }
+    }
+
+  protected:
+    virtual_ptr() = default;
+};
+
+template<class Class>
+virtual_ptr(Class&) -> virtual_ptr<Class, YOMM2_DEFAULT_POLICY>;
+
+template<class Policy, class Class>
+inline auto final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Class, Policy>::final(obj);
+}
+
+template<class Class>
+inline auto final_virtual_ptr(Class& obj) {
+    return virtual_ptr<Class>::final(obj);
+}
+
+// =============================================================================
+// Method
+
+namespace detail {
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux {
+    using type = void;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<Policy, virtual_<P>, Q> {
+    using type = polymorphic_type<Policy, Q>;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<
+    Policy, virtual_ptr<P, Policy>, virtual_ptr<Q, Policy>> {
+    using type = typename virtual_traits<
+        Policy, virtual_ptr<Q, Policy>>::polymorphic_type;
+};
+
+template<class Policy, typename P, typename Q>
+struct select_spec_polymorphic_type_aux<
+    Policy, const virtual_ptr<P, Policy>&, const virtual_ptr<Q, Policy>&> {
+    using type = typename virtual_traits<
+        Policy, const virtual_ptr<Q, Policy>&>::polymorphic_type;
+};
+
+template<class Policy, typename P, typename Q>
+using select_spec_polymorphic_type =
+    typename select_spec_polymorphic_type_aux<Policy, P, Q>::type;
+
+template<class Policy, typename MethodArgList, typename SpecArgList>
+using spec_polymorphic_types = boost::mp11::mp_remove<
+    boost::mp11::mp_transform_q<
+        boost::mp11::mp_bind_front<select_spec_polymorphic_type, Policy>,
+        MethodArgList, SpecArgList>,
+    void>;
+
 template<class Policy, typename T>
 struct argument_traits {
-    static const T& rarg(const T& arg) {
+    static auto rarg(const T& arg) -> const T& {
         return arg;
     }
 
     template<typename>
-    static T cast(T obj) {
+    static auto cast(T obj) -> T {
         return std::forward<T>(obj);
     }
 };
@@ -199,7 +590,7 @@ template<
     class Policy, typename BASE_RETURN, typename... BASE_PARAM, auto SPEC,
     typename... SPEC_PARAM>
 struct thunk<Policy, BASE_RETURN(BASE_PARAM...), SPEC, types<SPEC_PARAM...>> {
-    static BASE_RETURN fn(remove_virtual<BASE_PARAM>... arg) {
+    static auto fn(remove_virtual<BASE_PARAM>... arg) -> BASE_RETURN {
         using base_type = boost::mp11::mp_first<types<BASE_PARAM...>>;
         using spec_type = boost::mp11::mp_first<types<SPEC_PARAM...>>;
         return SPEC(
@@ -232,10 +623,21 @@ struct member_function_thunk;
 
 template<auto F, class ReturnType, class C, typename... Args>
 struct member_function_thunk<F, ReturnType (C::*)(Args...)> {
-    static ReturnType fn(C* this_, Args&&... args) {
+    static auto fn(C* this_, Args&&... args) -> ReturnType {
         return (this_->*F)(args...);
     }
 };
+
+template<class Method>
+struct static_offsets;
+
+template<class Method, typename = void>
+struct has_static_offsets : std::false_type {};
+
+template<class Method>
+struct has_static_offsets<
+    Method, std::void_t<decltype(static_offsets<Method>::slots)>>
+    : std::true_type {};
 
 } // namespace detail
 
@@ -393,342 +795,6 @@ typename method<Name, ReturnType(Args...), Policy>::next_type
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
 
-// -----------------------------------------------------------------------------
-// class_declaration
-
-namespace detail {
-
-template<class...>
-struct class_declaration_aux;
-
-template<class Policy, class Class, typename... Bases>
-struct class_declaration_aux<Policy, types<Class, Bases...>> : class_info {
-    class_declaration_aux() {
-        this->type = collect_static_type_id<Policy, Class>();
-        this->first_base = type_id_list<Policy, types<Bases...>>::begin;
-        this->last_base = type_id_list<Policy, types<Bases...>>::end;
-        Policy::classes.push_back(*this);
-        this->is_abstract = std::is_abstract_v<Class>;
-        this->static_vptr = &Policy::template static_vptr<Class>;
-    }
-
-    ~class_declaration_aux() {
-        Policy::classes.remove(*this);
-    }
-};
-
-// Collect the base classes of a list of classes. The result is a mp11 map that
-// associates each class to a list starting with the class itself, followed by
-// all its bases, as per std::is_base_of. Thus the list includes the class
-// itself at least twice: at the front, and down the list, as its own improper
-// base. The direct and its direct and indirect proper bases are included. The
-// runtime will extract the direct proper bases. See unit tests for an example.
-template<typename... Cs>
-using inheritance_map = types<boost::mp11::mp_push_front<
-    boost::mp11::mp_filter_q<
-        boost::mp11::mp_bind_back<std::is_base_of, Cs>, types<Cs...>>,
-    Cs>...>;
-
-template<class Policy, class... Classes>
-struct use_classes_aux;
-
-template<class Policy, class... Classes>
-struct use_classes_aux<Policy, types<Classes...>> {
-    using type = boost::mp11::mp_apply<
-        std::tuple,
-        boost::mp11::mp_transform_q<
-            boost::mp11::mp_bind_front<class_declaration_aux, Policy>,
-            boost::mp11::mp_apply<inheritance_map, types<Classes...>>>>;
-};
-
-template<class Policy, class... Classes, class... MoreClassLists>
-struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
-    : use_classes_aux<
-          Policy, boost::mp11::mp_append<types<Classes...>, MoreClassLists...>>
-
-{};
-
-template<typename... Ts>
-using second_last = boost::mp11::mp_at_c<
-    types<Ts...>, boost::mp11::mp_size<types<Ts...>>::value - 2>;
-
-template<class... Classes>
-using use_classes_macro = typename std::conditional_t<
-    is_policy<second_last<Classes...>>,
-    use_classes_aux<
-        second_last<Classes...>,
-        boost::mp11::mp_pop_back<boost::mp11::mp_pop_back<types<Classes...>>>>,
-    use_classes_aux<
-        boost::mp11::mp_back<types<Classes...>>,
-        boost::mp11::mp_pop_back<types<Classes...>>>>::type;
-
-} // namespace detail
-
-template<class... Classes>
-struct class_declaration
-    : detail::class_declaration_aux<
-          detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
-
-template<class... Classes>
-struct class_declaration<detail::types<Classes...>>
-    : detail::class_declaration_aux<
-          detail::get_policy<Classes...>, detail::remove_policy<Classes...>> {};
-
-template<class... Classes>
-using use_classes = typename detail::use_classes_aux<
-    detail::get_policy<Classes...>, detail::remove_policy<Classes...>>::type;
-
-// -----------------------------------------------------------------------------
-// virtual_ptr
-
-namespace detail {
-
-template<class Class, class Policy>
-struct is_virtual<virtual_ptr<Class, Policy>> : std::true_type {};
-
-template<class Class, class Policy>
-struct is_virtual<const virtual_ptr<Class, Policy>&> : std::true_type {};
-
-template<typename>
-struct is_virtual_ptr_aux : std::false_type {};
-
-template<class Class, class Policy>
-struct is_virtual_ptr_aux<virtual_ptr<Class, Policy>> : std::true_type {};
-
-template<class Class, class Policy>
-struct is_virtual_ptr_aux<const virtual_ptr<Class, Policy>&> : std::true_type {
-};
-
-} // namespace detail
-
-template<class Class, class Policy>
-struct virtual_ptr_traits {
-    static bool constexpr is_smart_ptr = false;
-    using polymorphic_type = Class;
-};
-
-template<class Policy, class Class>
-struct virtual_traits<Policy, virtual_ptr<Class, Policy>> {
-    using ptr_traits = virtual_ptr_traits<Class, Policy>;
-    using polymorphic_type = typename ptr_traits::polymorphic_type;
-
-    static const virtual_ptr<Class, Policy>&
-    rarg(const virtual_ptr<Class, Policy>& ptr) {
-        return ptr;
-    }
-
-    template<typename Derived>
-    static decltype(auto) cast(const virtual_ptr<Class, Policy>& ptr) {
-        return ptr.template cast<Derived>();
-    }
-};
-
-template<class Policy, class Class>
-struct virtual_traits<Policy, const virtual_ptr<Class, Policy>&>
-    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
-
-template<typename T>
-constexpr bool is_virtual_ptr = detail::is_virtual_ptr_aux<T>::value;
-
-template<class Class, class Policy = YOMM2_DEFAULT_POLICY>
-class virtual_ptr {
-    template<class, class>
-    friend class virtual_ptr;
-
-    template<class, typename>
-    friend struct virtual_traits;
-
-  protected:
-    constexpr static bool IsSmartPtr =
-        virtual_ptr_traits<Class, Policy>::is_smart_ptr;
-    using Box = std::conditional_t<IsSmartPtr, Class, Class*>;
-    static constexpr bool is_indirect =
-        Policy::template has_facet<policies::indirect_vptr>;
-
-    using vptr_type = std::conditional_t<
-        is_indirect, std::uintptr_t const* const*, std::uintptr_t const*>;
-
-    Box obj;
-    vptr_type vptr;
-
-    template<typename Other>
-    void box(Other&& value) {
-        if constexpr (IsSmartPtr) {
-            if constexpr (std::is_rvalue_reference_v<Other>) {
-                obj = std::move(value);
-            } else {
-                obj = value;
-            }
-        } else {
-            static_assert(std::is_lvalue_reference_v<Other>);
-            obj = &value;
-        }
-    }
-
-    auto unbox() const -> auto& {
-        if constexpr (IsSmartPtr) {
-            return obj;
-        } else {
-            return *obj;
-        }
-    }
-
-  public:
-    using element_type = Class;
-    using box_type = Box;
-
-    template<class Other>
-    virtual_ptr(Other&& other) {
-        box(other);
-
-        using namespace policies;
-        using namespace detail;
-
-        static_assert(
-            std::is_polymorphic_v<polymorphic_type<
-                Policy, const std::remove_reference_t<Other>&>>,
-            "use 'final' if intended");
-
-        auto dynamic_id =
-            Policy::dynamic_type(virtual_traits<Policy, Other&>::rarg(other));
-        auto static_id = Policy::template static_type<
-            typename virtual_traits<Policy, Other&>::polymorphic_type>();
-
-        if (dynamic_id == static_id) {
-            if constexpr (has_facet<Policy, indirect_vptr>) {
-                vptr = &Policy::template static_vptr<
-                    typename virtual_traits<
-                        Policy, Other&>::polymorphic_type>;
-            } else {
-                vptr = Policy::template static_vptr<
-                    typename virtual_traits<Policy, Other&>::polymorphic_type>;
-            }
-        } else {
-            auto index = dynamic_id;
-
-            if constexpr (has_facet<Policy, type_hash>) {
-                index = Policy::hash_type_id(index);
-            }
-
-            if constexpr (has_facet<Policy, indirect_vptr>) {
-                vptr = Policy::indirect_vptrs[index];
-            } else {
-                vptr = Policy::vptrs[index];
-            }
-        }
-    }
-
-    template<class Other>
-    virtual_ptr(virtual_ptr<Other, Policy>& other)
-        : obj(other.obj), vptr(other.vptr) {
-    }
-
-    template<class Other>
-    virtual_ptr(const virtual_ptr<Other, Policy>& other)
-        : obj(other.obj), vptr(other.vptr) {
-    }
-
-    template<class Other>
-    virtual_ptr(virtual_ptr<Other, Policy>&& other)
-        : obj(std::move(other.obj)), vptr(other.vptr) {
-    }
-
-    auto get() const noexcept {
-        return obj;
-    }
-
-    auto operator->() const noexcept {
-        return get();
-    }
-
-    auto operator*() const noexcept -> decltype(auto) {
-        return *get();
-    }
-
-    template<class Other>
-    static auto final(Other&& obj) {
-        using namespace detail;
-        using namespace policies;
-
-        using other_virtual_traits = virtual_traits<Policy, Other>;
-        using polymorphic_type =
-            typename other_virtual_traits::polymorphic_type;
-
-        vptr_type vptr;
-
-        if constexpr (has_facet<Policy, indirect_vptr>) {
-            vptr = &Policy::template static_vptr<polymorphic_type>;
-        } else {
-            vptr = Policy::template static_vptr<polymorphic_type>;
-        }
-
-        if constexpr (has_facet<Policy, runtime_checks>) {
-            // check that dynamic type == static type
-            auto dynamic_type =
-                Policy::dynamic_type(other_virtual_traits::rarg(obj));
-            auto static_type = Policy::template static_type<polymorphic_type>();
-
-            if (dynamic_type != static_type) {
-                method_table_error error;
-                error.type = dynamic_type;
-                Policy::error(error);
-                abort();
-            }
-        }
-
-        virtual_ptr result;
-        result.box(obj);
-        result.vptr = vptr;
-
-        return result;
-    }
-
-    template<typename Other>
-    auto cast() const {
-        using namespace detail;
-        std::remove_cv_t<std::remove_reference_t<Other>> result;
-        result.vptr = vptr;
-
-        if constexpr (IsSmartPtr) {
-            result.obj =
-                virtual_ptr_traits<Class, Policy>::template cast<Other>(obj);
-        } else {
-            result.obj =
-                &optimal_cast<Policy, typename Other::element_type&>(*obj);
-        }
-
-        return result;
-    }
-
-    // consider as private, public for tests only
-    auto _vptr() const noexcept {
-        if constexpr (is_indirect) {
-            return *vptr;
-        } else {
-            return vptr;
-        }
-    }
-
-  protected:
-    virtual_ptr() = default;
-};
-
-template<class Class>
-virtual_ptr(Class&) -> virtual_ptr<Class, YOMM2_DEFAULT_POLICY>;
-
-template<class Policy, class Class>
-inline auto final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Class, Policy>::final(obj);
-}
-
-template<class Class>
-inline auto final_virtual_ptr(Class& obj) {
-    return virtual_ptr<Class>::final(obj);
-}
-
-// -----------------------------------------------------------------------------
-// definitions
-
 template<typename Name, typename ReturnType, class Policy, typename... Args>
 method<Name, ReturnType(Args...), Policy>::method() {
     this->slots_strides_ptr = slots_strides;
@@ -840,7 +906,8 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_uni(
         }
 
         if constexpr (has_static_offsets<method>::value) {
-            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
+            if constexpr (Policy::template has_facet<
+                              policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     static_offsets<method>::slots[0], this->slots_strides[0]);
             }
@@ -877,7 +944,8 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_first(
 
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[0];
-            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
+            if constexpr (Policy::template has_facet<
+                              policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     static_offsets<method>::slots[0], this->slots_strides[0]);
             }
@@ -923,7 +991,8 @@ inline auto method<Name, ReturnType(Args...), Policy>::resolve_multi_next(
         if constexpr (has_static_offsets<method>::value) {
             slot = static_offsets<method>::slots[VirtualArg];
             stride = static_offsets<method>::strides[VirtualArg - 1];
-            if constexpr (Policy::template has_facet<policies::runtime_checks>) {
+            if constexpr (Policy::template has_facet<
+                              policies::runtime_checks>) {
                 check_static_offset<static_slot_error>(
                     this->slots_strides[VirtualArg], slot);
                 check_static_offset<static_stride_error>(

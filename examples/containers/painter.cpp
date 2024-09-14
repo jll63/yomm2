@@ -8,5 +8,3 @@
 
 #include "geometries.hpp"
 #include "painter.hpp"
-
-register_class(geometries::Geometry);

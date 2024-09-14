@@ -11,4 +11,4 @@
 #include "geometries.hpp"
 #include "painter.hpp"
 
-register_class(geometries::Line, geometries::Geometry);
+register_classes(geometries::Line, geometries::Geometry);

@@ -1,6 +1,8 @@
 #ifndef YOREL_YOMM2_CAST_HPP
 #define YOREL_YOMM2_CAST_HPP
 
+#include <type_traits>
+
 namespace yorel {
 namespace yomm2 {
 
@@ -20,7 +22,7 @@ constexpr bool requires_dynamic_cast =
     detail::requires_dynamic_cast_ref_aux<B, D>::value;
 
 template<class Policy, class D, class B>
-decltype(auto) optimal_cast(B&& obj) {
+auto optimal_cast(B&& obj) -> decltype(auto) {
     if constexpr (requires_dynamic_cast<B, D>) {
         return Policy::template dynamic_cast_ref<D>(obj);
     } else {

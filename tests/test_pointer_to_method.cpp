@@ -21,8 +21,7 @@ class Animal {
 
 class Dog : public Animal {};
 
-register_class(Animal);
-register_class(Dog, Animal);
+register_classes(Animal, Dog, Animal);
 
 declare_method(std::string, kick, (virtual_<Animal&>));
 

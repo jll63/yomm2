@@ -214,9 +214,6 @@
 #define YOMM2_DEFINITION(Container, ReturnType, Args)                          \
     Container<ReturnType Args>::fn
 
-#define YOMM2_CLASS(...)                                                       \
-    static ::yorel::yomm2::class_declaration<__VA_ARGS__> YOMM2_GENSYM;
-
 #define YOMM2_CLASSES(...)                                                     \
     static ::yorel::yomm2::detail::use_classes_macro<                          \
         __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
@@ -239,7 +236,6 @@
     ::yorel::yomm2::method<YOMM2_SYMBOL(Name), ReturnType Args, Policy>
 
 
-#define register_class YOMM2_CLASS
 #define register_classes YOMM2_CLASSES
 
 #define declare_method YOMM2_DECLARE

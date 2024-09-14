@@ -31,7 +31,7 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, const std::shared_ptr<T>&> {
     using polymorphic_type = std::remove_cv_t<T>;
 
-    static const T& rarg(const std::shared_ptr<T>& arg) {
+    static auto rarg(const std::shared_ptr<T>& arg) -> const T& {
         return *arg;
     }
 
@@ -64,7 +64,7 @@ template<class Policy, typename T>
 struct virtual_traits<Policy, std::shared_ptr<T>> {
     using polymorphic_type = std::remove_cv_t<T>;
 
-    static const T& rarg(const std::shared_ptr<T>& arg) {
+    static auto rarg(const std::shared_ptr<T>& arg) -> const T& {
         return *arg;
     }
 
@@ -98,7 +98,7 @@ struct virtual_ptr_traits<std::shared_ptr<Class>, Policy> {
     using polymorphic_type = Class;
 
     template<typename OtherPtrRef>
-    static decltype(auto) cast(const std::shared_ptr<Class>& ptr) {
+    static auto cast(const std::shared_ptr<Class>& ptr) -> decltype(auto) {
         using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
         using OtherClass = typename OtherPtr::box_type::element_type;
 

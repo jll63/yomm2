@@ -14,7 +14,7 @@
 #include "painter.hpp"
 #include "line_painter.hpp"
 
-register_class(geometries::Arc, geometries::Line);
+register_classes(geometries::Arc, geometries::Line);
 
 namespace painter {
 namespace paint1d {
