@@ -649,7 +649,6 @@ class method<Name, Return(Parameters...), Options...>
     using Signature = Return(Parameters...);
     using FunctionPointer =
         Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);
-    using Next = FunctionPointer;
 
     static constexpr auto arity = detail::arity<Parameters...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
@@ -703,42 +702,13 @@ class method<Name, Return(Parameters...), Options...>
     template<auto, typename>
     struct thunk;
 
-    template<
-        auto Overrider, typename OverriderReturn,
-        typename... OverriderParameters>
-    struct thunk<Overrider, OverriderReturn (*)(OverriderParameters...)> {
-        static auto fn(detail::remove_virtual<Parameters>... arg) -> Return;
-        using OverriderParameterTypeIds = detail::type_id_list<
-            Policy,
-            detail::spec_polymorphic_types<
-                Policy, DeclaredParameters,
-                detail::types<OverriderParameters...>>>;
-    };
-
-    template<class Container, bool has_next>
-    struct override_;
-
     friend class generator;
-
-  public:
-    template<auto Function>
-    struct override_fn;
-
-  private:
-    template<class Container>
-    struct override_<Container, false> {
-        override_fn<Container::fn> override_{nullptr};
-    };
-
-    template<class Container>
-    struct override_<Container, true> {
-        override_fn<Container::fn> add{&Container::next};
-    };
 
   public:
     // Public aliases.
     using return_type = Return;
-    using next_type = Next;
+    using next_type =
+        Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);
 
     static method fn;
 
@@ -753,9 +723,31 @@ class method<Name, Return(Parameters...), Options...>
     template<class Container>
     using next = detail::next_aux<method, Container>;
 
+    template<auto>
+    static FunctionPointer next_fn;
+
+  private:
+    template<
+        auto Overrider, typename OverriderReturn,
+        typename... OverriderParameters>
+    struct thunk<Overrider, OverriderReturn (*)(OverriderParameters...)> {
+        static auto fn(detail::remove_virtual<Parameters>... arg) -> Return;
+        using OverriderParameterTypeIds = detail::type_id_list<
+            Policy,
+            detail::spec_polymorphic_types<
+                Policy, DeclaredParameters,
+                detail::types<OverriderParameters...>>>;
+    };
+
     template<auto Function>
-    struct override_fn {
-        explicit override_fn(Next* next = nullptr) {
+    struct override_fn_impl {
+        explicit override_fn_impl(FunctionPointer* next = nullptr) {
+            // Work around MSVC bug: using &next_fn<Function> as a default value
+            // for 'next' confuses it about Parameters not being expanded.
+            if (!next) {
+                next = &next_fn<Function>;
+            }
+
             static detail::definition_info info;
 
             if (info.method) {
@@ -774,24 +766,72 @@ class method<Name, Return(Parameters...), Options...>
         }
     };
 
-    template<class Container>
-    struct override
-        : override_<Container, detail::has_next<Container>::value> {
-        using type = override; // make it a meta-function
+    template<auto Function, typename FunctionType>
+    struct override_fn_aux;
+
+    template<auto Function, typename FnReturnType, typename... FnParameters>
+    struct override_fn_aux<Function, FnReturnType (*)(FnParameters...)>
+        : override_fn_impl<Function> {
+        using override_fn_impl<Function>::override_fn_impl;
     };
 
-    template<auto F>
-    struct add_member_function
-        : override_fn<detail::member_function_thunk<F, decltype(F)>::fn> {};
+    template<
+        auto Function, class FnClass, typename FnReturnType,
+        typename... FnParameters>
+    struct override_fn_aux<
+        Function, FnReturnType (FnClass::*)(FnParameters...)> {
+        static auto fn(FnClass* this_, FnParameters&&... args) -> FnReturnType {
+            return (this_->*Function)(std::forward<FnParameters>(args)...);
+        }
+
+        override_fn_impl<fn> impl{&next_fn<Function>};
+    };
+
+  public:
+    template<auto Function>
+    struct override_fn : override_fn_aux<Function, decltype(Function)> {
+        using override_fn_aux<Function, decltype(Function)>::override_fn_aux;
+    };
 
     template<auto... F>
-    struct add_member_functions : std::tuple<add_member_function<F>...> {};
+    struct override_fns {
+        std::tuple<override_fn<F>...> fns;
+    };
+
+  private:
+    template<class Container, bool HasNext>
+    struct override_aux;
+
+    template<class Container>
+    struct override_aux<Container, false> : override_fn<Container::fn> {
+        override_aux() : override_fn<Container::fn>(nullptr) {
+        }
+    };
+
+    template<class Container>
+    struct override_aux<Container, true> : override_fn<Container::fn> {
+        override_aux() : override_fn<Container::fn>(&Container::next) {
+        }
+    };
+
+  public:
+    template<class Container>
+    struct override
+        : override_aux<Container, detail::has_next<Container>::value> {
+        using type = override; // make it a meta-function
+    };
 };
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 method<Name, Return(Parameters...), Options...>
     method<Name, Return(Parameters...), Options...>::fn;
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<auto>
+typename method<Name, Return(Parameters...), Options...>::FunctionPointer
+    method<Name, Return(Parameters...), Options...>::next_fn;
 
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;

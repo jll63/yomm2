@@ -51,8 +51,10 @@
         YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS,                                  \
         ::yorel::yomm2::detail::types<__VA_ARGS__>>::type
 
-#define YOMM2_DECLARE(...) yOMM2_DECLARE(yOMM2_WHEN_NOT_STATIC, __VA_ARGS__)
-#define YOMM2_STATIC_DECLARE(...) yOMM2_DECLARE(yOMM2_WHEN_STATIC, __VA_ARGS__)
+#define YOMM2_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                            \
+    yOMM2_DECLARE(yOMM2_WHEN_NOT_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
+#define YOMM2_STATIC_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                     \
+    yOMM2_DECLARE(yOMM2_WHEN_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
 
 #define yOMM2_DECLARE(IF_STATIC, RETURN_TYPE, NAME, ARGS, ...)                 \
     struct YOMM2_SYMBOL(NAME);                                                 \
@@ -112,7 +114,7 @@
     struct _yOMM2_spec {                                                       \
         static NS::_yOMM2_method::return_type yOMM2_body ARGS;                 \
     };                                                                         \
-    _yOMM2_method::override_fn<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(&next);  \
+    _yOMM2_method::override_fn<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(&next);   \
     }                                                                          \
     }                                                                          \
     NS::_yOMM2_method::return_type NS::_yOMM2_spec::yOMM2_body ARGS
@@ -165,7 +167,7 @@
     Inline NS::_yOMM2_method::next_type CONTAINER<RETURN_TYPE ARGS>::next;     \
     namespace {                                                                \
     namespace NS {                                                             \
-    Inline _yOMM2_method::override_fn<CONTAINER<RETURN_TYPE ARGS>::fn>        \
+    Inline _yOMM2_method::override_fn<CONTAINER<RETURN_TYPE ARGS>::fn>         \
         YOMM2_GENSYM(&CONTAINER<RETURN_TYPE ARGS>::next);                      \
     }                                                                          \
     }                                                                          \

@@ -39,12 +39,14 @@ struct Payroll {
     void pay_employee(const Employee&) {
         balance -= 2000;
     }
-    void pay_manager(const Manager&) {
-        balance -= 3000;
+    void pay_manager(const Manager& manager) {
+        auto pf = &pay_method::next_fn<&Payroll::pay_manager>;
+        pay_method::next_fn<&Payroll::pay_manager>(this, manager);
+        balance -= 1000;
     }
 
   public:
-    using pay_functions = Payroll::pay_method::add_member_functions<
+    using pay_functions = Payroll::pay_method::override_fns<
         &Payroll::pay_employee, &Payroll::pay_manager>;
 };
 

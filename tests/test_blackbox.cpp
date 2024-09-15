@@ -203,6 +203,45 @@ BOOST_AUTO_TEST_CASE(simple) {
 
 } // namespace matrices
 
+namespace test_next_fn {
+
+struct Animal {
+    virtual ~Animal() {
+    }
+};
+
+struct Dog : Animal {};
+struct Bulldog : Dog {};
+
+register_classes(Animal, Dog, Bulldog);
+
+struct YOMM2_SYMBOL(kick);
+using kick = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
+
+std::string kick_dog(Dog& dog) {
+    return "bark";
+}
+
+YOMM2_STATIC(kick::override_fn<kick_dog>);
+
+std::string kick_bulldog(Bulldog& dog) {
+    return kick::next_fn<kick_bulldog>(dog) + " and bite back";
+}
+
+YOMM2_STATIC(kick::override_fn<kick_bulldog>);
+
+BOOST_AUTO_TEST_CASE(test_next_fn) {
+    update();
+
+    std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
+    BOOST_TEST(kick::fn(*snoopy) == "bark");
+
+    std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
+    BOOST_TEST(kick::fn(*hector) == "bark and bite back");
+}
+
+} // namespace test_next_fn
+
 namespace errors {
 
 struct matrix {
