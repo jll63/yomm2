@@ -42,7 +42,7 @@ struct error {};
 
 struct resolution_error : error {
     enum status_type { no_definition = 1, ambiguous } status;
-    std::string_view method_name;
+    type_id method;
     std::size_t arity;
     static constexpr std::size_t max_types = 16;
     type_id types[max_types];

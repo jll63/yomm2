@@ -54,7 +54,7 @@ void decode_dispatch_data(Data& init) {
         auto method_index = 0;
 
         for (auto& method : Policy::methods) {
-            ++trace << "method " << method.name << "\n";
+            ++trace << "method " << type_name(method.method_type) << "\n";
             indent _(trace);
 
             *methods_iter++ = &method;

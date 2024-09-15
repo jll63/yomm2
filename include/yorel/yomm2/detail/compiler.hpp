@@ -535,7 +535,7 @@ void compiler<Policy>::augment_methods() {
     auto meth_iter = methods.begin();
 
     for (auto& meth_info : Policy::methods) {
-        ++trace << meth_info.name << " "
+        ++trace << type_name(meth_info.method_type) << " "
                 << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
 
         indent _(trace);

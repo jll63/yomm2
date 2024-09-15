@@ -90,7 +90,6 @@ struct class_info : static_list<class_info>::static_link {
 struct definition_info;
 
 struct yOMM2_API method_info : static_list<method_info>::static_link {
-    std::string_view name;
     type_id *vp_begin, *vp_end;
     static_list<definition_info> specs;
     void* ambiguous;

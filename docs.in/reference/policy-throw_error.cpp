@@ -62,9 +62,10 @@ BOOST_AUTO_TEST_CASE(ref_throw_error) {
     } catch (yomm2::resolution_error& error) {
         BOOST_TEST(error.status == yomm2::resolution_error::no_definition);
         BOOST_TEST(
-            error.method_name ==
-            typeid(method_class(void, kick, (virtual_<Animal&>), throw_policy))
-                .name());
+            error.method ==
+            yomm2::type_id(
+                &typeid(method_class(
+                    void, kick, (virtual_<Animal&>), throw_policy))));
         BOOST_TEST(error.arity == 1);
         BOOST_TEST(error.types[0] == throw_policy::static_type<Dog>());
         threw = true;

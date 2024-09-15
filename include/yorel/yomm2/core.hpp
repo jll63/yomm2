@@ -817,12 +817,6 @@ template<
 method<Name, Return(Parameters...), Options...>::method() {
     this->slots_strides_ptr = slots_strides;
 
-#ifndef BOOST_NO_RTTI
-    this->name = typeid(method).name();
-#else
-    this->name = "method";
-#endif
-
     using virtual_type_ids = detail::type_id_list<
         Policy,
         boost::mp11::mp_transform_q<
@@ -1057,7 +1051,7 @@ method<Name, Return(Parameters...), Options...>::not_implemented_handler(
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::no_definition;
-        error.method_name = fn.name;
+        error.method = Policy::template static_type<method>();
         error.arity = arity;
         type_id types[sizeof...(args)];
         auto ti_iter = types;
@@ -1079,7 +1073,7 @@ method<Name, Return(Parameters...), Options...>::ambiguous_handler(
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::ambiguous;
-        error.method_name = fn.name;
+        error.method = Policy::template static_type<method>();
         error.arity = arity;
         type_id types[sizeof...(args)];
         auto ti_iter = types;

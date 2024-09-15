@@ -28,7 +28,9 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                 Policy::error_stream
                     << explanation
                            [error->status - resolution_error::no_definition]
-                    << " for " << error->method_name << "(";
+                    << " for ";
+                Policy::type_name(error->method, Policy::error_stream);
+                Policy::error_stream << "(";
                 auto comma = "";
 
                 for (auto ti :
