@@ -110,7 +110,7 @@ std::string kick_dog(Dog& dog) {
     return "bark";
 }
 
-kick_method::add_function<kick_dog> add_kick_dog;
+kick_method::override_fn<kick_dog> add_kick_dog;
 // >
 
 // md<
@@ -120,7 +120,7 @@ kick_method::add_function<kick_dog> add_kick_dog;
 // appropriate function. Function templates and explicit specialization can also
 // be used for this purpose.
 
-// What about `next`? The constructor of `add_function` can be passed a pointer
+// What about `next`? The constructor of `override_fn` can be passed a pointer
 // to a function that will be set to the function's next definition by
 // `update`. The pointer type is available in the method as `next_type`.
 
@@ -133,7 +133,7 @@ std::string kick_bulldog(Bulldog& dog) {
     return kick_bulldog_next(dog) + " and bite back";
 }
 
-kick_method::add_function<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
+kick_method::override_fn<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
 // >
 
 // md<
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // passing it `declval` arguments for the definition's parameter list. The
 // compiler performs overload resolution, and the macro uses `decltype` to
 // extract the result type, i.e the method's class, and registers the definition
-// and the `next` pointer with `add_function`.
+// and the `next` pointer with `override_fn`.
 
 // In the process, both macros need to create identifiers for the various static
 // objects, and the name of the function inside the definition wrapper class.
@@ -249,13 +249,13 @@ using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
 
 // md<
 
-// `add_function` is a workhorse that is intended to be used directly only by
+// `override_fn` is a workhorse that is intended to be used directly only by
 // `define_method`. YOMM2 has another mechanism that is a bit more high level:
 // *definition containers*.
 
 // A definition container is a struct that, at the minimum, contains a static
 // function named `fn`. Containers are added to methods via the
-// `add_definition` nested type:
+// `override` nested type:
 
 // >
 
@@ -266,14 +266,14 @@ struct kick_dog {
     }
 };
 
-YOMM2_STATIC(kick_method::add_definition<kick_dog>);
+YOMM2_STATIC(kick_method::override<kick_dog>);
 // >
 
 // md<
 
 // This may not seem like a huge improvement, until we need a `next` function.
 // If the container has a static member variable called `next`, and it is of the
-// appropriate type, `add_definition` will pick it up for `update` to
+// appropriate type, `override` will pick it up for `update` to
 // fill. Static member variables are a bit clumsy, because, unlike functions,
 // they must be declared inside the class, and defined outside. Methods have a
 // nested CRTP helper to inject a `next` into a container.
@@ -287,7 +287,7 @@ struct kick_bulldog : kick_method::next<kick_bulldog> {
     }
 };
 
-YOMM2_STATIC(kick_method::add_definition<kick_bulldog>);
+YOMM2_STATIC(kick_method::override<kick_bulldog>);
 // >
 
 // md<

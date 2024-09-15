@@ -1,6 +1,6 @@
 /***
 entry: method
-hrefs: method-fn, method-next_type, method-add_function, method-add_definition, method-use_next
+hrefs: method-fn, method-next_type, method-override_fn, method-override, method-use_next
 headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
@@ -16,8 +16,8 @@ struct method<Name, ReturnType(Args...), Policy>;
 
 `method` provides a static function object, `fn`, that takes a list of arguments
 of type `Args`, *minus* the `virtual_` decorator, and returns `ReturnType`.
-Method definitions can be added with the [`method::add_function`](#add_function)
-and [`method::add_definition`](#add_definition) class templates.
+Method definitions can be added with the [`method::override_fn`](#override_fn)
+and [`method::override`](#override) class templates.
 
 ## Template parameters
 
@@ -82,17 +82,17 @@ The single instance of `method<Name, ReturnType(Args...)>`. Used to call the met
 
 | Name                              | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
-| [add_function](#add_function)     | add a definition to the method                            |
-| [add_definition](#add_definition) | add a definition container to the method                  |
+| [override_fn](#override_fn)     | add a definition to the method                            |
+| [override](#override) | add a definition container to the method                  |
 | [next_type](#next_type)           | type of a pointer to the next most specialised definition |
 | [use_next](#use_next)             | CRTP base for definitions that use `next`                 |
 
-## add_function
+## override_fn
 
 ```c++
 template<auto Function>
-struct add_function {
-    explicit add_function(next_type* next = nullptr);
+struct override_fn {
+    explicit override_fn(next_type* next = nullptr);
 };
 ```
 
@@ -104,12 +104,12 @@ The parameters of `Function` must be compatible with the corresponding
 parameters in the method when virtual, and invariant otherwise. The return
 type of `Function` must be compatible with the return type of the method.
 
-## add_definition
+## override
 
 ```c++
-template<typename Container>
-struct add_definition {
-    add_definition();
+template<class Container>
+struct override {
+    override();
 };
 ```
 
@@ -142,12 +142,12 @@ type of `Function` must be compatible with the return type of the method.
 ## use_next
 
 ```c++
-template<typename Container>
+template<class Container>
 struct use_next {
     static next_type next;
 };
 template<typename Name, typename ReturnType, typename... A, typename... Unspecified>
-template<typename Container>
+template<class Container>
 typename method<Name, ReturnType(A...), Unspecified...>::next_type
 method<Name, ReturnType(A...), Unspecified...>::use_next<Container>::next;
 ```
@@ -195,24 +195,24 @@ struct kick_methods;
 using kick = yomm2::method<kick_methods, std::string(virtual_<Animal&>)>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
-YOMM2_STATIC(kick::add_function<kick_cat>);
+YOMM2_STATIC(kick::override_fn<kick_cat>);
 
 std::string kick_dog(Dog& dog) { return "bark"; }
-YOMM2_STATIC(kick::add_function<kick_dog>);
+YOMM2_STATIC(kick::override_fn<kick_dog>);
 
-struct kick_bulldog : kick::use_next<kick_bulldog> {
+struct kick_bulldog : kick::next<kick_bulldog> {
     static std::string fn(Bulldog& dog) { return next(dog) + " and bite"; }
 };
-YOMM2_STATIC(kick::add_definition<kick_bulldog>);
+YOMM2_STATIC(kick::override<kick_bulldog>);
 
 struct YOMM2_SYMBOL(pet); // use obfuscated name
 using pet = yomm2::method<YOMM2_SYMBOL(pet), std::string(virtual_<Animal&>)>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
-YOMM2_STATIC(pet::add_function<pet_cat>);
+YOMM2_STATIC(pet::override_fn<pet_cat>);
 
 std::string pet_dog(Dog& dog) { return "wag tail"; }
-YOMM2_STATIC(pet::add_function<pet_dog>);
+YOMM2_STATIC(pet::override_fn<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::update();

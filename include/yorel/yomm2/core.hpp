@@ -580,23 +580,21 @@ template<class Policy, class Class>
 struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
     : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
 
-void type_next(...);
+template<class Container, typename = void>
+struct has_next : std::false_type {};
 
-template<typename Container>
-auto type_next(Container t) -> decltype(t.next);
+template<class Container>
+struct has_next<Container, std::void_t<decltype(Container::next)>>
+    : std::true_type {};
 
-template<typename Container>
-using type_next_t = decltype(type_next(std::declval<Container>()));
-
-template<typename Container, typename Next>
-constexpr bool has_next_v = std::is_same_v<type_next_t<Container>, Next>;
-
-template<typename Method, typename Container>
+// Helper to make it possible for 'method' to have a nested CRTP template class
+// called 'next', which has a static member also called 'next'.
+template<class Method, class Container>
 struct next_aux {
     static typename Method::next_type next;
 };
 
-template<typename Method, typename Container>
+template<class Method, class Container>
 typename Method::next_type next_aux<Method, Container>::next;
 
 template<auto F, typename T>
@@ -635,8 +633,8 @@ template<
     typename Name, typename Return, typename... Parameters, class... Options>
 class method<Name, Return(Parameters...), Options...>
     : public detail::method_info {
-    // Implementation aliases. Everything extracted from template arguments is
-    // capitalized like the arguments themselves.
+    // Aliases used in implementation only. Everything extracted from template
+    // arguments is capitalized like the arguments themselves.
     using Policy = detail::get_policy<Options...>;
     static constexpr bool NoExcept = boost::mp11::mp_at<
         detail::types<Options..., noexcept_if<false>>,
@@ -709,18 +707,7 @@ class method<Name, Return(Parameters...), Options...>
         auto Overrider, typename OverriderReturn,
         typename... OverriderParameters>
     struct thunk<Overrider, OverriderReturn (*)(OverriderParameters...)> {
-        static auto fn(detail::remove_virtual<Parameters>... arg) -> Return {
-            static_assert(
-                !NoExcept ||
-                    noexcept(Overrider(std::declval<OverriderParameters>()...)),
-                "overrider must be noexcept if method is noexcept");
-
-            return Overrider(
-                detail::argument_traits<Policy, Parameters>::template cast<
-                    OverriderParameters>(
-                    detail::remove_virtual<Parameters>(arg))...);
-        }
-
+        static auto fn(detail::remove_virtual<Parameters>... arg) -> Return;
         using OverriderParameterTypeIds = detail::type_id_list<
             Policy,
             detail::spec_polymorphic_types<
@@ -728,24 +715,24 @@ class method<Name, Return(Parameters...), Options...>
                 detail::types<OverriderParameters...>>>;
     };
 
-    template<typename Container, bool has_next>
-    struct add_definition_;
+    template<class Container, bool has_next>
+    struct override_;
 
     friend class generator;
 
   public:
     template<auto Function>
-    struct add_function;
+    struct override_fn;
 
   private:
-    template<typename Container>
-    struct add_definition_<Container, false> {
-        add_function<Container::fn> override_{nullptr};
+    template<class Container>
+    struct override_<Container, false> {
+        override_fn<Container::fn> override_{nullptr};
     };
 
-    template<typename Container>
-    struct add_definition_<Container, true> {
-        add_function<Container::fn> add{&Container::next};
+    template<class Container>
+    struct override_<Container, true> {
+        override_fn<Container::fn> add{&Container::next};
     };
 
   public:
@@ -763,12 +750,12 @@ class method<Name, Return(Parameters...), Options...>
     auto operator()(detail::remove_virtual<Parameters>... args) const
         noexcept(NoExcept) -> Return;
 
-    template<typename Container>
+    template<class Container>
     using next = detail::next_aux<method, Container>;
 
     template<auto Function>
-    struct add_function {
-        explicit add_function(Next* next = nullptr) {
+    struct override_fn {
+        explicit override_fn(Next* next = nullptr) {
             static detail::definition_info info;
 
             if (info.method) {
@@ -787,40 +774,24 @@ class method<Name, Return(Parameters...), Options...>
         }
     };
 
-    template<auto... Function>
-    struct add_functions : std::tuple<add_function<Function>...> {};
-
-    template<typename Container>
-    struct add_definition
-        : add_definition_<Container, detail::has_next_v<Container, Next>> {
-        using type = add_definition; // make it a meta-function
+    template<class Container>
+    struct override
+        : override_<Container, detail::has_next<Container>::value> {
+        using type = override; // make it a meta-function
     };
 
     template<auto F>
     struct add_member_function
-        : add_function<detail::member_function_thunk<F, decltype(F)>::fn> {};
+        : override_fn<detail::member_function_thunk<F, decltype(F)>::fn> {};
 
     template<auto... F>
-    struct add_member_functions {
-        std::tuple<add_member_function<F>...> add;
-    };
-
-    template<typename Container>
-    struct use_next {
-        static Next next;
-    };
+    struct add_member_functions : std::tuple<add_member_function<F>...> {};
 };
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 method<Name, Return(Parameters...), Options...>
     method<Name, Return(Parameters...), Options...>::fn;
-
-template<
-    typename Name, typename Return, typename... Parameters, class... Options>
-template<typename Container>
-typename method<Name, Return(Parameters...), Options...>::Next
-    method<Name, Return(Parameters...), Options...>::use_next<Container>::next;
 
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
@@ -1101,6 +1072,23 @@ method<Name, Return(Parameters...), Options...>::ambiguous_handler(
     }
 
     abort(); // in case user handler "forgets" to abort
+}
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<
+    auto Overrider, typename OverriderReturn, typename... OverriderParameters>
+auto method<Name, Return(Parameters...), Options...>::
+    thunk<Overrider, OverriderReturn (*)(OverriderParameters...)>::fn(
+        detail::remove_virtual<Parameters>... arg) -> Return {
+    static_assert(
+        !NoExcept ||
+            noexcept(Overrider(std::declval<OverriderParameters>()...)),
+        "overrider must be noexcept if method is noexcept");
+
+    return Overrider(
+        detail::argument_traits<Policy, Parameters>::template cast<
+            OverriderParameters>(detail::remove_virtual<Parameters>(arg))...);
 }
 
 namespace detail {

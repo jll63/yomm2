@@ -282,7 +282,7 @@ inline bool operator==(const vector& a, const vector& b) {
 // Now we need to provide definitions for these methods. But which ones?
 
 // We could decide *for the user* that only (say) vectors of `double`s and
-// `int`s are supported. We could use `add_function` or `add_definition` to
+// `int`s are supported. We could use `override_fn` or `override` to
 // define four specializations, covering all the possible combinations (i.e. the
 // Cartesian product):
 
@@ -335,7 +335,7 @@ inline bool operator==(const vector& a, const vector& b) {
 // >
 
 // code<
-template<typename Method, typename...>
+template<class Method, typename...>
 struct definition;
 // >
 
@@ -961,7 +961,7 @@ auto operator~(const handle<Matrix<T>>& m) {
 // code<
 
 template<
-    typename Method, typename Abstract, typename Concrete, typename T,
+    class Method, typename Abstract, typename Concrete, typename T,
     typename = std::bool_constant<std::is_base_of_v<
         typename Abstract::template fn<T>,
         typename Concrete::template fn<T>>> // see note 1
@@ -1223,7 +1223,7 @@ struct enable_binary_definition<
 // code<
 
 template<
-    typename Method, typename A1, typename C1, typename T1, typename A2,
+    class Method, typename A1, typename C1, typename T1, typename A2,
     typename C2, typename T2,
     typename = typename enable_binary_definition<A1, C1, T1, A2, C2, T2>::type>
 struct binary_definition : not_defined {};

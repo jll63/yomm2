@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const class_* cls) {
 
 std::string empty = "{}";
 
-template<template<typename...> typename Container, typename T>
+template<template<typename...> class Container, typename T>
 auto str(const Container<T>& container) {
     std::ostringstream os;
     os << "{";

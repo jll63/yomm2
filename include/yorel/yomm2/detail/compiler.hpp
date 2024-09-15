@@ -178,7 +178,7 @@ operator<<(trace_type<Policy>& trace, const generic_compiler::class_& cls) {
     return trace;
 }
 
-template<class Policy, template<typename...> typename Container, typename... T>
+template<class Policy, template<typename...> class Container, typename... T>
 trace_type<Policy>& operator<<(
     trace_type<Policy>& trace,
     Container<generic_compiler::class_*, T...>& classes) {

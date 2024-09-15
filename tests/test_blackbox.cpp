@@ -383,31 +383,31 @@ BOOST_AUTO_TEST_CASE(update_report) {
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
-    YOMM2_STATIC(kick::add_function<fn<Animal>>);
+    YOMM2_STATIC(kick::override_fn<fn<Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
-    YOMM2_STATIC(pet::add_function<fn<Cat>>);
-    YOMM2_STATIC(pet::add_function<fn<Dog>>);
+    YOMM2_STATIC(pet::override_fn<fn<Cat>>);
+    YOMM2_STATIC(pet::override_fn<fn<Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     // create ambiguity
-    YOMM2_STATIC(meet::add_function<fn<Animal, Cat>>);
-    YOMM2_STATIC(meet::add_function<fn<Dog, Animal>>);
+    YOMM2_STATIC(meet::override_fn<fn<Animal, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 4);
     BOOST_TEST(report.ambiguous == 1);
 
-    YOMM2_STATIC(meet::add_function<fn<Cat, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Cat, Cat>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 6);
     BOOST_TEST(report.ambiguous == 1);
 
     // shadow ambiguity
-    YOMM2_STATIC(meet::add_function<fn<Dog, Dog>>);
-    YOMM2_STATIC(meet::add_function<fn<Dog, Cat>>);
-    YOMM2_STATIC(meet::add_function<fn<Cat, Dog>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Dog>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Cat, Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 9);
     BOOST_TEST(report.ambiguous == 0);
