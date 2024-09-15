@@ -281,7 +281,7 @@ YOMM2_STATIC(kick_method::override<kick_dog>);
 // >
 
 // code<
-struct kick_bulldog : kick_method::next<kick_bulldog> {
+struct kick_bulldog : kick_method::with_next<kick_bulldog> {
     static std::string fn(Bulldog& dog) {
         return next(dog) + " and bite back";
     }

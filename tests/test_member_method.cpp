@@ -40,8 +40,7 @@ struct Payroll {
         balance -= 2000;
     }
     void pay_manager(const Manager& manager) {
-        auto pf = &pay_method::next_fn<&Payroll::pay_manager>;
-        pay_method::next_fn<&Payroll::pay_manager>(this, manager);
+        pay_method::next<&Payroll::pay_manager>(this, manager);
         balance -= 1000;
     }
 

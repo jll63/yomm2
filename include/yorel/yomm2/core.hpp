@@ -587,16 +587,6 @@ template<class Container>
 struct has_next<Container, std::void_t<decltype(Container::next)>>
     : std::true_type {};
 
-// Helper to make it possible for 'method' to have a nested CRTP template class
-// called 'next', which has a static member also called 'next'.
-template<class Method, class Container>
-struct next_aux {
-    static typename Method::next_type next;
-};
-
-template<class Method, class Container>
-typename Method::next_type next_aux<Method, Container>::next;
-
 template<auto F, typename T>
 struct member_function_thunk;
 
@@ -721,10 +711,12 @@ class method<Name, Return(Parameters...), Options...>
         noexcept(NoExcept) -> Return;
 
     template<class Container>
-    using next = detail::next_aux<method, Container>;
+    struct with_next {
+        static next_type next;
+    };
 
     template<auto>
-    static FunctionPointer next_fn;
+    static FunctionPointer next;
 
   private:
     template<
@@ -741,29 +733,7 @@ class method<Name, Return(Parameters...), Options...>
 
     template<auto Function>
     struct override_fn_impl {
-        explicit override_fn_impl(FunctionPointer* next = nullptr) {
-            // Work around MSVC bug: using &next_fn<Function> as a default value
-            // for 'next' confuses it about Parameters not being expanded.
-            if (!next) {
-                next = &next_fn<Function>;
-            }
-
-            static detail::definition_info info;
-
-            if (info.method) {
-                BOOST_ASSERT(info.method == &fn);
-                return;
-            }
-
-            info.method = &fn;
-            info.type = Policy::template static_type<decltype(Function)>();
-            info.next = reinterpret_cast<void**>(next);
-            using Thunk = thunk<Function, decltype(Function)>;
-            info.pf = (void*)Thunk::fn;
-            info.vp_begin = Thunk::OverriderParameterTypeIds::begin;
-            info.vp_end = Thunk::OverriderParameterTypeIds::end;
-            fn.specs.push_back(info);
-        }
+        explicit override_fn_impl(FunctionPointer* next = nullptr);
     };
 
     template<auto Function, typename FunctionType>
@@ -784,7 +754,7 @@ class method<Name, Return(Parameters...), Options...>
             return (this_->*Function)(std::forward<FnParameters>(args)...);
         }
 
-        override_fn_impl<fn> impl{&next_fn<Function>};
+        override_fn_impl<fn> impl{&next<Function>};
     };
 
   public:
@@ -829,9 +799,15 @@ method<Name, Return(Parameters...), Options...>
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
+template<class Container>
+typename method<Name, Return(Parameters...), Options...>::next_type
+    method<Name, Return(Parameters...), Options...>::with_next<Container>::next;
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
 template<auto>
 typename method<Name, Return(Parameters...), Options...>::FunctionPointer
-    method<Name, Return(Parameters...), Options...>::next_fn;
+    method<Name, Return(Parameters...), Options...>::next;
 
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
@@ -870,6 +846,9 @@ template<
 method<Name, Return(Parameters...), Options...>::~method() {
     Policy::methods.remove(*this);
 }
+
+// -----------------------------------------------------------------------------
+// method dispatch
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
@@ -1114,6 +1093,9 @@ method<Name, Return(Parameters...), Options...>::ambiguous_handler(
     abort(); // in case user handler "forgets" to abort
 }
 
+// -----------------------------------------------------------------------------
+// thunk
+
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<
@@ -1129,6 +1111,37 @@ auto method<Name, Return(Parameters...), Options...>::
     return Overrider(
         detail::argument_traits<Policy, Parameters>::template cast<
             OverriderParameters>(detail::remove_virtual<Parameters>(arg))...);
+}
+
+// -----------------------------------------------------------------------------
+// overriders
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<auto Function>
+method<Name, Return(Parameters...), Options...>::override_fn_impl<
+    Function>::override_fn_impl(FunctionPointer* p_next) {
+    // Work around MSVC bug: using &next<Function> as a default value
+    // for 'next' confuses it about Parameters not being expanded.
+    if (!p_next) {
+        p_next = &next<Function>;
+    }
+
+    static detail::definition_info info;
+
+    if (info.method) {
+        BOOST_ASSERT(info.method == &fn);
+        return;
+    }
+
+    info.method = &fn;
+    info.type = Policy::template static_type<decltype(Function)>();
+    info.next = reinterpret_cast<void**>(p_next);
+    using Thunk = thunk<Function, decltype(Function)>;
+    info.pf = (void*)Thunk::fn;
+    info.vp_begin = Thunk::OverriderParameterTypeIds::begin;
+    info.vp_end = Thunk::OverriderParameterTypeIds::end;
+    fn.specs.push_back(info);
 }
 
 namespace detail {
