@@ -80,7 +80,7 @@ using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         boost::test_tools::output_test_stream os;
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
             }
         });
 
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
     bool threw = false;
 
     try {
@@ -156,7 +156,7 @@ using kick = method<void, void(virtual_shared_ptr<Animal>, std::ostream&)>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         boost::test_tools::output_test_stream os;
@@ -178,7 +178,7 @@ using kick =
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         boost::test_tools::output_test_stream os;
@@ -206,7 +206,7 @@ using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         boost::test_tools::output_test_stream os;

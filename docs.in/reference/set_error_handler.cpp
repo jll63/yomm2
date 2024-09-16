@@ -62,7 +62,7 @@ void no_definition_handler(const default_policy::error_variant& ev) {
 BOOST_AUTO_TEST_CASE(ref_set_error_handler_example) {
     next_error_handler =
         default_policy::set_error_handler(no_definition_handler);
-    update();
+    initialize();
 
     try {
         Dog snoopy;

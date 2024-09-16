@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
             method<baz_key, void(virtual_<foo&>, virtual_<foo&>), policy>;
         YOMM2_STATIC(baz2::override_fn<baz2_def>);
 
-        update<policy>();
+        initialize<policy>();
 
         {
             std::ostringstream os;

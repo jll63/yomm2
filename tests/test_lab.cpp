@@ -21,6 +21,6 @@ using yorel::yomm2::virtual_;
 // }
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
     return 0;
 }

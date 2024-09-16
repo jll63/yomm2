@@ -215,7 +215,7 @@ int main() {
   cout << visitor::to_rpn(expr) << " = " << expr.value() << "\n";
   cout << funtable::to_rpn(expr) << " = " << expr.value() << "\n";
 
-  yorel::yomm2::update();
+  yorel::yomm2::initialize();
   cout << openmethods::to_rpn(expr) << " = " << expr.value() << "\n";
 
   cout << core_api::value::fn(expr) << "\n";

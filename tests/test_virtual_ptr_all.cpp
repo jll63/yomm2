@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    update<Policy>();
+    initialize<Policy>();
 
     using vptr_player = virtual_ptr<Player, Policy>;
     static_assert(is_virtual_ptr<vptr_player>);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         Policy::dispatch_data.resize(2 * Policy::dispatch_data.size());
     }
 
-    update<Policy>();
+    initialize<Policy>();
 
     BOOST_TEST(
         (virtual_cat_ptr._vptr() == Policy::template static_vptr<Bear>) ==
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    update<Policy>();
+    initialize<Policy>();
 
     Bear bear;
     BOOST_TEST(kick::fn(virtual_ptr<Player, Policy>(bear)) == "growl");
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
-    update<Policy>();
+    initialize<Policy>();
 
     auto bear = make_virtual_shared<Bear, Policy>();
     auto warrior = make_virtual_shared<Warrior, Policy>();

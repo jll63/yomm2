@@ -111,7 +111,7 @@ define_method(std::string, to_json, (const diagonal_matrix& m)) {
 }
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     const matrix& a = dense_matrix();
     const matrix& b = diagonal_matrix();
@@ -147,7 +147,7 @@ argument names, i.e. `virtual_<const matrix&> arg` is _not permitted_.
 `define_method` defines two implementations for the `to_json` method: one for
 dense matrices, and one for diagonal matrices.
 
-`yorel::yomm2::update()` creates the dispatch tables; it must be called
+`yorel::yomm2::initialize()` creates the dispatch tables; it must be called
 before any method is called, and after dynamically loading and unloading
 shared libraries.
 

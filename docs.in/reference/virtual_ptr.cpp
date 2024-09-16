@@ -229,7 +229,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     Dog snoopy, hector;
     Cat sylvester;
@@ -356,7 +356,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     Dog snoopy, hector;
     Cat sylvester;
@@ -409,7 +409,7 @@ define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final_incorrect) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     Dog snoopy;
     Animal& animal = snoopy;
@@ -502,7 +502,7 @@ define_method(
 }
 
 BOOST_AUTO_TEST_CASE(ref_make_virtual_shared) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     using yorel::yomm2::make_virtual_shared;
 

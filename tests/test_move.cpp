@@ -84,7 +84,7 @@ register_classes(Base, Derived);
 
 struct yomm2_update {
     yomm2_update() {
-        yorel::yomm2::update();
+        yorel::yomm2::initialize();
     }
 };
 
