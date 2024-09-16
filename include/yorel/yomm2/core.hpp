@@ -892,9 +892,9 @@ method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<class Error>
-inline void
+inline auto
 method<Name, Return(Parameters...), Options...>::check_static_offset(
-    std::size_t actual, std::size_t expected) const noexcept(NoExcept) {
+    std::size_t actual, std::size_t expected) const noexcept(NoExcept) -> void {
     using namespace detail;
 
     if (actual != expected) {
@@ -903,7 +903,7 @@ method<Name, Return(Parameters...), Options...>::check_static_offset(
             error.method = Policy::template static_type<method>();
             error.expected = this->slots_strides[0];
             error.actual = actual;
-            Policy::error(error_type(std::move(error)));
+            Policy::error(error);
 
             abort();
         }
@@ -1059,7 +1059,7 @@ method<Name, Return(Parameters...), Options...>::not_implemented_handler(
         std::copy_n(
             types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
-        Policy::error(error_type(std::move(error)));
+        Policy::error(error);
     }
 
     abort(); // in case user handler "forgets" to abort
@@ -1081,7 +1081,7 @@ method<Name, Return(Parameters...), Options...>::ambiguous_handler(
         std::copy_n(
             types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
-        Policy::error(error_type(std::move(error)));
+        Policy::error(error);
     }
 
     abort(); // in case user handler "forgets" to abort
@@ -1151,18 +1151,6 @@ struct method_macro_aux<Name, Signature, types<Options...>> {
 };
 
 } // namespace detail
-
-#ifndef BOOST_NO_RTTI
-
-inline auto set_error_handler(error_handler_type handler)
-    -> error_handler_type {
-    auto p = &default_policy::error;
-    auto prev = default_policy::error;
-    default_policy::error = handler;
-    return prev;
-}
-
-#endif
 
 } // namespace yomm2
 } // namespace yorel

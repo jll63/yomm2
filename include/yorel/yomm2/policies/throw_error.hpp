@@ -14,8 +14,9 @@ namespace yomm2 {
 namespace policies {
 
 struct yOMM2_API_gcc throw_error : virtual error_handler {
-    static void error(const error_type& error_v) {
-        std::visit([](auto&& arg) { throw arg; }, error_v);
+    template<class Error>
+    static auto error(const Error& error) {
+        throw error;
     }
 };
 

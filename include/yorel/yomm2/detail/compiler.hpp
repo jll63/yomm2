@@ -413,7 +413,7 @@ void compiler<Policy>::augment_classes() {
 
                 if constexpr (Policy::template has_facet<
                                   policies::error_handler>) {
-                    Policy::error(error_type(error));
+                    Policy::error(error);
                 }
 
                 abort();
@@ -554,7 +554,7 @@ void compiler<Policy>::augment_methods() {
                 error.type = ti;
 
                 if constexpr (has_facet<Policy, error_handler>) {
-                    Policy::error(error_type(error));
+                    Policy::error(error);
                 }
 
                 abort();
@@ -599,7 +599,7 @@ void compiler<Policy>::augment_methods() {
                     error.type = type;
 
                     if constexpr (has_facet<Policy, error_handler>) {
-                        Policy::error(error_type(error));
+                        Policy::error(error);
                     }
 
                     abort();

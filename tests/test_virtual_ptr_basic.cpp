@@ -21,10 +21,11 @@ using std::cout;
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
 
-auto debug_handler = &default_policy::error;
+auto debug_handler = &default_policy::error_handler;
 
 struct base {
-    virtual ~base() {}
+    virtual ~base() {
+    }
 };
 
 struct a : base {};
@@ -40,18 +41,14 @@ static_assert(
             virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>>,
         types<std::shared_ptr<a>, std::shared_ptr<c>>>);
 
-static_assert(
-    std::is_same_v<
-        spec_polymorphic_types<
-            default_policy,
-            types<virtual_<a&>, b, virtual_<c&>>,
-            types<d&, e, f&>>,
-        types<d, f>>);
+static_assert(std::is_same_v<
+              spec_polymorphic_types<
+                  default_policy, types<virtual_<a&>, b, virtual_<c&>>,
+                  types<d&, e, f&>>,
+              types<d, f>>);
 
 static_assert(
-    std::is_same_v<
-        polymorphic_type<default_policy, std::shared_ptr<a>>,
-    a>);
+    std::is_same_v<polymorphic_type<default_policy, std::shared_ptr<a>>, a>);
 
 static_assert(
     std::is_same_v<
@@ -111,13 +108,14 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
 }
 
 BOOST_AUTO_TEST_CASE(test_final_error) {
-    auto prev_handler = set_error_handler([](const error_type& ev) {
-        if (auto error = std::get_if<method_table_error>(&ev)) {
-            static_assert(
-                std::is_same_v<decltype(error), const method_table_error*>);
-            throw *error;
-        }
-    });
+    auto prev_handler = default_policy::set_error_handler(
+        [](const default_policy::error_variant& ev) {
+            if (auto error = std::get_if<method_table_error>(&ev)) {
+                static_assert(
+                    std::is_same_v<decltype(error), const method_table_error*>);
+                throw *error;
+            }
+        });
 
     yorel::yomm2::update();
     bool threw = false;
@@ -127,11 +125,11 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
         Animal& animal = snoopy;
         virtual_ptr<Animal>::final(animal);
     } catch (const method_table_error& error) {
-        set_error_handler(prev_handler);
+        default_policy::set_error_handler(prev_handler);
         BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(Dog)));
         threw = true;
     } catch (...) {
-        set_error_handler(prev_handler);
+        default_policy::set_error_handler(prev_handler);
         BOOST_FAIL("wrong exception");
         return;
     }

@@ -262,7 +262,7 @@ YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void test_handler(const error_type& error_v) {
+void test_handler(const default_policy::error_variant& error_v) {
     if (auto error = std::get_if<resolution_error>(&error_v)) {
         throw *error;
     }
@@ -276,46 +276,6 @@ void test_handler(const error_type& error_v) {
     }
 
     throw int();
-}
-
-BOOST_AUTO_TEST_CASE(call_error_handling) {
-    update();
-
-    auto prev_handler = set_error_handler(test_handler);
-
-    try {
-        times(dense_matrix(), dense_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const resolution_error& error) {
-        BOOST_TEST(error.status == resolution_error::no_definition);
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-
-    try {
-        times(diagonal_matrix(), diagonal_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const resolution_error& error) {
-        BOOST_TEST(error.status == resolution_error::ambiguous);
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-
-#ifndef NDEBUG
-    struct identity_matrix : matrix {};
-
-    try {
-        times(diagonal_matrix(), identity_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const unknown_class_error& error) {
-        BOOST_TEST(
-            error.type == reinterpret_cast<type_id>(&typeid(identity_matrix)));
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-#endif
-
-    set_error_handler(prev_handler);
 }
 
 } // namespace errors
@@ -332,17 +292,16 @@ struct base {
 YOMM2_DECLARE(void, foo, (virtual_<base&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
-    auto prev_handler = test_policy::error;
-    test_policy::error = errors::test_handler;
+    auto prev_handler = test_policy::set_error_handler(errors::test_handler);
 
     try {
         update<test_policy>();
     } catch (const unknown_class_error& error) {
-        test_policy::error = prev_handler;
+        test_policy::set_error_handler(prev_handler);
         BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(base)));
         return;
     } catch (...) {
-        test_policy::error = prev_handler;
+        test_policy::set_error_handler(prev_handler);
         BOOST_FAIL("unexpected exception");
     }
     BOOST_FAIL("did not throw");

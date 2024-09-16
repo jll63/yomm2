@@ -70,24 +70,6 @@ struct static_offset_error : error {
 struct static_slot_error : static_offset_error {};
 struct static_stride_error : static_offset_error {};
 
-using error_type = std::variant<
-    error, resolution_error, unknown_class_error, hash_search_error,
-    method_table_error, static_slot_error, static_stride_error>;
-
-using error_handler_type = std::function<void(const error_type& error)>;
-
-// deprecated
-
-struct method_call_error {
-    resolution_error::status_type code;
-    static constexpr auto not_implemented = resolution_error::no_definition;
-    static constexpr auto ambiguous = resolution_error::ambiguous;
-    std::string_view method_name;
-};
-
-using method_call_error_handler =
-    void (*)(const method_call_error& error, std::size_t arity, type_id* types);
-
 namespace policies {
 
 struct abstract_policy {};
