@@ -58,7 +58,7 @@ YOMM2_DEFINE(string, name, (const Cat& cat)) {
 }
 
 BOOST_AUTO_TEST_CASE(initializing) {
-    update<test_policy>();
+    initialize<test_policy>();
     const Animal& dog = Dog("spot");
     BOOST_TEST("dog spot" == name(dog));
     const Animal& cat = Cat("felix");
@@ -168,7 +168,7 @@ YOMM2_DEFINE(Subtype, zero_ptr, (diagonal_matrix * m)) {
 }
 
 BOOST_AUTO_TEST_CASE(simple) {
-    auto report = update();
+    auto report = initialize();
 
     {
         const matrix& dense = dense_matrix();
@@ -231,7 +231,7 @@ std::string kick_bulldog(Bulldog& dog) {
 YOMM2_STATIC(kick::override_fn<kick_bulldog>);
 
 BOOST_AUTO_TEST_CASE(test_next_fn) {
-    update();
+    initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
     BOOST_TEST(kick::fn(*snoopy) == "bark");
@@ -262,7 +262,7 @@ YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
 YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
 }
 
-void test_handler(const error_type& error_v) {
+void test_handler(const default_policy::error_variant& error_v) {
     if (auto error = std::get_if<resolution_error>(&error_v)) {
         throw *error;
     }
@@ -276,46 +276,6 @@ void test_handler(const error_type& error_v) {
     }
 
     throw int();
-}
-
-BOOST_AUTO_TEST_CASE(call_error_handling) {
-    update();
-
-    auto prev_handler = set_error_handler(test_handler);
-
-    try {
-        times(dense_matrix(), dense_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const resolution_error& error) {
-        BOOST_TEST(error.status == resolution_error::no_definition);
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-
-    try {
-        times(diagonal_matrix(), diagonal_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const resolution_error& error) {
-        BOOST_TEST(error.status == resolution_error::ambiguous);
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-
-#ifndef NDEBUG
-    struct identity_matrix : matrix {};
-
-    try {
-        times(diagonal_matrix(), identity_matrix());
-        BOOST_FAIL("did not throw");
-    } catch (const unknown_class_error& error) {
-        BOOST_TEST(
-            error.type == reinterpret_cast<type_id>(&typeid(identity_matrix)));
-    } catch (...) {
-        BOOST_FAIL("unexpected exception");
-    }
-#endif
-
-    set_error_handler(prev_handler);
 }
 
 } // namespace errors
@@ -332,17 +292,16 @@ struct base {
 YOMM2_DECLARE(void, foo, (virtual_<base&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
-    auto prev_handler = test_policy::error;
-    test_policy::error = errors::test_handler;
+    auto prev_handler = test_policy::set_error_handler(errors::test_handler);
 
     try {
-        update<test_policy>();
+        initialize<test_policy>();
     } catch (const unknown_class_error& error) {
-        test_policy::error = prev_handler;
+        test_policy::set_error_handler(prev_handler);
         BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(base)));
         return;
     } catch (...) {
-        test_policy::error = prev_handler;
+        test_policy::set_error_handler(prev_handler);
         BOOST_FAIL("unexpected exception");
     }
     BOOST_FAIL("did not throw");
@@ -416,30 +375,30 @@ BOOST_AUTO_TEST_CASE(update_report) {
     using meet =
         method<meet_, void(virtual_<Animal&>, virtual_<Animal&>), test_policy>;
 
-    auto report = update<test_policy>().report;
+    auto report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 3);
     BOOST_TEST(report.ambiguous == 0);
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
     YOMM2_STATIC(kick::override_fn<fn<Animal>>);
-    report = update<test_policy>().report;
+    report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     YOMM2_STATIC(pet::override_fn<fn<Cat>>);
     YOMM2_STATIC(pet::override_fn<fn<Dog>>);
-    report = update<test_policy>().report;
+    report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     // create ambiguity
     YOMM2_STATIC(meet::override_fn<fn<Animal, Cat>>);
     YOMM2_STATIC(meet::override_fn<fn<Dog, Animal>>);
-    report = update<test_policy>().report;
+    report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 4);
     BOOST_TEST(report.ambiguous == 1);
 
     YOMM2_STATIC(meet::override_fn<fn<Cat, Cat>>);
-    report = update<test_policy>().report;
+    report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 6);
     BOOST_TEST(report.ambiguous == 1);
 
@@ -447,7 +406,7 @@ BOOST_AUTO_TEST_CASE(update_report) {
     YOMM2_STATIC(meet::override_fn<fn<Dog, Dog>>);
     YOMM2_STATIC(meet::override_fn<fn<Dog, Cat>>);
     YOMM2_STATIC(meet::override_fn<fn<Cat, Dog>>);
-    report = update<test_policy>().report;
+    report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 9);
     BOOST_TEST(report.ambiguous == 0);
 }

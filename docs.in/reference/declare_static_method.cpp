@@ -57,7 +57,7 @@ define_method(std::string, no_adl::speak, (const SeniorEngineer& engineer)) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_love_adl) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         const Engineer &engineer = Engineer();
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(ref_love_adl) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_hate_adl) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     {
         const Engineer &engineer = Engineer();

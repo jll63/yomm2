@@ -146,7 +146,7 @@ kick_method::override_fn<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
 
 // code<
 BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
-    update();
+    initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
     BOOST_TEST(kick_method::fn(*snoopy) == "bark");
@@ -305,7 +305,7 @@ YOMM2_STATIC(kick_method::override<kick_bulldog>);
 // >
 
 BOOST_AUTO_TEST_CASE(test_synopsis_definition_containers) {
-    update();
+    initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
     BOOST_TEST(kick_method::fn(*snoopy) == "bark");

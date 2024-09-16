@@ -77,7 +77,7 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
 }
 
 BOOST_AUTO_TEST_CASE(custom_rtti_simple_projection) {
-    update<test_policy>();
+    initialize<test_policy>();
 
     Animal &&a = Dog("Snoopy"), &&b = Cat("Sylvester");
 
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(custom_rtti_simple) {
     BOOST_TEST(Animal::static_type == 0);
     BOOST_TEST(Dog::static_type == 1);
     BOOST_TEST(Cat::static_type == 2);
-    update<test_policy>();
+    initialize<test_policy>();
 
     Animal &&a = Dog("Snoopy"), &&b = Cat("Sylvester");
 
@@ -334,7 +334,7 @@ BOOST_AUTO_TEST_CASE(virtual_base) {
     BOOST_TEST(Animal::static_type == 0);
     BOOST_TEST(Dog::static_type == 1);
     BOOST_TEST(Cat::static_type == 2);
-    update<test_policy>();
+    initialize<test_policy>();
 
     Animal &&a = Dog("Snoopy"), &&b = Cat("Sylvester");
 
@@ -457,7 +457,7 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
 }
 
 BOOST_AUTO_TEST_CASE(custom_rtti_deferred) {
-    update<test_policy>();
+    initialize<test_policy>();
 
     Animal &&a = Dog("Snoopy"), &&b = Cat("Sylvester");
 

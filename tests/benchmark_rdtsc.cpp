@@ -95,7 +95,7 @@ struct use_policy {
         YOMM2_STATIC(
             use_classes<
                 dyn::Animal, dyn::Cat, stat::Animal, stat::Cat, Policy>);
-        update<Policy>();
+        initialize<Policy>();
     }
 };
 

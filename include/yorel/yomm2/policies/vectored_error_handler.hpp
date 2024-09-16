@@ -13,11 +13,29 @@ namespace yorel {
 namespace yomm2 {
 namespace policies {
 
-template<class Policy, typename DefaultHandlerProvider = void>
-struct yOMM2_API_gcc vectored_error : virtual error_handler {
-    static error_handler_type error;
+template<class Policy>
+struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
 
-    static void default_error_handler(const error_type& error_v) {
+    using error_variant = std::variant<
+        error, resolution_error, unknown_class_error, hash_search_error,
+        method_table_error, static_slot_error, static_stride_error>;
+
+    using error_handler_type = std::function<void(const error_variant& error)>;
+    static error_handler_type error_handler;
+
+    template<class Error>
+    static auto error(const Error& error) {
+        error_handler(error_variant(error));
+    }
+
+    static auto set_error_handler(error_handler_type handler) {
+        auto prev = error_handler;
+        error_handler = handler;
+
+        return error_handler;
+    }
+
+    static auto default_error_handler(const error_variant& error_v) {
         using namespace detail;
         using namespace policies;
 
@@ -59,11 +77,10 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
     }
 };
 
-template<class Policy, typename DefaultHandlerProvider>
-error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
-    std::conditional_t<
-        std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
-        DefaultHandlerProvider>::default_error_handler;
+template<class Policy>
+typename vectored_error_handler<Policy>::error_handler_type
+    vectored_error_handler<Policy>::error_handler =
+        vectored_error_handler<Policy>::default_error_handler;
 
 } // namespace policies
 } // namespace yomm2

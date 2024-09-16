@@ -657,8 +657,8 @@ class method<Name, Return(Parameters...), Options...>
         -> const std::uintptr_t*;
 
     template<class Error>
-    void check_static_offset(std::size_t actual, std::size_t expected) const
-        noexcept(NoExcept);
+    auto check_static_offset(std::size_t actual, std::size_t expected) const
+        noexcept(NoExcept) -> void;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     auto resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const
@@ -841,12 +841,33 @@ method<Name, Return(Parameters...), Options...>::~method() {
     Policy::methods.remove(*this);
 }
 
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<class Error>
+auto method<Name, Return(Parameters...), Options...>::check_static_offset(
+    std::size_t actual, std::size_t expected) const noexcept(NoExcept) -> void {
+    using namespace detail;
+
+    if (actual != expected) {
+        if (Policy::template has_facet<policies::error_handler>) {
+            Error error;
+            error.method = Policy::template static_type<method>();
+            error.expected = this->slots_strides[0];
+            error.actual = actual;
+            Policy::error(error);
+
+            abort();
+        }
+    }
+}
+
 // -----------------------------------------------------------------------------
 // method dispatch
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-auto inline method<Name, Return(Parameters...), Options...>::operator()(
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::operator()(
     detail::remove_virtual<Parameters>... args) const noexcept(NoExcept)
     -> Return {
     using namespace detail;
@@ -858,9 +879,10 @@ auto inline method<Name, Return(Parameters...), Options...>::operator()(
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename... ArgType>
-inline typename method<Name, Return(Parameters...), Options...>::FunctionPointer
-method<Name, Return(Parameters...), Options...>::resolve(
-    const ArgType&... args) const {
+BOOST_FORCEINLINE
+    typename method<Name, Return(Parameters...), Options...>::FunctionPointer
+    method<Name, Return(Parameters...), Options...>::resolve(
+        const ArgType&... args) const {
     using namespace detail;
 
     std::uintptr_t pf;
@@ -877,7 +899,7 @@ method<Name, Return(Parameters...), Options...>::resolve(
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename ArgType>
-inline auto
+BOOST_FORCEINLINE auto
 method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
     noexcept(NoExcept) -> const std::uintptr_t* {
     if constexpr (is_virtual_ptr<ArgType>) {
@@ -891,29 +913,9 @@ method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-template<class Error>
-inline void
-method<Name, Return(Parameters...), Options...>::check_static_offset(
-    std::size_t actual, std::size_t expected) const noexcept(NoExcept) {
-    using namespace detail;
-
-    if (actual != expected) {
-        if (Policy::template has_facet<policies::error_handler>) {
-            Error error;
-            error.method = Policy::template static_type<method>();
-            error.expected = this->slots_strides[0];
-            error.actual = actual;
-            Policy::error(error_type(std::move(error)));
-
-            abort();
-        }
-    }
-}
-
-template<
-    typename Name, typename Return, typename... Parameters, class... Options>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-inline auto method<Name, Return(Parameters...), Options...>::resolve_uni(
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
 
@@ -949,7 +951,7 @@ template<
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto
+BOOST_FORCEINLINE auto
 method<Name, Return(Parameters...), Options...>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
@@ -997,7 +999,8 @@ template<
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto method<Name, Return(Parameters...), Options...>::resolve_multi_next(
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const noexcept(NoExcept)
     -> std::uintptr_t {
@@ -1043,6 +1046,9 @@ inline auto method<Name, Return(Parameters...), Options...>::resolve_multi_next(
     }
 }
 
+// -----------------------------------------------------------------------------
+// Error handling
+
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 BOOST_NORETURN auto
@@ -1059,7 +1065,7 @@ method<Name, Return(Parameters...), Options...>::not_implemented_handler(
         std::copy_n(
             types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
-        Policy::error(error_type(std::move(error)));
+        Policy::error(error);
     }
 
     abort(); // in case user handler "forgets" to abort
@@ -1081,7 +1087,7 @@ method<Name, Return(Parameters...), Options...>::ambiguous_handler(
         std::copy_n(
             types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
-        Policy::error(error_type(std::move(error)));
+        Policy::error(error);
     }
 
     abort(); // in case user handler "forgets" to abort
@@ -1151,18 +1157,6 @@ struct method_macro_aux<Name, Signature, types<Options...>> {
 };
 
 } // namespace detail
-
-#ifndef BOOST_NO_RTTI
-
-inline auto set_error_handler(error_handler_type handler)
-    -> error_handler_type {
-    auto p = &default_policy::error;
-    auto prev = default_policy::error;
-    default_policy::error = handler;
-    return prev;
-}
-
-#endif
 
 } // namespace yomm2
 } // namespace yorel

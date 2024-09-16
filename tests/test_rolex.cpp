@@ -61,7 +61,7 @@ define_method(
 }
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 }
 
 double call_pay(const Employee& emp) {

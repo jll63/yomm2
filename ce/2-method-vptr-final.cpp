@@ -56,7 +56,7 @@ void meet_animals(
 }
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     Dog hector{"Hector"}, snoopy{"Snoopy"};
     Cat felix{"Felix"}, sylvester{"Sylvester"};

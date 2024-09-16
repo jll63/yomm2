@@ -37,7 +37,7 @@ define_method(string, foobar, (C&)) {
 #include <memory>
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     D d;
     B& db = d; // B part of D

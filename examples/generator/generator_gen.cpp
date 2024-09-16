@@ -7,7 +7,7 @@
 int main(int argc, char* argv[]) {
     using namespace yorel::yomm2;
 
-    auto compiler = update();
+    auto compiler = initialize();
     generator generator;
 
     std::ofstream slots("slots.hpp");

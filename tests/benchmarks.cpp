@@ -630,7 +630,7 @@ int main(int argc, char** argv) {
         YOMM2_GENSYM;
 
     mp_for_each<method_dispatch_types>(
-        [](auto value) { update<typename decltype(value)::policy>(); });
+        [](auto value) { initialize<typename decltype(value)::policy>(); });
 
     mp_for_each<mp_iota_c<NH>>([](auto I_value) {
         using I = decltype(I_value);

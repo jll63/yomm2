@@ -234,7 +234,7 @@ struct compiler : detail::generic_compiler {
     compiler();
 
     auto compile();
-    auto update();
+    auto initialize();
     void install_global_tables();
 
     void resolve_static_type_ids();
@@ -299,7 +299,7 @@ auto compiler<Policy>::compile() {
 }
 
 template<class Policy>
-auto compiler<Policy>::update() {
+auto compiler<Policy>::initialize() {
     compile();
     install_global_tables();
 
@@ -413,7 +413,7 @@ void compiler<Policy>::augment_classes() {
 
                 if constexpr (Policy::template has_facet<
                                   policies::error_handler>) {
-                    Policy::error(error_type(error));
+                    Policy::error(error);
                 }
 
                 abort();
@@ -554,7 +554,7 @@ void compiler<Policy>::augment_methods() {
                 error.type = ti;
 
                 if constexpr (has_facet<Policy, error_handler>) {
-                    Policy::error(error_type(error));
+                    Policy::error(error);
                 }
 
                 abort();
@@ -599,7 +599,7 @@ void compiler<Policy>::augment_methods() {
                     error.type = type;
 
                     if constexpr (has_facet<Policy, error_handler>) {
-                        Policy::error(error_type(error));
+                        Policy::error(error);
                     }
 
                     abort();
@@ -1212,26 +1212,16 @@ void compiler<Policy>::print(const update_method_report& report) const {
 }
 
 template<class Policy>
-auto update() -> compiler<Policy> {
+auto initialize() -> compiler<Policy> {
     compiler<Policy> compiler;
-    compiler.update();
+    compiler.initialize();
 
     return compiler;
 }
 
-#ifdef YOMM2_SHARED
-
-#if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-yOMM2_API auto update() -> compiler<policies::debug_shared>;
-#endif
-
-#else
-
-inline auto update() -> compiler<YOMM2_DEFAULT_POLICY> {
-    return update<YOMM2_DEFAULT_POLICY>();
+inline auto initialize() -> compiler<YOMM2_DEFAULT_POLICY> {
+    return initialize<YOMM2_DEFAULT_POLICY>();
 }
-
-#endif
 
 } // namespace yomm2
 } // namespace yorel

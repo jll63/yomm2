@@ -11,7 +11,7 @@
 int main(int argc, char* argv[]) {
     using namespace yorel::yomm2;
 
-    auto compiler = update<throw_policy>();
+    auto compiler = initialize<throw_policy>();
     generator generator;
 
     std::ofstream slots("test_generator_slots.hpp");

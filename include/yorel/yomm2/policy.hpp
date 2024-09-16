@@ -21,7 +21,7 @@
 #include <yorel/yomm2/policies/basic_error_output.hpp>
 #include <yorel/yomm2/policies/basic_trace_output.hpp>
 #include <yorel/yomm2/policies/fast_perfect_hash.hpp>
-#include <yorel/yomm2/policies/vectored_error.hpp>
+#include <yorel/yomm2/policies/vectored_error_handler.hpp>
 
 #ifndef BOOST_NO_EXCEPTIONS
 #include <yorel/yomm2/policies/throw_error.hpp>
@@ -34,13 +34,13 @@ namespace policies {
 struct yOMM2_API_gcc release
     : basic_policy<
           release, std_rtti, fast_perfect_hash<release>, vptr_vector<release>,
-          vectored_error<release>> {};
+          vectored_error_handler<release>> {};
 
 struct yOMM2_API_gcc debug
     : basic_policy<
           debug, std_rtti, checked_perfect_hash<debug>, vptr_vector<debug>,
           basic_error_output<debug>, basic_trace_output<debug>,
-          vectored_error<debug>> {};
+          vectored_error_handler<debug>> {};
 
 } // namespace policies
 

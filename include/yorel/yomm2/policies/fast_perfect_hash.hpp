@@ -143,7 +143,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
     error.buckets = 1 << M;
 
     if constexpr (has_facet<Policy, error_handler>) {
-        Policy::error(error_type(error));
+        Policy::error(error);
     }
 
     abort();

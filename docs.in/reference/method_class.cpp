@@ -39,7 +39,7 @@ define_method(std::string, kick, (Dog & dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_method_class) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     Animal&& dog = Dog();
     using X = YOMM2_METHOD_CLASS(std::string, kick, (virtual_<Animal&>));

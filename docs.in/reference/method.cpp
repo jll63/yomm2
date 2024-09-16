@@ -215,7 +215,7 @@ std::string pet_dog(Dog& dog) { return "wag tail"; }
 YOMM2_STATIC(pet::override_fn<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
-    yomm2::update();
+    yomm2::initialize();
 
     std::unique_ptr<Animal>
         felix = std::make_unique<Cat>(),
