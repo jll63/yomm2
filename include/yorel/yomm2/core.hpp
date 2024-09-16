@@ -657,8 +657,8 @@ class method<Name, Return(Parameters...), Options...>
         -> const std::uintptr_t*;
 
     template<class Error>
-    void check_static_offset(std::size_t actual, std::size_t expected) const
-        noexcept(NoExcept);
+    auto check_static_offset(std::size_t actual, std::size_t expected) const
+        noexcept(NoExcept) -> void;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     auto resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const
@@ -841,59 +841,10 @@ method<Name, Return(Parameters...), Options...>::~method() {
     Policy::methods.remove(*this);
 }
 
-// -----------------------------------------------------------------------------
-// method dispatch
-
-template<
-    typename Name, typename Return, typename... Parameters, class... Options>
-auto inline method<Name, Return(Parameters...), Options...>::operator()(
-    detail::remove_virtual<Parameters>... args) const noexcept(NoExcept)
-    -> Return {
-    using namespace detail;
-    auto pf = resolve(argument_traits<Policy, Parameters>::rarg(args)...);
-
-    return pf(std::forward<remove_virtual<Parameters>>(args)...);
-}
-
-template<
-    typename Name, typename Return, typename... Parameters, class... Options>
-template<typename... ArgType>
-inline typename method<Name, Return(Parameters...), Options...>::FunctionPointer
-method<Name, Return(Parameters...), Options...>::resolve(
-    const ArgType&... args) const {
-    using namespace detail;
-
-    std::uintptr_t pf;
-
-    if constexpr (arity == 1) {
-        pf = resolve_uni<types<Parameters...>, ArgType...>(args...);
-    } else {
-        pf = resolve_multi_first<0, types<Parameters...>, ArgType...>(args...);
-    }
-
-    return reinterpret_cast<FunctionPointer>(pf);
-}
-
-template<
-    typename Name, typename Return, typename... Parameters, class... Options>
-template<typename ArgType>
-inline auto
-method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
-    noexcept(NoExcept) -> const std::uintptr_t* {
-    if constexpr (is_virtual_ptr<ArgType>) {
-        return arg._vptr();
-        // No need to check the method pointer: this was done when the
-        // virtual_ptr was created.
-    } else {
-        return Policy::dynamic_vptr(arg);
-    }
-}
-
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<class Error>
-inline auto
-method<Name, Return(Parameters...), Options...>::check_static_offset(
+auto method<Name, Return(Parameters...), Options...>::check_static_offset(
     std::size_t actual, std::size_t expected) const noexcept(NoExcept) -> void {
     using namespace detail;
 
@@ -910,10 +861,61 @@ method<Name, Return(Parameters...), Options...>::check_static_offset(
     }
 }
 
+// -----------------------------------------------------------------------------
+// method dispatch
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::operator()(
+    detail::remove_virtual<Parameters>... args) const noexcept(NoExcept)
+    -> Return {
+    using namespace detail;
+    auto pf = resolve(argument_traits<Policy, Parameters>::rarg(args)...);
+
+    return pf(std::forward<remove_virtual<Parameters>>(args)...);
+}
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<typename... ArgType>
+BOOST_FORCEINLINE
+    typename method<Name, Return(Parameters...), Options...>::FunctionPointer
+    method<Name, Return(Parameters...), Options...>::resolve(
+        const ArgType&... args) const {
+    using namespace detail;
+
+    std::uintptr_t pf;
+
+    if constexpr (arity == 1) {
+        pf = resolve_uni<types<Parameters...>, ArgType...>(args...);
+    } else {
+        pf = resolve_multi_first<0, types<Parameters...>, ArgType...>(args...);
+    }
+
+    return reinterpret_cast<FunctionPointer>(pf);
+}
+
+template<
+    typename Name, typename Return, typename... Parameters, class... Options>
+template<typename ArgType>
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
+    noexcept(NoExcept) -> const std::uintptr_t* {
+    if constexpr (is_virtual_ptr<ArgType>) {
+        return arg._vptr();
+        // No need to check the method pointer: this was done when the
+        // virtual_ptr was created.
+    } else {
+        return Policy::dynamic_vptr(arg);
+    }
+}
+
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-inline auto method<Name, Return(Parameters...), Options...>::resolve_uni(
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
 
@@ -949,7 +951,7 @@ template<
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto
+BOOST_FORCEINLINE auto
 method<Name, Return(Parameters...), Options...>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
@@ -997,7 +999,8 @@ template<
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
-inline auto method<Name, Return(Parameters...), Options...>::resolve_multi_next(
+BOOST_FORCEINLINE auto
+method<Name, Return(Parameters...), Options...>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const noexcept(NoExcept)
     -> std::uintptr_t {
@@ -1042,6 +1045,9 @@ inline auto method<Name, Return(Parameters...), Options...>::resolve_multi_next(
             dispatch, more_args...);
     }
 }
+
+// -----------------------------------------------------------------------------
+// Error handling
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
