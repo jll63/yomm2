@@ -30,7 +30,7 @@ define_method(std::string, kick, (Dog & dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(noadl) {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
     auto stimulus = &kick;
     Dog snoopy;
     Animal& animal = snoopy;

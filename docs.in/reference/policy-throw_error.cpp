@@ -52,7 +52,7 @@ register_classes(Animal, Dog, throw_policy);
 declare_method(void, kick, (virtual_<Animal&>), throw_policy);
 
 BOOST_AUTO_TEST_CASE(ref_throw_error) {
-    yomm2::update<throw_policy>();
+    yomm2::initialize<throw_policy>();
 
     bool threw = false;
 

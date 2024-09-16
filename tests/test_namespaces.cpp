@@ -79,7 +79,7 @@ define_method(std::string, meet, (felis::Cat & cat, canis::Dog& dog)) {
 #include <memory>
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     std::unique_ptr<interfaces::Animal> hector =
                                             std::make_unique<canis::Bulldog>(),

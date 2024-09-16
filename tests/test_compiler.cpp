@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(test_use_classes) {
 
     std::vector<class_*> actual, expected;
 
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     auto a = get_class<A>(comp);
     auto b = get_class<B>(comp);
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a_b1_c) {
     YOMM2_STATIC(use_classes<A, B, test_policy>);
     YOMM2_STATIC(use_classes<A, C, test_policy>);
     ADD_METHOD(B);
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     BOOST_TEST_REQUIRE(get_method(comp, m_B).slots.size() == 1);
     BOOST_TEST(get_method(comp, m_B).slots[0] == 0);
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_c1) {
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     BOOST_TEST_REQUIRE(get_method(comp, m_A).slots.size() == 1);
     BOOST_TEST(get_method(comp, m_A).slots[0] == 0);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_d1_c1_d1) {
     ADD_METHOD(B);
     ADD_METHOD(C);
     ADD_METHOD(D);
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     BOOST_TEST_REQUIRE(get_method(comp, m_A).slots.size() == 1);
     BOOST_TEST(get_method(comp, m_A).slots[0] == 0);
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_d1_c1_d1_e2) {
     ADD_METHOD_N(E, 1);
     ADD_METHOD_N(E, 2);
     ADD_METHOD_N(E, 3);
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     BOOST_TEST_REQUIRE(get_method(comp, m_A).slots.size() == 1);
     BOOST_TEST(get_method(comp, m_A).slots[0] == 0);
@@ -340,7 +340,7 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_c1_b1) {
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);
-    auto comp = update<test_policy>();
+    auto comp = initialize<test_policy>();
 
     BOOST_TEST_REQUIRE(get_method(comp, m_A).slots.size() == 1);
     BOOST_TEST(get_method(comp, m_A).slots[0] == 0);

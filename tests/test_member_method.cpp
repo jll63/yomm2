@@ -55,7 +55,7 @@ YOMM2_STATIC(Payroll::pay_functions);
 #include <boost/test/included/unit_test.hpp>
 
 BOOST_AUTO_TEST_CASE(member_method) {
-    update();
+    initialize();
 
     Payroll pr;
     const Employee& alice = Employee();

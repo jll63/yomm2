@@ -51,7 +51,7 @@ define_method(void, inspect, (const Car& v, const StateInspector& i)) {
 }
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     const Vehicle& vehicle1 = Car();
     const Inspector& inspector1 = StateInspector();

@@ -76,7 +76,7 @@ use_definitions<
 > YOMM2_GENSYM; // 5
 
 BOOST_AUTO_TEST_CASE(ref_use_definitions) {
-    update();
+    initialize();
 
     const abstract_matrix& ordinary = ordinary_matrix();
     const abstract_matrix& square = square_matrix();

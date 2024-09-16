@@ -474,7 +474,7 @@ use_definitions<
 // code<
 
 BOOST_AUTO_TEST_CASE(test_vectors) {
-    update();
+    initialize();
 
     {
         vector a(new concrete_vector<int>{1, 2});
@@ -1057,7 +1057,7 @@ YOMM2_STATIC(use_classes<apply_product<matrix_templates, types<double, int>>>);
 
 // code<
 BOOST_AUTO_TEST_CASE(test_dynamic_transpose) {
-    update();
+    initialize();
 
     handle<any<double>> o(new ordinary<double>);
     handle<any<double>> ot = ~o;
@@ -1292,7 +1292,7 @@ use_definitions<
 
 // code<
 BOOST_AUTO_TEST_CASE(test_dynamic_operations) {
-    update();
+    initialize();
 
     {
         handle<any<int>> a(new ordinary<int>);

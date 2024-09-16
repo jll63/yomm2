@@ -18,7 +18,7 @@ using std::cout;
 using yorel::yomm2::virtual_;
 
 int main() {
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     const geometries::Geometry& arc = geometries::Arc();
     const geometries::Geometry& segment = geometries::Segment();

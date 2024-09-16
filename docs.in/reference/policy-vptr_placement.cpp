@@ -269,8 +269,8 @@ BOOST_AUTO_TEST_CASE(ref_vptr_page) {
     static_assert(sizeof(Integer) == sizeof(int));
     static_assert(sizeof(Rational) == 2 * sizeof(int));
 
-    // Call update(). This must be done before we create any Numbers.
-    update<number_aware_policy>();
+    // Call initialize(). This must be done before we create any Numbers.
+    initialize<number_aware_policy>();
 
     // Allocate a few Integers...
     Page<Integer> ints;

@@ -83,7 +83,7 @@ define_method(void, meet, (Cat& cat, Dog& dog, std::ostream& os)) {
 
 int main() {
     // Initialise method dispatch tables.
-    yorel::yomm2::update();
+    yorel::yomm2::initialize();
 
     // Create a few objects.
     // Note that the actual classes are type-erased to base class Animal!

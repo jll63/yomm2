@@ -282,7 +282,7 @@ template argument:
 
 BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
     // Note: call update for our custom policy!
-    yorel::yomm2::update<custom_policy>();
+    yorel::yomm2::initialize<custom_policy>();
 
     Animal&& a = Dog("Snoopy");
     Animal&& b = Cat("Sylvester");
@@ -406,7 +406,7 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
 
 BOOST_AUTO_TEST_CASE(custom_rtti_integer_demo) {
     // Note: call update for our custom policy!
-    yorel::yomm2::update<custom_policy>();
+    yorel::yomm2::initialize<custom_policy>();
 
     Animal&& a = Dog("Snoopy");
     Animal&& b = Cat("Sylvester");
@@ -557,7 +557,7 @@ define_method(void, kick, (Cat & cat, std::ostream& os)) {
 }
 
 BOOST_AUTO_TEST_CASE(custom_rtti_deferred) {
-    update<custom_policy>();
+    initialize<custom_policy>();
 
     Animal &&a = Dog("Snoopy"), &&b = Cat("Sylvester");
 

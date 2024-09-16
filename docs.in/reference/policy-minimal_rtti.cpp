@@ -68,7 +68,7 @@ define_method(std::string, kick, (vptr<Dog> dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_static_rtti) {
-    update<final_policy>();
+    initialize<final_policy>();
 
     Cat felix;
     Dog snoopy;
