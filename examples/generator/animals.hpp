@@ -13,13 +13,13 @@
 // was not acceptable, we could build the 'generate' program with RTTI enabled,
 // and the application without RTTI. This would require building the 'animals'
 // classes twice, but the debug build could be used for the generation.
-struct animals_policy : yorel::yomm2::policy::basic_policy<
-                            animals_policy, yorel::yomm2::policy::std_rtti> {};
+struct animals_policy : yorel::yomm2::policies::basic_policy<
+                            animals_policy, yorel::yomm2::policies::std_rtti> {};
 
 #define YOMM2_DEFAULT_POLICY animals_policy
 #endif
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 
 using yorel::yomm2::virtual_ptr;
 

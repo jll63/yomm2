@@ -1,6 +1,8 @@
 #ifndef YOREL_YOMM2_DETAIL_TRACE_HPP
 #define YOREL_YOMM2_DETAIL_TRACE_HPP
 
+#include <yorel/yomm2/detail/types.hpp>
+
 #include <boost/dynamic_bitset.hpp>
 
 namespace yorel {
@@ -27,7 +29,7 @@ struct type_name {
 template<class Policy>
 struct trace_type {
     static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::trace_output>;
+        Policy::template has_facet<policies::trace_output>;
 
     std::size_t indentation_level{0};
 
@@ -142,7 +144,7 @@ auto& operator<<(trace_type<Policy>& trace, const range<T>& range) {
 
 template<class Policy>
 auto& operator<<(trace_type<Policy>& trace, const type_name& manip) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
+    if constexpr (Policy::template has_facet<policies::trace_output>) {
         Policy::type_name(manip.type, trace);
     }
 

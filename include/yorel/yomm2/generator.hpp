@@ -7,6 +7,7 @@
 #define YOREL_YOMM2_GENERATOR_GENERATE_HPP
 
 #include <yorel/yomm2/core.hpp>
+#include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/decode.hpp>
 
 #include <boost/core/demangle.hpp>
@@ -376,8 +377,9 @@ void generator::encode_dispatch_data(
     os << indent << "// slots and strides\n";
 
     for (auto& method : methods) {
-        os << indent << "// "
-           << boost::core::demangle(method->info->name.data()) << "\n";
+        os << indent << "// ";
+        Compiler::policy_type::type_name(method->info->method_type, os);
+        os << "\n";
         os << indent;
         auto strides_iter = std::transform(
             method->slots.begin(), method->slots.end(),
@@ -451,8 +453,9 @@ void generator::encode_dispatch_data(
             continue;
         }
 
-        os << indent << "// " << boost::core::demangle(method.info->name.data())
-           << "\n";
+        os << indent << "// ";
+        Compiler::policy_type::type_name(method.info->method_type, os);
+        os << "\n";
         os << indent;
         auto dt_iter = std::transform(
             method.dispatch_table.begin(), method.dispatch_table.end() - 1,

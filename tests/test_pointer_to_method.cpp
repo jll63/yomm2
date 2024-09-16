@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 #include <string>
@@ -21,8 +21,7 @@ class Animal {
 
 class Dog : public Animal {};
 
-register_class(Animal);
-register_class(Dog, Animal);
+register_classes(Animal, Dog, Animal);
 
 declare_method(std::string, kick, (virtual_<Animal&>));
 

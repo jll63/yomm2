@@ -11,7 +11,7 @@
 
 #include "geometries.hpp"
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2.hpp>
 
 namespace painter {
 

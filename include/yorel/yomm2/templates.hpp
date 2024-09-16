@@ -31,15 +31,12 @@ using templates = types<template_<Templates>...>;
 
 namespace detail {
 
-// template <template <typename...> typename... F>
-// using mp_list_q = types<boost::mp11::mp_quote<F>...>;
-
 template<typename...>
 struct product_impl;
 
 template<typename... Ts, typename... TypeLists>
 struct product_impl<types<Ts...>, TypeLists...> {
-    using type = mp11::mp_product<types, types<Ts...>, TypeLists...>;
+    using type = boost::mp11::mp_product<types, types<Ts...>, TypeLists...>;
 };
 
 template<typename...>
@@ -47,8 +44,8 @@ struct apply_product_impl;
 
 template<template<typename...> typename... Templates, typename... TypeLists>
 struct apply_product_impl<templates<Templates...>, TypeLists...> {
-    using type = mp11::mp_product<
-        mp11::mp_invoke_q,
+    using type = boost::mp11::mp_product<
+        boost::mp11::mp_invoke_q,
         types<boost::mp11::mp_quote<Templates>...>,
         TypeLists...
     >;
@@ -95,28 +92,28 @@ struct use_definition {
 
     template<typename T>
     struct impl<true, T> {
-        using type = typename T::method::template add_definition<T>;
+        using type = typename T::method::template override<T>;
     };
 
     template<typename First, typename... Rest>
     struct impl<false, Definition<First, Rest...>> {
-        using type = typename First::self_type::template add_definition<Definition<First, Rest...>>;
+        using type = typename First::template override<Definition<First, Rest...>>;
     };
 
     template<typename TypeList>
     using fn = typename impl<
-        has_method<mp11::mp_apply<Definition, TypeList>>,
-        mp11::mp_apply<Definition, TypeList>
+        has_method<boost::mp11::mp_apply<Definition, TypeList>>,
+        boost::mp11::mp_apply<Definition, TypeList>
     >::type;
 };
 
 template<template<typename...> typename Definition>
 struct is_defined {
     template<typename TypeList>
-    using fn = mp11::mp_bool<
+    using fn = boost::mp11::mp_bool<
         !std::is_base_of_v<
             not_defined,
-            mp11::mp_apply<Definition, TypeList>
+            boost::mp11::mp_apply<Definition, TypeList>
         >
     >;
 };
@@ -128,8 +125,8 @@ struct is_defined {
 
 template<typename... T>
 struct large_aggregate : std::tuple<
-    mp11::mp_apply<aggregate, mp11::mp_take_c<types<T...>, sizeof...(T) / 2>>,
-    mp11::mp_apply<aggregate, mp11::mp_drop_c<types<T...>, sizeof...(T) / 2>>
+    boost::mp11::mp_apply<aggregate, boost::mp11::mp_take_c<types<T...>, sizeof...(T) / 2>>,
+    boost::mp11::mp_apply<aggregate, boost::mp11::mp_drop_c<types<T...>, sizeof...(T) / 2>>
 > {
 };
 

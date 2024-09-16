@@ -49,6 +49,7 @@ presets = {
                 "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "CMAKE_CXX_COMPILER": join(compiler, version),
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON",

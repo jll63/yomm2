@@ -116,7 +116,7 @@ struct Init {
 } init;
 }
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 namespace openmethods {
@@ -188,7 +188,7 @@ using value = method<value_id, int(virtual_<const Node&>)>;
 int number_value(const Number& node) {
   return node.val;
 }
-value::add_function<number_value> add_number_value;
+value::override_fn<number_value> add_number_value;
 
 template<class NodeClass, class Op>
 struct binary_value {
@@ -197,8 +197,8 @@ struct binary_value {
   }
 };
 
-YOMM2_STATIC(value::add_definition<binary_value<Plus, std::plus<int>>>);
-YOMM2_STATIC(value::add_definition<binary_value<Times, std::multiplies<int>>>);
+YOMM2_STATIC(value::override<binary_value<Plus, std::plus<int>>>);
+YOMM2_STATIC(value::override<binary_value<Times, std::multiplies<int>>>);
 
 }
 

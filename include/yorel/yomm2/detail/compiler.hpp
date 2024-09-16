@@ -29,39 +29,27 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-struct update_report : update_method_report {};
-
 template<class Reports, class Facets, typename = void>
 struct aggregate_reports;
 
 template<class... Reports, class Facet, class... MoreFacets>
 struct aggregate_reports<
-    types<Reports...>,
-    types<Facet, MoreFacets...>,
+    types<Reports...>, types<Facet, MoreFacets...>,
     std::void_t<typename Facet::report>> {
     using type = typename aggregate_reports<
-        types<Reports..., typename Facet::report>,
-        types<MoreFacets...>>::type;
+        types<Reports..., typename Facet::report>, types<MoreFacets...>>::type;
 };
 
 template<class... Reports, class Facet, class... MoreFacets, typename Void>
-struct aggregate_reports<
-    types<Reports...>,
-    types<Facet, MoreFacets...>, Void> {
+struct aggregate_reports<types<Reports...>, types<Facet, MoreFacets...>, Void> {
     using type = typename aggregate_reports<
-        types<Reports...>,
-        types<MoreFacets...>>::type;
+        types<Reports...>, types<MoreFacets...>>::type;
 };
 
 template<class... Reports, typename Void>
-struct aggregate_reports<
-    types<Reports...>, types<>, Void> {
+struct aggregate_reports<types<Reports...>, types<>, Void> {
     struct type : Reports... {};
 };
-
-template<class Policy>
-using report_type = typename aggregate_reports<
-    types<update_report>, typename Policy::facets>::type;
 
 inline void merge_into(boost::dynamic_bitset<>& a, boost::dynamic_bitset<>& b) {
     if (b.size() < a.size()) {
@@ -146,12 +134,9 @@ struct generic_compiler {
     using group_map = std::map<bitvec, group>;
 
     struct update_method_report {
-        size_t cells = 0;
-        size_t concrete_cells = 0;
-        size_t not_implemented = 0;
-        size_t concrete_not_implemented = 0;
-        size_t ambiguous = 0;
-        size_t concrete_ambiguous = 0;
+        std::size_t cells = 0;
+        std::size_t not_implemented = 0;
+        std::size_t ambiguous = 0;
     };
 
     struct update_report : update_method_report {};
@@ -186,18 +171,18 @@ struct generic_compiler {
 template<class Policy>
 trace_type<Policy>&
 operator<<(trace_type<Policy>& trace, const generic_compiler::class_& cls) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
+    if constexpr (Policy::template has_facet<policies::trace_output>) {
         trace << type_name(cls.type_ids[0]);
     }
 
     return trace;
 }
 
-template<class Policy, template<typename...> typename Container, typename... T>
+template<class Policy, template<typename...> class Container, typename... T>
 trace_type<Policy>& operator<<(
     trace_type<Policy>& trace,
     Container<generic_compiler::class_*, T...>& classes) {
-    if constexpr (Policy::template has_facet<policy::trace_output>) {
+    if constexpr (Policy::template has_facet<policies::trace_output>) {
         trace << "(";
         const char* sep = "";
         for (auto cls : classes) {
@@ -242,8 +227,7 @@ struct compiler : detail::generic_compiler {
     using type_index_type = decltype(Policy::type_index(0));
 
     typename detail::aggregate_reports<
-        detail::types<update_report>, typename Policy::facets>::type
-        report;
+        detail::types<update_report>, typename Policy::facets>::type report;
 
     std::unordered_map<type_index_type, class_*> class_map;
 
@@ -274,7 +258,7 @@ struct compiler : detail::generic_compiler {
 
     static type_id static_type(type_id type) {
         if constexpr (std::is_base_of_v<
-                          policy::deferred_static_rtti, policy::rtti>) {
+                          policies::deferred_static_rtti, policies::rtti>) {
             return reinterpret_cast<type_id (*)()>(type)();
         } else {
             return type;
@@ -283,7 +267,7 @@ struct compiler : detail::generic_compiler {
 
     mutable detail::trace_type<Policy> trace;
     static constexpr bool trace_enabled =
-        Policy::template has_facet<policy::trace_output>;
+        Policy::template has_facet<policies::trace_output>;
     using indent = typename detail::trace_type<Policy>::indent;
 };
 
@@ -335,7 +319,7 @@ void compiler<Policy>::resolve_static_type_ids() {
         *p = pf();
     };
 
-    if constexpr (std::is_base_of_v<policy::deferred_static_rtti, Policy>) {
+    if constexpr (std::is_base_of_v<policies::deferred_static_rtti, Policy>) {
         if (!Policy::classes.empty())
             for (auto& ci : Policy::classes) {
                 resolve(&ci.type);
@@ -428,7 +412,7 @@ void compiler<Policy>::augment_classes() {
                 error.type = *base_iter;
 
                 if constexpr (Policy::template has_facet<
-                                  policy::error_handler>) {
+                                  policies::error_handler>) {
                     Policy::error(error_type(error));
                 }
 
@@ -540,7 +524,7 @@ void compiler<Policy>::calculate_covariant_classes(class_& cls) {
 
 template<class Policy>
 void compiler<Policy>::augment_methods() {
-    using namespace policy;
+    using namespace policies;
     using namespace detail;
 
     methods.resize(Policy::methods.size());
@@ -551,7 +535,7 @@ void compiler<Policy>::augment_methods() {
     auto meth_iter = methods.begin();
 
     for (auto& meth_info : Policy::methods) {
-        ++trace << meth_info.name << " "
+        ++trace << type_name(meth_info.method_type) << " "
                 << range{meth_info.vp_begin, meth_info.vp_end} << "\n";
 
         indent _(trace);
@@ -889,7 +873,6 @@ void compiler<Policy>::build_dispatch_tables() {
                     prefix = " x ";
                 }
 
-                m.report.concrete_cells = 1;
                 prefix = ", concrete only: ";
 
                 for (const auto& dim_groups : groups) {
@@ -898,7 +881,6 @@ void compiler<Policy>::build_dispatch_tables() {
                         [](const auto& group) {
                             return group.second.has_concrete_classes;
                         });
-                    m.report.concrete_cells *= cells;
                     trace << prefix << cells;
                     prefix = " x ";
                 }
@@ -1011,17 +993,11 @@ void compiler<Policy>::build_dispatch_table(
                 ++trace << "ambiguous\n";
                 m.dispatch_table.push_back(&m.ambiguous);
                 ++m.report.ambiguous;
-                if (concrete) {
-                    ++m.report.concrete_ambiguous;
-                }
             } else if (specs.empty()) {
                 indent _(trace);
                 ++trace << "not implemented\n";
                 m.dispatch_table.push_back(&m.not_implemented);
                 ++m.report.not_implemented;
-                if (concrete && group.has_concrete_classes) {
-                    ++m.report.concrete_not_implemented;
-                }
             } else {
                 auto spec = specs[0];
                 m.dispatch_table.push_back(spec);
@@ -1041,16 +1017,13 @@ void compiler<Policy>::build_dispatch_table(
 inline void detail::generic_compiler::accumulate(
     const update_method_report& partial, update_report& total) {
     total.cells += partial.cells;
-    total.concrete_cells += partial.concrete_cells;
     total.not_implemented += partial.not_implemented != 0;
-    total.concrete_not_implemented += partial.concrete_not_implemented != 0;
     total.ambiguous += partial.ambiguous != 0;
-    total.concrete_ambiguous += partial.concrete_ambiguous != 0;
 }
 
 template<class Policy>
 void compiler<Policy>::install_gv() {
-    using namespace policy;
+    using namespace policies;
     using namespace detail;
 
     auto dispatch_data_size = std::accumulate(
@@ -1234,15 +1207,8 @@ void compiler<Policy>::print(const update_method_report& report) const {
         ++trace << report.cells << " dispatch table cells, ";
     }
 
-    trace << report.not_implemented << " not implemented, ";
-    trace << report.ambiguous << " ambiguities, concrete only: ";
-
-    if (report.cells) {
-        trace << report.concrete_cells << ", ";
-    }
-
-    trace << report.concrete_not_implemented << ", ";
-    trace << report.concrete_ambiguous << "\n";
+    trace << report.not_implemented << " not implemented, " << report.ambiguous
+          << " ambiguous\n";
 }
 
 template<class Policy>
@@ -1256,7 +1222,7 @@ auto update() -> compiler<Policy> {
 #ifdef YOMM2_SHARED
 
 #if defined(__GXX_RTTI) || defined(_HAS_STATIC_RTTI)
-yOMM2_API auto update() -> compiler<policy::debug_shared>;
+yOMM2_API auto update() -> compiler<policies::debug_shared>;
 #endif
 
 #else

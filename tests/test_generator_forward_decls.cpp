@@ -188,11 +188,11 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
         YOMM2_STATIC(use_classes<foo, policy>);
 
         using baz1 = method<baz_key, void(virtual_<foo&>, int), policy>;
-        YOMM2_STATIC(baz1::add_function<baz1_def>);
+        YOMM2_STATIC(baz1::override_fn<baz1_def>);
 
         using baz2 =
             method<baz_key, void(virtual_<foo&>, virtual_<foo&>), policy>;
-        YOMM2_STATIC(baz2::add_function<baz2_def>);
+        YOMM2_STATIC(baz2::override_fn<baz2_def>);
 
         update<policy>();
 

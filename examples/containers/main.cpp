@@ -6,7 +6,7 @@
 // This exmaple is based on sample code provided by Github user matpen in
 // https://github.com/jll63/yomm2/issues/7
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 #include <iostream>

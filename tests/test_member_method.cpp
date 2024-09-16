@@ -3,7 +3,7 @@
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 #include <iostream>
@@ -39,12 +39,13 @@ struct Payroll {
     void pay_employee(const Employee&) {
         balance -= 2000;
     }
-    void pay_manager(const Manager&) {
-        balance -= 3000;
+    void pay_manager(const Manager& manager) {
+        pay_method::next<&Payroll::pay_manager>(this, manager);
+        balance -= 1000;
     }
 
   public:
-    using pay_functions = Payroll::pay_method::add_member_functions<
+    using pay_functions = Payroll::pay_method::override_fns<
         &Payroll::pay_employee, &Payroll::pay_manager>;
 };
 

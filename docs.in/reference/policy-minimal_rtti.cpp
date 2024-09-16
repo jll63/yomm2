@@ -1,6 +1,6 @@
 /***
-entry: policy::minimal_rtti
-headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2/keywords.hpp
+entry: policies::minimal_rtti
+headers: yorel/yomm2/policy.hpp, yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
 struct minimal_rtti;
@@ -41,7 +41,7 @@ Allocate a static `char` variable and return its address, cast to ->`type_id`.
 #include <string>
 #include <vector>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 using namespace yorel::yomm2;
 
@@ -49,8 +49,8 @@ struct Animal {};
 struct Cat : Animal {};
 struct Dog : Animal {};
 
-struct final_policy : policy::basic_policy<final_policy, policy::minimal_rtti> {
-};
+struct final_policy
+    : policies::basic_policy<final_policy, policies::minimal_rtti> {};
 
 template<class Class>
 using vptr = virtual_ptr<Class, final_policy>;

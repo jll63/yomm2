@@ -10,7 +10,7 @@
 
 #include "painter.hpp"
 
-register_class(geometries::Shape, geometries::Geometry);
+register_classes(geometries::Shape, geometries::Geometry);
 
 namespace painter {
 namespace paint2d {

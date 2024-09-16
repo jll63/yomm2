@@ -135,7 +135,7 @@ namespace test_add_definition {
 
 struct method {
     using self_type = method;
-    template<typename Container> struct add_definition;
+    template<class Container> struct override;
 };
 
 template<typename...>
@@ -143,7 +143,7 @@ struct definition {};
 
 static_assert(std::is_same_v<
     detail::use_definition<definition>::fn<types<method, int>>,
-    method::add_definition<definition<method, int>>
+    method::override<definition<method, int>>
 
 >);
 }

@@ -11,7 +11,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy>
 struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
@@ -19,7 +19,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
 
     template<typename ForwardIterator>
     static void publish_vptrs(ForwardIterator first, ForwardIterator last) {
-        using namespace policy;
+        using namespace policies;
 
         std::size_t size;
 
@@ -64,7 +64,7 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
     }
 
     template<class Class>
-    static const std::uintptr_t* dynamic_vptr(const Class& arg) {
+    static auto dynamic_vptr(const Class& arg) -> const std::uintptr_t* {
         auto index = Policy::dynamic_type(arg);
 
         if constexpr (has_facet<Policy, type_hash>) {
@@ -78,8 +78,8 @@ struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
 template<class Policy>
 std::vector<const std::uintptr_t*> vptr_vector<Policy>::vptrs;
 
-}
-}
-}
+} // namespace policies
+} // namespace yomm2
+} // namespace yorel
 
 #endif

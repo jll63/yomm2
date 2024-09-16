@@ -8,7 +8,7 @@
 
 using std::string;
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 using yorel::yomm2::virtual_;
@@ -21,10 +21,7 @@ struct B : A {};
 struct C : A {};
 struct D : B, C {};
 
-register_class(A);
-register_class(B, A);
-register_class(C, A);
-register_class(D, B, C);
+register_classes(A, B, C, D);
 
 declare_method(string, foobar, (virtual_<A&>));
 

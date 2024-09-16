@@ -8,12 +8,13 @@
 
 #include <yorel/yomm2.hpp>
 
+#include "test_util.hpp"
+
 #define BOOST_TEST_MODULE core
 #include <boost/test/included/unit_test.hpp>
 
 using namespace yorel::yomm2;
 using namespace yorel::yomm2::detail;
-using namespace boost::mp11;
 
 // clang-format off
 
@@ -32,7 +33,7 @@ struct f : base {};
 
 static_assert(
     std::is_same_v<
-        mp_filter<
+        boost::mp11::mp_filter<
             is_virtual,
             types< virtual_<a&>, b, virtual_<c&> >
         >,
@@ -53,7 +54,7 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform<
+        boost::mp11::mp_transform<
             remove_virtual,
             types< virtual_<a&>, virtual_<c&> >
         >,
@@ -62,9 +63,9 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform_q<
-            mp_bind_front<polymorphic_type, default_policy>,
-            mp_transform<
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<polymorphic_type, default_policy>,
+            boost::mp11::mp_transform<
                 remove_virtual,
                 types< virtual_<a&>, virtual_<c&> >
             >
@@ -74,11 +75,11 @@ static_assert(
 
 static_assert(
     std::is_same_v<
-        mp_transform_q<
-            mp_bind_front<polymorphic_type, default_policy>,
-            mp_transform<
+        boost::mp11::mp_transform_q<
+            boost::mp11::mp_bind_front<polymorphic_type, default_policy>,
+            boost::mp11::mp_transform<
                 remove_virtual,
-                mp_filter<
+                boost::mp11::mp_filter<
                     is_virtual,
                     types< virtual_<a&>, b, virtual_<c&> >
                 >
@@ -91,34 +92,6 @@ static_assert(
     std::is_same_v<
         polymorphic_types<types<virtual_<a&>, b, virtual_<c&>>>,
         types<a&, c&>>);
-
-static_assert(
-    std::is_same_v<
-        polymorphic_types<types<
-            virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>>,
-        types<std::shared_ptr<a>, std::shared_ptr<c>>>);
-
-static_assert(
-    std::is_same_v<
-        spec_polymorphic_types<
-            default_policy,
-            types<virtual_<a&>, b, virtual_<c&>>,
-            types<d&, e, f&>>,
-        types<d, f>>);
-
-static_assert(
-    std::is_same_v<
-        polymorphic_type<default_policy, std::shared_ptr<a>>,
-    a>);
-
-static_assert(
-    std::is_same_v<
-        spec_polymorphic_types<
-            default_policy,
-            types<
-                virtual_<std::shared_ptr<a>>, b, virtual_<std::shared_ptr<c>>>,
-            types<std::shared_ptr<d>, e, std::shared_ptr<f>>>,
-        types<d, f>>);
 
 BOOST_AUTO_TEST_CASE(test_type_id_list) {
     type_id expected[] = {type_id(&typeid(a)), type_id(&typeid(b))};
@@ -192,26 +165,6 @@ BOOST_AUTO_TEST_CASE(casts) {
     static_assert(std::is_same_v<virtual_animal_t, Animal>, "animal");
     using virtual_mammal_t = polymorphic_type<default_policy, const Mammal&>;
     static_assert(std::is_same_v<virtual_mammal_t, Mammal>, "mammal");
-
-    voidp base_address;
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), mammal_this,
-        types<const Mammal&>>::fn(animal);
-    BOOST_TEST(base_address == &mammal);
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), carnivore_this,
-        types<const Carnivore&>>::fn(animal);
-    BOOST_TEST(base_address == &carnivore);
-
-    base_address = thunk<
-        default_policy,
-        voidp(virtual_<const Animal&>), mammal_this,
-        types<const Dog&>>::fn(animal);
-    BOOST_TEST(base_address == &dog);
 }
 
 } // namespace casts
@@ -248,38 +201,65 @@ static_assert(
         >
 >);
 
-static_assert(
-    std::is_same_v<
-        use_classes_macro<Animal, default_policy>,
-        std::tuple<
-            class_declaration_aux<default_policy, types<Animal, Animal>>
-        >
->);
-
-struct my_policy : policy::abstract_policy {};
+struct my_policy : policies::abstract_policy {};
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, my_policy, default_policy>,
-        std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
-        >
+        get_policy<Animal, Dog>,
+        default_policy
 >);
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, my_policy>,
-        std::tuple<
-            class_declaration_aux<my_policy, types<Animal, Animal>>
-        >
+        get_policy<Animal, Dog, my_policy>,
+        my_policy
 >);
 
+static_assert(
+    std::is_same_v<
+        remove_policy<Animal, Dog, my_policy>,
+        types<Animal, Dog>
+>);
+
+static_assert(
+    std::is_same_v<
+        remove_policy<Animal, Dog, my_policy, default_policy>,
+        types<Animal, Dog>
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, Dog>,
+        use_classes_aux<default_policy, types<Animal, Dog>>::type
+>);
+
+static_assert(
+    std::is_same_v<
+        use_classes_macro<Animal, Dog, my_policy, default_policy>,
+        use_classes_aux<my_policy, types<Animal, Dog>>::type
+    >);
 
 } // namespace test_use_classes
 
+namespace test_has_next {
+
+struct with_next {
+    static int next;
+};
+
+static_assert(has_next<with_next>::value);
+
+struct sans_next {
+    static int next;
+};
+
+static_assert(has_next<sans_next>::value);
+
+}
+
 namespace facets {
 
-using namespace policy;
+using namespace policies;
 
 struct key1;
 struct key2;
@@ -290,8 +270,8 @@ static_assert(std::is_same_v<
     basic_domain<key2>
 >);
 
-// yorel::yomm2::policy::basic_policy<facets::key2, yorel::yomm2::policy::std_rtti>,
-// yorel::yomm2::policy::basic_policy<yorel::yomm2::policy::basic_domain<facets::key2>, yorel::yomm2::policy::std_rtti>
+// yorel::yomm2::policies::basic_policy<facets::key2, yorel::yomm2::policies::std_rtti>,
+// yorel::yomm2::policies::basic_policy<yorel::yomm2::policies::basic_domain<facets::key2>, yorel::yomm2::policies::std_rtti>
 
 struct policy1 : basic_policy<policy1, std_rtti> {};
 struct policy2 : policy1::rebind<policy2> {};
@@ -313,13 +293,6 @@ static_assert(std::is_same_v<
 // >);
 
 }
-
-void f(char, int) {}
-
-static_assert(std::is_same_v<
-    parameter_type_list_t<decltype(f)>,
-    types<char, int>
->);
 
 // -----------------------------------------------------------------------------
 // static_slots
@@ -358,5 +331,31 @@ static_assert(!has_static_offsets<kick>::value);
 
 using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);
+
+}
+
+// -----------------------------------------------------------------------------
+// noexcept
+
+namespace test_noexcept {
+
+struct Animal {};
+struct Cat : public Animal {};
+
+struct policy : test_policy_<__COUNTER__> {};
+
+register_classes(Animal, Cat, policy);
+
+using name = method<void, const char*(virtual_<Animal&>), noexcept_, policy>;
+
+static_assert(noexcept(name::fn));
+
+const char* name_cat(Cat&) {
+    throw 0;
+    return "cat";
+}
+
+// should not compile:
+// YOMM2_STATIC(name::override_fn<name_cat>);
 
 }

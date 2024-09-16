@@ -1,6 +1,6 @@
 /***
 macro: method_class
-headers: yorel/yomm2/keywords.hpp
+headers: yorel/yomm2.hpp
 macro: YOMM2_METHOD_CLASS
 headers: yorel/yomm2/macros.hpp
 
@@ -20,7 +20,7 @@ corresponding core type ->`method`.
 
 #include <string>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Animal {
@@ -39,7 +39,7 @@ define_method(std::string, kick, (Dog & dog)) {
 }
 
 BOOST_AUTO_TEST_CASE(ref_method_class) {
-    yomm2::update();
+    yorel::yomm2::update();
 
     Animal&& dog = Dog();
     using X = YOMM2_METHOD_CLASS(std::string, kick, (virtual_<Animal&>));

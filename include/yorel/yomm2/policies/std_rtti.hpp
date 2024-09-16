@@ -17,18 +17,18 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 struct std_rtti : virtual rtti {
 #ifndef BOOST_NO_RTTI
     template<class Class>
-    static type_id static_type() {
+    static auto static_type() -> type_id {
         auto tip = &typeid(Class);
         return reinterpret_cast<type_id>(tip);
     }
 
     template<class Class>
-    static type_id dynamic_type(const Class& obj) {
+    static auto dynamic_type(const Class& obj) -> type_id {
         auto tip = &typeid(obj);
         return reinterpret_cast<type_id>(tip);
     }
@@ -39,19 +39,19 @@ struct std_rtti : virtual rtti {
             reinterpret_cast<const std::type_info*>(type)->name());
     }
 
-    static std::type_index type_index(type_id type) {
+    static auto type_index(type_id type) -> std::type_index {
         return std::type_index(*reinterpret_cast<const std::type_info*>(type));
     }
 
     template<typename D, typename B>
-    static D dynamic_cast_ref(B&& obj) {
+    static auto dynamic_cast_ref(B&& obj) -> D {
         return dynamic_cast<D>(obj);
     }
 #endif
 };
 
-}
-}
-}
+} // namespace policies
+} // namespace yomm2
+} // namespace yorel
 
 #endif

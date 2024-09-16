@@ -9,9 +9,11 @@
 
 #include <yorel/yomm2/policies/core.hpp>
 
+#include <unordered_map>
+
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<
     class Policy,
@@ -38,8 +40,8 @@ struct yOMM2_API_gcc vptr_map : virtual external_vptr {
 template<class Policy, class Map>
 Map vptr_map<Policy, Map>::vptrs;
 
-}
-}
-}
+} // namespace policies
+} // namespace yomm2
+} // namespace yorel
 
 #endif

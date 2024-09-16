@@ -7,7 +7,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/utility/identity_type.hpp>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 using namespace yorel::yomm2;
 
@@ -187,7 +187,7 @@ example:
 // for brevity
 using namespace yorel::yomm2;
 
-struct custom_rtti : policy::rtti {
+struct custom_rtti : policies::rtti {
     template<typename T>
     static type_id static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -242,7 +242,7 @@ Thus we create the policy with:
 //***
 
 struct custom_policy : default_policy::rebind<custom_policy>::replace<
-                           policy::rtti, custom_rtti> {};
+                           policies::rtti, custom_rtti> {};
 
 //***
 
@@ -366,7 +366,7 @@ This time, virtual inheritance is not involved, so we dispense with
 
 //***
 
-struct custom_rtti : policy::rtti {
+struct custom_rtti : policies::rtti {
     template<typename T>
     static type_id static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -387,8 +387,8 @@ struct custom_rtti : policy::rtti {
 };
 
 struct custom_policy
-    : policy::default_static::rebind<custom_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
+    : default_policy::rebind<custom_policy>::replace<
+          policies::rtti, custom_rtti>::remove<policies::type_hash> {};
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
@@ -511,7 +511,7 @@ pointer to the `static_type` functions; they will be called by `update`:
 
 //***
 
-struct custom_rtti : policy::deferred_static_rtti {
+struct custom_rtti : policies::deferred_static_rtti {
     template<typename T>
     static type_id static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -541,8 +541,8 @@ The only change is that the custom facet now inherits from
 ***/
 
 struct custom_policy
-    : policy::default_static::rebind<custom_policy>::replace<
-          policy::rtti, custom_rtti>::remove<policy::type_hash> {};
+    : default_policy::rebind<custom_policy>::replace<
+          policies::rtti, custom_rtti>::remove<policies::type_hash> {};
 
 register_classes(Animal, Dog, Cat, custom_policy);
 

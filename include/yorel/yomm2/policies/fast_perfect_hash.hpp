@@ -13,7 +13,7 @@
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy>
 struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
@@ -31,8 +31,8 @@ struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
 #ifdef _MSC_VER
     __forceinline
 #endif
-        static type_id
-        hash_type_id(type_id type) {
+        static auto
+        hash_type_id(type_id type) -> type_id {
         return (hash_mult * type) >> hash_shift;
     }
 
@@ -53,7 +53,7 @@ template<typename ForwardIterator>
 void fast_perfect_hash<Policy>::hash_initialize(
     ForwardIterator first, ForwardIterator last,
     std::vector<type_id>& buckets) {
-    using namespace policy;
+    using namespace policies;
 
     constexpr bool trace_enabled = Policy::template has_facet<trace_output>;
     const auto N = std::distance(first, last);
@@ -165,12 +165,12 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
                                             virtual runtime_checks {
     static std::vector<type_id> control;
 
-    static type_id hash_type_id(type_id type) {
+    static auto hash_type_id(type_id type) -> type_id {
         auto index = fast_perfect_hash<Policy>::hash_type_id(type);
 
         if (index >= fast_perfect_hash<Policy>::hash_length ||
             control[index] != type) {
-            using namespace policy;
+            using namespace policies;
 
             if constexpr (Policy::template has_facet<error_handler>) {
                 unknown_class_error error;
@@ -195,8 +195,8 @@ struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
 template<class Policy>
 std::vector<type_id> checked_perfect_hash<Policy>::control;
 
-}
-}
-}
+} // namespace policies
+} // namespace yomm2
+} // namespace yorel
 
 #endif

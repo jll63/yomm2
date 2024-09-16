@@ -11,9 +11,9 @@
 #include "geometries.hpp"
 #include "shape_painter.hpp"
 
-register_class(geometries::Shape, geometries::Geometry);
-register_class(geometries::Square, geometries::Shape);
-register_class(geometries::Circle, geometries::Shape);
+register_classes(
+    geometries::Geometry, geometries::Shape, geometries::Square,
+    geometries::Circle);
 
 namespace painter {
 namespace paint2d {

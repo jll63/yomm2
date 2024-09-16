@@ -8,7 +8,8 @@
 #include <string>
 #include <typeinfo>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 using std::make_shared;

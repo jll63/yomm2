@@ -6,12 +6,12 @@
 
 struct throw_policy
     : yorel::yomm2::default_policy::rebind<throw_policy>::replace<
-          yorel::yomm2::policy::error_handler,
-          yorel::yomm2::policy::throw_error> {};
+          yorel::yomm2::policies::error_handler,
+          yorel::yomm2::policies::throw_error> {};
 
 #define YOMM2_DEFAULT_POLICY throw_policy
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 
 #ifndef _MSC_VER
 // Because MSC is believes that forward declaring with 'struct' or 'class' makes

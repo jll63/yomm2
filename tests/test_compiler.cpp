@@ -1,7 +1,7 @@
 #include <iostream>
 #include <type_traits>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/detail/compiler.hpp>
 
@@ -24,7 +24,7 @@ std::ostream& operator<<(std::ostream& os, const class_* cls) {
 
 std::string empty = "{}";
 
-template<template<typename...> typename Container, typename T>
+template<template<typename...> class Container, typename T>
 auto str(const Container<T>& container) {
     std::ostringstream os;
     os << "{";

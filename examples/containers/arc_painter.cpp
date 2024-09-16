@@ -8,13 +8,13 @@
 
 #include <iostream>
 
-#include <yorel/yomm2/cute.hpp>
+#include <yorel/yomm2.hpp>
 
 #include "geometries.hpp"
 #include "painter.hpp"
 #include "line_painter.hpp"
 
-register_class(geometries::Arc, geometries::Line);
+register_classes(geometries::Arc, geometries::Line);
 
 namespace painter {
 namespace paint1d {

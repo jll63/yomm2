@@ -1,6 +1,6 @@
 /***
 entry: policy::throw_error
-location: policy;yorel/yomm2/core.hpp,yorel/yomm2/keywords.hpp
+location: policy;yorel/yomm2/core.hpp,yorel/yomm2.hpp
 
     struct throw_error;
 
@@ -31,7 +31,7 @@ Extract the value of `error_variant`, and throw it as an exception.
 
 //***
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 namespace yomm2 = yorel::yomm2;
@@ -45,7 +45,7 @@ struct Animal {
 struct Dog : Animal {};
 
 using throw_policy = yomm2::default_policy::replace<
-    yomm2::policy::error_handler, yomm2::policy::throw_error>;
+    yorel::yomm2::policies::error_handler, yorel::yomm2::policies::throw_error>;
 
 register_classes(Animal, Dog, throw_policy);
 
@@ -62,9 +62,10 @@ BOOST_AUTO_TEST_CASE(ref_throw_error) {
     } catch (yomm2::resolution_error& error) {
         BOOST_TEST(error.status == yomm2::resolution_error::no_definition);
         BOOST_TEST(
-            error.method_name ==
-            typeid(method_class(void, kick, (virtual_<Animal&>), throw_policy))
-                .name());
+            error.method ==
+            yomm2::type_id(
+                &typeid(method_class(
+                    void, kick, (virtual_<Animal&>), throw_policy))));
         BOOST_TEST(error.arity == 1);
         BOOST_TEST(error.types[0] == throw_policy::static_type<Dog>());
         threw = true;

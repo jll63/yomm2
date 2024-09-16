@@ -8,11 +8,10 @@
 #define YOREL_YOMM2_POLICY_VECTORED_ERROR_HPP
 
 #include <yorel/yomm2/policies/core.hpp>
-#include <yorel/yomm2/detail/range.hpp>
 
 namespace yorel {
 namespace yomm2 {
-namespace policy {
+namespace policies {
 
 template<class Policy, typename DefaultHandlerProvider = void>
 struct yOMM2_API_gcc vectored_error : virtual error_handler {
@@ -20,7 +19,7 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
 
     static void default_error_handler(const error_type& error_v) {
         using namespace detail;
-        using namespace policy;
+        using namespace policies;
 
         if constexpr (Policy::template has_facet<error_output>) {
             if (auto error = std::get_if<resolution_error>(&error_v)) {
@@ -29,7 +28,9 @@ struct yOMM2_API_gcc vectored_error : virtual error_handler {
                 Policy::error_stream
                     << explanation
                            [error->status - resolution_error::no_definition]
-                    << " for " << error->method_name << "(";
+                    << " for ";
+                Policy::type_name(error->method, Policy::error_stream);
+                Policy::error_stream << "(";
                 auto comma = "";
 
                 for (auto ti :
@@ -64,8 +65,8 @@ error_handler_type vectored_error<Policy, DefaultHandlerProvider>::error =
         std::is_same_v<DefaultHandlerProvider, void>, vectored_error<Policy>,
         DefaultHandlerProvider>::default_error_handler;
 
-}
-}
-}
+} // namespace policies
+} // namespace yomm2
+} // namespace yorel
 
 #endif

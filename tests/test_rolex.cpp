@@ -1,4 +1,4 @@
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Role {
@@ -27,16 +27,8 @@ struct Metro : Public {};
 struct Taxi : Expense {};
 struct Jet : Expense {};
 
-register_class(Role);
-register_class(Employee, Role);
-register_class(Manager, Employee);
-register_class(Founder, Role);
-register_class(Expense);
-register_class(Public, Expense);
-register_class(Bus, Public);
-register_class(Metro, Public);
-register_class(Taxi, Expense);
-register_class(Jet, Expense);
+register_classes(
+    Role, Employee, Manager, Founder, Expense, Public, Bus, Metro, Taxi, Jet);
 
 declare_method(double, pay, (virtual_<const Employee&>));
 declare_method(

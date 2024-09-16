@@ -25,16 +25,15 @@ int main() {
 
 #include <benchmark/benchmark.h>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/detail/compiler.hpp>
 #include <yorel/yomm2/templates.hpp>
+#include <yorel/yomm2/virtual_shared_ptr.hpp>
 
 #include "benchmarks_parameters.hpp"
 
 using namespace yorel::yomm2;
-using namespace yorel::yomm2::policy;
-using yorel::yomm2::detail::dump_type;
+using namespace yorel::yomm2::policies;
 using namespace boost::mp11;
 
 #if !defined(NDEBUG)
@@ -128,8 +127,8 @@ struct virtual_dispatch : virtual_by_reference {
 
 struct use_basic_policy : virtual_by_reference {
     struct policy
-        : default_static::rebind<policy>::remove<yomm2::policy::trace_output>,
-          yomm2::policy::basic_trace_output<policy> {};
+        : default_policy::rebind<policy>::remove<policies::trace_output>,
+          policies::basic_trace_output<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -138,10 +137,9 @@ struct use_basic_policy : virtual_by_reference {
 };
 
 struct std_map_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::
-                        remove<yomm2::policy::type_hash>::replace<
-                            yomm2::policy::external_vptr,
-                            yomm2::policy::vptr_map<policy>> {};
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::type_hash>::replace<
+              policies::external_vptr, policies::vptr_map<policy>> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -151,13 +149,13 @@ struct std_map_policy : virtual_by_reference {
 
 #if UNORDERED_FLAT_MAP_AVAILABLE
 struct flat_map_policy : virtual_by_reference {
-    struct policy : default_static::rebind<policy>::
-                        remove<yomm2::policy::type_hash>::replace<
-                            yomm2::policy::external_vptr,
-                            yomm2::policy::vptr_map<
-                                policy,
-                                boost::unordered_flat_map<
-                                    type_id, const std::uintptr_t*>>> {};
+    struct policy
+        : default_policy::rebind<policy>::remove<policies::type_hash>::replace<
+              policies::external_vptr,
+              policies::vptr_map<
+                  policy,
+                  boost::unordered_flat_map<type_id, const std::uintptr_t*>>> {
+    };
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -168,7 +166,7 @@ struct flat_map_policy : virtual_by_reference {
 
 struct direct_intrusive_dispatch : virtual_by_reference {
     struct policy
-        : default_static::rebind<policy>::remove<yomm2::policy::external_vptr> {
+        : default_policy::rebind<policy>::remove<policies::external_vptr> {
         template<class Class>
         static auto dynamic_vptr(const Class& arg) {
             return arg.yomm2_vptr();
@@ -182,7 +180,7 @@ struct direct_intrusive_dispatch : virtual_by_reference {
 };
 
 struct indirect_intrusive_dispatch : virtual_by_reference {
-    struct policy : default_static::rebind<policy> {};
+    struct policy : default_policy::rebind<policy> {};
     template<typename Inheritance>
     using base_type = indirect_intrusive_base<Inheritance>;
     static std::string name() {
@@ -195,7 +193,7 @@ struct direct_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.vptr_draw();
     }
-    struct policy : default_static::rebind<policy> {};
+    struct policy : default_policy::rebind<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -208,8 +206,8 @@ struct indirect_virtual_ptr_dispatch {
     static auto draw(Population& pop) {
         return pop.ivptr_draw();
     }
-    struct policy : default_static::rebind<policy>,
-                    yomm2::policy::basic_indirect_vptr<policy> {};
+    struct policy : default_policy::rebind<policy>,
+                    policies::basic_indirect_vptr<policy> {};
     template<typename Inheritance>
     using base_type = orthogonal_base<Inheritance>;
     static std::string name() {
@@ -379,24 +377,24 @@ struct population : abstract_population {
         template<typename T>
         static void fn1(T&) {
         }
-        typename method1::template add_function<fn1<intermediate<0>>>
+        typename method1::template override_fn<fn1<intermediate<0>>>
             YOMM2_GENSYM;
-        typename method1::template add_function<fn1<intermediate<1>>>
+        typename method1::template override_fn<fn1<intermediate<1>>>
             YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(T&, U&) {
         }
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };
@@ -418,24 +416,24 @@ struct population : abstract_population {
         template<typename T>
         static void fn1(vptr<T>) {
         }
-        typename method1::template add_function<fn1<intermediate<0>>>
+        typename method1::template override_fn<fn1<intermediate<0>>>
             YOMM2_GENSYM;
-        typename method1::template add_function<fn1<intermediate<1>>>
+        typename method1::template override_fn<fn1<intermediate<1>>>
             YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(vptr<T>, vptr<U>) {
         }
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template add_function<
+        typename method2::template override_fn<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };

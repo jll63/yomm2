@@ -2,7 +2,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <boost/utility/identity_type.hpp>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 using namespace yorel::yomm2;
@@ -31,7 +31,7 @@ struct Cat : Animal {
     static constexpr const char* static_type = "Cat";
 };
 
-struct custom_rtti : policy::rtti {
+struct custom_rtti : policies::rtti {
     template<typename T>
     static auto static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -61,8 +61,8 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy : policy::default_static::rebind<test_policy>::replace<
-                         policy::rtti, custom_rtti> {};
+struct test_policy : default_policy::rebind<test_policy>::replace<
+                         policies::rtti, custom_rtti> {};
 
 register_classes(Animal, Dog, Cat, test_policy);
 
@@ -120,7 +120,7 @@ struct Cat : Animal {
     static constexpr std::size_t static_type = 2;
 };
 
-struct custom_rtti : policy::rtti {
+struct custom_rtti : policies::rtti {
     template<typename T>
     static auto static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -150,9 +150,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy : policy::default_static::rebind<test_policy>::replace<
-                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
-};
+struct test_policy
+    : default_policy::rebind<test_policy>::replace<
+          policies::rtti, custom_rtti>::remove<policies::type_hash> {};
 
 register_classes(Animal, Dog, Cat, test_policy);
 
@@ -268,7 +268,7 @@ struct Cat : virtual Animal {
     static constexpr std::size_t static_type = 2;
 };
 
-struct custom_rtti : policy::rtti {
+struct custom_rtti : policies::rtti {
     template<typename T>
     static auto static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -303,9 +303,9 @@ struct custom_rtti : policy::rtti {
     }
 };
 
-struct test_policy : policy::default_static::rebind<test_policy>::replace<
-                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
-};
+struct test_policy
+    : default_policy::rebind<test_policy>::replace<
+          policies::rtti, custom_rtti>::remove<policies::type_hash> {};
 
 register_classes(Animal, Dog, Cat, test_policy);
 
@@ -409,7 +409,7 @@ struct Cat : Animal {
 
 std::size_t Cat::static_type = ++Animal::last_type_id;
 
-struct custom_rtti : policy::deferred_static_rtti {
+struct custom_rtti : policies::deferred_static_rtti {
     template<typename T>
     static auto static_type() {
         if constexpr (std::is_base_of_v<Animal, T>) {
@@ -440,9 +440,9 @@ struct custom_rtti : policy::deferred_static_rtti {
     }
 };
 
-struct test_policy : policy::default_static::rebind<test_policy>::replace<
-                         policy::rtti, custom_rtti>::remove<policy::type_hash> {
-};
+struct test_policy
+    : default_policy::rebind<test_policy>::replace<
+          policies::rtti, custom_rtti>::remove<policies::type_hash> {};
 
 register_classes(Animal, Dog, Cat, test_policy);
 

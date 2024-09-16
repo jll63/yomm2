@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 struct Character {

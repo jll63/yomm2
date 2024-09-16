@@ -9,7 +9,7 @@
 
 #include <iostream>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 using namespace std;

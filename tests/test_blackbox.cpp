@@ -7,7 +7,7 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include <yorel/yomm2/keywords.hpp>
+#include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
 #include "test_util.hpp"
@@ -88,9 +88,7 @@ enum Subtype {
     DIAGONAL_DIAGONAL
 };
 
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
-YOMM2_CLASS(diagonal_matrix, matrix);
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix);
 
 YOMM2_DECLARE(
     Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>));
@@ -205,6 +203,45 @@ BOOST_AUTO_TEST_CASE(simple) {
 
 } // namespace matrices
 
+namespace test_next_fn {
+
+struct Animal {
+    virtual ~Animal() {
+    }
+};
+
+struct Dog : Animal {};
+struct Bulldog : Dog {};
+
+register_classes(Animal, Dog, Bulldog);
+
+struct YOMM2_SYMBOL(kick);
+using kick = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
+
+std::string kick_dog(Dog& dog) {
+    return "bark";
+}
+
+YOMM2_STATIC(kick::override_fn<kick_dog>);
+
+std::string kick_bulldog(Bulldog& dog) {
+    return kick::next<kick_bulldog>(dog) + " and bite back";
+}
+
+YOMM2_STATIC(kick::override_fn<kick_bulldog>);
+
+BOOST_AUTO_TEST_CASE(test_next_fn) {
+    update();
+
+    std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
+    BOOST_TEST(kick::fn(*snoopy) == "bark");
+
+    std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
+    BOOST_TEST(kick::fn(*hector) == "bark and bite back");
+}
+
+} // namespace test_next_fn
+
 namespace errors {
 
 struct matrix {
@@ -215,9 +252,7 @@ struct matrix {
 struct dense_matrix : matrix {};
 struct diagonal_matrix : matrix {};
 
-YOMM2_CLASS(matrix);
-YOMM2_CLASS(dense_matrix, matrix);
-YOMM2_CLASS(diagonal_matrix, matrix);
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, matrix);
 
 YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
 
@@ -294,9 +329,7 @@ struct base {
     }
 };
 
-struct derived : base {};
-
-YOMM2_STATIC(class_declaration<derived, base, test_policy>);
+YOMM2_DECLARE(void, foo, (virtual_<base&>), test_policy);
 
 BOOST_AUTO_TEST_CASE(test_update_error_handling) {
     auto prev_handler = test_policy::error;
@@ -326,8 +359,6 @@ class Animal {
     }
 };
 
-YOMM2_CLASS(Animal);
-
 YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>));
 
 } // namespace animals
@@ -336,7 +367,7 @@ namespace more_animals {
 
 class Dog : public animals::Animal {};
 
-YOMM2_CLASS(Dog, animals::Animal);
+YOMM2_CLASSES(Dog, animals::Animal);
 
 YOMM2_DEFINE(std::string, kick, (const Dog& dog)) {
     return "bark";
@@ -387,49 +418,38 @@ BOOST_AUTO_TEST_CASE(update_report) {
 
     auto report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 3);
-    BOOST_TEST(report.concrete_not_implemented == 3);
     BOOST_TEST(report.ambiguous == 0);
-    BOOST_TEST(report.concrete_ambiguous == 0);
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
-    BOOST_TEST(report.concrete_cells == 1);
 
-    YOMM2_STATIC(kick::add_function<fn<Animal>>);
+    YOMM2_STATIC(kick::override_fn<fn<Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
-    BOOST_TEST(report.concrete_not_implemented == 2);
 
-    YOMM2_STATIC(pet::add_function<fn<Cat>>);
-    YOMM2_STATIC(pet::add_function<fn<Dog>>);
+    YOMM2_STATIC(pet::override_fn<fn<Cat>>);
+    YOMM2_STATIC(pet::override_fn<fn<Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
-    BOOST_TEST(report.concrete_not_implemented == 1);
 
     // create ambiguity
-    YOMM2_STATIC(meet::add_function<fn<Animal, Cat>>);
-    YOMM2_STATIC(meet::add_function<fn<Dog, Animal>>);
+    YOMM2_STATIC(meet::override_fn<fn<Animal, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Animal>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 4);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 1);
-    BOOST_TEST(report.concrete_ambiguous == 1);
 
-    YOMM2_STATIC(meet::add_function<fn<Cat, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Cat, Cat>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 6);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 1);
-    BOOST_TEST(report.concrete_ambiguous == 1);
 
     // shadow ambiguity
-    YOMM2_STATIC(meet::add_function<fn<Dog, Dog>>);
-    YOMM2_STATIC(meet::add_function<fn<Dog, Cat>>);
-    YOMM2_STATIC(meet::add_function<fn<Cat, Dog>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Dog>>);
+    YOMM2_STATIC(meet::override_fn<fn<Dog, Cat>>);
+    YOMM2_STATIC(meet::override_fn<fn<Cat, Dog>>);
     report = update<test_policy>().report;
     BOOST_TEST(report.cells == 9);
-    BOOST_TEST(report.concrete_cells == 4);
     BOOST_TEST(report.ambiguous == 0);
-    BOOST_TEST(report.concrete_ambiguous == 0);
 }
 
 } // namespace report
