@@ -1127,7 +1127,7 @@ method<Name, Return(Parameters...), Options...>::override_fn_impl<
         p_next = &next<Function>;
     }
 
-    static detail::definition_info info;
+    static detail::overrider_info info;
 
     if (info.method) {
         BOOST_ASSERT(info.method == &fn);

@@ -87,11 +87,11 @@ struct class_info : static_list<class_info>::static_link {
 // -----------
 // method info
 
-struct definition_info;
+struct overrider_info;
 
 struct yOMM2_API method_info : static_list<method_info>::static_link {
     type_id *vp_begin, *vp_end;
-    static_list<definition_info> specs;
+    static_list<overrider_info> specs;
     void* ambiguous;
     void* not_implemented;
     type_id method_type;
@@ -102,8 +102,8 @@ struct yOMM2_API method_info : static_list<method_info>::static_link {
     }
 };
 
-struct definition_info : static_list<definition_info>::static_link {
-    ~definition_info() {
+struct overrider_info : static_list<overrider_info>::static_link {
+    ~overrider_info() {
         method->specs.remove(*this);
     }
 

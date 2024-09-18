@@ -117,8 +117,8 @@ struct generic_compiler {
         }
     };
 
-    struct definition {
-        const detail::definition_info* info;
+    struct overrider {
+        const detail::overrider_info* info;
         std::vector<class_*> vp;
         std::uintptr_t pf;
         std::size_t method_index, spec_index;
@@ -147,14 +147,14 @@ struct generic_compiler {
     struct method {
         detail::method_info* info;
         std::vector<class_*> vp;
-        std::vector<definition> specs;
+        std::vector<overrider> specs;
         std::vector<std::size_t> slots;
         std::vector<std::size_t> strides;
-        std::vector<const definition*> dispatch_table;
+        std::vector<const overrider*> dispatch_table;
         // following two are dummies, when converting to a function pointer, we will
         // get the corresponding pointer from method_info
-        definition not_implemented;
-        definition ambiguous;
+        overrider not_implemented;
+        overrider ambiguous;
         const std::uintptr_t* gv_dispatch_table{nullptr};
         auto arity() const {
             return vp.size();
@@ -199,11 +199,11 @@ trace_type<Policy>& operator<<(
 struct spec_name {
     spec_name(
         const detail::generic_compiler::method& method,
-        const detail::generic_compiler::definition* def)
+        const detail::generic_compiler::overrider* def)
         : method(method), def(def) {
     }
     const detail::generic_compiler::method& method;
-    const detail::generic_compiler::definition* def;
+    const detail::generic_compiler::overrider* def;
 };
 
 template<class Policy>
@@ -251,10 +251,10 @@ struct compiler : detail::generic_compiler {
         bool concrete);
     void install_gv();
     void print(const update_method_report& report) const;
-    static std::vector<const definition*>
-    best(std::vector<const definition*>& candidates);
-    static bool is_more_specific(const definition* a, const definition* b);
-    static bool is_base(const definition* a, const definition* b);
+    static std::vector<const overrider*>
+    best(std::vector<const overrider*>& candidates);
+    static bool is_more_specific(const overrider* a, const overrider* b);
+    static bool is_base(const overrider* a, const overrider* b);
 
     static type_id static_type(type_id type) {
         if constexpr (std::is_base_of_v<
@@ -342,15 +342,15 @@ void compiler<Policy>::resolve_static_type_ids() {
                     }
 
                     if (!method.specs.empty())
-                        for (auto& definition : method.specs) {
-                            if (*definition.vp_end == 0) {
+                        for (auto& overrider : method.specs) {
+                            if (*overrider.vp_end == 0) {
                                 for (auto& ti : range{
-                                         definition.vp_begin,
-                                         definition.vp_end}) {
+                                         overrider.vp_begin,
+                                         overrider.vp_end}) {
                                     resolve(&ti);
                                 }
 
-                                *definition.vp_end = 1;
+                                *overrider.vp_end = 1;
                             }
                         }
                 }
@@ -578,18 +578,18 @@ void compiler<Policy>::augment_methods() {
         meth_iter->specs.resize(spec_size);
         auto spec_iter = meth_iter->specs.begin();
 
-        for (auto& definition_info : meth_info.specs) {
+        for (auto& overrider_info : meth_info.specs) {
             spec_iter->method_index = meth_iter - methods.begin();
             spec_iter->spec_index = spec_iter - meth_iter->specs.begin();
 
-            ++trace << type_name(definition_info.type) << " ("
-                    << definition_info.pf << ")\n";
-            spec_iter->info = &definition_info;
+            ++trace << type_name(overrider_info.type) << " ("
+                    << overrider_info.pf << ")\n";
+            spec_iter->info = &overrider_info;
             spec_iter->vp.reserve(meth_info.arity());
             std::size_t param_index = 0;
 
             for (auto type :
-                 range{definition_info.vp_begin, definition_info.vp_end}) {
+                 range{overrider_info.vp_begin, overrider_info.vp_end}) {
                 indent _(trace);
                 auto class_ = class_map[Policy::type_index(type)];
                 if (!class_) {
@@ -892,18 +892,18 @@ void compiler<Policy>::build_dispatch_tables() {
             accumulate(m.report, report);
             ++trace << "assigning next\n";
 
-            std::vector<const definition*> specs;
+            std::vector<const overrider*> specs;
             std::transform(
                 m.specs.begin(), m.specs.end(), std::back_inserter(specs),
-                [](const definition& spec) { return &spec; });
+                [](const overrider& spec) { return &spec; });
 
             for (auto& spec : m.specs) {
                 indent _(trace);
                 ++trace << type_name(spec.info->type) << ":\n";
-                std::vector<const definition*> candidates;
+                std::vector<const overrider*> candidates;
                 std::copy_if(
                     specs.begin(), specs.end(), std::back_inserter(candidates),
-                    [&spec](const definition* other) {
+                    [&spec](const overrider* other) {
                         return is_base(other, &spec);
                     });
 
@@ -922,7 +922,7 @@ void compiler<Policy>::build_dispatch_tables() {
                 void* next;
 
                 if (nexts.size() == 1) {
-                    const definition_info* next_info = nexts.front()->info;
+                    const overrider_info* next_info = nexts.front()->info;
                     next = next_info->pf;
                     ++trace << "-> "
                             << "#" << nexts.front()->spec_index
@@ -966,7 +966,7 @@ void compiler<Policy>::build_dispatch_table(
         }
 
         if (dim == 0) {
-            std::vector<const definition*> applicable;
+            std::vector<const overrider*> applicable;
             std::size_t i = 0;
 
             for (const auto& spec : m.specs) {
@@ -1129,12 +1129,12 @@ void compiler<Policy>::install_gv() {
 }
 
 template<class Policy>
-std::vector<const detail::generic_compiler::definition*>
-compiler<Policy>::best(std::vector<const definition*>& candidates) {
-    std::vector<const definition*> best;
+std::vector<const detail::generic_compiler::overrider*>
+compiler<Policy>::best(std::vector<const overrider*>& candidates) {
+    std::vector<const overrider*> best;
 
     for (auto spec : candidates) {
-        const definition* candidate = spec;
+        const overrider* candidate = spec;
 
         for (auto iter = best.begin(); iter != best.end();) {
             if (is_more_specific(spec, *iter)) {
@@ -1157,7 +1157,7 @@ compiler<Policy>::best(std::vector<const definition*>& candidates) {
 
 template<class Policy>
 bool compiler<Policy>::is_more_specific(
-    const definition* a, const definition* b) {
+    const overrider* a, const overrider* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1179,7 +1179,7 @@ bool compiler<Policy>::is_more_specific(
 }
 
 template<class Policy>
-bool compiler<Policy>::is_base(const definition* a, const definition* b) {
+bool compiler<Policy>::is_base(const overrider* a, const overrider* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();

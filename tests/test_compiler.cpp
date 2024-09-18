@@ -15,7 +15,7 @@ using namespace yorel::yomm2::detail;
 
 using class_ = generic_compiler::class_;
 using cc_method = generic_compiler::method;
-using definition = generic_compiler::definition;
+using overrider = generic_compiler::overrider;
 
 std::ostream& operator<<(std::ostream& os, const class_* cls) {
     return os
