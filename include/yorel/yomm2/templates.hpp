@@ -6,6 +6,8 @@
 #ifndef YOREL_YOMM2_TEMPLATES_HPP
 #define YOREL_YOMM2_TEMPLATES_HPP
 
+#include <yorel/yomm2/detail/types.hpp>
+
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 #include <boost/mp11/list.hpp>

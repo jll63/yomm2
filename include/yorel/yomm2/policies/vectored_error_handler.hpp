@@ -9,6 +9,9 @@
 
 #include <yorel/yomm2/policies/core.hpp>
 
+#include <functional>
+#include <variant>
+
 namespace yorel {
 namespace yomm2 {
 namespace policies {

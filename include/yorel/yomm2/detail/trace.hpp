@@ -2,6 +2,7 @@
 #define YOREL_YOMM2_DETAIL_TRACE_HPP
 
 #include <yorel/yomm2/detail/types.hpp>
+#include <yorel/yomm2/policies/core.hpp>
 
 #include <boost/dynamic_bitset.hpp>
 
