@@ -7,7 +7,7 @@
     },
     "configurePresets": [
         {
-            "name": "ninja-clang++-18-static",
+            "name": "ninja-clang++-18",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -22,22 +22,7 @@
             }
         },
         {
-            "name": "ninja-clang++-18-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "clang++-18",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-clang++-19-static",
+            "name": "ninja-clang++-19",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -52,22 +37,7 @@
             }
         },
         {
-            "name": "ninja-clang++-19-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "clang++-19",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-clang++-20-static",
+            "name": "ninja-clang++-20",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -82,22 +52,7 @@
             }
         },
         {
-            "name": "ninja-clang++-20-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "clang++-20",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-g++-11-static",
+            "name": "ninja-g++-11",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -112,22 +67,7 @@
             }
         },
         {
-            "name": "ninja-g++-11-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "g++-11",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-g++-12-static",
+            "name": "ninja-g++-12",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -142,22 +82,7 @@
             }
         },
         {
-            "name": "ninja-g++-12-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "g++-12",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-g++-13-static",
+            "name": "ninja-g++-13",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -172,22 +97,7 @@
             }
         },
         {
-            "name": "ninja-g++-13-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "g++-13",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-c++-static",
+            "name": "ninja-c++",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -202,22 +112,7 @@
             }
         },
         {
-            "name": "ninja-c++-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "c++",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "ninja-cl-static",
+            "name": "ninja-cl",
             "generator": "Ninja Multi-Config",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -232,42 +127,7 @@
             }
         },
         {
-            "name": "ninja-cl-shared",
-            "generator": "Ninja Multi-Config",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            }
-        },
-        {
-            "name": "msbuild-cl-static",
-            "generator": "Visual Studio 17 2022",
-            "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
-            "binaryDir": "${sourceDir}/builds/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "CMAKE_CXX_COMPILER": "cl",
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "YOMM2_ENABLE_EXAMPLES": "ON",
-                "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Windows"
-            }
-        },
-        {
-            "name": "msbuild-cl-shared",
+            "name": "msbuild-cl",
             "generator": "Visual Studio 17 2022",
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -289,545 +149,275 @@
     ],
     "buildPresets": [
         {
-            "name": "build-ninja-clang++-18-static-dbg",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "build-ninja-clang++-18-dbg",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-18-static-rel",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "build-ninja-clang++-18-rel",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-18-static-reldbg",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "build-ninja-clang++-18-reldbg",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-clang++-18-shared-dbg",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "build-ninja-clang++-19-dbg",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-18-shared-rel",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "build-ninja-clang++-19-rel",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-18-shared-reldbg",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "build-ninja-clang++-19-reldbg",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-clang++-19-static-dbg",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "build-ninja-clang++-20-dbg",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-19-static-rel",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "build-ninja-clang++-20-rel",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-19-static-reldbg",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "build-ninja-clang++-20-reldbg",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-clang++-19-shared-dbg",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "build-ninja-g++-11-dbg",
+            "configurePreset": "ninja-g++-11",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-19-shared-rel",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "build-ninja-g++-11-rel",
+            "configurePreset": "ninja-g++-11",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-19-shared-reldbg",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "build-ninja-g++-11-reldbg",
+            "configurePreset": "ninja-g++-11",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-clang++-20-static-dbg",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "build-ninja-g++-12-dbg",
+            "configurePreset": "ninja-g++-12",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-20-static-rel",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "build-ninja-g++-12-rel",
+            "configurePreset": "ninja-g++-12",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-20-static-reldbg",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "build-ninja-g++-12-reldbg",
+            "configurePreset": "ninja-g++-12",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-clang++-20-shared-dbg",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "build-ninja-g++-13-dbg",
+            "configurePreset": "ninja-g++-13",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-clang++-20-shared-rel",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "build-ninja-g++-13-rel",
+            "configurePreset": "ninja-g++-13",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-clang++-20-shared-reldbg",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "build-ninja-g++-13-reldbg",
+            "configurePreset": "ninja-g++-13",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-g++-11-static-dbg",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "build-ninja-c++-dbg",
+            "configurePreset": "ninja-c++",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-g++-11-static-rel",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "build-ninja-c++-rel",
+            "configurePreset": "ninja-c++",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-g++-11-static-reldbg",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "build-ninja-c++-reldbg",
+            "configurePreset": "ninja-c++",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-g++-11-shared-dbg",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "build-ninja-cl-dbg",
+            "configurePreset": "ninja-cl",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-g++-11-shared-rel",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "build-ninja-cl-rel",
+            "configurePreset": "ninja-cl",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-g++-11-shared-reldbg",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "build-ninja-cl-reldbg",
+            "configurePreset": "ninja-cl",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "build-ninja-g++-12-static-dbg",
-            "configurePreset": "ninja-g++-12-static",
+            "name": "build-msbuild-cl-dbg",
+            "configurePreset": "msbuild-cl",
             "configuration": "Debug"
         },
         {
-            "name": "build-ninja-g++-12-static-rel",
-            "configurePreset": "ninja-g++-12-static",
+            "name": "build-msbuild-cl-rel",
+            "configurePreset": "msbuild-cl",
             "configuration": "Release"
         },
         {
-            "name": "build-ninja-g++-12-static-reldbg",
-            "configurePreset": "ninja-g++-12-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-g++-12-shared-dbg",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-g++-12-shared-rel",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-g++-12-shared-reldbg",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-g++-13-static-dbg",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-g++-13-static-rel",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-g++-13-static-reldbg",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-g++-13-shared-dbg",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-g++-13-shared-rel",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-g++-13-shared-reldbg",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-c++-static-dbg",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-c++-static-rel",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-c++-static-reldbg",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-c++-shared-dbg",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-c++-shared-rel",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-c++-shared-reldbg",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-cl-static-dbg",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-cl-static-rel",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-cl-static-reldbg",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-ninja-cl-shared-dbg",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-ninja-cl-shared-rel",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-ninja-cl-shared-reldbg",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-msbuild-cl-static-dbg",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-msbuild-cl-static-rel",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-msbuild-cl-static-reldbg",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "build-msbuild-cl-shared-dbg",
-            "configurePreset": "msbuild-cl-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "build-msbuild-cl-shared-rel",
-            "configurePreset": "msbuild-cl-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "build-msbuild-cl-shared-reldbg",
-            "configurePreset": "msbuild-cl-shared",
+            "name": "build-msbuild-cl-reldbg",
+            "configurePreset": "msbuild-cl",
             "configuration": "RelWithDebInfo"
         }
     ],
     "testPresets": [
         {
-            "name": "test-ninja-clang++-18-static-dbg",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "test-ninja-clang++-18-dbg",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-18-static-rel",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "test-ninja-clang++-18-rel",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-18-static-reldbg",
-            "configurePreset": "ninja-clang++-18-static",
+            "name": "test-ninja-clang++-18-reldbg",
+            "configurePreset": "ninja-clang++-18",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-clang++-18-shared-dbg",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "test-ninja-clang++-19-dbg",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-18-shared-rel",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "test-ninja-clang++-19-rel",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-18-shared-reldbg",
-            "configurePreset": "ninja-clang++-18-shared",
+            "name": "test-ninja-clang++-19-reldbg",
+            "configurePreset": "ninja-clang++-19",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-clang++-19-static-dbg",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "test-ninja-clang++-20-dbg",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-19-static-rel",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "test-ninja-clang++-20-rel",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-19-static-reldbg",
-            "configurePreset": "ninja-clang++-19-static",
+            "name": "test-ninja-clang++-20-reldbg",
+            "configurePreset": "ninja-clang++-20",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-clang++-19-shared-dbg",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "test-ninja-g++-11-dbg",
+            "configurePreset": "ninja-g++-11",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-19-shared-rel",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "test-ninja-g++-11-rel",
+            "configurePreset": "ninja-g++-11",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-19-shared-reldbg",
-            "configurePreset": "ninja-clang++-19-shared",
+            "name": "test-ninja-g++-11-reldbg",
+            "configurePreset": "ninja-g++-11",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-clang++-20-static-dbg",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "test-ninja-g++-12-dbg",
+            "configurePreset": "ninja-g++-12",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-20-static-rel",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "test-ninja-g++-12-rel",
+            "configurePreset": "ninja-g++-12",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-20-static-reldbg",
-            "configurePreset": "ninja-clang++-20-static",
+            "name": "test-ninja-g++-12-reldbg",
+            "configurePreset": "ninja-g++-12",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-clang++-20-shared-dbg",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "test-ninja-g++-13-dbg",
+            "configurePreset": "ninja-g++-13",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-clang++-20-shared-rel",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "test-ninja-g++-13-rel",
+            "configurePreset": "ninja-g++-13",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-clang++-20-shared-reldbg",
-            "configurePreset": "ninja-clang++-20-shared",
+            "name": "test-ninja-g++-13-reldbg",
+            "configurePreset": "ninja-g++-13",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-g++-11-static-dbg",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "test-ninja-c++-dbg",
+            "configurePreset": "ninja-c++",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-g++-11-static-rel",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "test-ninja-c++-rel",
+            "configurePreset": "ninja-c++",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-g++-11-static-reldbg",
-            "configurePreset": "ninja-g++-11-static",
+            "name": "test-ninja-c++-reldbg",
+            "configurePreset": "ninja-c++",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-g++-11-shared-dbg",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "test-ninja-cl-dbg",
+            "configurePreset": "ninja-cl",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-g++-11-shared-rel",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "test-ninja-cl-rel",
+            "configurePreset": "ninja-cl",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-g++-11-shared-reldbg",
-            "configurePreset": "ninja-g++-11-shared",
+            "name": "test-ninja-cl-reldbg",
+            "configurePreset": "ninja-cl",
             "configuration": "RelWithDebInfo"
         },
         {
-            "name": "test-ninja-g++-12-static-dbg",
-            "configurePreset": "ninja-g++-12-static",
+            "name": "test-msbuild-cl-dbg",
+            "configurePreset": "msbuild-cl",
             "configuration": "Debug"
         },
         {
-            "name": "test-ninja-g++-12-static-rel",
-            "configurePreset": "ninja-g++-12-static",
+            "name": "test-msbuild-cl-rel",
+            "configurePreset": "msbuild-cl",
             "configuration": "Release"
         },
         {
-            "name": "test-ninja-g++-12-static-reldbg",
-            "configurePreset": "ninja-g++-12-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-g++-12-shared-dbg",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-g++-12-shared-rel",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-g++-12-shared-reldbg",
-            "configurePreset": "ninja-g++-12-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-g++-13-static-dbg",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-g++-13-static-rel",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-g++-13-static-reldbg",
-            "configurePreset": "ninja-g++-13-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-g++-13-shared-dbg",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-g++-13-shared-rel",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-g++-13-shared-reldbg",
-            "configurePreset": "ninja-g++-13-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-c++-static-dbg",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-c++-static-rel",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-c++-static-reldbg",
-            "configurePreset": "ninja-c++-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-c++-shared-dbg",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-c++-shared-rel",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-c++-shared-reldbg",
-            "configurePreset": "ninja-c++-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-cl-static-dbg",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-cl-static-rel",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-cl-static-reldbg",
-            "configurePreset": "ninja-cl-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-ninja-cl-shared-dbg",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-ninja-cl-shared-rel",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-ninja-cl-shared-reldbg",
-            "configurePreset": "ninja-cl-shared",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-msbuild-cl-static-dbg",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-msbuild-cl-static-rel",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-msbuild-cl-static-reldbg",
-            "configurePreset": "msbuild-cl-static",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "test-msbuild-cl-shared-dbg",
-            "configurePreset": "msbuild-cl-shared",
-            "configuration": "Debug"
-        },
-        {
-            "name": "test-msbuild-cl-shared-rel",
-            "configurePreset": "msbuild-cl-shared",
-            "configuration": "Release"
-        },
-        {
-            "name": "test-msbuild-cl-shared-reldbg",
-            "configurePreset": "msbuild-cl-shared",
+            "name": "test-msbuild-cl-reldbg",
+            "configurePreset": "msbuild-cl",
             "configuration": "RelWithDebInfo"
         }
     ]
