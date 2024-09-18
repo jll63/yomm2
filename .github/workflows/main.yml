@@ -10,14 +10,13 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   job:
-    name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.linkage }}-${{ matrix.config }}
+    name: ${{ matrix.os }}-${{ matrix.compiler }}-${{ matrix.config }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
         config: [dbg, rel]
-        linkage: [static, shared]
         include:
           # - os: windows-latest
           #   triplet: x64-windows
@@ -29,8 +28,6 @@ jobs:
           #   triplet: x64-osx
           - os: windows-latest
             config: dbg
-            linkage: shared
-            add_shared_path: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\ninja-cl-shared\src\Debug"
           - os: windows-latest
             config: rel
             add_shared_path: $env:PATH +=  ";" + (Get-Item .).FullName + "\builds\ninja-cl-shared\src\Release"
@@ -122,14 +119,12 @@ jobs:
       - name: Restore from cache the dependencies and generate project files
         run: |
           ${{ matrix.pre_configure }}
-          cmake --preset ninja-${{ matrix.compiler }}-${{ matrix.linkage }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+          cmake --preset ninja-${{ matrix.compiler }} -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
 
       - name: Build
         run: |
-          ${{ matrix.add_shared_path }}
-          cmake --build --preset build-ninja-${{ matrix.compiler }}-${{ matrix.linkage}}-${{ matrix.config }}
+          cmake --build --preset build-ninja-${{ matrix.compiler }}-${{ matrix.config }}
 
       - name: Test
         run: |
-          ${{ matrix.add_shared_path }}
-          ctest --preset test-ninja-${{ matrix.compiler }}-${{ matrix.linkage}}-${{ matrix.config }} --output-on-failure
+          ctest --preset test-ninja-${{ matrix.compiler }}-${{ matrix.config }} --output-on-failure
