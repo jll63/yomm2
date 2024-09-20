@@ -6,10 +6,11 @@
 // This exmaple is based on sample code provided by Github user matpen in
 // https://github.com/jll63/yomm2/issues/7
 
+#include <yorel/yomm2.hpp>
 #include <iostream>
 
 #include "geometries.hpp"
-#include "shape_painter.hpp"
+#include "painter.hpp"
 
 register_classes(
     geometries::Geometry, geometries::Shape, geometries::Square,
@@ -19,18 +20,16 @@ namespace painter {
 namespace paint2d {
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Square& square)) {
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(
+    void, paintObject, (Painter & painter, const geometries::Square& square)) {
+    paintObject_overriders<void(Painter&, const geometries::Shape&)>::fn(
         painter, square);
     std::cout << "painting square\n";
 }
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Circle& circle)) {
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(
-        painter, circle);
+    void, paintObject, (Painter & painter, const geometries::Circle& circle)) {
+    paint2d::paintObject_overriders<void(
+        Painter&, const geometries::Shape&)>::fn(painter, circle);
     std::cout << "painting Circle\n";
 }
 

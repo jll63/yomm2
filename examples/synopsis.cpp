@@ -38,10 +38,54 @@ register_classes(Dog, Bulldog);
 
 // Define a uni-method, i.e. a method with a single virtual argument. This is in
 // essence a virtual function implemented as a free function.
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+struct kick_method;
+using YoMm2_gS_2 = ::yorel::yomm2::detail::method_macro_aux<
+    kick_method, void(virtual_<Animal&>, std::ostream&),
+    ::yorel::yomm2::detail::types<>>::type;
+auto kick_method_guide(
+    ::yorel::yomm2::detail::remove_virtual<virtual_<Animal&>> a0,
+    ::yorel::yomm2::detail::remove_virtual<std::ostream&> a1) -> YoMm2_gS_2;
+inline __attribute__((__always_inline__)) void kick(
+    ::yorel::yomm2::detail::remove_virtual<virtual_<Animal&>> a0,
+    ::yorel::yomm2::detail::remove_virtual<std::ostream&> a1) {
+    return YoMm2_gS_2::fn(
+        std::forward<::yorel::yomm2::detail::remove_virtual<virtual_<Animal&>>>(
+            a0),
+        std::forward<::yorel::yomm2::detail::remove_virtual<std::ostream&>>(
+            a1));
+}
+template<typename MethodSignature, typename OverriderSignature>
+struct kick_overriders;
+template<
+    typename OverriderReturnType,
+    typename... OverriderParameters>
+struct kick_overriders<
+    kick_method(virtual_<Animal&>, std::ostream&),
+    OverriderReturnType(OverriderParameters...)> {
+    static typename YoMm2_gS_2::next_type next;
+    static OverriderReturnType fn(OverriderParameters...);
+};
 
 // Implement 'kick' for dogs.
-define_method(void, kick, (Dog& dog, std::ostream& os)) {
+template<typename...>
+struct YoMm2_gS_3;
+template<typename... Parameters>
+struct YoMm2_gS_3<void(Parameters...)> {
+    using type = decltype(kick_method_guide(std::declval<Parameters>()...));
+};
+template<>
+auto kick_overriders<
+    kick_method(virtual_<Animal&>, std::ostream&),
+    void(Dog& dog, std::ostream& os)>::fn(Dog& dog, std::ostream& os) -> void;
+static YoMm2_gS_3<void(Dog& dog, std::ostream& os)>::type::override<
+    kick_overriders<
+        YoMm2_gS_3<void(Dog& dog, std::ostream& os)>::type,
+        void(Dog& dog, std::ostream& os)>>
+    YoMm2_gS_4;
+template<>
+auto kick_overriders<
+    YoMm2_gS_3<void(Dog& dog, std::ostream& os)>::type::this_type,
+    void(Dog& dog, std::ostream& os)>::fn(Dog& dog, std::ostream& os) -> void {
     os << "bark";
 }
 

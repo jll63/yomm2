@@ -13,14 +13,33 @@
 
 #include <yorel/yomm2.hpp>
 
+#define YOMM2_FWD_OVERRIDER(RETURN_TYPE, NAME, ARGS)                           \
+    template<typename>                                                         \
+    struct NAME##_overriders;                                                  \
+    template<>                                                                 \
+    struct NAME##_overriders<RETURN_TYPE ARGS>
+
 namespace painter {
 
+class Painter;
+
 namespace paint1d {
-method_container(painters);
-}
+
+template<typename>
+struct paintObject_overriders;
+
+} // namespace paint1d
+
 namespace paint2d {
-method_container(painters);
+
+YOMM2_FWD_OVERRIDER(void, paintObject, (Painter&, const geometries::Shape&));
+
 }
+
+// Implements paint
+declare_method(
+    void, paintObject,
+    (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>));
 
 class Painter {
   public:
@@ -29,15 +48,11 @@ class Painter {
 
   private:
     int counter = 0;
-    friend_method(paint1d::painters);
-    friend_method(
-        paint2d::painters, void, (Painter&, const geometries::Shape&));
+    template<typename>
+    friend struct paint1d::paintObject_overriders;
+    friend paint2d::paintObject_overriders<void(
+        Painter&, const geometries::Shape&)>;
 };
-
-// Implements paint
-declare_method(
-    void, paintObject,
-    (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>));
 
 inline void Painter::paint(const geometries::Geometry& geometry) {
     paintObject(*this, geometry);

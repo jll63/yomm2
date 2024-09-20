@@ -37,92 +37,69 @@
 #define yOMM2_WHEN_STATIC(CODE1, CODE2) CODE1
 #define yOMM2_WHEN_NOT_STATIC(CODE1, CODE2) CODE2
 
-#define YOMM2_PREFIX yomm2__
-#define YOMM2_NAME(NAME) BOOST_PP_CAT(YOMM2_PREFIX, NAME)
-
 // Find method given the arguments. We cannot detect if __VAR_ARGS__ is empty,
 // so we cannot express the 'method<...>' type directly. Instead, we wrap
 // __VAR_ARGS__ in 'types<...>' and use 'method_macro_aux' find the method.
 
 #define YOREL_YOMM2_DETAIL_METHOD(RETURN_TYPE, NAME, ARGS, ...)                \
     ::yorel::yomm2::detail::method_macro_aux<                                  \
-        yorel_yomm2_##NAME, RETURN_TYPE ARGS,                                  \
+        NAME##_method, RETURN_TYPE ARGS,                                       \
         ::yorel::yomm2::detail::types<__VA_ARGS__>>::type
 
 #define YOMM2_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                            \
-    yOMM2_DECLARE(yOMM2_WHEN_NOT_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
+    yOMM2_DECLARE(                                                             \
+        YOMM2_GENSYM, yOMM2_WHEN_NOT_STATIC, RETURN_TYPE, NAME, ARGS,          \
+        __VA_ARGS__)
 
 #define YOMM2_STATIC_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                     \
     yOMM2_DECLARE(yOMM2_WHEN_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
 
-#define yOMM2_DECLARE(IF_STATIC, RETURN_TYPE, NAME, ARGS, ...)                 \
-    struct yorel_yomm2_##NAME;                                                 \
+#define yOMM2_DECLARE(GENSYM, IF_STATIC, RETURN_TYPE, NAME, ARGS, ...)         \
+    struct NAME##_method;                                                      \
+    using GENSYM =                                                             \
+        YOREL_YOMM2_DETAIL_METHOD(RETURN_TYPE, NAME, ARGS, __VA_ARGS__);       \
     IF_STATIC(static, )                                                        \
-    auto _yorel_yomm2_detail_guide_(                                           \
+    auto NAME##_method_guide(                                                  \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS))         \
-        ->YOREL_YOMM2_DETAIL_METHOD(RETURN_TYPE, NAME, ARGS, __VA_ARGS__);     \
+        ->GENSYM;                                                              \
     IF_STATIC(static, )                                                        \
     BOOST_FORCEINLINE RETURN_TYPE NAME(                                        \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
-        return YOREL_YOMM2_DETAIL_METHOD(                                      \
-            RETURN_TYPE, NAME, ARGS, __VA_ARGS__)::                            \
-            fn(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS)); \
-    }
+        return GENSYM::fn(                                                     \
+            BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));    \
+    }                                                                          \
+    template<typename MethodSignature, typename OverriderSignature>            \
+    struct NAME##_overriders;                                                  \
+    template<typename OverriderReturnType, typename... OverriderParameters>    \
+    struct NAME##_overriders<                                                  \
+        NAME##_method ARGS, OverriderReturnType(OverriderParameters...)> {     \
+        static typename GENSYM::next_type next;                                \
+        static OverriderReturnType fn(OverriderParameters...);                 \
+    };
+
+#define YOMM2_DEFINE_X_(NS, PREFIX, RETURN_TYPE, NAME, ARGS, SUFFIX)           \
+    template<typename...>                                                      \
+    struct NS;                                                                 \
+    template<typename... Parameters>                                           \
+    struct NS<void(Parameters...)> {                                           \
+        using type =                                                           \
+            decltype(NAME##_method_guide(std::declval<Parameters>()...));      \
+    };                                                                         \
+    template<>                                                                 \
+    auto NAME##_overriders<NS<void ARGS>::type::this_type, RETURN_TYPE ARGS>:: \
+        fn ARGS->RETURN_TYPE;                                                  \
+    YOMM2_STATIC(                                                              \
+        NS<void ARGS>::type::override<                                         \
+            NAME##_overriders<NS<void ARGS>::type, RETURN_TYPE ARGS>>);        \
+    template<>                                                                 \
+    auto NAME##_overriders<NS<void ARGS>::type::this_type, RETURN_TYPE ARGS>:: \
+        fn ARGS->RETURN_TYPE
 
 #define YOMM2_DEFINE_X(PREFIX, RETURN_TYPE, NAME, ARGS, SUFFIX)                \
-    template<typename...>                                                      \
-    struct yorel_yomm2_overriders;                                             \
-    template<>                                                                 \
-    struct yorel_yomm2_overriders<RETURN_TYPE, yorel_yomm2_##NAME ARGS> {      \
-        template<typename>                                                     \
-        struct _yorel_yomm2_detail_method_;                                    \
-        template<typename... Parameters>                                       \
-        struct _yorel_yomm2_detail_method_<void(Parameters...)> {              \
-            using type = decltype(_yorel_yomm2_detail_guide_(                  \
-                std::declval<Parameters>()...));                               \
-        };                                                                     \
-        static _yorel_yomm2_detail_method_<void ARGS>::type::next_type next;   \
-        static auto fn ARGS->RETURN_TYPE;                                      \
-    };                                                                         \
-    yorel_yomm2_overriders<RETURN_TYPE, yorel_yomm2_##NAME ARGS>::             \
-        _yorel_yomm2_detail_method_<void ARGS>::type::next_type                \
-            yorel_yomm2_overriders<                                            \
-                RETURN_TYPE, yorel_yomm2_##NAME ARGS>::next;                   \
-    YOMM2_STATIC(                                                              \
-        yorel_yomm2_overriders<RETURN_TYPE, yorel_yomm2_##NAME ARGS>::         \
-            _yorel_yomm2_detail_method_<void ARGS>::type::override<            \
-                yorel_yomm2_overriders<                                        \
-                    RETURN_TYPE, yorel_yomm2_##NAME ARGS>>);                   \
-    auto yorel_yomm2_overriders<RETURN_TYPE, yorel_yomm2_##NAME ARGS>::fn ARGS \
-        ->RETURN_TYPE
+    YOMM2_DEFINE_X_(YOMM2_GENSYM, PREFIX, RETURN_TYPE, NAME, ARGS, SUFFIX)
 
 #define YOMM2_DEFINE(RETURN_TYPE, NAME, ARGS)                                  \
     YOMM2_DEFINE_X(, RETURN_TYPE, NAME, ARGS, )
-
-#define YOMM2_DECLARE_METHOD_CONTAINER_1(CONTAINER)                            \
-    template<typename S>                                                       \
-    struct CONTAINER
-
-#define YOMM2_DECLARE_METHOD_CONTAINER_4(CONTAINER, RETURN_TYPE, NAME, ARGS)   \
-    template<typename S>                                                       \
-    struct CONTAINER;                                                          \
-    YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                       \
-        YOMM2_GENSYM, CONTAINER, RETURN_TYPE, NAME, ARGS)
-
-#define YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                   \
-    NS, CONTAINER, RETURN_TYPE, NAME, ARGS)                                    \
-    template<typename S>                                                       \
-    struct CONTAINER;                                                          \
-    namespace {                                                                \
-    namespace NS {                                                             \
-    yOMM2_SELECT_METHOD(RETURN_TYPE, NAME, ARGS);                              \
-    }                                                                          \
-    }                                                                          \
-    template<>                                                                 \
-    struct CONTAINER<RETURN_TYPE ARGS> {                                       \
-        static NS::_YOREL_YOMM2_DETAIL_METHOD::next_type next;                 \
-        static RETURN_TYPE fn ARGS;                                            \
-    }
 
 #define YOMM2_DEFINE_INLINE(CONTAINER, RETURN_TYPE, NAME, ARGS)                \
     yOMM2_DEFINE_IN_CONTAINER(INLINE, CONTAINER, RETURN_TYPE, NAME, ARGS)
@@ -162,8 +139,8 @@
         __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
         YOMM2_GENSYM;
 
-#define YOREL_YOMM2_DETAIL_METHOD_CLASS(RETURN_TYPE, NAME, ...)                \
-    ::yorel::yomm2::method<yorel_yomm2_##NAME, RETURN_TYPE __VA_ARGS__>
+// #define YOREL_YOMM2_DETAIL_METHOD_CLASS(RETURN_TYPE, NAME, ...)                \
+//     ::yorel::yomm2::method<NAME##_method, RETURN_TYPE __VA_ARGS__>
 
 #define register_classes YOMM2_CLASSES
 
@@ -171,7 +148,7 @@
 #define declare_static_method YOMM2_STATIC_DECLARE
 #define define_method YOMM2_DEFINE
 #define define_method_INLINE YOMM2_DEFINE_INLINE
-#define method_class YOREL_YOMM2_DETAIL_METHOD_CLASS
+//#define method_class YOREL_YOMM2_DETAIL_METHOD_CLASS
 
 #define method_container YOMM2_DECLARE_METHOD_CONTAINER
 #define friend_method YOMM2_FRIEND

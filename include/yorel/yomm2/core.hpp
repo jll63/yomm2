@@ -699,6 +699,7 @@ class method<Name, Return(Parameters...), Options...>
     using return_type = Return;
     using next_type =
         Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);
+    using this_type = Name(Parameters...);
 
     static method fn;
 
