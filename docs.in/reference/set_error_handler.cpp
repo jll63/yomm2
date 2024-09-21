@@ -43,7 +43,7 @@ struct Dog : Animal {};
 
 register_classes(Animal, Dog);
 
-declare_method(void, kick, (virtual_<Animal&>));
+declare_method(kick, (virtual_<Animal&>), void);
 
 using namespace yorel::yomm2; // for brevity
 

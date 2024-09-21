@@ -34,7 +34,7 @@ struct Payroll {
   private:
     struct YOMM2_SYMBOL(pay);
     using pay_method =
-        method<YOMM2_SYMBOL(pay), void(Payroll*, virtual_<const Role&>)>;
+        method<YOMM2_SYMBOL(pay)(Payroll*, virtual_<const Role&>), void>;
 
     void pay_employee(const Employee&) {
         balance -= 2000;

@@ -36,39 +36,39 @@ register_classes(
     delphinus::Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
-declare_method(std::string, kick, (virtual_<interfaces::Animal&>));
+declare_method(kick, (virtual_<interfaces::Animal&>), std::string);
 
 namespace canis {
 // implement 'kick' for dogs
-define_method(std::string, kick, (Dog & dog)) {
+define_method(kick, (Dog & dog), std::string) {
     return "bark";
 }
 
 // implement 'kick' for bulldogs
-define_method(std::string, kick, (Bulldog & dog)) {
+define_method(kick, (Bulldog & dog), std::string) {
     return next(dog) + " and bite";
 }
 } // namespace canis
 
 // multi-method
 declare_method(
-    std::string, meet,
-    (virtual_<interfaces::Animal&>, virtual_<interfaces::Animal&>));
+    meet, (virtual_<interfaces::Animal&>, virtual_<interfaces::Animal&>),
+    std::string);
 
 // 'meet' catch-all implementation
-define_method(std::string, meet, (interfaces::Animal&, interfaces::Animal&)) {
+define_method(meet, (interfaces::Animal&, interfaces::Animal&), std::string) {
     return "ignore";
 }
 
-define_method(std::string, meet, (canis::Dog & dog1, canis::Dog& dog2)) {
+define_method(meet, (canis::Dog & dog1, canis::Dog& dog2), std::string) {
     return "wag tail";
 }
 
-define_method(std::string, meet, (canis::Dog & dog, felis::Cat& cat)) {
+define_method(meet, (canis::Dog & dog, felis::Cat& cat), std::string) {
     return "chase";
 }
 
-define_method(std::string, meet, (felis::Cat & cat, canis::Dog& dog)) {
+define_method(meet, (felis::Cat & cat, canis::Dog& dog), std::string) {
     return "run";
 }
 

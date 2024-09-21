@@ -103,7 +103,7 @@ namespace ns1_longer {
 class foo;
 }
 )"),
-    fd<method<foo, void(virtual_<baz<foo>&>, std::ostream)>>(
+    fd<method<foo(virtual_<baz<foo>&>, std::ostream), void>>(
         R"(
 class foo;
 )"),
@@ -187,11 +187,11 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
         using policy = test_policy_<1>;
         YOMM2_STATIC(use_classes<foo, policy>);
 
-        using baz1 = method<baz_key, void(virtual_<foo&>, int), policy>;
+        using baz1 = method<baz_key(virtual_<foo&>, int), void, policy>;
         YOMM2_STATIC(baz1::override_fn<baz1_def>);
 
         using baz2 =
-            method<baz_key, void(virtual_<foo&>, virtual_<foo&>), policy>;
+            method<baz_key(virtual_<foo&>, virtual_<foo&>), void, policy>;
         YOMM2_STATIC(baz2::override_fn<baz2_def>);
 
         initialize<policy>();
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(test_generate_offsets) {
             generator gen;
             gen.write_static_offsets<baz1>(os);
             std::string_view expected = R"(
-template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1>>> {static constexpr std::size_t slots[] = {0}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key (yorel::yomm2::virtual_<foo&>, int), void, test_policy_<1>>> {static constexpr std::size_t slots[] = {0}; };
 )";
             auto actual =
                 std::regex_replace(os.str(), std::basic_regex("> +>"), ">>");
@@ -218,8 +218,8 @@ template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_
             gen.write_forward_declarations(os);
             gen.write_static_offsets<policy>(os);
             std::string_view expected = R"(
-template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, int), test_policy_<1>>> {static constexpr std::size_t slots[] = {0}; };
-template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key, void (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), test_policy_<1>>> {static constexpr std::size_t slots[] = {1, 2}; static constexpr std::size_t strides[] = {1}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key (yorel::yomm2::virtual_<foo&>, int), void, test_policy_<1>>> {static constexpr std::size_t slots[] = {0}; };
+template<> struct yorel::yomm2::detail::static_offsets<yorel::yomm2::method<baz_key (yorel::yomm2::virtual_<foo&>, yorel::yomm2::virtual_<foo&>), void, test_policy_<1>>> {static constexpr std::size_t slots[] = {1, 2}; static constexpr std::size_t strides[] = {1}; };
 )";
             auto actual =
                 std::regex_replace(os.str(), std::basic_regex("> +>"), ">>");

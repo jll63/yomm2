@@ -12,11 +12,11 @@ headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp></sub
 ### Usage
 
 ```
-define_method(return-type, name, (method-parameter-list)) {
+define_method(name, (method-parameter-list), return-type) {
     ...
 }
 
-define_method(container, return-type, name, (method-parameter-list)) {
+define_method(return-type, name, container, (method-parameter-list)) {
     ...
 }
 ```
@@ -63,13 +63,13 @@ struct Bulldog : Dog {};
 
 register_classes(Animal, Dog, Bulldog);
 
-declare_method(std::string, kick, (virtual_<Animal*>));
+declare_method(kick, (virtual_<Animal*>), std::string);
 
-define_method(std::string, kick, (Dog* dog)) {
+define_method(kick, (Dog* dog), std::string) {
     return "bark";
 }
 
-define_method(std::string, kick, (Bulldog* dog)) {
+define_method(kick, (Bulldog* dog), std::string) {
     return next(dog) + " and bite";
 }
 

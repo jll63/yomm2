@@ -48,8 +48,10 @@ class Animal {
     std::string name;
 
   public:
-    explicit Animal(const std::string& name) : name(name) {}
-    virtual ~Animal() {}
+    explicit Animal(const std::string& name) : name(name) {
+    }
+    virtual ~Animal() {
+    }
 
     friend_method(kicks);
 };
@@ -64,14 +66,14 @@ class Bulldog : public Dog {
 
 register_classes(Animal, Dog, Bulldog);
 
-declare_method(std::string, kick, (virtual_<Animal*>));
+declare_method(kick, (virtual_<Animal*>), std::string);
 
-define_method_inline(kicks, std::string, kick, (Dog* dog)) {
+define_method_inline(kicks, kick, (Dog * dog), std::string) {
     return dog->name + " barks";
 }
 
-define_method(kicks, std::string, kick, (Bulldog* dog)) {
-    return kicks<std::string(Dog*)>::fn(dog) + " and bites";
+define_method(kicks, kick, (Bulldog * dog), std::string) {
+    return method_definition(kicks, kick, (Dog*))(dog) + " and bites";
 }
 
 BOOST_AUTO_TEST_CASE(ref_example) {

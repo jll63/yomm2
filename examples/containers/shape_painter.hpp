@@ -15,8 +15,8 @@ namespace painter {
 namespace paint2d {
 
 method_container(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Shape& shape));
+    painters, paintObject,
+    (Painter & painter, const geometries::Shape& shape), void);
 
 }
 } // namespace painter

@@ -38,26 +38,26 @@ register_classes(
     Character, Warrior, Device, Hands, Axe, Banana, Creature, Dragon, Bear);
 
 declare_method(
-    std::string, fight,
-    (virtual_<Character&>, virtual_<Creature&>, virtual_<Device&>));
+    fight, (virtual_<Character&>, virtual_<Creature&>, virtual_<Device&>),
+    std::string);
 
-define_method(std::string, fight, (Character & x, Creature& y, Banana& z)) {
+define_method(fight, (Character & x, Creature& y, Banana& z), std::string) {
     return "are you insane?";
 }
 
-define_method(std::string, fight, (Character & x, Creature& y, Axe& z)) {
+define_method(fight, (Character & x, Creature& y, Axe& z), std::string) {
     return "not agile enough to wield";
 }
 
-define_method(std::string, fight, (Warrior & x, Creature& y, Axe& z)) {
+define_method(fight, (Warrior & x, Creature& y, Axe& z), std::string) {
     return "and cuts it into pieces";
 }
 
-define_method(std::string, fight, (Warrior & x, Dragon& y, Axe& z)) {
+define_method(fight, (Warrior & x, Dragon& y, Axe& z), std::string) {
     return "and dies a honorable death";
 }
 
-define_method(std::string, fight, (Character & x, Dragon& y, Hands& z)) {
+define_method(fight, (Character & x, Dragon& y, Hands& z), std::string) {
     return "Congratulations! You have just vainquished a dragon with your bare "
            "hands"
            " (unbelievable, isn't it?)";

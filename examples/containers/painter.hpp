@@ -22,6 +22,13 @@ namespace paint2d {
 method_container(painters);
 }
 
+class Painter;
+
+// Implements paint
+declare_method(
+    paintObject,
+    (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>), void);
+
 class Painter {
   public:
     void paint(const geometries::Geometry& geometry);
@@ -31,13 +38,8 @@ class Painter {
     int counter = 0;
     friend_method(paint1d::painters);
     friend_method(
-        paint2d::painters, void, (Painter&, const geometries::Shape&));
+        paint2d::painters, paintObject, (Painter&, const geometries::Shape&));
 };
-
-// Implements paint
-declare_method(
-    void, paintObject,
-    (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>));
 
 inline void Painter::paint(const geometries::Geometry& geometry) {
     paintObject(*this, geometry);

@@ -44,59 +44,37 @@
 
 // Find method given the arguments. We cannot detect if __VAR_ARGS__ is empty,
 // so we cannot express the 'method<...>' type directly. Instead, we wrap
-// __VAR_ARGS__ in 'types<...>' and use 'method_macro_aux' find the method.
+// __VAR_ARGS__ in 'types<...>' and use 'method_va_args_first' find the method.
 
-#define yOMM2_method(RETURN_TYPE, NAME, ARGS, ...)                             \
-    ::yorel::yomm2::detail::method_macro_aux<                                  \
-        YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS,                                  \
-        ::yorel::yomm2::detail::types<__VA_ARGS__>>::type
+#define yOMM2_method(NAME, ARGS, ...)                                          \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME) ARGS, __VA_ARGS__>
 
-#define YOMM2_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                            \
-    yOMM2_DECLARE(yOMM2_WHEN_NOT_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
-#define YOMM2_STATIC_DECLARE(RETURN_TYPE, NAME, ARGS, ...)                     \
-    yOMM2_DECLARE(yOMM2_WHEN_STATIC, RETURN_TYPE, NAME, ARGS, __VA_ARGS__)
+#define YOMM2_DECLARE(NAME, ARGS, ...)                                         \
+    yOMM2_DECLARE(yOMM2_WHEN_NOT_STATIC, NAME, ARGS, __VA_ARGS__)
 
-#define yOMM2_DECLARE(IF_STATIC, RETURN_TYPE, NAME, ARGS, ...)                 \
+#define YOMM2_STATIC_DECLARE(NAME, ARGS, ...)                                  \
+    yOMM2_DECLARE(yOMM2_WHEN_STATIC, NAME, ARGS, __VA_ARGS__)
+
+#define yOMM2_DECLARE(IF_STATIC, NAME, ARGS, ...)                              \
     struct YOMM2_SYMBOL(NAME);                                                 \
     IF_STATIC(static, )                                                        \
-    yOMM2_method(RETURN_TYPE, NAME, ARGS, __VA_ARGS__) yOMM2_SELECTOR(NAME)(   \
+    yOMM2_method(NAME, ARGS, __VA_ARGS__) yOMM2_SELECTOR(NAME)(                \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));        \
     IF_STATIC(static, )                                                        \
-    inline const char* yOMM2_SELECTOR(NAME)(                                   \
-        const yOMM2_method(RETURN_TYPE, NAME, ARGS, __VA_ARGS__)&) {           \
-        return #RETURN_TYPE " " #NAME #ARGS;                                   \
-    }                                                                          \
-    IF_STATIC(static, )                                                        \
-    inline RETURN_TYPE NAME(                                                   \
+    inline decltype(auto) NAME(                                                \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
-        return yOMM2_method(RETURN_TYPE, NAME, ARGS, __VA_ARGS__)::fn(         \
+        return yOMM2_method(NAME, ARGS, __VA_ARGS__)::fn(                      \
             BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));    \
     }
 
-#if defined(YOMM2_ENABLE_TRACE) && (YOMM2_ENABLE_TRACE & 1) || !defined(NDEBUG)
-#define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) HUMAN_READABLE
-#else
-#define yOMM2_NAME(FROM_TYPEID, HUMAN_READABLE) FROM_TYPEID
-#endif
+#define YOMM2_DEFINE(NAME, ARGS, ...)                                        \
+    yOMM2_DEFINE(YOMM2_GENSYM, NAME, ARGS, __VA_ARGS__)
 
-#if !BOOST_PP_VARIADICS_MSVC
-#define YOMM2_DEFINE(...)                                                      \
-    BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__)
-#else
-#define YOMM2_DEFINE(...)                                                      \
-    BOOST_PP_CAT(                                                              \
-        BOOST_PP_OVERLOAD(YOMM2_DEFINE_, __VA_ARGS__)(__VA_ARGS__),            \
-        BOOST_PP_EMPTY())
-#endif
-
-#define YOMM2_DEFINE_3(RETURN_TYPE, NAME, ARGS)                                \
-    yOMM2_DEFINE(YOMM2_GENSYM, RETURN_TYPE, NAME, ARGS)
-
-#define YOMM2_DEFINE_4(CONTAINER, RETURN_TYPE, NAME, ARGS)                     \
+#define YOMM2_DEFINE_IN(CONTAINER, NAME, ARGS, ...)                     \
     yOMM2_DEFINE_IN_CONTAINER(                                                 \
-        YOMM2_GENSYM, , CONTAINER, RETURN_TYPE, NAME, ARGS)
+        YOMM2_GENSYM, , CONTAINER, NAME, ARGS, __VA_ARGS__)
 
-#define yOMM2_SELECT_METHOD(RETURN_TYPE, NAME, ARGS)                           \
+#define yOMM2_SELECT_METHOD(NAME, ARGS)                                        \
     template<typename T>                                                       \
     struct _yOMM2_select;                                                      \
     template<typename... A>                                                    \
@@ -106,18 +84,20 @@
     using _yOMM2_method = _yOMM2_select<void ARGS>::type;                      \
     using _yOMM2_return_t = _yOMM2_method::return_type;
 
-#define yOMM2_DEFINE(NS, RETURN_TYPE, NAME, ARGS)                              \
+#define yOMM2_DEFINE(NS, NAME, ARGS, ...)                                      \
     namespace {                                                                \
     namespace NS {                                                             \
-    yOMM2_SELECT_METHOD(RETURN_TYPE, NAME, ARGS);                              \
+    yOMM2_SELECT_METHOD(NAME, ARGS);                                           \
     _yOMM2_method::next_type next;                                             \
     struct _yOMM2_spec {                                                       \
-        static NS::_yOMM2_method::return_type yOMM2_body ARGS;                 \
+        static boost::mp11::mp_first<boost::mp11::mp_list<__VA_ARGS__>>        \
+            yOMM2_body ARGS;                                                   \
     };                                                                         \
     _yOMM2_method::override_fn<_yOMM2_spec::yOMM2_body> YOMM2_GENSYM(&next);   \
     }                                                                          \
     }                                                                          \
-    NS::_yOMM2_method::return_type NS::_yOMM2_spec::yOMM2_body ARGS
+    boost::mp11::mp_first<boost::mp11::mp_list<__VA_ARGS__>>                   \
+        NS::_yOMM2_spec::yOMM2_body ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
 #define YOMM2_DECLARE_METHOD_CONTAINER(...)                                    \
@@ -135,43 +115,44 @@
     template<typename S>                                                       \
     struct CONTAINER
 
-#define YOMM2_DECLARE_METHOD_CONTAINER_4(CONTAINER, RETURN_TYPE, NAME, ARGS)   \
+#define YOMM2_DECLARE_METHOD_CONTAINER_4(CONTAINER, NAME, ARGS, ...)           \
     template<typename S>                                                       \
     struct CONTAINER;                                                          \
     YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                       \
-        YOMM2_GENSYM, CONTAINER, RETURN_TYPE, NAME, ARGS)
+        YOMM2_GENSYM, CONTAINER, NAME, ARGS, __VA_ARGS__)
 
-#define YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                   \
-    NS, CONTAINER, RETURN_TYPE, NAME, ARGS)                                    \
+#define YOMM2_DECLARE_METHOD_CONTAINER_4_NS(NS, CONTAINER, NAME, ARGS, ...)    \
     template<typename S>                                                       \
     struct CONTAINER;                                                          \
     namespace {                                                                \
     namespace NS {                                                             \
-    yOMM2_SELECT_METHOD(RETURN_TYPE, NAME, ARGS);                              \
+    yOMM2_SELECT_METHOD(NAME, ARGS);                                           \
     }                                                                          \
     }                                                                          \
     template<>                                                                 \
-    struct CONTAINER<RETURN_TYPE ARGS> {                                       \
+    struct CONTAINER<YOMM2_SYMBOL(NAME) ARGS> {                                \
         static NS::_yOMM2_method::next_type next;                              \
-        static RETURN_TYPE fn ARGS;                                            \
+        static boost::mp11::mp_first<boost::mp11::mp_list<__VA_ARGS__>> fn     \
+            ARGS;                                                              \
     }
 
-#define YOMM2_DEFINE_INLINE(CONTAINER, RETURN_TYPE, NAME, ARGS)                \
+#define YOMM2_DEFINE_INLINE(CONTAINER, NAME, ARGS, ...)                        \
     yOMM2_DEFINE_IN_CONTAINER(                                                 \
-        YOMM2_GENSYM, inline, CONTAINER, RETURN_TYPE, NAME, ARGS)
+        YOMM2_GENSYM, inline, CONTAINER, NAME, ARGS, __VA_ARGS__)
 
-#define yOMM2_DEFINE_IN_CONTAINER(                                             \
-    NS, Inline, CONTAINER, RETURN_TYPE, NAME, ARGS)                            \
+#define yOMM2_DEFINE_IN_CONTAINER(NS, INLINE, CONTAINER, NAME, ARGS, ...)      \
     YOMM2_DECLARE_METHOD_CONTAINER_4_NS(                                       \
-        NS, CONTAINER, RETURN_TYPE, NAME, ARGS);                               \
-    Inline NS::_yOMM2_method::next_type CONTAINER<RETURN_TYPE ARGS>::next;     \
+        NS, CONTAINER, NAME, ARGS, __VA_ARGS__);                               \
+    INLINE NS::_yOMM2_method::next_type                                        \
+        CONTAINER<YOMM2_SYMBOL(NAME) ARGS>::next;                              \
     namespace {                                                                \
     namespace NS {                                                             \
-    Inline _yOMM2_method::override_fn<CONTAINER<RETURN_TYPE ARGS>::fn>         \
-        YOMM2_GENSYM(&CONTAINER<RETURN_TYPE ARGS>::next);                      \
+    INLINE _yOMM2_method::override_fn<CONTAINER<YOMM2_SYMBOL(NAME) ARGS>::fn>  \
+        YOMM2_GENSYM(&CONTAINER<YOMM2_SYMBOL(NAME) ARGS>::next);               \
     }                                                                          \
     }                                                                          \
-    Inline NS::_yOMM2_method::return_type CONTAINER<RETURN_TYPE ARGS>::fn ARGS
+    INLINE boost::mp11::mp_first<boost::mp11::mp_list<__VA_ARGS__>>            \
+        CONTAINER<YOMM2_SYMBOL(NAME) ARGS>::fn ARGS
 
 #if !BOOST_PP_VARIADICS_MSVC
 #define YOMM2_FRIEND(...)                                                      \
@@ -187,36 +168,19 @@
     template<typename>                                                         \
     friend struct CONTAINER
 
-#define YOMM2_FRIEND_3(CONTAINER, RETURN_TYPE, ARGS)                           \
-    friend struct CONTAINER<RETURN_TYPE ARGS>
+#define YOMM2_FRIEND_3(CONTAINER, NAME, ARGS)                                  \
+    friend struct CONTAINER<YOMM2_SYMBOL(NAME) ARGS>
 
-#define YOMM2_DEFINITION(CONTAINER, RETURN_TYPE, ARGS)                         \
-    CONTAINER<RETURN_TYPE ARGS>::fn
+#define YOMM2_DEFINITION(CONTAINER, NAME, ARGS)                                \
+    CONTAINER<YOMM2_SYMBOL(NAME) ARGS>::fn
 
 #define YOMM2_CLASSES(...)                                                     \
     static ::yorel::yomm2::detail::use_classes_macro<                          \
         __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
         YOMM2_GENSYM;
 
-#define YOMM2_METHOD_CLASS(RETURN_TYPE, NAME, ...)                             \
-    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE __VA_ARGS__>
-
-// #if !BOOST_PP_VARIADICS_MSVC
-// #define YOMM2_METHOD_CLASS(...)                                                \
-//     BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__)
-// #else
-// #define YOMM2_METHOD_CLASS(...)                                                \
-//     BOOST_PP_CAT(                                                              \
-//         BOOST_PP_OVERLOAD(YOMM2_METHOD_CLASS_, __VA_ARGS__)(__VA_ARGS__),      \
-//         BOOST_PP_EMPTY())
-// #endif
-
-// #define YOMM2_METHOD_CLASS_3(RETURN_TYPE, NAME, ARGS)                          \
-//     ::yorel::yomm2::method<                                                    \
-//         YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS, YOMM2_DEFAULT_POLICY>
-
-// #define YOMM2_METHOD_CLASS_4(RETURN_TYPE, NAME, ARGS, POLICY)                  \
-//     ::yorel::yomm2::method<YOMM2_SYMBOL(NAME), RETURN_TYPE ARGS, POLICY>
+#define YOMM2_METHOD_CLASS(NAME, ARGS, ...)                                    \
+    ::yorel::yomm2::method<YOMM2_SYMBOL(NAME) ARGS, __VA_ARGS__>
 
 #define register_classes YOMM2_CLASSES
 

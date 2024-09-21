@@ -200,31 +200,27 @@ class Cat : public Animal {
 
 register_classes(Animal, Dog, Cat);
 
-declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
+declare_method(kick, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(void, kick, (virtual_ptr<Dog> dog, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Dog> dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (virtual_ptr<Cat> cat, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Cat> cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&));
+declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os), void) {
     os << "chase";
 }
 
@@ -327,31 +323,27 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_ptr;
 
-declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
+declare_method(kick, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(void, kick, (virtual_ptr<Dog> dog, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Dog> dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (virtual_ptr<Cat> cat, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Cat> cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&));
+declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os), void) {
     os << "chase";
 }
 
@@ -404,7 +396,7 @@ selected, as in the following example.
 
 //***
 
-define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Animal> dog, std::ostream& os), void) {
     os << "wrong call";
 }
 
@@ -463,41 +455,27 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_shared_ptr;
 
-declare_method(void, kick, (const virtual_shared_ptr<Animal>&, std::ostream&));
+declare_method(kick, (const virtual_shared_ptr<Animal>&, std::ostream&), void);
 
-define_method(void, kick, (
-        const virtual_shared_ptr<Dog>& dog, std::ostream& os)) {
+define_method(kick, (const virtual_shared_ptr<Dog>& dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (
-    const virtual_shared_ptr<Cat>& cat, std::ostream& os)) {
+define_method(kick, (const virtual_shared_ptr<Cat>& cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (
-        const virtual_shared_ptr<Animal>&,
-        const virtual_shared_ptr<Animal>&, std::ostream&));
+declare_method(meet, (const virtual_shared_ptr<Animal>&,const virtual_shared_ptr<Animal>&, std::ostream&), void);
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Dog>& a,
-        const virtual_shared_ptr<Dog>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Dog>& a,const virtual_shared_ptr<Dog>& b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Cat>& a,
-        const virtual_shared_ptr<Dog>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Cat>& a,const virtual_shared_ptr<Dog>& b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Dog>& a,
-        const virtual_shared_ptr<Cat>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Dog>& a,const virtual_shared_ptr<Cat>& b, std::ostream& os), void) {
     os << "chase";
 }
 

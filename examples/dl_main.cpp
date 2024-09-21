@@ -16,7 +16,7 @@
 
 using namespace std;
 
-define_method(string, encounter, (const Animal&, const Animal&)) {
+define_method(encounter, (const Animal&, const Animal&), string) {
     return "ignore";
 }
 

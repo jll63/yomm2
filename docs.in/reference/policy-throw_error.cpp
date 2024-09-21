@@ -49,7 +49,7 @@ using throw_policy = yomm2::default_policy::replace<
 
 register_classes(Animal, Dog, throw_policy);
 
-declare_method(void, kick, (virtual_<Animal&>), throw_policy);
+declare_method(kick, (virtual_<Animal&>), void, throw_policy);
 
 BOOST_AUTO_TEST_CASE(ref_throw_error) {
     yomm2::initialize<throw_policy>();
@@ -64,8 +64,7 @@ BOOST_AUTO_TEST_CASE(ref_throw_error) {
         BOOST_TEST(
             error.method ==
             yomm2::type_id(
-                &typeid(method_class(
-                    void, kick, (virtual_<Animal&>), throw_policy))));
+                &typeid(method_class(kick, (virtual_<Animal&>), void, throw_policy))));
         BOOST_TEST(error.arity == 1);
         BOOST_TEST(error.types[0] == throw_policy::static_type<Dog>());
         threw = true;

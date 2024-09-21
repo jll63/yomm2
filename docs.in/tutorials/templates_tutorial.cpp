@@ -47,10 +47,10 @@ using namespace yorel::yomm2;
 //
 // ```c++
 // template<typename T>
-// declare_method(string, to_json, (virtual_<matrix<T>&>));
+// declare_method(to_json, (virtual_<matrix<T>&>), string);
 //
 // template<typename T>
-// define_method(string, to_json, (dense<T>& m)) {
+// define_method(to_json, (dense<T>& m), string) {
 //     return "json for dense matrix...";
 // }
 // ```
@@ -235,26 +235,26 @@ using namespace yorel::yomm2;
 struct YOMM2_SYMBOL(addition);
 
 using addition = method<
-    YOMM2_SYMBOL(addition),
-    vector(
+    YOMM2_SYMBOL(addition)(
         virtual_<abstract_vector&>,
-        virtual_<abstract_vector&>)>;
+        virtual_<abstract_vector&>),
+    vector>;
 
 struct YOMM2_SYMBOL(subtraction);
 
 using subtraction = method<
-    YOMM2_SYMBOL(subtraction),
-    vector(
+    YOMM2_SYMBOL(subtraction)(
         virtual_<abstract_vector&>,
-        virtual_<abstract_vector&>)>;
+        virtual_<abstract_vector&>),
+    vector>;
 
 struct YOMM2_SYMBOL(comparison);
 
 using comparison = method<
-    YOMM2_SYMBOL(comparison),
-    bool(
+    YOMM2_SYMBOL(comparison)(
         virtual_<abstract_vector&>,
-        virtual_<abstract_vector&>)>;
+        virtual_<abstract_vector&>),
+    bool>;
 // >
 
 // md<
@@ -886,7 +886,7 @@ struct YOMM2_SYMBOL(transpose);
 
 template<typename Matrix>
 using transpose =
-    method<YOMM2_SYMBOL(transpose), handle<Matrix>(virtual_<Matrix&>)>;
+    method<YOMM2_SYMBOL(transpose)(virtual_<Matrix&>), handle<Matrix>>;
 
 template<
     template<typename> typename Matrix, typename T,
@@ -1138,8 +1138,8 @@ struct YOMM2_SYMBOL(add);
 
 template<typename M1, typename M2>
 using add = method<
-    YOMM2_SYMBOL(add),
-    handle<binary_result_type<M1, M2>>(virtual_<M1&>, virtual_<M2&>)>;
+    YOMM2_SYMBOL(add)(virtual_<M1&>, virtual_<M2&>),
+    handle<binary_result_type<M1, M2>>>;
 
 template<
     typename M1, typename M2,

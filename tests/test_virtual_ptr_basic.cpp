@@ -76,7 +76,8 @@ void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
+struct YOMM2_SYMBOL(kick);
+using kick = method<YOMM2_SYMBOL(kick)(virtual_ptr<Animal>, std::ostream&), void>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
@@ -152,7 +153,9 @@ void kick_dog(virtual_shared_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_shared_ptr<Animal>, std::ostream&)>;
+struct YOMM2_SYMBOL(kick);
+using kick =
+    method<YOMM2_SYMBOL(kick)(virtual_shared_ptr<Animal>, std::ostream&), void>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
@@ -173,8 +176,9 @@ void kick_dog(const virtual_shared_ptr<Dog>&, std::ostream& os) {
     os << "bark";
 }
 
+struct YOMM2_SYMBOL(kick);
 using kick =
-    method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)>;
+    method<YOMM2_SYMBOL(kick)(const virtual_shared_ptr<Animal>&, std::ostream&), void>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
@@ -202,7 +206,8 @@ void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
+struct YOMM2_SYMBOL(kick);
+using kick = method<YOMM2_SYMBOL(kick)(virtual_ptr<Animal>, std::ostream&), void>;
 YOMM2_STATIC(kick::override_fn<kick_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {

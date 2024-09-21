@@ -192,7 +192,7 @@ using yomm2::virtual_;
 YOMM2_STATIC(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 
 struct kick_methods;
-using kick = yomm2::method<kick_methods, std::string(virtual_<Animal&>)>;
+using kick = yomm2::method<kick_methods(virtual_<Animal&>), std::string>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
 YOMM2_STATIC(kick::override_fn<kick_cat>);
@@ -206,7 +206,7 @@ struct kick_bulldog : kick::with_next<kick_bulldog> {
 YOMM2_STATIC(kick::override<kick_bulldog>);
 
 struct YOMM2_SYMBOL(pet); // use obfuscated name
-using pet = yomm2::method<YOMM2_SYMBOL(pet), std::string(virtual_<Animal&>)>;
+using pet = yomm2::method<YOMM2_SYMBOL(pet)(virtual_<Animal&>), std::string>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
 YOMM2_STATIC(pet::override_fn<pet_cat>);

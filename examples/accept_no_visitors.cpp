@@ -50,51 +50,51 @@ register_classes(Node, Plus, Times, Integer);
 // -----------------------------------------------------------------------------
 // evaluate
 
-declare_method(int, value, (virtual_<const Node&>));
+declare_method(value, (virtual_<const Node&>), int);
 
-define_method(int, value, (const Plus& expr)) {
+define_method(value, (const Plus& expr), int) {
     return value(*expr.left) + value(*expr.right);
 }
 
-define_method(int, value, (const Times& expr)) {
+define_method(value, (const Times& expr), int) {
     return value(*expr.left) * value(*expr.right);
 }
 
-define_method(int, value, (const Integer& expr)) {
+define_method(value, (const Integer& expr), int) {
     return expr.value;
 }
 
 // -----------------------------------------------------------------------------
 // render as Forth
 
-declare_method(string, as_forth, (virtual_<const Node&>));
+declare_method(as_forth, (virtual_<const Node&>), string);
 
-define_method(string, as_forth, (const Plus& expr)) {
+define_method(as_forth, (const Plus& expr), string) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " +";
 }
 
-define_method(string, as_forth, (const Times& expr)) {
+define_method(as_forth, (const Times& expr), string) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " *";
 }
 
-define_method(string, as_forth, (const Integer& expr)) {
+define_method(as_forth, (const Integer& expr), string) {
     return std::to_string(expr.value);
 }
 
 // -----------------------------------------------------------------------------
 // render as Lisp
 
-declare_method(string, as_lisp, (virtual_<const Node&>));
+declare_method(as_lisp, (virtual_<const Node&>), string);
 
-define_method(string, as_lisp, (const Plus& expr)) {
+define_method(as_lisp, (const Plus& expr), string) {
     return "(plus " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 }
 
-define_method(string, as_lisp, (const Times& expr)) {
+define_method(as_lisp, (const Times& expr), string) {
     return "(times " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 }
 
-define_method(string, as_lisp, (const Integer& expr)) {
+define_method(as_lisp, (const Integer& expr), string) {
     return std::to_string(expr.value);
 }
 

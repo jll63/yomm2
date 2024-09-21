@@ -7,7 +7,8 @@ struct Animal {
     const char* name;
     Animal(const char* name) : name(name) {
     }
-    virtual ~Animal() {}
+    virtual ~Animal() {
+    }
 };
 
 struct Dog : Animal {
@@ -22,13 +23,13 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_ptr;
 
-declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
+declare_method(kick, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(void, kick, (virtual_ptr<Cat> animal, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Cat> animal, std::ostream& os), void) {
     os << animal->name << " hisses.\n";
 }
 
-define_method(void, kick, (virtual_ptr<Dog> animal, std::ostream& os)) {
+define_method(kick, (virtual_ptr<Dog> animal, std::ostream& os), void) {
     os << animal->name << " barks.\n";
 }
 

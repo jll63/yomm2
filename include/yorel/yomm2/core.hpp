@@ -621,7 +621,7 @@ struct method;
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-class method<Name, Return(Parameters...), Options...>
+class method<Name(Parameters...), Return, Options...>
     : public detail::method_info {
     // Aliases used in implementation only. Everything extracted from template
     // arguments is capitalized like the arguments themselves.
@@ -637,8 +637,8 @@ class method<Name, Return(Parameters...), Options...>
     using VirtualParameters =
         typename detail::polymorphic_types<DeclaredParameters>;
     using Signature = Return(Parameters...);
-    using FunctionPointer =
-        Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);
+    using FunctionPointer = auto (*)(
+        detail::remove_virtual<Parameters>...) noexcept(NoExcept) -> Return;
 
     static constexpr auto arity = detail::arity<Parameters...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
@@ -794,27 +794,27 @@ class method<Name, Return(Parameters...), Options...>
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-method<Name, Return(Parameters...), Options...>
-    method<Name, Return(Parameters...), Options...>::fn;
+method<Name(Parameters...), Return, Options...>
+    method<Name(Parameters...), Return, Options...>::fn;
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<class Container>
-typename method<Name, Return(Parameters...), Options...>::next_type
-    method<Name, Return(Parameters...), Options...>::with_next<Container>::next;
+typename method<Name(Parameters...), Return, Options...>::next_type
+    method<Name(Parameters...), Return, Options...>::with_next<Container>::next;
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<auto>
-typename method<Name, Return(Parameters...), Options...>::FunctionPointer
-    method<Name, Return(Parameters...), Options...>::next;
+typename method<Name(Parameters...), Return, Options...>::FunctionPointer
+    method<Name(Parameters...), Return, Options...>::next;
 
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-method<Name, Return(Parameters...), Options...>::method() {
+method<Name(Parameters...), Return, Options...>::method() {
     this->slots_strides_ptr = slots_strides;
 
     using virtual_type_ids = detail::type_id_list<
@@ -833,18 +833,18 @@ method<Name, Return(Parameters...), Options...>::method() {
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 std::size_t method<
-    Name, Return(Parameters...), Options...>::slots_strides[2 * arity - 1];
+    Name(Parameters...), Return, Options...>::slots_strides[2 * arity - 1];
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
-method<Name, Return(Parameters...), Options...>::~method() {
+method<Name(Parameters...), Return, Options...>::~method() {
     Policy::methods.remove(*this);
 }
 
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<class Error>
-auto method<Name, Return(Parameters...), Options...>::check_static_offset(
+auto method<Name(Parameters...), Return, Options...>::check_static_offset(
     std::size_t actual, std::size_t expected) const noexcept(NoExcept) -> void {
     using namespace detail;
 
@@ -867,7 +867,7 @@ auto method<Name, Return(Parameters...), Options...>::check_static_offset(
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 BOOST_FORCEINLINE auto
-method<Name, Return(Parameters...), Options...>::operator()(
+method<Name(Parameters...), Return, Options...>::operator()(
     detail::remove_virtual<Parameters>... args) const noexcept(NoExcept)
     -> Return {
     using namespace detail;
@@ -880,8 +880,8 @@ template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename... ArgType>
 BOOST_FORCEINLINE
-    typename method<Name, Return(Parameters...), Options...>::FunctionPointer
-    method<Name, Return(Parameters...), Options...>::resolve(
+    typename method<Name(Parameters...), Return, Options...>::FunctionPointer
+    method<Name(Parameters...), Return, Options...>::resolve(
         const ArgType&... args) const {
     using namespace detail;
 
@@ -900,7 +900,7 @@ template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename ArgType>
 BOOST_FORCEINLINE auto
-method<Name, Return(Parameters...), Options...>::vptr(const ArgType& arg) const
+method<Name(Parameters...), Return, Options...>::vptr(const ArgType& arg) const
     noexcept(NoExcept) -> const std::uintptr_t* {
     if constexpr (is_virtual_ptr<ArgType>) {
         return arg._vptr();
@@ -915,7 +915,7 @@ template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
 BOOST_FORCEINLINE auto
-method<Name, Return(Parameters...), Options...>::resolve_uni(
+method<Name(Parameters...), Return, Options...>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
 
@@ -952,7 +952,7 @@ template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 BOOST_FORCEINLINE auto
-method<Name, Return(Parameters...), Options...>::resolve_multi_first(
+method<Name(Parameters...), Return, Options...>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const
     noexcept(NoExcept) -> std::uintptr_t {
 
@@ -1000,7 +1000,7 @@ template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 BOOST_FORCEINLINE auto
-method<Name, Return(Parameters...), Options...>::resolve_multi_next(
+method<Name(Parameters...), Return, Options...>::resolve_multi_next(
     const std::uintptr_t* dispatch, const ArgType& arg,
     const MoreArgTypes&... more_args) const noexcept(NoExcept)
     -> std::uintptr_t {
@@ -1052,7 +1052,7 @@ method<Name, Return(Parameters...), Options...>::resolve_multi_next(
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 BOOST_NORETURN auto
-method<Name, Return(Parameters...), Options...>::not_implemented_handler(
+method<Name(Parameters...), Return, Options...>::not_implemented_handler(
     detail::remove_virtual<Parameters>... args) noexcept(NoExcept) -> Return {
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
@@ -1074,7 +1074,7 @@ method<Name, Return(Parameters...), Options...>::not_implemented_handler(
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 BOOST_NORETURN auto
-method<Name, Return(Parameters...), Options...>::ambiguous_handler(
+method<Name(Parameters...), Return, Options...>::ambiguous_handler(
     detail::remove_virtual<Parameters>... args) noexcept(NoExcept) -> Return {
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
@@ -1100,7 +1100,7 @@ template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<
     auto Overrider, typename OverriderReturn, typename... OverriderParameters>
-auto method<Name, Return(Parameters...), Options...>::
+auto method<Name(Parameters...), Return, Options...>::
     thunk<Overrider, OverriderReturn (*)(OverriderParameters...)>::fn(
         detail::remove_virtual<Parameters>... arg) -> Return {
     static_assert(
@@ -1119,7 +1119,7 @@ auto method<Name, Return(Parameters...), Options...>::
 template<
     typename Name, typename Return, typename... Parameters, class... Options>
 template<auto Function>
-method<Name, Return(Parameters...), Options...>::override_fn_impl<
+method<Name(Parameters...), Return, Options...>::override_fn_impl<
     Function>::override_fn_impl(FunctionPointer* p_next) {
     // Work around MSVC bug: using &next<Function> as a default value
     // for 'next' confuses it about Parameters not being expanded.

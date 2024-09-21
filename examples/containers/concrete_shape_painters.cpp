@@ -19,17 +19,18 @@ namespace painter {
 namespace paint2d {
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Square& square)) {
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(
-        painter, square);
+    painters, paintObject,
+    (Painter & painter, const geometries::Square& square), void) {
+    method_definition(
+        painters, paintObject,
+        (Painter&, const geometries::Shape&))(painter, square);
     std::cout << "painting square\n";
 }
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Circle& circle)) {
-    method_definition(painters, void, (Painter&, const geometries::Shape&))(
+    painters, paintObject,
+    (Painter & painter, const geometries::Circle& circle), void) {
+    painters<YOMM2_SYMBOL(paintObject)(Painter&, const geometries::Shape&)>::fn(
         painter, circle);
     std::cout << "painting Circle\n";
 }

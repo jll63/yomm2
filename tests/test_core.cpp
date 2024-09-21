@@ -346,7 +346,7 @@ struct policy : test_policy_<__COUNTER__> {};
 
 register_classes(Animal, Cat, policy);
 
-using name = method<void, const char*(virtual_<Animal&>), noexcept_, policy>;
+using name = method<void(virtual_<Animal&>), noexcept_, const char*, policy>;
 
 static_assert(noexcept(name::fn));
 

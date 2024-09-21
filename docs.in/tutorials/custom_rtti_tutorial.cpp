@@ -258,13 +258,13 @@ templates `use_classes` and `method` accept an addition policy argument.
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -392,13 +392,13 @@ struct custom_policy
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -546,13 +546,13 @@ struct custom_policy
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 

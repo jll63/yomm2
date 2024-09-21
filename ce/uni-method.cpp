@@ -21,13 +21,13 @@ struct Cat : Animal {
 
 register_classes(Animal, Dog, Cat);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void);
 
-define_method(void, kick, (Cat& animal, std::ostream& os)) {
+define_method(kick, (Cat & animal, std::ostream& os), void) {
     os << animal.name << " hisses.\n";
 }
 
-define_method(void, kick, (Dog& animal, std::ostream& os)) {
+define_method(kick, (Dog & animal, std::ostream& os), void) {
     os << animal.name << " barks.\n";
 }
 

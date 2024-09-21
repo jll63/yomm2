@@ -5,7 +5,7 @@ headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp
 hrefs: YOMM2_STATIC_DECLARE
 
 ```c++
-#define declare_static_method(return-type, name, (types)) /*unspecified*/
+#define declare_static_method(name, (types), return-type) /*unspecified*/
 ```
 
 Declare a method as a static member in a `struct` or `class`. Otherwise, the
@@ -34,25 +34,25 @@ struct SeniorEngineer : Engineer {};
 
 register_classes(Engineer, SeniorEngineer);
 
-declare_method(std::string, speak, (virtual_<const Engineer&>));
+declare_method(speak, (virtual_<const Engineer&>), std::string);
 
-define_method(std::string, speak, (const Engineer&)) {
+define_method(speak, (const Engineer&), std::string) {
   return "engineers love ADL";
 }
 
-define_method(std::string, speak, (const SeniorEngineer& engineer)) {
+define_method(speak, (const SeniorEngineer& engineer), std::string) {
   return "senior " + next(engineer);
 }
 
 struct no_adl {
-    declare_static_method(std::string, speak, (virtual_<const Engineer&>));
+    declare_static_method(speak, (virtual_<const Engineer&>), std::string);
 };
 
-define_method(std::string, no_adl::speak, (const Engineer&)) {
+define_method(no_adl::speak, (const Engineer&), std::string) {
   return "engineers hate ADL";
 }
 
-define_method(std::string, no_adl::speak, (const SeniorEngineer& engineer)) {
+define_method(no_adl::speak, (const SeniorEngineer& engineer), std::string) {
   return "senior " + next(engineer);
 }
 

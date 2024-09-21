@@ -161,11 +161,11 @@ struct M;
 
 #define ADD_METHOD(CLASS)                                                      \
     auto& BOOST_PP_CAT(m_, CLASS) =                                            \
-        method<CLASS, void(virtual_<CLASS&>), test_policy>::fn;
+        method<CLASS(virtual_<CLASS&>), void, test_policy>::fn;
 
 #define ADD_METHOD_N(CLASS, N)                                                 \
     auto& BOOST_PP_CAT(BOOST_PP_CAT(m_, CLASS), N) =                           \
-        method<M<N>, void(virtual_<CLASS&>), test_policy>::fn;
+        method<M<N>(virtual_<CLASS&>), void, test_policy>::fn;
 
 BOOST_AUTO_TEST_CASE(test_assign_slots_a_b1_c) {
     using test_policy = test_policy_<__COUNTER__>;

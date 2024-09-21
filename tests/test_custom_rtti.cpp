@@ -66,13 +66,13 @@ struct test_policy : default_policy::rebind<test_policy>::replace<
 
 register_classes(Animal, Dog, Cat, test_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -156,13 +156,13 @@ struct test_policy
 
 register_classes(Animal, Dog, Cat, test_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -202,13 +202,13 @@ namespace using_vptr {
 template<class C>
 using vptr = virtual_ptr<C, test_policy>;
 
-declare_method(void, kick, (vptr<Animal>, std::ostream&), test_policy);
+declare_method(kick, (vptr<Animal>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (vptr<Dog> dog, std::ostream& os)) {
+define_method(kick, (vptr<Dog> dog, std::ostream& os), void) {
     os << dog->name << " barks.";
 }
 
-define_method(void, kick, (vptr<Cat> cat, std::ostream& os)) {
+define_method(kick, (vptr<Cat> cat, std::ostream& os), void) {
     os << cat->name << " hisses.";
 }
 
@@ -309,13 +309,13 @@ struct test_policy
 
 register_classes(Animal, Dog, Cat, test_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -355,13 +355,13 @@ namespace using_vptr {
 template<class C>
 using vptr = virtual_ptr<C, test_policy>;
 
-declare_method(void, kick, (vptr<Animal>, std::ostream&), test_policy);
+declare_method(kick, (vptr<Animal>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (vptr<Dog> dog, std::ostream& os)) {
+define_method(kick, (vptr<Dog> dog, std::ostream& os), void) {
     os << dog->name << " barks.";
 }
 
-define_method(void, kick, (vptr<Cat> cat, std::ostream& os)) {
+define_method(kick, (vptr<Cat> cat, std::ostream& os), void) {
     os << cat->name << " hisses.";
 }
 
@@ -446,13 +446,13 @@ struct test_policy
 
 register_classes(Animal, Dog, Cat, test_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), test_policy);
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void, test_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(kick, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(kick, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 

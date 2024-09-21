@@ -47,13 +47,13 @@ struct Cat : virtual Animal {
 
 YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
 
-YOMM2_DECLARE(string, name, (virtual_<const Animal&>), test_policy);
+YOMM2_DECLARE(name, (virtual_<const Animal&>), string, test_policy);
 
-YOMM2_DEFINE(string, name, (const Dog& dog)) {
+YOMM2_DEFINE(name, (const Dog& dog), string) {
     return "dog " + dog.name;
 }
 
-YOMM2_DEFINE(string, name, (const Cat& cat)) {
+YOMM2_DEFINE(name, (const Cat& cat), string) {
     return "cat " + cat.name;
 }
 
@@ -91,79 +91,79 @@ enum Subtype {
 YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix);
 
 YOMM2_DECLARE(
-    Subtype, times, (virtual_<const matrix&>, virtual_<const matrix&>));
-YOMM2_DECLARE(Subtype, times, (double, virtual_<const matrix&>));
-YOMM2_DECLARE(Subtype, times, (virtual_<const matrix&>, double));
+    times, (virtual_<const matrix&>, virtual_<const matrix&>), Subtype);
+YOMM2_DECLARE(times, (double, virtual_<const matrix&>), Subtype);
+YOMM2_DECLARE(times, (virtual_<const matrix&>, double), Subtype);
 
-YOMM2_DEFINE(Subtype, times, (const matrix&, const matrix&)) {
+YOMM2_DEFINE(times, (const matrix&, const matrix&), Subtype) {
     return MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(Subtype, times, (const diagonal_matrix&, const diagonal_matrix&)) {
+YOMM2_DEFINE(times, (const diagonal_matrix&, const diagonal_matrix&), Subtype) {
     return DIAGONAL_DIAGONAL;
 }
 
-YOMM2_DEFINE(Subtype, times, (double a, const matrix& m)) {
+YOMM2_DEFINE(times, (double a, const matrix& m), Subtype) {
     return SCALAR_MATRIX;
 }
 
-YOMM2_DEFINE(Subtype, times, (double a, const diagonal_matrix& m)) {
+YOMM2_DEFINE(times, (double a, const diagonal_matrix& m), Subtype) {
     return SCALAR_DIAGONAL;
 }
 
-YOMM2_DEFINE(Subtype, times, (const diagonal_matrix& m, double a)) {
+YOMM2_DEFINE(times, (const diagonal_matrix& m, double a), Subtype) {
     return DIAGONAL_SCALAR;
 }
 
-YOMM2_DEFINE(Subtype, times, (const matrix& m, double a)) {
+YOMM2_DEFINE(times, (const matrix& m, double a), Subtype) {
     return MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(int, times, (virtual_<matrix&&>, virtual_<matrix&&>));
-YOMM2_DECLARE(int, times, (double, virtual_<matrix&&>));
-YOMM2_DECLARE(int, times, (virtual_<matrix&&>, double));
+YOMM2_DECLARE(times, (virtual_<matrix&&>, virtual_<matrix&&>), int);
+YOMM2_DECLARE(times, (double, virtual_<matrix&&>), int);
+YOMM2_DECLARE(times, (virtual_<matrix&&>, double), int);
 
-YOMM2_DEFINE(int, times, (matrix&&, matrix&&)) {
+YOMM2_DEFINE(times, (matrix&&, matrix&&), int) {
     return -MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(int, times, (diagonal_matrix&&, diagonal_matrix&&)) {
+YOMM2_DEFINE(times, (diagonal_matrix&&, diagonal_matrix&&), int) {
     return -DIAGONAL_DIAGONAL;
 }
 
-YOMM2_DEFINE(int, times, (double a, matrix&& m)) {
+YOMM2_DEFINE(times, (double a, matrix&& m), int) {
     return -SCALAR_MATRIX;
 }
 
-YOMM2_DEFINE(int, times, (double a, diagonal_matrix&& m)) {
+YOMM2_DEFINE(times, (double a, diagonal_matrix&& m), int) {
     return -SCALAR_DIAGONAL;
 }
 
-YOMM2_DEFINE(int, times, (diagonal_matrix && m, double a)) {
+YOMM2_DEFINE(times, (diagonal_matrix && m, double a), int) {
     return -DIAGONAL_SCALAR;
 }
 
-YOMM2_DEFINE(int, times, (matrix && m, double a)) {
+YOMM2_DEFINE(times, (matrix && m, double a), int) {
     return -MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(Subtype, zero_ref, (virtual_<matrix&>));
+YOMM2_DECLARE(zero_ref, (virtual_<matrix&>), Subtype);
 
-YOMM2_DEFINE(Subtype, zero_ref, (dense_matrix & m)) {
+YOMM2_DEFINE(zero_ref, (dense_matrix & m), Subtype) {
     return MATRIX;
 }
 
-YOMM2_DEFINE(Subtype, zero_ref, (diagonal_matrix & m)) {
+YOMM2_DEFINE(zero_ref, (diagonal_matrix & m), Subtype) {
     return DIAGONAL;
 }
 
-YOMM2_DECLARE(Subtype, zero_ptr, (virtual_<matrix*>));
+YOMM2_DECLARE(zero_ptr, (virtual_<matrix*>), Subtype);
 
-YOMM2_DEFINE(Subtype, zero_ptr, (dense_matrix * m)) {
+YOMM2_DEFINE(zero_ptr, (dense_matrix * m), Subtype) {
     return MATRIX;
 }
 
-YOMM2_DEFINE(Subtype, zero_ptr, (diagonal_matrix * m)) {
+YOMM2_DEFINE(zero_ptr, (diagonal_matrix * m), Subtype) {
     return DIAGONAL;
 }
 
@@ -216,7 +216,7 @@ struct Bulldog : Dog {};
 register_classes(Animal, Dog, Bulldog);
 
 struct YOMM2_SYMBOL(kick);
-using kick = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
+using kick = method<YOMM2_SYMBOL(kick)(virtual_<Animal&>), std::string>;
 
 std::string kick_dog(Dog& dog) {
     return "bark";
@@ -254,12 +254,12 @@ struct diagonal_matrix : matrix {};
 
 YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, matrix);
 
-YOMM2_DECLARE(void, times, (virtual_<const matrix&>, virtual_<const matrix&>));
+YOMM2_DECLARE(times, (virtual_<const matrix&>, virtual_<const matrix&>), void);
 
-YOMM2_DEFINE(void, times, (const diagonal_matrix&, const matrix&)) {
+YOMM2_DEFINE(times, (const diagonal_matrix&, const matrix&), void) {
 }
 
-YOMM2_DEFINE(void, times, (const matrix&, const diagonal_matrix&)) {
+YOMM2_DEFINE(times, (const matrix&, const diagonal_matrix&), void) {
 }
 
 void test_handler(const default_policy::error_variant& error_v) {
@@ -289,7 +289,7 @@ struct base {
     }
 };
 
-YOMM2_DECLARE(void, foo, (virtual_<base&>), test_policy);
+YOMM2_DECLARE(foo, (virtual_<base&>), void, test_policy);
 
 BOOST_AUTO_TEST_CASE(test_initialize_error_handling) {
     auto prev_handler = test_policy::set_error_handler(errors::test_handler);
@@ -318,7 +318,7 @@ class Animal {
     }
 };
 
-YOMM2_DECLARE(std::string, kick, (virtual_<const Animal&>));
+YOMM2_DECLARE(kick, (virtual_<const Animal&>), std::string);
 
 } // namespace animals
 
@@ -328,7 +328,7 @@ class Dog : public animals::Animal {};
 
 YOMM2_CLASSES(Dog, animals::Animal);
 
-YOMM2_DEFINE(std::string, kick, (const Dog& dog)) {
+YOMM2_DEFINE(kick, (const Dog& dog), std::string) {
     return "bark";
 }
 
@@ -370,10 +370,10 @@ void fn(Class&...) {
 YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
 
 BOOST_AUTO_TEST_CASE(update_report) {
-    using kick = method<kick_, void(virtual_<Animal&>), test_policy>;
-    using pet = method<pet_, void(virtual_<Animal&>), test_policy>;
+    using kick = method<kick_(virtual_<Animal&>), void, test_policy>;
+    using pet = method<pet_(virtual_<Animal&>), void, test_policy>;
     using meet =
-        method<meet_, void(virtual_<Animal&>, virtual_<Animal&>), test_policy>;
+        method<meet_(virtual_<Animal&>, virtual_<Animal&>), void, test_policy>;
 
     auto report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 3);
@@ -412,3 +412,29 @@ BOOST_AUTO_TEST_CASE(update_report) {
 }
 
 } // namespace report
+
+namespace test_comma_in_return_type {
+
+using test_policy = test_policy_<__COUNTER__>;
+
+struct Test {
+    virtual ~Test() {};
+};
+
+YOMM2_CLASSES(Test, test_policy);
+
+YOMM2_DECLARE(foo, (virtual_<Test&>), std::pair<int, int>, test_policy);
+
+YOMM2_DEFINE(foo, (Test&), std::pair<int, int>) {
+    return {1, 2};
+}
+
+BOOST_AUTO_TEST_CASE(comma_in_return_type) {
+    initialize<test_policy>();
+
+    Test test;
+
+    BOOST_TEST((foo(test) == std::pair(1, 2)));
+}
+
+} // namespace test_comma_in_return_type

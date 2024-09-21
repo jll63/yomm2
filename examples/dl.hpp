@@ -36,6 +36,6 @@ struct Wolf : Carnivore {};
 register_classes(Wolf, Carnivore);
 
 declare_method(
-    std::string, encounter, (virtual_<const Animal&>, virtual_<const Animal&>));
+    encounter, (virtual_<const Animal&>, virtual_<const Animal&>), std::string);
 
 #endif

@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
 // -----------------------------------------------------------------------------
 
-declare_method(void, move_non_virtual_arg, (virtual_<Base&>, Base&&));
+declare_method(move_non_virtual_arg, (virtual_<Base&>, Base&&), void);
 
-define_method(void, move_non_virtual_arg, (Base & ref_arg, Base&& moving_arg)) {
+define_method(move_non_virtual_arg, (Base & ref_arg, Base&& moving_arg), void) {
     BOOST_TEST(ref_arg.status == ORIGINAL);
     BOOST_TEST(moving_arg.status == ORIGINAL);
     Base moved = std::move(moving_arg);
@@ -63,9 +63,9 @@ BOOST_AUTO_TEST_CASE(test_move_non_virtual_arg) {
 
 // -----------------------------------------------------------------------------
 
-declare_method(void, move_virtual_arg, (Base&, virtual_<Base&&>));
+declare_method(move_virtual_arg, (Base&, virtual_<Base&&>), void);
 
-define_method(void, move_virtual_arg, (Base & ref_arg, Base&& moving_arg)) {
+define_method(move_virtual_arg, (Base & ref_arg, Base&& moving_arg), void) {
     BOOST_TEST(ref_arg.status == ORIGINAL);
     BOOST_TEST(moving_arg.status == ORIGINAL);
     Base moved = std::move(moving_arg);

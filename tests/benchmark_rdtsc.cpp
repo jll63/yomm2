@@ -150,10 +150,10 @@ namespace dyn {
 // -----------------------------------------------------------------------------
 // method, argument passed by reference
 
-declare_method(void, pet_ref, (virtual_<Animal&>));
+declare_method(pet_ref, (virtual_<Animal&>), void);
 
 // Implement 'pet_ref' for Cats.
-define_method(void, pet_ref, (Cat & Cat)) {
+define_method(pet_ref, (Cat & Cat), void) {
     // purr
 }
 
@@ -162,10 +162,10 @@ BENCHMARK(ref, pet_ref(dyn_ref));
 // -----------------------------------------------------------------------------
 // method, argument passed by virtual_ptr
 
-declare_method(void, pet_vp, (virtual_ptr<Animal>));
+declare_method(pet_vp, (virtual_ptr<Animal>), void);
 
 // Implement 'pet_vp' for Cats.
-define_method(void, pet_vp, (virtual_ptr<Cat> cat)) {
+define_method(pet_vp, (virtual_ptr<Cat> cat), void) {
     // purr
 }
 
@@ -177,10 +177,10 @@ YOMM2_STATIC(use_policy<default_policy>);
 // -----------------------------------------------------------------------------
 // intrusive
 
-declare_method(void, pet_iptr, (virtual_<Animal&>), intrusive);
+declare_method(pet_iptr, (virtual_<Animal&>), void, intrusive);
 
 // Implement 'pet_iptr' for Cats.
-define_method(void, pet_iptr, (Cat & Cat)) {
+define_method(pet_iptr, (Cat & Cat), void) {
     // purr
 }
 
@@ -190,10 +190,10 @@ BENCHMARK(iptr, pet_iptr(dyn_ref));
 // -----------------------------------------------------------------------------
 // std_unordered_map
 
-declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
+declare_method(pet_sum, (virtual_<Animal&>), void, std_unordered_map);
 
 // Implement 'pet_sum' for Cats.
-define_method(void, pet_sum, (Cat & Cat)) {
+define_method(pet_sum, (Cat & Cat), void) {
     // purr
 }
 
@@ -205,10 +205,10 @@ BENCHMARK(sum, pet_sum(dyn_ref));
 
 #ifdef FLAT_MAP_AVAILABLE
 
-declare_method(void, pet_fum, (virtual_<Animal&>), flat_std_unordered_map);
+declare_method(pet_fum, (virtual_<Animal&>), void, flat_std_unordered_map);
 
 // Implement 'pet_fum' for Cats.
-define_method(void, pet_fum, (Cat & Cat)) {
+define_method(pet_fum, (Cat & Cat), void) {
     // purr
 }
 
@@ -224,10 +224,10 @@ namespace stat {
 // -----------------------------------------------------------------------------
 // method, argument passed by reference
 
-declare_method(void, pet_ref, (virtual_<Animal&>));
+declare_method(pet_ref, (virtual_<Animal&>), void);
 
 // Implement 'pet_ref' for Cats.
-define_method(void, pet_ref, (Cat & Cat)) {
+define_method(pet_ref, (Cat & Cat), void) {
     // purr
 }
 
@@ -236,10 +236,10 @@ BENCHMARK(stat_ref, pet_ref(stat_ref));
 // -----------------------------------------------------------------------------
 // method, argument passed by virtual_ptr
 
-declare_method(void, pet_vp, (virtual_ptr<Animal>));
+declare_method(pet_vp, (virtual_ptr<Animal>), void);
 
 // Implement 'pet_vp' for Cats.
-define_method(void, pet_vp, (virtual_ptr<Cat> cat)) {
+define_method(pet_vp, (virtual_ptr<Cat> cat), void) {
     // purr
 }
 
@@ -251,10 +251,10 @@ YOMM2_STATIC(use_policy<default_policy>);
 // -----------------------------------------------------------------------------
 // intrusive
 
-declare_method(void, pet_iptr, (virtual_<Animal&>), intrusive);
+declare_method(pet_iptr, (virtual_<Animal&>), void, intrusive);
 
 // Implement 'pet_iptr' for Cats.
-define_method(void, pet_iptr, (Cat & Cat)) {
+define_method(pet_iptr, (Cat & Cat), void) {
     // purr
 }
 
@@ -264,10 +264,10 @@ BENCHMARK(stat_iptr, pet_iptr(stat_ref));
 // -----------------------------------------------------------------------------
 // std_unordered_map
 
-declare_method(void, pet_sum, (virtual_<Animal&>), std_unordered_map);
+declare_method(pet_sum, (virtual_<Animal&>), void, std_unordered_map);
 
 // Implement 'pet_sum' for Cats.
-define_method(void, pet_sum, (Cat & Cat)) {
+define_method(pet_sum, (Cat & Cat), void) {
     // purr
 }
 
@@ -279,10 +279,10 @@ BENCHMARK(stat_sum, pet_sum(stat_ref));
 
 #ifdef FLAT_MAP_AVAILABLE
 
-declare_method(void, pet_fum, (virtual_<Animal&>), flat_std_unordered_map);
+declare_method(pet_fum, (virtual_<Animal&>), void, flat_std_unordered_map);
 
 // Implement 'pet_fum' for Cats.
-define_method(void, pet_fum, (Cat & Cat)) {
+define_method(pet_fum, (Cat & Cat), void) {
     // purr
 }
 

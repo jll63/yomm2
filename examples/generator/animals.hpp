@@ -14,7 +14,8 @@
 // and the application without RTTI. This would require building the 'animals'
 // classes twice, but the debug build could be used for the generation.
 struct animals_policy : yorel::yomm2::policies::basic_policy<
-                            animals_policy, yorel::yomm2::policies::std_rtti> {};
+                            animals_policy, yorel::yomm2::policies::std_rtti> {
+};
 
 #define YOMM2_DEFAULT_POLICY animals_policy
 #endif
@@ -38,8 +39,8 @@ struct Cat : Animal {
     }
 };
 
-declare_method(void, kick, (virtual_ptr<Animal>));
-declare_method(void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>));
+declare_method(kick, (virtual_ptr<Animal>), void);
+declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>), void);
 
 #if __has_include("slots.hpp")
 #include "slots.hpp"

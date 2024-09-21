@@ -100,13 +100,13 @@ struct diagonal_matrix : matrix { /* ... */
 
 register_classes(matrix, dense_matrix, diagonal_matrix);
 
-declare_method(std::string, to_json, (virtual_<const matrix&>));
+declare_method(to_json, (virtual_<const matrix&>), std::string);
 
-define_method(std::string, to_json, (const dense_matrix& m)) {
+define_method(to_json, (const dense_matrix& m), std::string) {
     return "json for dense matrix...";
 }
 
-define_method(std::string, to_json, (const diagonal_matrix& m)) {
+define_method(to_json, (const diagonal_matrix& m), std::string) {
     return "json for diagonal matrix...";
 }
 
@@ -168,19 +168,19 @@ situations, for example to implement binary operations on matrices:
 // matrix * matrix
 
 declare_method(
-    std::shared_ptr<const matrix>, times,
-    (virtual_<const matrix&>, virtual_<const matrix&>));
+    times, (virtual_<const matrix&>, virtual_<const matrix&>),
+    std::shared_ptr<const matrix>);
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
-    std::shared_ptr<const matrix>, times, (const matrix& a, const matrix& b)) {
+    times, (const matrix& a, const matrix& b), std::shared_ptr<const matrix>) {
     return std::make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
-    std::shared_ptr<const matrix>, times,
-    (const diagonal_matrix& a, const diagonal_matrix& b)) {
+    times, (const diagonal_matrix& a, const diagonal_matrix& b),
+    std::shared_ptr<const matrix>) {
     return std::make_shared<diagonal_matrix>();
 }
 //***

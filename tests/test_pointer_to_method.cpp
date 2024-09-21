@@ -23,9 +23,9 @@ class Dog : public Animal {};
 
 register_classes(Animal, Dog, Animal);
 
-declare_method(std::string, kick, (virtual_<Animal&>));
+declare_method(kick, (virtual_<Animal&>), std::string);
 
-define_method(std::string, kick, (Dog & dog)) {
+define_method(kick, (Dog & dog), std::string) {
     return "bark";
 }
 

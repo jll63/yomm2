@@ -13,14 +13,13 @@
 using namespace yorel::yomm2;
 
 static_assert(detail::has_static_offsets<method_class(
-                  void, kick, (virtual_<Animal&>, std::ostream&))>::value);
+                  kick, (virtual_<Animal&>, std::ostream&), void)>::value);
+static_assert(detail::has_static_offsets<method_class(
+                  meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&),
+                  void)>::value);
 static_assert(
     detail::has_static_offsets<method_class(
-        void, meet,
-        (virtual_<Animal&>, virtual_<Animal&>, std::ostream&))>::value);
-static_assert(
-    detail::has_static_offsets<method_class(
-        void, identify, (virtual_<Property&>, std::ostream&))>::value);
+        identify, (virtual_<Property&>, std::ostream&), void)>::value);
 
 #define BOOST_TEST_MODULE test_generator
 #include <boost/test/included/unit_test.hpp>

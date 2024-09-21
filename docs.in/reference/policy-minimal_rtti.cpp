@@ -57,13 +57,13 @@ using vptr = virtual_ptr<Class, final_policy>;
 
 register_classes(Animal, Dog, Cat, final_policy);
 
-declare_method(std::string, kick, (vptr<Animal>), final_policy);
+declare_method(kick, (vptr<Animal>), std::string, final_policy);
 
-define_method(std::string, kick, (vptr<Cat> cat)) {
+define_method(kick, (vptr<Cat> cat), std::string) {
     return "hiss";
 }
 
-define_method(std::string, kick, (vptr<Dog> dog)) {
+define_method(kick, (vptr<Dog> dog), std::string) {
     return "bark";
 }
 

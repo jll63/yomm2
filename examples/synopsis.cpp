@@ -38,39 +38,38 @@ register_classes(Dog, Bulldog);
 
 // Define a uni-method, i.e. a method with a single virtual argument. This is in
 // essence a virtual function implemented as a free function.
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(kick, (virtual_<Animal&>, std::ostream&), void);
 
 // Implement 'kick' for dogs.
-define_method(void, kick, (Dog& dog, std::ostream& os)) {
+define_method(kick, (Dog& dog, std::ostream& os), void) {
     os << "bark";
 }
 
 // Implement 'kick' for bulldogs. They behave like Dogs, but, in addition, they
 // fight back.
-define_method(void, kick, (Bulldog& dog, std::ostream& os)) {
+define_method(kick, (Bulldog& dog, std::ostream& os), void) {
     next(dog, os); // calls "base" method, i.e. definition for Dog
     os << " and bite";
 }
 
 // A multi-method with two virtual arguments...
-declare_method(
-    void, meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&));
+declare_method(meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&), void);
 
 // 'meet' catch-all implementation.
-define_method(void, meet, (Animal&, Animal&, std::ostream& os)) {
+define_method(meet, (Animal&, Animal&, std::ostream& os), void) {
     os << "ignore";
 }
 
 // Add definitions for specific pairs of animals.
-define_method(void, meet, (Dog& dog1, Dog& dog2, std::ostream& os)) {
+define_method(meet, (Dog& dog1, Dog& dog2, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(void, meet, (Dog& dog, Cat& cat, std::ostream& os)) {
+define_method(meet, (Dog& dog, Cat& cat, std::ostream& os), void) {
     os << "chase";
 }
 
-define_method(void, meet, (Cat& cat, Dog& dog, std::ostream& os)) {
+define_method(meet, (Cat& cat, Dog& dog, std::ostream& os), void) {
     os << "run";
 }
 

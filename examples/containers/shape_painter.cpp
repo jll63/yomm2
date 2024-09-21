@@ -16,8 +16,8 @@ namespace painter {
 namespace paint2d {
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Shape& shape)) {
+    painters, paintObject, (Painter & painter, const geometries::Shape& shape),
+    void) {
     ++painter.counter;
     static int counter;
     ++counter;
