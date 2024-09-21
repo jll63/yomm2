@@ -197,8 +197,8 @@ struct binary_value {
   }
 };
 
-YOMM2_STATIC(value::override<binary_value<Plus, std::plus<int>>>);
-YOMM2_STATIC(value::override<binary_value<Times, std::multiplies<int>>>);
+YOMM2_REGISTER(value::override<binary_value<Plus, std::plus<int>>>);
+YOMM2_REGISTER(value::override<binary_value<Times, std::multiplies<int>>>);
 
 }
 

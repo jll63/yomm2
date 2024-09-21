@@ -19,15 +19,12 @@ register_classes(geometries::Arc, geometries::Line);
 namespace painter {
 namespace paint1d {
 
-define_method(
+define_method_in(
     painters, paintObject, (Painter & painter, const geometries::Arc& arc),
     void) {
     ++painter.counter;
-    method_definition(
-        painters, paintObject,
-        (Painter&, const geometries::Line&))(painter, arc);
-    std::cout << " "
-              << "painting arc\n";
+    next(painter, arc);
+    std::cout << " " << "painting arc\n";
 }
 
 } // namespace paint1d

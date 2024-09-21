@@ -19,14 +19,13 @@ register_classes(geometries::Segment, geometries::Line);
 namespace painter {
 namespace paint1d {
 
-define_method(
+define_method_in(
     painters, paintObject,
     (Painter & painter, const geometries::Segment& segment), void) {
     ++painter.counter;
-    method_definition(painters, paintObject, (Painter&, const geometries::Line&))(
+    painters<YOMM2_METHOD_NAME(paintObject)(Painter&, const geometries::Line&)>::fn(
         painter, segment);
-    std::cout << " "
-              << "painting segment\n";
+    std::cout << " " << "painting segment\n";
 }
 
 } // namespace paint1d

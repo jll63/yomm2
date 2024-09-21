@@ -59,8 +59,8 @@ struct indirect_test_policy : test_policy_<Name> {
 template<int Name>
 using policy_types = types<test_policy_<Name>, indirect_test_policy<Name>>;
 
-struct YOMM2_SYMBOL(kick);
-struct YOMM2_SYMBOL(fight);
+struct YOMM2_METHOD_NAME(kick);
+struct YOMM2_METHOD_NAME(fight);
 
 namespace YOMM2_GENSYM {
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
     using kick = method<
-        YOMM2_SYMBOL(kick)(virtual_ptr<Player, Policy>), std::string, Policy>;
+        YOMM2_METHOD_NAME(kick)(virtual_ptr<Player, Policy>), std::string, Policy>;
     static typename kick::template override_fn<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
@@ -127,13 +127,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
     using kick = method<
-        YOMM2_SYMBOL(kick)(virtual_ptr<Player, Policy>), std::string, Policy>;
+        YOMM2_METHOD_NAME(kick)(virtual_ptr<Player, Policy>), std::string, Policy>;
     static typename kick::template override_fn<
         kick_bear<virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        YOMM2_SYMBOL(fight)(
+        YOMM2_METHOD_NAME(fight)(
             virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
             virtual_ptr<Player, Policy>),
         std::string, Policy>;
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
     using kick = method<
-        YOMM2_SYMBOL(kick)(virtual_shared_ptr<Player, Policy>), std::string,
+        YOMM2_METHOD_NAME(kick)(virtual_shared_ptr<Player, Policy>), std::string,
         Policy>;
 
     static typename kick::template override_fn<
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
         YOMM2_GENSYM;
 
     using fight = method<
-        YOMM2_SYMBOL(fight)(
+        YOMM2_METHOD_NAME(fight)(
             virtual_shared_ptr<Player, Policy>,
             virtual_shared_ptr<Object, Policy>,
             virtual_shared_ptr<Player, Policy>),

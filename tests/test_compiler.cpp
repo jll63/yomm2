@@ -90,7 +90,7 @@ struct F : C, E {};
 
 BOOST_AUTO_TEST_CASE(test_use_classes) {
     using test_policy = test_policy_<__COUNTER__>;
-    YOMM2_STATIC(use_classes<A, B, AB, C, D, E, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, AB, C, D, E, test_policy>);
 
     std::vector<class_*> actual, expected;
 
@@ -178,9 +178,9 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a_b1_c) {
     struct B : A {};
     struct C : A {};
 
-    YOMM2_STATIC(use_classes<A, test_policy>);
-    YOMM2_STATIC(use_classes<A, B, test_policy>);
-    YOMM2_STATIC(use_classes<A, C, test_policy>);
+    YOMM2_REGISTER(use_classes<A, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, test_policy>);
+    YOMM2_REGISTER(use_classes<A, C, test_policy>);
     ADD_METHOD(B);
     auto comp = initialize<test_policy>();
 
@@ -202,9 +202,9 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_c1) {
     struct B : A {};
     struct C : A {};
 
-    YOMM2_STATIC(use_classes<A, test_policy>);
-    YOMM2_STATIC(use_classes<A, B, test_policy>);
-    YOMM2_STATIC(use_classes<A, C, test_policy>);
+    YOMM2_REGISTER(use_classes<A, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, test_policy>);
+    YOMM2_REGISTER(use_classes<A, C, test_policy>);
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);
@@ -237,10 +237,10 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_d1_c1_d1) {
     struct C : virtual A {};
     struct D : B, C {};
 
-    YOMM2_STATIC(use_classes<A, test_policy>);
-    YOMM2_STATIC(use_classes<A, B, test_policy>);
-    YOMM2_STATIC(use_classes<A, C, test_policy>);
-    YOMM2_STATIC(use_classes<D, B, C, test_policy>);
+    YOMM2_REGISTER(use_classes<A, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, test_policy>);
+    YOMM2_REGISTER(use_classes<A, C, test_policy>);
+    YOMM2_REGISTER(use_classes<D, B, C, test_policy>);
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);
@@ -280,11 +280,11 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_b1_d1_c1_d1_e2) {
     struct E : C {};
     struct D : B, C {};
 
-    YOMM2_STATIC(use_classes<A, test_policy>);
-    YOMM2_STATIC(use_classes<A, B, test_policy>);
-    YOMM2_STATIC(use_classes<A, C, test_policy>);
-    YOMM2_STATIC(use_classes<C, E, test_policy>);
-    YOMM2_STATIC(use_classes<D, B, C, test_policy>);
+    YOMM2_REGISTER(use_classes<A, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, test_policy>);
+    YOMM2_REGISTER(use_classes<A, C, test_policy>);
+    YOMM2_REGISTER(use_classes<C, E, test_policy>);
+    YOMM2_REGISTER(use_classes<D, B, C, test_policy>);
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);
@@ -334,9 +334,9 @@ BOOST_AUTO_TEST_CASE(test_assign_slots_a1_c1_b1) {
     struct B {};
     struct C : A, B {};
 
-    YOMM2_STATIC(use_classes<A, test_policy>);
-    YOMM2_STATIC(use_classes<B, test_policy>);
-    YOMM2_STATIC(use_classes<A, B, C, test_policy>);
+    YOMM2_REGISTER(use_classes<A, test_policy>);
+    YOMM2_REGISTER(use_classes<B, test_policy>);
+    YOMM2_REGISTER(use_classes<A, B, C, test_policy>);
     ADD_METHOD(A);
     ADD_METHOD(B);
     ADD_METHOD(C);

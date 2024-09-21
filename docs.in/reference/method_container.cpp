@@ -42,7 +42,7 @@ the same namespace as the container itself.
 #include <yorel/yomm2.hpp>
 #include <yorel/yomm2/compiler.hpp>
 
-method_container(kicks);
+template<typename...> struct kicks;
 
 class Animal {
     std::string name;
@@ -53,7 +53,7 @@ class Animal {
     virtual ~Animal() {
     }
 
-    friend_method(kicks);
+    template<typename...> friend struct kicks;
 };
 
 class Dog : public Animal {
@@ -72,8 +72,8 @@ define_method_inline(kicks, kick, (Dog * dog), std::string) {
     return dog->name + " barks";
 }
 
-define_method(kicks, kick, (Bulldog * dog), std::string) {
-    return method_definition(kicks, kick, (Dog*))(dog) + " and bites";
+define_method_in(kicks, kick, (Bulldog * dog), std::string) {
+    return kicks<YOMM2_METHOD_NAME(kick)(Dog*)>::fn(dog) + " and bites";
 }
 
 BOOST_AUTO_TEST_CASE(ref_example) {

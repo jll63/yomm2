@@ -32,9 +32,9 @@ struct Payroll {
     }
 
   private:
-    struct YOMM2_SYMBOL(pay);
+    struct YOMM2_METHOD_NAME(pay);
     using pay_method =
-        method<YOMM2_SYMBOL(pay)(Payroll*, virtual_<const Role&>), void>;
+        method<YOMM2_METHOD_NAME(pay)(Payroll*, virtual_<const Role&>), void>;
 
     void pay_employee(const Employee&) {
         balance -= 2000;
@@ -49,7 +49,7 @@ struct Payroll {
         &Payroll::pay_employee, &Payroll::pay_manager>;
 };
 
-YOMM2_STATIC(Payroll::pay_functions);
+YOMM2_REGISTER(Payroll::pay_functions);
 
 #define BOOST_TEST_MODULE yomm2
 #include <boost/test/included/unit_test.hpp>

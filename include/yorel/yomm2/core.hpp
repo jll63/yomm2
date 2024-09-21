@@ -696,6 +696,7 @@ class method<Name(Parameters...), Return, Options...>
 
   public:
     // Public aliases.
+    using name_type = Name;
     using return_type = Return;
     using next_type =
         Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);

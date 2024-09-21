@@ -16,10 +16,10 @@
 namespace painter {
 
 namespace paint1d {
-method_container(painters);
+template<typename...> struct painters;
 }
 namespace paint2d {
-method_container(painters);
+template<typename...> struct painters;
 }
 
 class Painter;
@@ -36,9 +36,8 @@ class Painter {
 
   private:
     int counter = 0;
-    friend_method(paint1d::painters);
-    friend_method(
-        paint2d::painters, paintObject, (Painter&, const geometries::Shape&));
+    template<typename...> friend struct paint1d::painters;
+    friend paint2d::painters<YOMM2_METHOD_NAME(paintObject)(Painter&, const geometries::Shape&)>;
 };
 
 inline void Painter::paint(const geometries::Geometry& geometry) {

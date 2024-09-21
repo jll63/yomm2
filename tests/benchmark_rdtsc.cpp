@@ -62,9 +62,9 @@ struct Cat : Animal {
     void pet_vf() override { /*purr*/ };
 };
 
-struct YOMM2_SYMBOL(pet_ref);
-struct YOMM2_SYMBOL(pet_vp);
-struct YOMM2_SYMBOL(pet_iptr);
+struct YOMM2_METHOD_NAME(pet_ref);
+struct YOMM2_METHOD_NAME(pet_vp);
+struct YOMM2_METHOD_NAME(pet_iptr);
 
 } // namespace stat
 
@@ -92,7 +92,7 @@ struct Cat : Animal {
 template<class Policy>
 struct use_policy {
     use_policy() {
-        YOMM2_STATIC(
+        YOMM2_REGISTER(
             use_classes<
                 dyn::Animal, dyn::Cat, stat::Animal, stat::Cat, Policy>);
         initialize<Policy>();
@@ -172,7 +172,7 @@ define_method(pet_vp, (virtual_ptr<Cat> cat), void) {
 BENCHMARK(vp, pet_vp(dyn_vp));
 
 // ref and vp
-YOMM2_STATIC(use_policy<default_policy>);
+YOMM2_REGISTER(use_policy<default_policy>);
 
 // -----------------------------------------------------------------------------
 // intrusive
@@ -184,7 +184,7 @@ define_method(pet_iptr, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<intrusive>);
+YOMM2_REGISTER(use_policy<intrusive>);
 BENCHMARK(iptr, pet_iptr(dyn_ref));
 
 // -----------------------------------------------------------------------------
@@ -197,7 +197,7 @@ define_method(pet_sum, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<std_unordered_map>);
+YOMM2_REGISTER(use_policy<std_unordered_map>);
 BENCHMARK(sum, pet_sum(dyn_ref));
 
 // -----------------------------------------------------------------------------
@@ -212,7 +212,7 @@ define_method(pet_fum, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<flat_std_unordered_map>);
+YOMM2_REGISTER(use_policy<flat_std_unordered_map>);
 BENCHMARK(fum, pet_fum(dyn_ref));
 
 #endif
@@ -246,7 +246,7 @@ define_method(pet_vp, (virtual_ptr<Cat> cat), void) {
 BENCHMARK(stat_vp, pet_vp(stat_vp));
 
 // ref and vp
-YOMM2_STATIC(use_policy<default_policy>);
+YOMM2_REGISTER(use_policy<default_policy>);
 
 // -----------------------------------------------------------------------------
 // intrusive
@@ -258,7 +258,7 @@ define_method(pet_iptr, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<intrusive>);
+YOMM2_REGISTER(use_policy<intrusive>);
 BENCHMARK(stat_iptr, pet_iptr(stat_ref));
 
 // -----------------------------------------------------------------------------
@@ -271,7 +271,7 @@ define_method(pet_sum, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<std_unordered_map>);
+YOMM2_REGISTER(use_policy<std_unordered_map>);
 BENCHMARK(stat_sum, pet_sum(stat_ref));
 
 // -----------------------------------------------------------------------------
@@ -286,7 +286,7 @@ define_method(pet_fum, (Cat & Cat), void) {
     // purr
 }
 
-YOMM2_STATIC(use_policy<flat_std_unordered_map>);
+YOMM2_REGISTER(use_policy<flat_std_unordered_map>);
 BENCHMARK(stat_fum, pet_fum(stat_ref));
 
 #endif

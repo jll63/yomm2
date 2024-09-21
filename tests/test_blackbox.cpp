@@ -47,13 +47,13 @@ struct Cat : virtual Animal {
 
 YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
 
-YOMM2_DECLARE(name, (virtual_<const Animal&>), string, test_policy);
+YOMM2_METHOD(name, (virtual_<const Animal&>), string, test_policy);
 
-YOMM2_DEFINE(name, (const Dog& dog), string) {
+YOMM2_OVERRIDE(name, (const Dog& dog), string) {
     return "dog " + dog.name;
 }
 
-YOMM2_DEFINE(name, (const Cat& cat), string) {
+YOMM2_OVERRIDE(name, (const Cat& cat), string) {
     return "cat " + cat.name;
 }
 
@@ -90,80 +90,80 @@ enum Subtype {
 
 YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix);
 
-YOMM2_DECLARE(
+YOMM2_METHOD(
     times, (virtual_<const matrix&>, virtual_<const matrix&>), Subtype);
-YOMM2_DECLARE(times, (double, virtual_<const matrix&>), Subtype);
-YOMM2_DECLARE(times, (virtual_<const matrix&>, double), Subtype);
+YOMM2_METHOD(times, (double, virtual_<const matrix&>), Subtype);
+YOMM2_METHOD(times, (virtual_<const matrix&>, double), Subtype);
 
-YOMM2_DEFINE(times, (const matrix&, const matrix&), Subtype) {
+YOMM2_OVERRIDE(times, (const matrix&, const matrix&), Subtype) {
     return MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(times, (const diagonal_matrix&, const diagonal_matrix&), Subtype) {
+YOMM2_OVERRIDE(times, (const diagonal_matrix&, const diagonal_matrix&), Subtype) {
     return DIAGONAL_DIAGONAL;
 }
 
-YOMM2_DEFINE(times, (double a, const matrix& m), Subtype) {
+YOMM2_OVERRIDE(times, (double a, const matrix& m), Subtype) {
     return SCALAR_MATRIX;
 }
 
-YOMM2_DEFINE(times, (double a, const diagonal_matrix& m), Subtype) {
+YOMM2_OVERRIDE(times, (double a, const diagonal_matrix& m), Subtype) {
     return SCALAR_DIAGONAL;
 }
 
-YOMM2_DEFINE(times, (const diagonal_matrix& m, double a), Subtype) {
+YOMM2_OVERRIDE(times, (const diagonal_matrix& m, double a), Subtype) {
     return DIAGONAL_SCALAR;
 }
 
-YOMM2_DEFINE(times, (const matrix& m, double a), Subtype) {
+YOMM2_OVERRIDE(times, (const matrix& m, double a), Subtype) {
     return MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(times, (virtual_<matrix&&>, virtual_<matrix&&>), int);
-YOMM2_DECLARE(times, (double, virtual_<matrix&&>), int);
-YOMM2_DECLARE(times, (virtual_<matrix&&>, double), int);
+YOMM2_METHOD(times, (virtual_<matrix&&>, virtual_<matrix&&>), int);
+YOMM2_METHOD(times, (double, virtual_<matrix&&>), int);
+YOMM2_METHOD(times, (virtual_<matrix&&>, double), int);
 
-YOMM2_DEFINE(times, (matrix&&, matrix&&), int) {
+YOMM2_OVERRIDE(times, (matrix&&, matrix&&), int) {
     return -MATRIX_MATRIX;
 }
 
-YOMM2_DEFINE(times, (diagonal_matrix&&, diagonal_matrix&&), int) {
+YOMM2_OVERRIDE(times, (diagonal_matrix&&, diagonal_matrix&&), int) {
     return -DIAGONAL_DIAGONAL;
 }
 
-YOMM2_DEFINE(times, (double a, matrix&& m), int) {
+YOMM2_OVERRIDE(times, (double a, matrix&& m), int) {
     return -SCALAR_MATRIX;
 }
 
-YOMM2_DEFINE(times, (double a, diagonal_matrix&& m), int) {
+YOMM2_OVERRIDE(times, (double a, diagonal_matrix&& m), int) {
     return -SCALAR_DIAGONAL;
 }
 
-YOMM2_DEFINE(times, (diagonal_matrix && m, double a), int) {
+YOMM2_OVERRIDE(times, (diagonal_matrix && m, double a), int) {
     return -DIAGONAL_SCALAR;
 }
 
-YOMM2_DEFINE(times, (matrix && m, double a), int) {
+YOMM2_OVERRIDE(times, (matrix && m, double a), int) {
     return -MATRIX_SCALAR;
 }
 
-YOMM2_DECLARE(zero_ref, (virtual_<matrix&>), Subtype);
+YOMM2_METHOD(zero_ref, (virtual_<matrix&>), Subtype);
 
-YOMM2_DEFINE(zero_ref, (dense_matrix & m), Subtype) {
+YOMM2_OVERRIDE(zero_ref, (dense_matrix & m), Subtype) {
     return MATRIX;
 }
 
-YOMM2_DEFINE(zero_ref, (diagonal_matrix & m), Subtype) {
+YOMM2_OVERRIDE(zero_ref, (diagonal_matrix & m), Subtype) {
     return DIAGONAL;
 }
 
-YOMM2_DECLARE(zero_ptr, (virtual_<matrix*>), Subtype);
+YOMM2_METHOD(zero_ptr, (virtual_<matrix*>), Subtype);
 
-YOMM2_DEFINE(zero_ptr, (dense_matrix * m), Subtype) {
+YOMM2_OVERRIDE(zero_ptr, (dense_matrix * m), Subtype) {
     return MATRIX;
 }
 
-YOMM2_DEFINE(zero_ptr, (diagonal_matrix * m), Subtype) {
+YOMM2_OVERRIDE(zero_ptr, (diagonal_matrix * m), Subtype) {
     return DIAGONAL;
 }
 
@@ -215,20 +215,20 @@ struct Bulldog : Dog {};
 
 register_classes(Animal, Dog, Bulldog);
 
-struct YOMM2_SYMBOL(kick);
-using kick = method<YOMM2_SYMBOL(kick)(virtual_<Animal&>), std::string>;
+struct YOMM2_METHOD_NAME(kick);
+using kick = method<YOMM2_METHOD_NAME(kick)(virtual_<Animal&>), std::string>;
 
 std::string kick_dog(Dog& dog) {
     return "bark";
 }
 
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+YOMM2_REGISTER(kick::override_fn<kick_dog>);
 
 std::string kick_bulldog(Bulldog& dog) {
     return kick::next<kick_bulldog>(dog) + " and bite back";
 }
 
-YOMM2_STATIC(kick::override_fn<kick_bulldog>);
+YOMM2_REGISTER(kick::override_fn<kick_bulldog>);
 
 BOOST_AUTO_TEST_CASE(test_next_fn) {
     initialize();
@@ -254,12 +254,12 @@ struct diagonal_matrix : matrix {};
 
 YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, matrix);
 
-YOMM2_DECLARE(times, (virtual_<const matrix&>, virtual_<const matrix&>), void);
+YOMM2_METHOD(times, (virtual_<const matrix&>, virtual_<const matrix&>), void);
 
-YOMM2_DEFINE(times, (const diagonal_matrix&, const matrix&), void) {
+YOMM2_OVERRIDE(times, (const diagonal_matrix&, const matrix&), void) {
 }
 
-YOMM2_DEFINE(times, (const matrix&, const diagonal_matrix&), void) {
+YOMM2_OVERRIDE(times, (const matrix&, const diagonal_matrix&), void) {
 }
 
 void test_handler(const default_policy::error_variant& error_v) {
@@ -289,7 +289,7 @@ struct base {
     }
 };
 
-YOMM2_DECLARE(foo, (virtual_<base&>), void, test_policy);
+YOMM2_METHOD(foo, (virtual_<base&>), void, test_policy);
 
 BOOST_AUTO_TEST_CASE(test_initialize_error_handling) {
     auto prev_handler = test_policy::set_error_handler(errors::test_handler);
@@ -318,7 +318,7 @@ class Animal {
     }
 };
 
-YOMM2_DECLARE(kick, (virtual_<const Animal&>), std::string);
+YOMM2_METHOD(kick, (virtual_<const Animal&>), std::string);
 
 } // namespace animals
 
@@ -328,7 +328,7 @@ class Dog : public animals::Animal {};
 
 YOMM2_CLASSES(Dog, animals::Animal);
 
-YOMM2_DEFINE(kick, (const Dog& dog), std::string) {
+YOMM2_OVERRIDE(animals::kick, (const Dog& dog), std::string) {
     return "bark";
 }
 
@@ -381,31 +381,31 @@ BOOST_AUTO_TEST_CASE(update_report) {
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
-    YOMM2_STATIC(kick::override_fn<fn<Animal>>);
+    YOMM2_REGISTER(kick::override_fn<fn<Animal>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
-    YOMM2_STATIC(pet::override_fn<fn<Cat>>);
-    YOMM2_STATIC(pet::override_fn<fn<Dog>>);
+    YOMM2_REGISTER(pet::override_fn<fn<Cat>>);
+    YOMM2_REGISTER(pet::override_fn<fn<Dog>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     // create ambiguity
-    YOMM2_STATIC(meet::override_fn<fn<Animal, Cat>>);
-    YOMM2_STATIC(meet::override_fn<fn<Dog, Animal>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Animal, Cat>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Dog, Animal>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 4);
     BOOST_TEST(report.ambiguous == 1);
 
-    YOMM2_STATIC(meet::override_fn<fn<Cat, Cat>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Cat, Cat>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 6);
     BOOST_TEST(report.ambiguous == 1);
 
     // shadow ambiguity
-    YOMM2_STATIC(meet::override_fn<fn<Dog, Dog>>);
-    YOMM2_STATIC(meet::override_fn<fn<Dog, Cat>>);
-    YOMM2_STATIC(meet::override_fn<fn<Cat, Dog>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Dog, Dog>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Dog, Cat>>);
+    YOMM2_REGISTER(meet::override_fn<fn<Cat, Dog>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 9);
     BOOST_TEST(report.ambiguous == 0);
@@ -423,9 +423,9 @@ struct Test {
 
 YOMM2_CLASSES(Test, test_policy);
 
-YOMM2_DECLARE(foo, (virtual_<Test&>), std::pair<int, int>, test_policy);
+YOMM2_METHOD(foo, (virtual_<Test&>), std::pair<int, int>, test_policy);
 
-YOMM2_DEFINE(foo, (Test&), std::pair<int, int>) {
+YOMM2_OVERRIDE(foo, (Test&), std::pair<int, int>) {
     return {1, 2};
 }
 

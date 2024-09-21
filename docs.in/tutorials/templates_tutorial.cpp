@@ -21,7 +21,7 @@ std::ostream &operator<<(std::ostream &os, const std::type_info &ti) {
 
 #include <yorel/yomm2/compiler.hpp>
 #include <yorel/yomm2/core.hpp>
-#include <yorel/yomm2/symbols.hpp>
+#include <yorel/yomm2/macros/register.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2;
@@ -232,26 +232,26 @@ vector reals(new concrete_vector<double>{4., 5., 6.});
 
 using namespace yorel::yomm2;
 
-struct YOMM2_SYMBOL(addition);
+struct addition_;
 
 using addition = method<
-    YOMM2_SYMBOL(addition)(
+    addition_(
         virtual_<abstract_vector&>,
         virtual_<abstract_vector&>),
     vector>;
 
-struct YOMM2_SYMBOL(subtraction);
+struct subtraction_;
 
 using subtraction = method<
-    YOMM2_SYMBOL(subtraction)(
+    subtraction_(
         virtual_<abstract_vector&>,
         virtual_<abstract_vector&>),
     vector>;
 
-struct YOMM2_SYMBOL(comparison);
+struct comparision_;
 
 using comparison = method<
-    YOMM2_SYMBOL(comparison)(
+    comparision_(
         virtual_<abstract_vector&>,
         virtual_<abstract_vector&>),
     bool>;
@@ -447,18 +447,18 @@ static_assert(
 
 // code<
 
-use_classes<
+YOMM2_REGISTER(use_classes<
     abstract_vector, concrete_vector<int>, concrete_vector<double>
-> YOMM2_GENSYM;
+>);
 
-use_definitions<
+YOMM2_REGISTER(use_definitions<
     definition,
     product<
         types<addition, subtraction, comparison>,
         types<int, double>,
         types<int, double>
     >
-> YOMM2_GENSYM;
+>);
 
 // >
 
@@ -882,11 +882,10 @@ BOOST_AUTO_TEST_CASE(test_static_operations) {
 
 // code<
 
-struct YOMM2_SYMBOL(transpose);
+struct transpose_;
 
 template<typename Matrix>
-using transpose =
-    method<YOMM2_SYMBOL(transpose)(virtual_<Matrix&>), handle<Matrix>>;
+using transpose = method<transpose_(virtual_<Matrix&>), handle<Matrix>>;
 
 template<
     template<typename> typename Matrix, typename T,
@@ -1026,12 +1025,11 @@ using matrix_templates = boost::mp11::mp_append<
 // >
 
 // code<
-use_definitions<
+YOMM2_REGISTER(use_definitions<
     unary_definition,
     product<
         templates<transpose>, abstract_matrix_templates,
-        concrete_matrix_templates, types<double, int>>>
-    YOMM2_GENSYM;
+        concrete_matrix_templates, types<double, int>>>);
 // >
 
 // md<
@@ -1050,7 +1048,8 @@ use_definitions<
 // >
 
 // code<
-YOMM2_STATIC(use_classes<apply_product<matrix_templates, types<double, int>>>);
+YOMM2_REGISTER(
+    use_classes<apply_product<matrix_templates, types<double, int>>>);
 // >
 
 #endif
@@ -1134,12 +1133,11 @@ static_assert(
 
 // code<
 
-struct YOMM2_SYMBOL(add);
+struct add_;
 
 template<typename M1, typename M2>
 using add = method<
-    YOMM2_SYMBOL(add)(virtual_<M1&>, virtual_<M2&>),
-    handle<binary_result_type<M1, M2>>>;
+    add_(virtual_<M1&>, virtual_<M2&>), handle<binary_result_type<M1, M2>>>;
 
 template<
     typename M1, typename M2,
@@ -1281,13 +1279,12 @@ static_assert(
 
 // code<
 
-use_definitions<
+YOMM2_REGISTER(use_definitions<
     binary_definition,
     product<
         templates<add>, abstract_matrix_templates, concrete_matrix_templates,
         types<double, int>, abstract_matrix_templates,
-        concrete_matrix_templates, types<double, int>>>
-    YOMM2_GENSYM;
+        concrete_matrix_templates, types<double, int>>>);
 // >
 
 // code<
@@ -1450,7 +1447,7 @@ struct use_polymorphic_matrices<>
     : use_polymorphic_matrices<ordinary, square, symmetric> {};
 // >
 
-YOMM2_STATIC(use_polymorphic_matrices<>::of<int, double>);
+YOMM2_REGISTER(use_polymorphic_matrices<>::of<int, double>);
 
 #endif
 

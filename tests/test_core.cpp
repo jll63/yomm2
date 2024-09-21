@@ -356,6 +356,6 @@ const char* name_cat(Cat&) {
 }
 
 // should not compile:
-// YOMM2_STATIC(name::override_fn<name_cat>);
+// YOMM2_REGISTER(name::override_fn<name_cat>);
 
 }

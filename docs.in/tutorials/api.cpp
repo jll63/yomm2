@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // ## A peek inside the two main YOMM2 macros
 
 // The code in the example above is essentially what
-// `YOMM2_DECLARE`/`declare_method` and `YOMM2_DEFINE`/`define_method` generate.
+// `YOMM2_METHOD`/`declare_method` and `YOMM2_OVERRIDE`/`define_method` generate.
 
 // In addition, `declare_method` generates an ordinary inline function that
 // forwards to the `fn` object nested inside the method. Importantly, ordinary
@@ -187,10 +187,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // - `YOMM2_GENSYM` expands to a new symbol each time it is called. It is used
 //   for the static "registrar" objects.
 
-// - `YOMM2_STATIC(...)` expands to `static __VA_ARGS__ YOMM2_GENSYM`, i.e. it
+// - `YOMM2_REGISTER(...)` expands to `static __VA_ARGS__ YOMM2_GENSYM`, i.e. it
 //   creates a static object of the type specified as macro parameters.
 
-// - `YOMM2_SYMBOL(name)` expands to an obfuscated version of `name`. It is used
+// - `YOMM2_METHOD_NAME(name)` expands to an obfuscated version of `name`. It is used
 //   for the method key and the guide function.
 
 // In addition, the header provides
@@ -235,15 +235,15 @@ class Bulldog : public Dog {};
 // code<
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/symbols.hpp>
+#include <yorel/yomm2/macros/register.hpp>
 
 using namespace yorel::yomm2;
 
-YOMM2_STATIC(use_classes<Animal, Dog, Bulldog>);
+YOMM2_REGISTER(use_classes<Animal, Dog, Bulldog>);
 
-struct YOMM2_SYMBOL(kick);
+struct kick_;
 
-using kick = method<YOMM2_SYMBOL(kick)(virtual_<Animal&>), std::string>;
+using kick = method<kick_(virtual_<Animal&>), std::string>;
 
 // >
 
@@ -266,7 +266,7 @@ struct kick_dog {
     }
 };
 
-YOMM2_STATIC(kick::override<kick_dog>);
+YOMM2_REGISTER(kick::override<kick_dog>);
 // >
 
 // md<
@@ -287,7 +287,7 @@ struct kick_bulldog : kick::with_next<kick_bulldog> {
     }
 };
 
-YOMM2_STATIC(kick::override<kick_bulldog>);
+YOMM2_REGISTER(kick::override<kick_bulldog>);
 // >
 
 // md<

@@ -23,7 +23,7 @@ and [`method::override`](#override) class templates.
 
 * **Name**: a type that differentiates methods with the same signature. It is
 recommended to declare a class (there is no need to define it) for each method
-name in the same namespace. ->YOMM2_SYMBOL can be used for that effect.
+name in the same namespace. ->YOMM2_METHOD_NAME can be used for that effect.
 
 * **ReturnType**: the type of the value returned by the function, or void. May
   not be `auto`.
@@ -176,7 +176,7 @@ make sense, see the example below.
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
+#include <yorel/yomm2/macros.hpp>
 
 #include <memory>
 #include <string>
@@ -189,30 +189,30 @@ struct Bulldog : Dog {};
 namespace yomm2 = yorel::yomm2; // for brevity
 using yomm2::virtual_;
 
-YOMM2_STATIC(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
+YOMM2_REGISTER(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 
 struct kick_methods;
 using kick = yomm2::method<kick_methods(virtual_<Animal&>), std::string>;
 
 std::string kick_cat(Cat& dog) { return "hiss"; }
-YOMM2_STATIC(kick::override_fn<kick_cat>);
+YOMM2_REGISTER(kick::override_fn<kick_cat>);
 
 std::string kick_dog(Dog& dog) { return "bark"; }
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+YOMM2_REGISTER(kick::override_fn<kick_dog>);
 
 struct kick_bulldog : kick::with_next<kick_bulldog> {
     static std::string fn(Bulldog& dog) { return next(dog) + " and bite"; }
 };
-YOMM2_STATIC(kick::override<kick_bulldog>);
+YOMM2_REGISTER(kick::override<kick_bulldog>);
 
-struct YOMM2_SYMBOL(pet); // use obfuscated name
-using pet = yomm2::method<YOMM2_SYMBOL(pet)(virtual_<Animal&>), std::string>;
+struct YOMM2_METHOD_NAME(pet); // use obfuscated name
+using pet = yomm2::method<YOMM2_METHOD_NAME(pet)(virtual_<Animal&>), std::string>;
 
 std::string pet_cat(Cat& dog) { return "purr"; }
-YOMM2_STATIC(pet::override_fn<pet_cat>);
+YOMM2_REGISTER(pet::override_fn<pet_cat>);
 
 std::string pet_dog(Dog& dog) { return "wag tail"; }
-YOMM2_STATIC(pet::override_fn<pet_dog>);
+YOMM2_REGISTER(pet::override_fn<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::initialize();

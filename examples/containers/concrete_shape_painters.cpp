@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "geometries.hpp"
-#include "shape_painter.hpp"
+#include "painter.hpp"
 
 register_classes(
     geometries::Geometry, geometries::Shape, geometries::Square,
@@ -18,20 +18,17 @@ register_classes(
 namespace painter {
 namespace paint2d {
 
-define_method(
+define_method_in(
     painters, paintObject,
     (Painter & painter, const geometries::Square& square), void) {
-    method_definition(
-        painters, paintObject,
-        (Painter&, const geometries::Shape&))(painter, square);
+    next(painter, square);
     std::cout << "painting square\n";
 }
 
-define_method(
+define_method_in(
     painters, paintObject,
     (Painter & painter, const geometries::Circle& circle), void) {
-    painters<YOMM2_SYMBOL(paintObject)(Painter&, const geometries::Shape&)>::fn(
-        painter, circle);
+    next(painter, circle);
     std::cout << "painting Circle\n";
 }
 

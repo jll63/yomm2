@@ -34,7 +34,7 @@ struct sparse_matrix : abstract_matrix {};
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/symbols.hpp>
+#include <yorel/yomm2/macros/register.hpp>
 #include <yorel/yomm2/templates.hpp>
 
 using namespace yorel::yomm2; // for brevity
@@ -43,15 +43,15 @@ using boost::mp11::mp_list;
 use_classes<abstract_matrix, ordinary_matrix, square_matrix, sparse_matrix>
     YOMM2_GENSYM;
 
-struct YOMM2_SYMBOL(same_type);
-using same_type = method<YOMM2_SYMBOL(same_type)(
+struct same_type_;
+using same_type = method<same_type_(
     virtual_<const abstract_matrix&>, virtual_<const abstract_matrix&>), bool>;
 
 // 1 - see notes below
 bool same_type_catch_all(const abstract_matrix&, const abstract_matrix&) {
     return false;
 }
-YOMM2_STATIC(same_type::override_fn<same_type_catch_all>);
+YOMM2_REGISTER(same_type::override_fn<same_type_catch_all>);
 
 // 2
 template<class Method, typename...>

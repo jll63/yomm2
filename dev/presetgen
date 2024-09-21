@@ -52,6 +52,8 @@ presets = {
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
+
             },
             **tool_chain.configure_presets,
         }

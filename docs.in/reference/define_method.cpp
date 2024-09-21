@@ -1,6 +1,6 @@
 #ifdef YOMM2_MD
 
-hrefs: YOMM2_DEFINE
+hrefs: YOMM2_OVERRIDE
 
 macro: define_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp></sub
