@@ -18,16 +18,14 @@ register_classes(
 namespace painter {
 namespace paint2d {
 
-define_method_in(
-    painters, paintObject,
-    (Painter & painter, const geometries::Square& square), void) {
+define_method(
+    paintObject, (Painter & painter, const geometries::Square& square), void) {
     next(painter, square);
     std::cout << "painting square\n";
 }
 
-define_method_in(
-    painters, paintObject,
-    (Painter & painter, const geometries::Circle& circle), void) {
+define_method(
+    paintObject, (Painter & painter, const geometries::Circle& circle), void) {
     next(painter, circle);
     std::cout << "painting Circle\n";
 }

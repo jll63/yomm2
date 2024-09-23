@@ -19,11 +19,12 @@ register_classes(geometries::Segment, geometries::Line);
 namespace painter {
 namespace paint1d {
 
-define_method_in(
-    painters, paintObject,
-    (Painter & painter, const geometries::Segment& segment), void) {
+define_method(
+    paintObject, (Painter & painter, const geometries::Segment& segment),
+    void) {
     ++painter.counter;
-    painters<void(Painter&, const geometries::Line&)>::fn(painter, segment);
+    YOMM2_OVERRIDERS(paintObject)<void(Painter&, const geometries::Line&)>::fn(
+        painter, segment);
     std::cout << " " << "painting segment\n";
 }
 

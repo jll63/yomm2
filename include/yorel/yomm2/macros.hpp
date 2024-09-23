@@ -100,13 +100,10 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
             ARGS noexcept(YOREL_YOMM2_DETAIL_OVERRIDER_NOEXECEPT(__VA_ARGS__)) \
                 ->boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>
 
-#define YOMM2_OVERRIDE_IN(OVERRIDERS, NAME, ARGS, ...)                         \
+#define YOMM2_OVERRIDE_INLINE(NAME, ARGS, ...)                                 \
     YOREL_YOMM2_DETAIL_DEFINE(                                                 \
-        , OVERRIDERS, YOMM2_METHOD_NAME(NAME), ARGS, __VA_ARGS__)
-
-#define YOMM2_OVERRIDE_INLINE(OVERRIDERS, NAME, ARGS, ...)                     \
-    YOREL_YOMM2_DETAIL_DEFINE(                                                 \
-        inline, OVERRIDERS, YOMM2_METHOD_NAME(NAME), ARGS, __VA_ARGS__)
+        inline, YOMM2_OVERRIDERS(NAME), YOMM2_METHOD_NAME(NAME), ARGS,         \
+        __VA_ARGS__)
 
 #define YOMM2_OVERRIDE(NAME, ARGS, ...)                                        \
     YOREL_YOMM2_DETAIL_DEFINE(                                                 \

@@ -15,19 +15,22 @@
 
 namespace painter {
 
-namespace paint1d {
-template<typename...> struct painters;
-}
-namespace paint2d {
-template<typename...> struct painters;
-}
-
 class Painter;
 
 // Implements paint
 declare_method(
     paintObject,
     (Painter&, yorel::yomm2::virtual_<const geometries::Geometry&>), void);
+
+namespace paint1d {
+template<typename...>
+struct YOMM2_OVERRIDERS(paintObject);
+}
+
+namespace paint2d {
+template<typename...>
+struct YOMM2_OVERRIDERS(paintObject);
+}
 
 class Painter {
   public:
@@ -36,8 +39,10 @@ class Painter {
 
   private:
     int counter = 0;
-    template<typename...> friend struct paint1d::painters;
-    friend paint2d::painters<void(Painter&, const geometries::Shape&)>;
+    template<typename...>
+    friend struct paint1d::YOMM2_OVERRIDERS(paintObject);
+    friend struct paint2d::YOMM2_OVERRIDERS(
+        paintObject)<void(Painter&, const geometries::Shape&)>;
 };
 
 inline void Painter::paint(const geometries::Geometry& geometry) {
