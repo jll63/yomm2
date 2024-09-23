@@ -23,8 +23,7 @@ define_method_in(
     painters, paintObject,
     (Painter & painter, const geometries::Segment& segment), void) {
     ++painter.counter;
-    painters<YOMM2_METHOD_NAME(paintObject)(Painter&, const geometries::Line&)>::fn(
-        painter, segment);
+    painters<void(Painter&, const geometries::Line&)>::fn(painter, segment);
     std::cout << " " << "painting segment\n";
 }
 

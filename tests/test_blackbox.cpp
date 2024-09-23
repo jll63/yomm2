@@ -49,12 +49,12 @@ YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
 
 YOMM2_METHOD(name, (virtual_<const Animal&>), string, test_policy);
 
-YOMM2_OVERRIDE(name, (const Dog& dog), string) {
-    return "dog " + dog.name;
-}
-
 YOMM2_OVERRIDE(name, (const Cat& cat), string) {
     return "cat " + cat.name;
+}
+
+YOMM2_OVERRIDE(name, (const Dog& dog), string) {
+    return "dog " + dog.name;
 }
 
 BOOST_AUTO_TEST_CASE(initializing) {
@@ -328,7 +328,7 @@ class Dog : public animals::Animal {};
 
 YOMM2_CLASSES(Dog, animals::Animal);
 
-YOMM2_OVERRIDE(animals::kick, (const Dog& dog), std::string) {
+YOMM2_OVERRIDE(kick, (const Dog& dog), std::string) {
     return "bark";
 }
 

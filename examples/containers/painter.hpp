@@ -37,7 +37,7 @@ class Painter {
   private:
     int counter = 0;
     template<typename...> friend struct paint1d::painters;
-    friend paint2d::painters<YOMM2_METHOD_NAME(paintObject)(Painter&, const geometries::Shape&)>;
+    friend paint2d::painters<void(Painter&, const geometries::Shape&)>;
 };
 
 inline void Painter::paint(const geometries::Geometry& geometry) {

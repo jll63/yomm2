@@ -73,7 +73,7 @@ define_method_inline(kicks, kick, (Dog * dog), std::string) {
 }
 
 define_method_in(kicks, kick, (Bulldog * dog), std::string) {
-    return kicks<YOMM2_METHOD_NAME(kick)(Dog*)>::fn(dog) + " and bites";
+    return kicks<std::string(Dog*)>::fn(dog) + " and bites";
 }
 
 BOOST_AUTO_TEST_CASE(ref_example) {

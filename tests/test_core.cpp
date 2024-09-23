@@ -341,21 +341,38 @@ namespace test_noexcept {
 
 struct Animal {};
 struct Cat : public Animal {};
+struct Dog : public Animal {};
 
 struct policy : test_policy_<__COUNTER__> {};
 
-register_classes(Animal, Cat, policy);
+register_classes(Animal, Cat, Dog, policy);
 
-using name = method<void(virtual_<Animal&>), noexcept_, const char*, policy>;
+using poke = method<void(virtual_<Animal&>) noexcept, void, policy>;
 
-static_assert(noexcept(name::fn));
+static_assert(noexcept(poke::fn));
 
-const char* name_cat(Cat&) {
-    throw 0;
-    return "cat";
+void poke_cat(Cat&) {
+    throw "hiss";
+}
+
+void poke_dog(Dog&) noexcept {
 }
 
 // should not compile:
-// YOMM2_REGISTER(name::override_fn<name_cat>);
+// YOMM2_REGISTER(poke::override_fn<poke_cat>);
+
+YOMM2_REGISTER(poke::override_fn<poke_dog>);
+
+YOMM2_METHOD(pet, (virtual_<Animal&>), void, noexcept_, policy);
+
+static_assert(noexcept(pet));
+
+// should not compile:
+
+// YOMM2_OVERRIDE(pet, (Cat&), void) {
+// }
+
+YOMM2_OVERRIDE(pet, (Dog&), noexcept_, void) {
+}
 
 }
