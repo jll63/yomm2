@@ -17,26 +17,10 @@
 namespace yorel {
 namespace yomm2 {
 
+// =============================================================================
+// optimal_cast
+
 namespace detail {
-
-template<typename T>
-struct is_policy_fn : std::is_base_of<policies::abstract_policy, T> {};
-
-template<typename... T>
-struct is_policy_fn<types<T...>> : std::false_type {};
-
-template<typename T>
-constexpr bool is_policy = is_policy_fn<T>::value;
-
-template<typename... Classes>
-using get_policy = boost::mp11::mp_at<
-    types<Classes..., YOMM2_DEFAULT_POLICY>,
-    boost::mp11::mp_find_if<
-        types<Classes..., YOMM2_DEFAULT_POLICY>, is_policy_fn>>;
-
-template<typename... Classes>
-using remove_policy =
-    boost::mp11::mp_remove_if<types<Classes...>, is_policy_fn>;
 
 template<typename B, typename D, typename = void>
 struct requires_dynamic_cast_ref_aux : std::true_type {};
@@ -68,9 +52,6 @@ template<class Policy, typename T>
 struct virtual_traits;
 
 template<class Policy, typename T>
-struct virtual_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
-
-template<class Policy, typename T>
 struct virtual_traits<Policy, T&> {
     using polymorphic_type = std::remove_cv_t<T>;
 
@@ -98,22 +79,8 @@ struct virtual_traits<Policy, T&&> {
     }
 };
 
-template<class Policy, typename T>
-struct virtual_traits<Policy, T*> {
-    using polymorphic_type = std::remove_cv_t<T>;
-
-    static auto rarg(const T* arg) -> const T& {
-        return *arg;
-    }
-
-    template<typename D>
-    static auto cast(T* obj) -> D {
-        return &optimal_cast<Policy, std::remove_pointer_t<D>&>(*obj);
-    }
-};
-
 // =============================================================================
-// Method
+// Common details
 
 namespace detail {
 
@@ -128,26 +95,53 @@ constexpr auto arity =
     boost::mp11::mp_count_if<types<Ts...>, is_virtual>::value;
 
 template<typename T>
-struct remove_virtual_ {
+struct remove_virtual_aux {
     using type = T;
 };
 
 template<typename T>
-struct remove_virtual_<virtual_<T>> {
+struct remove_virtual_aux<virtual_<T>> {
     using type = T;
 };
 
 template<typename T>
-using remove_virtual = typename remove_virtual_<T>::type;
+using remove_virtual = typename remove_virtual_aux<T>::type;
+
+template<class Policy, typename T>
+using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
 
 template<typename MethodArgList>
 using polymorphic_types = boost::mp11::mp_transform<
     remove_virtual, boost::mp11::mp_filter<detail::is_virtual, MethodArgList>>;
 
+template<class Policy, typename T>
+struct argument_traits {
+    static auto rarg(const T& arg) -> const T& {
+        return arg;
+    }
+
+    template<typename>
+    static auto cast(T value) -> T {
+        return std::forward<T>(value);
+    }
+};
+
+template<class Policy, typename T>
+struct argument_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
+
+template<class Policy, class Class>
+struct argument_traits<Policy, virtual_ptr<Class, Policy>>
+    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
+
+template<class Policy, class Class>
+struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
+    : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
+
 template<class Policy, typename ArgType, typename T>
 inline auto get_tip(const T& arg) -> uintptr_t {
     if constexpr (is_virtual<ArgType>::value) {
-        return Policy::dynamic_type(virtual_traits<Policy, ArgType>::rarg(arg));
+        return Policy::dynamic_type(
+            detail::argument_traits<Policy, ArgType>::rarg(arg));
     } else {
         return Policy::dynamic_type(arg);
     }
@@ -223,8 +217,8 @@ struct class_declaration_aux<Policy, types<Class, Bases...>> : class_info {
 // associates each class to a list starting with the class itself, followed by
 // all its bases, as per std::is_base_of. Thus the list includes the class
 // itself at least twice: at the front, and down the list, as its own improper
-// base. The direct and its direct and indirect proper bases are included. The
-// runtime will extract the direct proper bases. See unit tests for an example.
+// base. The direct and indirect bases are all included. The runtime will
+// extract the direct proper bases.
 template<typename... Cs>
 using inheritance_map = types<boost::mp11::mp_push_front<
     boost::mp11::mp_filter_q<
@@ -250,23 +244,28 @@ struct use_classes_aux<Policy, types<types<Classes...>, MoreClassLists...>>
 
 {};
 
-template<class... Classes>
-using use_classes_macro = typename use_classes_aux<
-    get_policy<Classes...>, remove_policy<Classes...>>::type;
+template<typename T>
+struct is_policy_fn : std::is_base_of<policies::abstract_policy, T> {};
+
+template<typename... T>
+struct is_policy_fn<types<T...>> : std::false_type {};
 
 } // namespace detail
 
 template<class... Classes>
 using use_classes = typename detail::use_classes_aux<
-    detail::get_policy<Classes...>, detail::remove_policy<Classes...>>::type;
+    boost::mp11::mp_at<
+        detail::types<Classes..., YOMM2_DEFAULT_POLICY>,
+        boost::mp11::mp_find_if<
+            detail::types<Classes..., YOMM2_DEFAULT_POLICY>,
+            detail::is_policy_fn>>,
+    boost::mp11::mp_remove_if<
+        detail::types<Classes...>, detail::is_policy_fn>>::type;
 
 // -----------------------------------------------------------------------------
 // virtual_ptr
 
 namespace detail {
-
-template<class Policy, typename T>
-using polymorphic_type = typename virtual_traits<Policy, T>::polymorphic_type;
 
 template<class Class, class Policy>
 struct is_virtual<virtual_ptr<Class, Policy>> : std::true_type {};
@@ -417,15 +416,15 @@ class virtual_ptr {
         : obj(std::move(other.obj)), vptr(other.vptr) {
     }
 
-    auto get() const noexcept {
+    auto get() const {
         return obj;
     }
 
-    auto operator->() const noexcept {
+    auto operator->() const {
         return get();
     }
 
-    auto operator*() const noexcept -> decltype(auto) {
+    auto operator*() const -> decltype(auto) {
         return *get();
     }
 
@@ -485,7 +484,7 @@ class virtual_ptr {
     }
 
     // consider as private, public for tests only
-    auto _vptr() const noexcept {
+    auto _vptr() const {
         if constexpr (is_indirect) {
             return *vptr;
         } else {
@@ -550,45 +549,12 @@ using spec_polymorphic_types = boost::mp11::mp_remove<
         MethodArgList, SpecArgList>,
     void>;
 
-template<class Policy, typename T>
-struct argument_traits {
-    static auto rarg(const T& arg) -> const T& {
-        return arg;
-    }
-
-    template<typename>
-    static auto cast(T obj) -> T {
-        return std::forward<T>(obj);
-    }
-};
-
-template<class Policy, typename T>
-struct argument_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
-
-template<class Policy, class Class>
-struct argument_traits<Policy, virtual_ptr<Class, Policy>>
-    : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
-
-template<class Policy, class Class>
-struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
-    : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
-
 template<class Container, typename = void>
 struct has_next : std::false_type {};
 
 template<class Container>
 struct has_next<Container, std::void_t<decltype(Container::next)>>
     : std::true_type {};
-
-template<auto F, typename T>
-struct member_function_thunk;
-
-template<auto F, class Return, class C, typename... Parameters>
-struct member_function_thunk<F, Return (C::*)(Parameters...)> {
-    static auto fn(C* this_, Parameters&&... args) -> Return {
-        return (this_->*F)(args...);
-    }
-};
 
 template<class Method>
 struct static_offsets;
@@ -603,25 +569,21 @@ struct has_static_offsets<
 
 } // namespace detail
 
-template<typename...>
+template<typename Method, typename Return, class Policy = YOMM2_DEFAULT_POLICY>
 struct method;
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
-    : public detail::method_info {
+template<typename Name, typename Return, typename... Parameters, class Policy>
+class method<Name(Parameters...), Return, Policy> : public detail::method_info {
     // Aliases used in implementation only. Everything extracted from template
     // arguments is capitalized like the arguments themselves.
-    using Policy = detail::get_policy<Options...>;
     using DeclaredParameters = detail::types<Parameters...>;
     using CallParameters =
         boost::mp11::mp_transform<detail::remove_virtual, DeclaredParameters>;
     using VirtualParameters =
         typename detail::polymorphic_types<DeclaredParameters>;
-    using Signature = auto(Parameters...) noexcept(NoExcept) -> Return;
-    using FunctionPointer = auto (*)(
-        detail::remove_virtual<Parameters>...) noexcept(NoExcept) -> Return;
+    using Signature = auto(Parameters...) -> Return;
+    using FunctionPointer = auto (*)(detail::remove_virtual<Parameters>...)
+        -> Return;
 
     static constexpr auto arity = detail::arity<Parameters...>;
     static_assert(arity > 0, "method must have at least one virtual argument");
@@ -636,41 +598,38 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     // the stride in the second dimension, etc.
 
     template<typename ArgType>
-    auto vptr(const ArgType& arg) const noexcept(NoExcept)
-        -> const std::uintptr_t*;
+    auto vptr(const ArgType& arg) const -> const std::uintptr_t*;
 
     template<class Error>
     auto check_static_offset(std::size_t actual, std::size_t expected) const
-        noexcept(NoExcept) -> void;
+        -> void;
 
     template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     auto resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const
-        noexcept(NoExcept) -> std::uintptr_t;
+        -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     auto resolve_multi_first(
         const ArgType& arg, const MoreArgTypes&... more_args) const
-        noexcept(NoExcept) -> std::uintptr_t;
+        -> std::uintptr_t;
 
     template<
         std::size_t VirtualArg, typename MethodArgList, typename ArgType,
         typename... MoreArgTypes>
     auto resolve_multi_next(
         const std::uintptr_t* dispatch, const ArgType& arg,
-        const MoreArgTypes&... more_args) const noexcept(NoExcept)
-        -> std::uintptr_t;
+        const MoreArgTypes&... more_args) const -> std::uintptr_t;
 
     template<typename... ArgType>
     FunctionPointer resolve(const ArgType&... args) const;
 
-    static BOOST_NORETURN auto not_implemented_handler(
-        detail::remove_virtual<Parameters>... args) noexcept(NoExcept)
+    static BOOST_NORETURN auto
+    not_implemented_handler(detail::remove_virtual<Parameters>... args)
         -> Return;
-    static BOOST_NORETURN auto ambiguous_handler(
-        detail::remove_virtual<Parameters>... args) noexcept(NoExcept)
-        -> Return;
+    static BOOST_NORETURN auto
+    ambiguous_handler(detail::remove_virtual<Parameters>... args) -> Return;
 
     template<auto, typename>
     struct thunk;
@@ -681,8 +640,7 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     // Public aliases.
     using name_type = Name;
     using return_type = Return;
-    using next_type =
-        Return (*)(detail::remove_virtual<Parameters>...) noexcept(NoExcept);
+    using next_type = Return (*)(detail::remove_virtual<Parameters>...);
 
     static method fn;
 
@@ -691,8 +649,7 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     method(method&&) = delete;
     ~method();
 
-    auto operator()(detail::remove_virtual<Parameters>... args) const
-        noexcept(NoExcept) -> Return;
+    auto operator()(detail::remove_virtual<Parameters>... args) const -> Return;
 
     template<class Container>
     struct with_next {
@@ -706,12 +663,8 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     template<
         auto Overrider, typename OverriderReturn,
         typename... OverriderParameters>
-    struct thunk<
-        Overrider,
-        OverriderReturn (*)(OverriderParameters...) noexcept(NoExcept)> {
-        static auto
-        fn(detail::remove_virtual<Parameters>... arg) noexcept(NoExcept)
-            -> Return;
+    struct thunk<Overrider, OverriderReturn (*)(OverriderParameters...)> {
+        static auto fn(detail::remove_virtual<Parameters>... arg) -> Return;
         using OverriderParameterTypeIds = detail::type_id_list<
             Policy,
             detail::spec_polymorphic_types<
@@ -719,7 +672,7 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
                 detail::types<OverriderParameters...>>>;
     };
 
-    template<auto Function, bool FnNoExcept>
+    template<auto Function>
     struct override_fn_impl {
         explicit override_fn_impl(FunctionPointer* next = nullptr);
     };
@@ -727,37 +680,22 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     template<auto Function, typename FunctionType>
     struct override_fn_aux;
 
-    template<
-        auto Function, typename FnReturnType, typename... FnParameters,
-        bool FnNoExcept>
-    struct override_fn_aux<
-        Function, FnReturnType (*)(FnParameters...) noexcept(FnNoExcept)>
-        : override_fn_impl<Function, FnNoExcept> {
-        using override_fn_impl<Function, FnNoExcept>::override_fn_impl;
+    template<auto Function, typename FnReturnType, typename... FnParameters>
+    struct override_fn_aux<Function, FnReturnType (*)(FnParameters...)>
+        : override_fn_impl<Function> {
+        using override_fn_impl<Function>::override_fn_impl;
     };
-
-    // template<
-    //     auto Function, typename FnReturnType, typename... FnParameters,
-    //     bool FnNoExcept>
-    // struct override_fn_aux<
-    //     Function, FnReturnType (*)(FnParameters...) noexcept(FnNoExcept)>
-    //     : override_fn_impl<Function, FnNoExcept> {
-    //     using override_fn_impl<Function, FnNoExcept>::override_fn_impl;
-    // };
 
     template<
         auto Function, class FnClass, typename FnReturnType,
-        typename... FnParameters, bool FnNoExcept>
+        typename... FnParameters>
     struct override_fn_aux<
-        Function,
-        FnReturnType (FnClass::*)(FnParameters...) noexcept(FnNoExcept)> {
-        static auto
-        fn(FnClass* this_, FnParameters&&... args) noexcept(FnNoExcept)
-            -> FnReturnType {
+        Function, FnReturnType (FnClass::*)(FnParameters...)> {
+        static auto fn(FnClass* this_, FnParameters&&... args) -> FnReturnType {
             return (this_->*Function)(std::forward<FnParameters>(args)...);
         }
 
-        override_fn_impl<fn, FnNoExcept> impl{&next<Function>};
+        override_fn_impl<fn> impl{&next<Function>};
     };
 
   public:
@@ -795,36 +733,25 @@ class method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
     };
 };
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>
-    method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::fn;
+template<typename Name, typename Return, typename... Parameters, class Policy>
+method<Name(Parameters...), Return, Policy>
+    method<Name(Parameters...), Return, Policy>::fn;
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<class Container>
-typename method<
-    Name(Parameters...) noexcept(NoExcept), Return, Options...>::next_type
-    method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-        with_next<Container>::next;
+typename method<Name(Parameters...), Return, Policy>::next_type
+    method<Name(Parameters...), Return, Policy>::with_next<Container>::next;
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<auto>
-typename method<
-    Name(Parameters...) noexcept(NoExcept), Return, Options...>::FunctionPointer
-    method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::next;
+typename method<Name(Parameters...), Return, Policy>::FunctionPointer
+    method<Name(Parameters...), Return, Policy>::next;
 
 template<typename T>
 constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::method() {
+template<typename Name, typename Return, typename... Parameters, class Policy>
+method<Name(Parameters...), Return, Policy>::method() {
     this->slots_strides_ptr = slots_strides;
 
     using virtual_type_ids = detail::type_id_list<
@@ -840,26 +767,19 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::method() {
     Policy::methods.push_back(*this);
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-std::size_t method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    slots_strides[2 * arity - 1];
+template<typename Name, typename Return, typename... Parameters, class Policy>
+std::size_t
+    method<Name(Parameters...), Return, Policy>::slots_strides[2 * arity - 1];
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::~method() {
+template<typename Name, typename Return, typename... Parameters, class Policy>
+method<Name(Parameters...), Return, Policy>::~method() {
     Policy::methods.remove(*this);
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<class Error>
-auto method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    check_static_offset(std::size_t actual, std::size_t expected) const
-    noexcept(NoExcept) -> void {
+auto method<Name(Parameters...), Return, Policy>::check_static_offset(
+    std::size_t actual, std::size_t expected) const -> void {
     using namespace detail;
 
     if (actual != expected) {
@@ -878,27 +798,21 @@ auto method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
 // -----------------------------------------------------------------------------
 // method dispatch
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-BOOST_FORCEINLINE auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::operator()(
-    detail::remove_virtual<Parameters>... args) const noexcept(NoExcept)
-    -> Return {
+template<typename Name, typename Return, typename... Parameters, class Policy>
+BOOST_FORCEINLINE auto method<Name(Parameters...), Return, Policy>::operator()(
+    detail::remove_virtual<Parameters>... args) const -> Return {
     using namespace detail;
     auto pf = resolve(argument_traits<Policy, Parameters>::rarg(args)...);
 
     return pf(std::forward<remove_virtual<Parameters>>(args)...);
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<typename... ArgType>
-BOOST_FORCEINLINE typename method<
-    Name(Parameters...) noexcept(NoExcept), Return, Options...>::FunctionPointer
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::resolve(
-    const ArgType&... args) const {
+BOOST_FORCEINLINE
+    typename method<Name(Parameters...), Return, Policy>::FunctionPointer
+    method<Name(Parameters...), Return, Policy>::resolve(
+        const ArgType&... args) const {
     using namespace detail;
 
     std::uintptr_t pf;
@@ -912,13 +826,11 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::resolve(
     return reinterpret_cast<FunctionPointer>(pf);
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<typename ArgType>
 BOOST_FORCEINLINE auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::vptr(
-    const ArgType& arg) const noexcept(NoExcept) -> const std::uintptr_t* {
+method<Name(Parameters...), Return, Policy>::vptr(const ArgType& arg) const
+    -> const std::uintptr_t* {
     if constexpr (is_virtual_ptr<ArgType>) {
         return arg._vptr();
         // No need to check the method pointer: this was done when the
@@ -928,14 +840,11 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::vptr(
     }
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
-BOOST_FORCEINLINE auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::resolve_uni(
+BOOST_FORCEINLINE auto method<Name(Parameters...), Return, Policy>::resolve_uni(
     const ArgType& arg, const MoreArgTypes&... more_args) const
-    noexcept(NoExcept) -> std::uintptr_t {
+    -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -964,16 +873,14 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::resolve_uni(
     }
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 BOOST_FORCEINLINE auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    resolve_multi_first(const ArgType& arg, const MoreArgTypes&... more_args)
-        const noexcept(NoExcept) -> std::uintptr_t {
+method<Name(Parameters...), Return, Policy>::resolve_multi_first(
+    const ArgType& arg, const MoreArgTypes&... more_args) const
+    -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -1013,18 +920,14 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
     }
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<
     std::size_t VirtualArg, typename MethodArgList, typename ArgType,
     typename... MoreArgTypes>
 BOOST_FORCEINLINE auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    resolve_multi_next(
-        const std::uintptr_t* dispatch, const ArgType& arg,
-        const MoreArgTypes&... more_args) const noexcept(NoExcept)
-        -> std::uintptr_t {
+method<Name(Parameters...), Return, Policy>::resolve_multi_next(
+    const std::uintptr_t* dispatch, const ArgType& arg,
+    const MoreArgTypes&... more_args) const -> std::uintptr_t {
 
     using namespace detail;
     using namespace boost::mp11;
@@ -1070,14 +973,10 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
 // -----------------------------------------------------------------------------
 // Error handling
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 BOOST_NORETURN auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    not_implemented_handler(
-        detail::remove_virtual<Parameters>... args) noexcept(NoExcept)
-        -> Return {
+method<Name(Parameters...), Return, Policy>::not_implemented_handler(
+    detail::remove_virtual<Parameters>... args) -> Return {
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::no_definition;
@@ -1095,13 +994,10 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
     abort(); // in case user handler "forgets" to abort
 }
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 BOOST_NORETURN auto
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    ambiguous_handler(detail::remove_virtual<Parameters>... args) noexcept(
-        NoExcept) -> Return {
+method<Name(Parameters...), Return, Policy>::ambiguous_handler(
+    detail::remove_virtual<Parameters>... args) -> Return {
     if constexpr (Policy::template has_facet<policies::error_handler>) {
         resolution_error error;
         error.status = resolution_error::ambiguous;
@@ -1122,14 +1018,12 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
 // -----------------------------------------------------------------------------
 // thunk
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
+template<typename Name, typename Return, typename... Parameters, class Policy>
 template<
     auto Overrider, typename OverriderReturn, typename... OverriderParameters>
-auto method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::thunk<
-    Overrider, OverriderReturn (*)(OverriderParameters...) noexcept(NoExcept)>::
-    fn(detail::remove_virtual<Parameters>... arg) noexcept(NoExcept) -> Return {
+auto method<Name(Parameters...), Return, Policy>::
+    thunk<Overrider, OverriderReturn (*)(OverriderParameters...)>::fn(
+        detail::remove_virtual<Parameters>... arg) -> Return {
     return Overrider(
         detail::argument_traits<Policy, Parameters>::template cast<
             OverriderParameters>(detail::remove_virtual<Parameters>(arg))...);
@@ -1138,13 +1032,10 @@ auto method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::thunk<
 // -----------------------------------------------------------------------------
 // overriders
 
-template<
-    typename Name, typename Return, typename... Parameters, bool NoExcept,
-    class... Options>
-template<auto Function, bool FnNoExcept>
-method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
-    override_fn_impl<Function, FnNoExcept>::override_fn_impl(
-        FunctionPointer* p_next) {
+template<typename Name, typename Return, typename... Parameters, class Policy>
+template<auto Function>
+method<Name(Parameters...), Return, Policy>::override_fn_impl<
+    Function>::override_fn_impl(FunctionPointer* p_next) {
     // Work around MSVC bug: using &next<Function> as a default value
     // for 'next' confuses it about Parameters not being expanded.
     if (!p_next) {
@@ -1156,11 +1047,6 @@ method<Name(Parameters...) noexcept(NoExcept), Return, Options...>::
     if (info.method) {
         BOOST_ASSERT(info.method == &fn);
         return;
-    }
-
-    if constexpr (NoExcept) {
-        static_assert(
-            FnNoExcept, "method is noexcept, overrider must be noexcept too");
     }
 
     info.method = &fn;

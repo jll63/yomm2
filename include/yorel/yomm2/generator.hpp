@@ -217,7 +217,7 @@ template<class T>
 const generator& generator::write_static_offsets(std::ostream& os) const {
     using namespace detail;
 
-    if constexpr (is_policy<T>) {
+    if constexpr (is_policy_fn<T>::value) {
         for (auto& method : T::methods) {
             write_static_offsets(method, os);
         }

@@ -10,28 +10,6 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 
-namespace yorel {
-namespace yomm2 {
-
-struct noexcept_ {};
-
-namespace detail {
-
-template<typename... Args>
-struct method_macro_aux {
-    using type = method<Args...>;
-};
-
-template<
-    typename Name, typename... Parameters, typename Return, typename... More>
-struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
-    using type = method<Name(Parameters...) noexcept, Return, More...>;
-};
-
-} // namespace detail
-} // namespace yomm2
-} // namespace yorel
-
 #define YOMM2_METHOD_NAME(NAME) NAME##_method_name
 #define YOMM2_OVERRIDERS(NAME) NAME##_overriders
 
@@ -50,15 +28,15 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
 
 #define YOMM2_METHOD(NAME, ARGS, ...)                                          \
     struct YOMM2_METHOD_NAME(NAME);                                            \
-    ::yorel::yomm2::detail::method_macro_aux<                                  \
-        YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>::type                       \
+    ::yorel::yomm2::method<YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>          \
         BOOST_PP_CAT(YOMM2_METHOD_NAME(NAME), guide_)(                         \
             BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS));    \
     inline decltype(auto) NAME(                                                \
         BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_PLIST, ARGS)) {       \
-        return ::yorel::yomm2::detail::method_macro_aux<                       \
-            YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>::type::                 \
-            fn(BOOST_PP_REPEAT(BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS)); \
+        return ::yorel::yomm2::                                                \
+            method<YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>::fn(             \
+                BOOST_PP_REPEAT(                                               \
+                    BOOST_PP_TUPLE_SIZE(ARGS), yOMM2_ALIST, ARGS));            \
     }
 
 #define YOREL_YOMM2_DETAIL_LOCATE_METHOD(NAME, ARGS)                           \
@@ -70,10 +48,6 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
     };                                                                         \
     using method_type = yorel_yomm2_detail_locate_method_aux<void ARGS>::type
 
-#define YOREL_YOMM2_DETAIL_OVERRIDER_NOEXECEPT(...)                            \
-    boost::mp11::mp_contains<                                                  \
-        boost::mp11::mp_list<__VA_ARGS__>, ::yorel::yomm2::noexcept_>::value
-
 #define YOREL_YOMM2_DETAIL_RETURN_TYPE(...)                                    \
     boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>
 
@@ -84,9 +58,7 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
     struct OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS> {      \
         YOREL_YOMM2_DETAIL_LOCATE_METHOD(NAME, ARGS);                          \
         static method_type::next_type next;                                    \
-        static auto fn                                                         \
-            ARGS noexcept(YOREL_YOMM2_DETAIL_OVERRIDER_NOEXECEPT(__VA_ARGS__)) \
-                -> YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__);                \
+        static auto fn ARGS->YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__);      \
     };                                                                         \
     INLINE OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__)              \
                           ARGS>::method_type::next_type                        \
@@ -96,9 +68,8 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
             method_type::override<OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(   \
                 __VA_ARGS__) ARGS>>);                                          \
     INLINE auto                                                                \
-        OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn       \
-            ARGS noexcept(YOREL_YOMM2_DETAIL_OVERRIDER_NOEXECEPT(__VA_ARGS__)) \
-                ->boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>
+        OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn ARGS  \
+            ->boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>
 
 #define YOMM2_OVERRIDE_INLINE(NAME, ARGS, ...)                                 \
     YOREL_YOMM2_DETAIL_DEFINE(                                                 \
@@ -110,9 +81,7 @@ struct method_macro_aux<Name(Parameters...), Return, noexcept_, More...> {
         , YOMM2_OVERRIDERS(NAME), YOMM2_METHOD_NAME(NAME), ARGS, __VA_ARGS__)
 
 #define YOMM2_CLASSES(...)                                                     \
-    static ::yorel::yomm2::detail::use_classes_macro<                          \
-        __VA_ARGS__, YOMM2_DEFAULT_POLICY>                                     \
-        YOMM2_GENSYM;
+    static ::yorel::yomm2::use_classes<__VA_ARGS__> YOMM2_GENSYM;
 
 #define YOMM2_METHOD_CLASS(NAME, ARGS, ...)                                    \
     ::yorel::yomm2::method<YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>

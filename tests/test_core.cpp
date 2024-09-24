@@ -205,37 +205,13 @@ struct my_policy : policies::abstract_policy {};
 
 static_assert(
     std::is_same_v<
-        get_policy<Animal, Dog>,
-        default_policy
->);
-
-static_assert(
-    std::is_same_v<
-        get_policy<Animal, Dog, my_policy>,
-        my_policy
->);
-
-static_assert(
-    std::is_same_v<
-        remove_policy<Animal, Dog, my_policy>,
-        types<Animal, Dog>
->);
-
-static_assert(
-    std::is_same_v<
-        remove_policy<Animal, Dog, my_policy, default_policy>,
-        types<Animal, Dog>
->);
-
-static_assert(
-    std::is_same_v<
-        use_classes_macro<Animal, Dog>,
+        use_classes<Animal, Dog>,
         use_classes_aux<default_policy, types<Animal, Dog>>::type
 >);
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, Dog, my_policy, default_policy>,
+        use_classes<Animal, Dog, my_policy, default_policy>,
         use_classes_aux<my_policy, types<Animal, Dog>>::type
     >);
 
@@ -331,48 +307,5 @@ static_assert(!has_static_offsets<kick>::value);
 
 using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);
-
-}
-
-// -----------------------------------------------------------------------------
-// noexcept
-
-namespace test_noexcept {
-
-struct Animal {};
-struct Cat : public Animal {};
-struct Dog : public Animal {};
-
-struct policy : test_policy_<__COUNTER__> {};
-
-register_classes(Animal, Cat, Dog, policy);
-
-using poke = method<void(virtual_<Animal&>) noexcept, void, policy>;
-
-static_assert(noexcept(poke::fn));
-
-void poke_cat(Cat&) {
-    throw "hiss";
-}
-
-void poke_dog(Dog&) noexcept {
-}
-
-// should not compile:
-// YOMM2_REGISTER(poke::override_fn<poke_cat>);
-
-YOMM2_REGISTER(poke::override_fn<poke_dog>);
-
-YOMM2_METHOD(pet, (virtual_<Animal&>), void, noexcept_, policy);
-
-static_assert(noexcept(pet));
-
-// should not compile:
-
-// YOMM2_OVERRIDE(pet, (Cat&), void) {
-// }
-
-YOMM2_OVERRIDE(pet, (Dog&), noexcept_, void) {
-}
 
 }

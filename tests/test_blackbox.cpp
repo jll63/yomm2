@@ -157,16 +157,6 @@ YOMM2_OVERRIDE(zero_ref, (diagonal_matrix & m), Subtype) {
     return DIAGONAL;
 }
 
-YOMM2_METHOD(zero_ptr, (virtual_<matrix*>), Subtype);
-
-YOMM2_OVERRIDE(zero_ptr, (dense_matrix * m), Subtype) {
-    return MATRIX;
-}
-
-YOMM2_OVERRIDE(zero_ptr, (diagonal_matrix * m), Subtype) {
-    return DIAGONAL;
-}
-
 BOOST_AUTO_TEST_CASE(simple) {
     auto report = initialize();
 
@@ -194,10 +184,8 @@ BOOST_AUTO_TEST_CASE(simple) {
     {
         dense_matrix dense;
         BOOST_TEST(zero_ref(dense) == MATRIX);
-        BOOST_TEST(zero_ptr(&dense) == MATRIX);
         diagonal_matrix diagonal;
         BOOST_TEST(zero_ref(diagonal) == DIAGONAL);
-        BOOST_TEST(zero_ptr(&diagonal) == DIAGONAL);
     }
 }
 
