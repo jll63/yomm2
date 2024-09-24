@@ -18,7 +18,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -33,7 +34,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -48,7 +50,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -63,7 +66,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -78,7 +82,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -93,7 +98,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -108,7 +114,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -123,7 +130,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             }
         },
         {
@@ -138,7 +146,8 @@
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
-                "YOMM2_ENABLE_BENCHMARKS": "ON"
+                "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
             },
             "condition": {
                 "type": "equals",
