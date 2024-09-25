@@ -13,14 +13,10 @@ if(NOT CMAKE_CXX_STANDARD)
 endif()
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(YOMM2_SHARED "Build yomm2 as a shared library" OFF)
 option(YOMM2_ENABLE_EXAMPLES "Set to ON to build examples" OFF)
 option(YOMM2_DEBUG_MACROS "Set to ON to debug macros" OFF)
 option(YOMM2_ENABLE_TESTS "Set to ON to build tests" OFF)
 option(YOMM2_ENABLE_BENCHMARKS "Set to ON to enable benchmarks" OFF)
-option(
-  YOMM2_CHECK_ABI_COMPATIBILITY
-  "Build shared library and examples in different modes" OFF)
 
 include(CMakeDependentOption)
 CMAKE_DEPENDENT_OPTION(YOMM2_ENABLE_BENCHMARKS
@@ -40,11 +36,7 @@ if(NOT MSVC AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(COMPILER_IS_CLANG ON)
 endif()
 
-if("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
-  set(VARIANT_IS_DEBUG ON)
-endif()
-
-if (VARIANT_IS_DEBUG)
+if (CMAKE_BUILD_TYPE MATCHES DEBUG)
   if(COMPILER_IS_CLANG)
     add_compile_options(-fno-limit-debug-info)
   endif()
@@ -53,6 +45,7 @@ if (VARIANT_IS_DEBUG)
   endif()
 else()
   if(CMAKE_COMPILER_IS_GNUCXX OR COMPILER_IS_CLANG)
+  message(STATUS "${CMAKE_BUILD_TYPE}")
     add_compile_options(-save-temps -masm=intel)
   endif()
 endif()

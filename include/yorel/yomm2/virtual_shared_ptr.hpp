@@ -50,7 +50,7 @@ struct virtual_traits<Policy, const std::shared_ptr<T>&> {
     static auto cast(const std::shared_ptr<T>& obj) {
         check_cast<DERIVED>();
 
-        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
+        if constexpr (detail::requires_dynamic_cast<T*, DERIVED>) {
             return std::dynamic_pointer_cast<
                 typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
         } else {
@@ -82,7 +82,7 @@ struct virtual_traits<Policy, std::shared_ptr<T>> {
     static auto cast(const std::shared_ptr<T>& obj) {
         check_cast<DERIVED>();
 
-        if constexpr (requires_dynamic_cast<T*, DERIVED>) {
+        if constexpr (detail::requires_dynamic_cast<T*, DERIVED>) {
             return std::dynamic_pointer_cast<
                 typename shared_ptr_traits<DERIVED>::polymorphic_type>(obj);
         } else {
@@ -102,7 +102,7 @@ struct virtual_ptr_traits<std::shared_ptr<Class>, Policy> {
         using OtherPtr = typename std::remove_reference_t<OtherPtrRef>;
         using OtherClass = typename OtherPtr::box_type::element_type;
 
-        if constexpr (requires_dynamic_cast<Class&, OtherClass&>) {
+        if constexpr (detail::requires_dynamic_cast<Class&, OtherClass&>) {
             return std::dynamic_pointer_cast<OtherClass>(ptr);
         } else {
             return std::static_pointer_cast<OtherClass>(ptr);

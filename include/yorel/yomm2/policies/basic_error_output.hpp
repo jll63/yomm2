@@ -15,7 +15,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy, typename Stream = detail::ostderr>
-struct yOMM2_API_gcc basic_error_output : virtual error_output {
+struct basic_error_output : virtual error_output {
     static Stream error_stream;
 };
 

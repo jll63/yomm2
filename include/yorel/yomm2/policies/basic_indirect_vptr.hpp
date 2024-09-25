@@ -16,7 +16,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy>
-struct yOMM2_API_gcc basic_indirect_vptr : virtual indirect_vptr {
+struct basic_indirect_vptr : virtual indirect_vptr {
     static std::vector<std::uintptr_t const* const*> indirect_vptrs;
 };
 

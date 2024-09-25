@@ -18,7 +18,7 @@ namespace policies {
 template<
     class Policy,
     class Map = std::unordered_map<type_id, const std::uintptr_t*>>
-struct yOMM2_API_gcc vptr_map : virtual external_vptr {
+struct vptr_map : virtual external_vptr {
     static Map vptrs;
 
     template<typename ForwardIterator>

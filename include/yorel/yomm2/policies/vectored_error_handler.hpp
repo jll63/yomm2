@@ -17,7 +17,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy>
-struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
+struct vectored_error_handler : virtual error_handler {
 
     using error_variant = std::variant<
         error, resolution_error, unknown_class_error, hash_search_error,
