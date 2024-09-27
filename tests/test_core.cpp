@@ -217,22 +217,6 @@ static_assert(
 
 } // namespace test_use_classes
 
-namespace test_has_next {
-
-struct with_next {
-    static int next;
-};
-
-static_assert(has_next<with_next>::value);
-
-struct sans_next {
-    static int next;
-};
-
-static_assert(has_next<sans_next>::value);
-
-}
-
 namespace facets {
 
 using namespace policies;

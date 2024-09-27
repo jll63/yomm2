@@ -535,13 +535,6 @@ using spec_polymorphic_types = boost::mp11::mp_remove<
         MethodParameters, OverriderParameters>,
     void>;
 
-template<class Container, typename = void>
-struct has_next : std::false_type {};
-
-template<class Container>
-struct has_next<Container, std::void_t<decltype(Container::next)>>
-    : std::true_type {};
-
 template<class Method>
 struct static_offsets;
 
@@ -637,11 +630,6 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
 
     auto operator()(detail::remove_virtual<Parameters>... args) const -> Return;
 
-    template<class Container>
-    struct with_next {
-        static next_type next;
-    };
-
     template<auto>
     static FunctionPointer next;
 
@@ -669,7 +657,6 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
     template<auto Function, typename FnReturnType, typename... FnParameters>
     struct override_fn_aux<Function, FnReturnType (*)(FnParameters...)>
         : override_fn_impl<Function> {
-        using override_fn_impl<Function>::override_fn_impl;
     };
 
     template<
@@ -695,38 +682,15 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
         std::tuple<override_fn<F>...> fns;
     };
 
-  private:
-    template<class Container, bool HasNext>
-    struct override_aux;
-
     template<class Container>
-    struct override_aux<Container, false> : override_fn<Container::fn> {
-        override_aux() : override_fn<Container::fn>(nullptr) {
-        }
-    };
-
-    template<class Container>
-    struct override_aux<Container, true> : override_fn<Container::fn> {
-        override_aux() : override_fn<Container::fn>(&Container::next) {
-        }
-    };
-
-  public:
-    template<class Container>
-    struct override
-        : override_aux<Container, detail::has_next<Container>::value> {
-        using type = override; // make it a meta-function
+    struct override : override_fn<Container::fn> {
+        using type = override;
     };
 };
 
 template<typename Name, typename Return, typename... Parameters, class Policy>
 method<Name(Parameters...), Return, Policy>
     method<Name(Parameters...), Return, Policy>::fn;
-
-template<typename Name, typename Return, typename... Parameters, class Policy>
-template<class Container>
-typename method<Name(Parameters...), Return, Policy>::next_type
-    method<Name(Parameters...), Return, Policy>::with_next<Container>::next;
 
 template<typename Name, typename Return, typename... Parameters, class Policy>
 template<auto>

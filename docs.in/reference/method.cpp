@@ -181,7 +181,10 @@ make sense, see the example below.
 #include <memory>
 #include <string>
 
-struct Animal { virtual ~Animal() {} };
+struct Animal {
+    virtual ~Animal() {
+    }
+};
 struct Cat : Animal {};
 struct Dog : Animal {};
 struct Bulldog : Dog {};
@@ -194,33 +197,43 @@ YOMM2_REGISTER(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 struct kick_methods;
 using kick = yomm2::method<kick_methods(virtual_<Animal&>), std::string>;
 
-std::string kick_cat(Cat& dog) { return "hiss"; }
+std::string kick_cat(Cat& dog) {
+    return "hiss";
+}
 YOMM2_REGISTER(kick::override_fn<kick_cat>);
 
-std::string kick_dog(Dog& dog) { return "bark"; }
+std::string kick_dog(Dog& dog) {
+    return "bark";
+}
 YOMM2_REGISTER(kick::override_fn<kick_dog>);
 
-struct kick_bulldog : kick::with_next<kick_bulldog> {
-    static std::string fn(Bulldog& dog) { return next(dog) + " and bite"; }
+struct kick_bulldog {
+    static std::string fn(Bulldog& dog) {
+        return kick::next<fn>(dog) + " and bite";
+    }
 };
 YOMM2_REGISTER(kick::override<kick_bulldog>);
 
 struct YOMM2_METHOD_NAME(pet); // use obfuscated name
-using pet = yomm2::method<YOMM2_METHOD_NAME(pet)(virtual_<Animal&>), std::string>;
+using pet =
+    yomm2::method<YOMM2_METHOD_NAME(pet)(virtual_<Animal&>), std::string>;
 
-std::string pet_cat(Cat& dog) { return "purr"; }
+std::string pet_cat(Cat& dog) {
+    return "purr";
+}
 YOMM2_REGISTER(pet::override_fn<pet_cat>);
 
-std::string pet_dog(Dog& dog) { return "wag tail"; }
+std::string pet_dog(Dog& dog) {
+    return "wag tail";
+}
 YOMM2_REGISTER(pet::override_fn<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::initialize();
 
-    std::unique_ptr<Animal>
-        felix = std::make_unique<Cat>(),
-        snoopy = std::make_unique<Dog>(),
-        hector = std::make_unique<Bulldog>();
+    std::unique_ptr<Animal> felix = std::make_unique<Cat>(),
+                            snoopy = std::make_unique<Dog>(),
+                            hector = std::make_unique<Bulldog>();
 
     BOOST_TEST(kick::fn(*felix) == "hiss");
     BOOST_TEST(kick::fn(*snoopy) == "bark");

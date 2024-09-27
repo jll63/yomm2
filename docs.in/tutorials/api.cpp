@@ -127,13 +127,11 @@ kick::override_fn<kick_dog> add_kick_dog;
 // >
 
 // code<
-kick::next_type kick_bulldog_next;
-
 std::string kick_bulldog(Bulldog& dog) {
-    return kick_bulldog_next(dog) + " and bite back";
+    return kick::next<kick_bulldog>(dog) + " and bite back";
 }
 
-kick::override_fn<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
+kick::override_fn<kick_bulldog> add_kick_bulldog;
 // >
 
 // md<
@@ -281,9 +279,9 @@ YOMM2_REGISTER(kick::override<kick_dog>);
 // >
 
 // code<
-struct kick_bulldog : kick::with_next<kick_bulldog> {
+struct kick_bulldog {
     static std::string fn(Bulldog& dog) {
-        return next(dog) + " and bite back";
+        return kick::next<fn>(dog) + " and bite back";
     }
 };
 

@@ -57,16 +57,20 @@
     template<>                                                                 \
     struct OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS> {      \
         YOREL_YOMM2_DETAIL_LOCATE_METHOD(NAME, ARGS);                          \
-        static method_type::next_type next;                                    \
         static auto fn ARGS->YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__);      \
+        static auto has_next() {                                               \
+            return method_type::next<fn> != nullptr;                           \
+        }                                                                      \
+        template<typename... Args>                                             \
+        static decltype(auto) next(Args&&... args) {                           \
+            BOOST_ASSERT(has_next());                                          \
+            return method_type::next<fn>(std::forward<Args>(args)...);         \
+        }                                                                      \
     };                                                                         \
-    INLINE OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__)              \
-                          ARGS>::method_type::next_type                        \
-        OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::next;    \
     INLINE YOMM2_REGISTER(                                                     \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::         \
-            method_type::override<OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(   \
-                __VA_ARGS__) ARGS>>);                                          \
+            method_type::override_fn<OVERRIDERS<                               \
+                YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn>);       \
     INLINE auto                                                                \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn ARGS  \
             ->boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>
