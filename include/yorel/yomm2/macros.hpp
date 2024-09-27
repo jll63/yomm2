@@ -86,12 +86,4 @@
 #define YOMM2_METHOD_CLASS(NAME, ARGS, ...)                                    \
     ::yorel::yomm2::method<YOMM2_METHOD_NAME(NAME) ARGS, __VA_ARGS__>
 
-#define register_classes YOMM2_CLASSES
-#define declare_method YOMM2_METHOD
-#define declare_static_method YOMM2_STATIC_METHOD
-#define define_method YOMM2_OVERRIDE
-#define define_method_in YOMM2_OVERRIDE_IN
-#define define_method_inline YOMM2_OVERRIDE_INLINE
-#define method_class YOMM2_METHOD_CLASS
-
 #endif
