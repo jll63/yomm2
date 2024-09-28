@@ -110,7 +110,7 @@ std::string kick_dog(Dog& dog) {
     return "bark";
 }
 
-kick::override_fn<kick_dog> add_kick_dog;
+kick::override<kick_dog> add_kick_dog;
 // >
 
 // md<
@@ -120,7 +120,7 @@ kick::override_fn<kick_dog> add_kick_dog;
 // appropriate function. Function templates and explicit specialization can also
 // be used for this purpose.
 
-// What about `next`? The constructor of `override_fn` can be passed a pointer
+// What about `next`? The constructor of `override` can be passed a pointer
 // to a function that will be set to the function's next definition by
 // `update`. The pointer type is available in the method as `next_type`.
 
@@ -131,7 +131,7 @@ std::string kick_bulldog(Bulldog& dog) {
     return kick::next<kick_bulldog>(dog) + " and bite back";
 }
 
-kick::override_fn<kick_bulldog> add_kick_bulldog;
+kick::override<kick_bulldog> add_kick_bulldog;
 // >
 
 // md<
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // passing it `declval` arguments for the definition's parameter list. The
 // compiler performs overload resolution, and the macro uses `decltype` to
 // extract the result type, i.e the method's class, and registers the definition
-// and the `next` pointer with `override_fn`.
+// and the `next` pointer with `override`.
 
 // In the process, both macros need to create identifiers for the various static
 // objects, and the name of the function inside the definition wrapper class.
@@ -247,7 +247,7 @@ using kick = method<kick_(virtual_<Animal&>), std::string>;
 
 // md<
 
-// `override_fn` is a workhorse that is intended to be used directly only by
+// `override` is a workhorse that is intended to be used directly only by
 // `define_method`. YOMM2 has another mechanism that is a bit more high level:
 // *definition containers*.
 
@@ -258,11 +258,9 @@ using kick = method<kick_(virtual_<Animal&>), std::string>;
 // >
 
 // code<
-struct kick_dog {
-    static std::string fn(Dog& dog) {
-        return "bark";
-    }
-};
+std::string kick_dog(Dog& dog) {
+    return "bark";
+}
 
 YOMM2_REGISTER(kick::override<kick_dog>);
 // >
@@ -279,11 +277,9 @@ YOMM2_REGISTER(kick::override<kick_dog>);
 // >
 
 // code<
-struct kick_bulldog {
-    static std::string fn(Bulldog& dog) {
-        return kick::next<fn>(dog) + " and bite back";
-    }
-};
+static std::string kick_bulldog(Bulldog& dog) {
+    return kick::next<kick_bulldog>(dog) + " and bite back";
+}
 
 YOMM2_REGISTER(kick::override<kick_bulldog>);
 // >

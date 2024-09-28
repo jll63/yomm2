@@ -282,7 +282,7 @@ inline bool operator==(const vector& a, const vector& b) {
 // Now we need to provide definitions for these methods. But which ones?
 
 // We could decide *for the user* that only (say) vectors of `double`s and
-// `int`s are supported. We could use `override_fn` or `override` to
+// `int`s are supported. We could use `override` or `override` to
 // define four specializations, covering all the possible combinations (i.e. the
 // Cartesian product):
 

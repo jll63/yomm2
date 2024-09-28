@@ -133,19 +133,28 @@ static_assert(
 
 namespace test_add_definition {
 
-struct method {
-    using self_type = method;
-    template<class Container> struct override;
-};
+struct Number {};
+struct Fraction : Number {};
+
+struct negate_;
+using negate = method<negate_(virtual_<const Number&>), Number>;
+
 
 template<typename...>
-struct definition {};
+struct definition;
+
+template<class Derived>
+struct definition<negate, Derived> {
+    static auto fn(const Derived&) {
+        return Derived();
+    }
+};
 
 static_assert(std::is_same_v<
-    detail::use_definition<definition>::fn<types<method, int>>,
-    method::override<definition<method, int>>
-
+    detail::use_definition<definition>::fn<types<negate, Fraction>>,
+    negate::override<definition<negate, Fraction>::fn>
 >);
+
 }
 
 int main() {

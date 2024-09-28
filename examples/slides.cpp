@@ -188,17 +188,15 @@ using value = method<value_id(virtual_<const Node&>), int>;
 int number_value(const Number& node) {
   return node.val;
 }
-value::override_fn<number_value> add_number_value;
+value::override<number_value> add_number_value;
 
 template<class NodeClass, class Op>
-struct binary_value {
-  static int fn(const NodeClass& expr) {
+int binary_op(const NodeClass& expr) {
     return Op()(value::fn(expr.left), value::fn(expr.right));
-  }
-};
+}
 
-YOMM2_REGISTER(value::override<binary_value<Plus, std::plus<int>>>);
-YOMM2_REGISTER(value::override<binary_value<Times, std::multiplies<int>>>);
+YOMM2_REGISTER(value::override<binary_op<Plus, std::plus<int>>>);
+YOMM2_REGISTER(value::override<binary_op<Times, std::multiplies<int>>>);
 
 }
 

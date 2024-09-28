@@ -45,7 +45,7 @@ struct Payroll {
     }
 
   public:
-    using pay_functions = Payroll::pay_method::override_fns<
+    using pay_functions = Payroll::pay_method::override<
         &Payroll::pay_employee, &Payroll::pay_manager>;
 };
 

@@ -647,44 +647,34 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
     };
 
     template<auto Function>
-    struct override_fn_impl {
-        explicit override_fn_impl(FunctionPointer* next = nullptr);
+    struct override_impl {
+        explicit override_impl(FunctionPointer* next = nullptr);
     };
 
     template<auto Function, typename FunctionType>
-    struct override_fn_aux;
+    struct override_aux;
 
     template<auto Function, typename FnReturnType, typename... FnParameters>
-    struct override_fn_aux<Function, FnReturnType (*)(FnParameters...)>
-        : override_fn_impl<Function> {
+    struct override_aux<Function, FnReturnType (*)(FnParameters...)>
+        : override_impl<Function> {
     };
 
     template<
         auto Function, class FnClass, typename FnReturnType,
         typename... FnParameters>
-    struct override_fn_aux<
+    struct override_aux<
         Function, FnReturnType (FnClass::*)(FnParameters...)> {
         static auto fn(FnClass* this_, FnParameters&&... args) -> FnReturnType {
             return (this_->*Function)(std::forward<FnParameters>(args)...);
         }
 
-        override_fn_impl<fn> impl{&next<Function>};
+        override_impl<fn> impl{&next<Function>};
     };
 
   public:
-    template<auto Function>
-    struct override_fn : override_fn_aux<Function, decltype(Function)> {
-        using override_fn_aux<Function, decltype(Function)>::override_fn_aux;
-    };
-
-    template<auto... F>
-    struct override_fns {
-        std::tuple<override_fn<F>...> fns;
-    };
-
-    template<class Container>
-    struct override : override_fn<Container::fn> {
-        using type = override;
+    template<auto... Function>
+    struct override {
+        std::tuple<override_aux<Function, decltype(Function)>...> impl;
     };
 };
 
@@ -988,8 +978,8 @@ auto method<Name(Parameters...), Return, Policy>::
 
 template<typename Name, typename Return, typename... Parameters, class Policy>
 template<auto Function>
-method<Name(Parameters...), Return, Policy>::override_fn_impl<
-    Function>::override_fn_impl(FunctionPointer* p_next) {
+method<Name(Parameters...), Return, Policy>::override_impl<
+    Function>::override_impl(FunctionPointer* p_next) {
     // Work around MSVC bug: using &next<Function> as a default value
     // for 'next' confuses it about Parameters not being expanded.
     if (!p_next) {

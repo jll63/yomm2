@@ -51,7 +51,7 @@ using same_type = method<same_type_(
 bool same_type_catch_all(const abstract_matrix&, const abstract_matrix&) {
     return false;
 }
-YOMM2_REGISTER(same_type::override_fn<same_type_catch_all>);
+YOMM2_REGISTER(same_type::override<same_type_catch_all>);
 
 // 2
 template<class Method, typename...>

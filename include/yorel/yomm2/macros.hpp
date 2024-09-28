@@ -69,7 +69,7 @@
     };                                                                         \
     INLINE YOMM2_REGISTER(                                                     \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::         \
-            method_type::override_fn<OVERRIDERS<                               \
+            method_type::override<OVERRIDERS<                               \
                 YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn>);       \
     INLINE auto                                                                \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn ARGS  \

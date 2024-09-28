@@ -377,24 +377,24 @@ struct population : abstract_population {
         template<typename T>
         static void fn1(T&) {
         }
-        typename method1::template override_fn<fn1<intermediate<0>>>
+        typename method1::template override<fn1<intermediate<0>>>
             YOMM2_GENSYM;
-        typename method1::template override_fn<fn1<intermediate<1>>>
+        typename method1::template override<fn1<intermediate<1>>>
             YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(T&, U&) {
         }
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };
@@ -416,24 +416,24 @@ struct population : abstract_population {
         template<typename T>
         static void fn1(vptr<T>) {
         }
-        typename method1::template override_fn<fn1<intermediate<0>>>
+        typename method1::template override<fn1<intermediate<0>>>
             YOMM2_GENSYM;
-        typename method1::template override_fn<fn1<intermediate<1>>>
+        typename method1::template override<fn1<intermediate<1>>>
             YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(vptr<T>, vptr<U>) {
         }
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };

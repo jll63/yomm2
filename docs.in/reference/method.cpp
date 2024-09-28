@@ -1,6 +1,6 @@
 /***
 entry: method
-hrefs: method-fn, method-next_type, method-override_fn, method-override, method-use_next
+hrefs: method-fn, method-next_type, method-override, method-override, method-use_next
 headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
@@ -16,7 +16,7 @@ struct method<Name, ReturnType(Args...), Policy>;
 
 `method` provides a static function object, `fn`, that takes a list of arguments
 of type `Args`, *minus* the `virtual_` decorator, and returns `ReturnType`.
-Method definitions can be added with the [`method::override_fn`](#override_fn)
+Method definitions can be added with the [`method::override`](#override)
 and [`method::override`](#override) class templates.
 
 ## Template parameters
@@ -82,17 +82,17 @@ The single instance of `method<Name, ReturnType(Args...)>`. Used to call the met
 
 | Name                              | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
-| [override_fn](#override_fn)     | add a definition to the method                            |
+| [override](#override)     | add a definition to the method                            |
 | [override](#override) | add a definition container to the method                  |
 | [next_type](#next_type)           | type of a pointer to the next most specialised definition |
 | [use_next](#use_next)             | CRTP base for definitions that use `next`                 |
 
-## override_fn
+## override
 
 ```c++
 template<auto Function>
-struct override_fn {
-    explicit override_fn(next_type* next = nullptr);
+struct override {
+    explicit override(next_type* next = nullptr);
 };
 ```
 
@@ -200,18 +200,18 @@ using kick = yomm2::method<kick_methods(virtual_<Animal&>), std::string>;
 std::string kick_cat(Cat& dog) {
     return "hiss";
 }
-YOMM2_REGISTER(kick::override_fn<kick_cat>);
+YOMM2_REGISTER(kick::override<kick_cat>);
 
 std::string kick_dog(Dog& dog) {
     return "bark";
 }
-YOMM2_REGISTER(kick::override_fn<kick_dog>);
 
-struct kick_bulldog {
-    static std::string fn(Bulldog& dog) {
-        return kick::next<fn>(dog) + " and bite";
-    }
-};
+YOMM2_REGISTER(kick::override<kick_dog>);
+
+std::string kick_bulldog(Bulldog& dog) {
+    return kick::next<kick_bulldog>(dog) + " and bite";
+}
+
 YOMM2_REGISTER(kick::override<kick_bulldog>);
 
 struct YOMM2_METHOD_NAME(pet); // use obfuscated name
@@ -221,12 +221,14 @@ using pet =
 std::string pet_cat(Cat& dog) {
     return "purr";
 }
-YOMM2_REGISTER(pet::override_fn<pet_cat>);
+
+YOMM2_REGISTER(pet::override<pet_cat>);
 
 std::string pet_dog(Dog& dog) {
     return "wag tail";
 }
-YOMM2_REGISTER(pet::override_fn<pet_dog>);
+
+YOMM2_REGISTER(pet::override<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::initialize();

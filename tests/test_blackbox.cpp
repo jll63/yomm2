@@ -210,13 +210,13 @@ std::string kick_dog(Dog& dog) {
     return "bark";
 }
 
-YOMM2_REGISTER(kick::override_fn<kick_dog>);
+YOMM2_REGISTER(kick::override<kick_dog>);
 
 std::string kick_bulldog(Bulldog& dog) {
     return kick::next<kick_bulldog>(dog) + " and bite back";
 }
 
-YOMM2_REGISTER(kick::override_fn<kick_bulldog>);
+YOMM2_REGISTER(kick::override<kick_bulldog>);
 
 BOOST_AUTO_TEST_CASE(test_next_fn) {
     initialize();
@@ -369,31 +369,31 @@ BOOST_AUTO_TEST_CASE(update_report) {
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
-    YOMM2_REGISTER(kick::override_fn<fn<Animal>>);
+    YOMM2_REGISTER(kick::override<fn<Animal>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
-    YOMM2_REGISTER(pet::override_fn<fn<Cat>>);
-    YOMM2_REGISTER(pet::override_fn<fn<Dog>>);
+    YOMM2_REGISTER(pet::override<fn<Cat>>);
+    YOMM2_REGISTER(pet::override<fn<Dog>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     // create ambiguity
-    YOMM2_REGISTER(meet::override_fn<fn<Animal, Cat>>);
-    YOMM2_REGISTER(meet::override_fn<fn<Dog, Animal>>);
+    YOMM2_REGISTER(meet::override<fn<Animal, Cat>>);
+    YOMM2_REGISTER(meet::override<fn<Dog, Animal>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 4);
     BOOST_TEST(report.ambiguous == 1);
 
-    YOMM2_REGISTER(meet::override_fn<fn<Cat, Cat>>);
+    YOMM2_REGISTER(meet::override<fn<Cat, Cat>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 6);
     BOOST_TEST(report.ambiguous == 1);
 
     // shadow ambiguity
-    YOMM2_REGISTER(meet::override_fn<fn<Dog, Dog>>);
-    YOMM2_REGISTER(meet::override_fn<fn<Dog, Cat>>);
-    YOMM2_REGISTER(meet::override_fn<fn<Cat, Dog>>);
+    YOMM2_REGISTER(meet::override<fn<Dog, Dog>>);
+    YOMM2_REGISTER(meet::override<fn<Dog, Cat>>);
+    YOMM2_REGISTER(meet::override<fn<Cat, Dog>>);
     report = initialize<test_policy>().report;
     BOOST_TEST(report.cells == 9);
     BOOST_TEST(report.ambiguous == 0);
