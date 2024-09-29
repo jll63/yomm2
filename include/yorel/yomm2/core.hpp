@@ -162,7 +162,9 @@ auto optimal_cast(B&& obj) -> decltype(auto) {
 // virtual_traits
 
 template<class Policy, typename T>
-struct virtual_traits;
+struct virtual_traits {
+    using polymorphic_type = void;
+};
 
 template<class Policy, typename T>
 struct virtual_traits<Policy, T&> {
@@ -175,6 +177,20 @@ struct virtual_traits<Policy, T&> {
     template<typename D>
     static auto cast(T& obj) -> D& {
         return detail::optimal_cast<Policy, D&>(obj);
+    }
+};
+
+template<class Policy, typename T>
+struct virtual_traits<Policy, T*> {
+    using polymorphic_type = std::remove_cv_t<T>;
+
+    static auto rarg(const T* arg) -> const T& {
+        return *arg;
+    }
+
+    template<typename D>
+    static auto cast(T* obj) -> D* {
+        return &detail::optimal_cast<Policy, D&>(*obj);
     }
 };
 
@@ -224,7 +240,7 @@ using polymorphic_types = boost::mp11::mp_transform<
     remove_virtual, boost::mp11::mp_filter<detail::is_virtual, MethodArgList>>;
 
 template<class Policy, typename T>
-struct argument_traits {
+struct parameter_traits {
     static auto rarg(const T& arg) -> const T& {
         return arg;
     }
@@ -236,14 +252,14 @@ struct argument_traits {
 };
 
 template<class Policy, typename T>
-struct argument_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
+struct parameter_traits<Policy, virtual_<T>> : virtual_traits<Policy, T> {};
 
 template<class Policy, class Class>
-struct argument_traits<Policy, virtual_ptr<Class, Policy>>
+struct parameter_traits<Policy, virtual_ptr<Class, Policy>>
     : virtual_traits<Policy, virtual_ptr<Class, Policy>> {};
 
 template<class Policy, class Class>
-struct argument_traits<Policy, const virtual_ptr<Class, Policy>&>
+struct parameter_traits<Policy, const virtual_ptr<Class, Policy>&>
     : virtual_traits<Policy, const virtual_ptr<Class, Policy>&> {};
 
 } // namespace detail
@@ -463,7 +479,8 @@ class virtual_ptr {
                 virtual_ptr_traits<Class, Policy>::template cast<Other>(obj);
         } else {
             result.obj =
-                &detail::optimal_cast<Policy, typename Other::element_type&>(*obj);
+                &detail::optimal_cast<Policy, typename Other::element_type&>(
+                    *obj);
         }
 
         return result;
@@ -607,8 +624,6 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
     static BOOST_NORETURN auto
     not_implemented_handler(detail::remove_virtual<Parameters>... args)
         -> Return;
-    static BOOST_NORETURN auto
-    ambiguous_handler(detail::remove_virtual<Parameters>... args) -> Return;
 
     template<auto, typename>
     struct thunk;
@@ -646,7 +661,7 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
                 detail::types<OverriderParameters...>>>;
     };
 
-    template<auto Function>
+    template<auto Function, typename FnReturnType>
     struct override_impl {
         explicit override_impl(FunctionPointer* next = nullptr);
     };
@@ -656,19 +671,17 @@ class method<Name(Parameters...), Return, Policy> : public detail::method_info {
 
     template<auto Function, typename FnReturnType, typename... FnParameters>
     struct override_aux<Function, FnReturnType (*)(FnParameters...)>
-        : override_impl<Function> {
-    };
+        : override_impl<Function, FnReturnType> {};
 
     template<
         auto Function, class FnClass, typename FnReturnType,
         typename... FnParameters>
-    struct override_aux<
-        Function, FnReturnType (FnClass::*)(FnParameters...)> {
+    struct override_aux<Function, FnReturnType (FnClass::*)(FnParameters...)> {
         static auto fn(FnClass* this_, FnParameters&&... args) -> FnReturnType {
             return (this_->*Function)(std::forward<FnParameters>(args)...);
         }
 
-        override_impl<fn> impl{&next<Function>};
+        override_impl<fn, FnReturnType> impl{&next<Function>};
     };
 
   public:
@@ -692,18 +705,19 @@ constexpr bool is_method = std::is_base_of_v<detail::method_info, T>;
 
 template<typename Name, typename Return, typename... Parameters, class Policy>
 method<Name(Parameters...), Return, Policy>::method() {
-    this->slots_strides_ptr = slots_strides;
+    method_info::slots_strides_ptr = slots_strides;
 
     using virtual_type_ids = detail::type_id_list<
         Policy,
         boost::mp11::mp_transform_q<
             boost::mp11::mp_bind_front<detail::polymorphic_type, Policy>,
             VirtualParameters>>;
-    this->vp_begin = virtual_type_ids::begin;
-    this->vp_end = virtual_type_ids::end;
-    this->not_implemented = (void*)not_implemented_handler;
-    this->ambiguous = (void*)ambiguous_handler;
-    this->method_type = Policy::template static_type<method>();
+    method_info::vp_begin = virtual_type_ids::begin;
+    method_info::vp_end = virtual_type_ids::end;
+    method_info::not_implemented = (void*)not_implemented_handler;
+    method_info::method_type = Policy::template static_type<method>();
+    method_info::return_type = Policy::template static_type<
+        typename virtual_traits<Policy, Return>::polymorphic_type>();
     Policy::methods.push_back(*this);
 }
 
@@ -742,7 +756,7 @@ template<typename Name, typename Return, typename... Parameters, class Policy>
 BOOST_FORCEINLINE auto method<Name(Parameters...), Return, Policy>::operator()(
     detail::remove_virtual<Parameters>... args) const -> Return {
     using namespace detail;
-    auto pf = resolve(argument_traits<Policy, Parameters>::rarg(args)...);
+    auto pf = resolve(parameter_traits<Policy, Parameters>::rarg(args)...);
 
     return pf(std::forward<remove_virtual<Parameters>>(args)...);
 }
@@ -926,30 +940,7 @@ method<Name(Parameters...), Return, Policy>::not_implemented_handler(
         auto ti_iter = types;
         (...,
          (*ti_iter++ = Policy::dynamic_type(
-              detail::argument_traits<Policy, Parameters>::rarg(args))));
-        std::copy_n(
-            types, (std::min)(sizeof...(args), resolution_error::max_types),
-            &error.types[0]);
-        Policy::error(error);
-    }
-
-    abort(); // in case user handler "forgets" to abort
-}
-
-template<typename Name, typename Return, typename... Parameters, class Policy>
-BOOST_NORETURN auto
-method<Name(Parameters...), Return, Policy>::ambiguous_handler(
-    detail::remove_virtual<Parameters>... args) -> Return {
-    if constexpr (Policy::template has_facet<policies::error_handler>) {
-        resolution_error error;
-        error.status = resolution_error::ambiguous;
-        error.method = Policy::template static_type<method>();
-        error.arity = Arity;
-        type_id types[sizeof...(args)];
-        auto ti_iter = types;
-        (...,
-         (*ti_iter++ = Policy::dynamic_type(
-              detail::argument_traits<Policy, Parameters>::rarg(args))));
+              detail::parameter_traits<Policy, Parameters>::rarg(args))));
         std::copy_n(
             types, (std::min)(sizeof...(args), resolution_error::max_types),
             &error.types[0]);
@@ -969,7 +960,7 @@ auto method<Name(Parameters...), Return, Policy>::
     thunk<Overrider, OverriderReturn (*)(OverriderParameters...)>::fn(
         detail::remove_virtual<Parameters>... arg) -> Return {
     return Overrider(
-        detail::argument_traits<Policy, Parameters>::template cast<
+        detail::parameter_traits<Policy, Parameters>::template cast<
             OverriderParameters>(detail::remove_virtual<Parameters>(arg))...);
 }
 
@@ -977,16 +968,18 @@ auto method<Name(Parameters...), Return, Policy>::
 // overriders
 
 template<typename Name, typename Return, typename... Parameters, class Policy>
-template<auto Function>
+template<auto Function, typename FnReturnType>
 method<Name(Parameters...), Return, Policy>::override_impl<
-    Function>::override_impl(FunctionPointer* p_next) {
+    Function, FnReturnType>::override_impl(FunctionPointer* p_next) {
+    using namespace detail;
+
     // Work around MSVC bug: using &next<Function> as a default value
     // for 'next' confuses it about Parameters not being expanded.
     if (!p_next) {
         p_next = &next<Function>;
     }
 
-    static detail::overrider_info info;
+    static overrider_info info;
 
     if (info.method) {
         BOOST_ASSERT(info.method == &fn);
@@ -994,6 +987,8 @@ method<Name(Parameters...), Return, Policy>::override_impl<
     }
 
     info.method = &fn;
+    info.return_type = Policy::template static_type<
+        typename virtual_traits<Policy, FnReturnType>::polymorphic_type>();
     info.type = Policy::template static_type<decltype(Function)>();
     info.next = reinterpret_cast<void**>(p_next);
     using Thunk = thunk<Function, decltype(Function)>;

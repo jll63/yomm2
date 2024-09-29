@@ -59,12 +59,6 @@ BOOST_AUTO_TEST_CASE(test_generator) {
     } catch (const resolution_error& e) {
     }
 
-    try {
-        meet(*cat, *dog, os);
-        BOOST_FAIL("should have thrown");
-    } catch (const resolution_error& e) {
-    }
-
     os.str("");
     identify(*cat, os);
     BOOST_TEST(os.str() == "Alice's cat");

@@ -18,7 +18,7 @@ using namespace yorel::yomm2::detail;
 
 // clang-format off
 
-namespace YOMM2_GENSYM {
+namespace test_virtual {
 
 struct base {
     virtual ~base() {}
@@ -30,6 +30,30 @@ struct c : base {};
 struct d : base {};
 struct e : base {};
 struct f : base {};
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, const base&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base*>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, const base*>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base&&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, int>::polymorphic_type, void>);
 
 static_assert(
     std::is_same_v<

@@ -59,7 +59,7 @@
         YOREL_YOMM2_DETAIL_LOCATE_METHOD(NAME, ARGS);                          \
         static auto fn ARGS->YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__);      \
         static auto has_next() {                                               \
-            return method_type::next<fn> != nullptr;                           \
+            return method_type::next<fn> != method_type::fn.not_implemented;   \
         }                                                                      \
         template<typename... Args>                                             \
         static decltype(auto) next(Args&&... args) {                           \
@@ -69,8 +69,8 @@
     };                                                                         \
     INLINE YOMM2_REGISTER(                                                     \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::         \
-            method_type::override<OVERRIDERS<                               \
-                YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn>);       \
+            method_type::override<OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(   \
+                __VA_ARGS__) ARGS>::fn>);                                      \
     INLINE auto                                                                \
         OVERRIDERS<YOREL_YOMM2_DETAIL_RETURN_TYPE(__VA_ARGS__) ARGS>::fn ARGS  \
             ->boost::mp11::mp_back<boost::mp11::mp_list<__VA_ARGS__>>

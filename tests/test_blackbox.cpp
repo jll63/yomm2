@@ -19,7 +19,7 @@ using namespace yorel::yomm2;
 
 namespace states {
 
-using test_policy = test_policy_<__COUNTER__>;
+using policy = test_policy_<__COUNTER__>;
 using std::string;
 
 struct Animal {
@@ -45,9 +45,9 @@ struct Cat : virtual Animal {
     }
 };
 
-YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
+YOMM2_CLASSES(Animal, Dog, Cat, policy);
 
-YOMM2_METHOD(name, (virtual_<const Animal&>), string, test_policy);
+YOMM2_METHOD(name, (virtual_<const Animal&>), string, policy);
 
 YOMM2_OVERRIDE(name, (const Cat& cat), string) {
     return "cat " + cat.name;
@@ -58,7 +58,7 @@ YOMM2_OVERRIDE(name, (const Dog& dog), string) {
 }
 
 BOOST_AUTO_TEST_CASE(initializing) {
-    initialize<test_policy>();
+    initialize<policy>();
     const Animal& dog = Dog("spot");
     BOOST_TEST("dog spot" == name(dog));
     const Animal& cat = Cat("felix");
@@ -68,6 +68,8 @@ BOOST_AUTO_TEST_CASE(initializing) {
 } // namespace states
 
 namespace matrices {
+
+using policy = test_policy_<__COUNTER__>;
 
 struct matrix {
     virtual ~matrix() {
@@ -88,18 +90,19 @@ enum Subtype {
     DIAGONAL_DIAGONAL
 };
 
-YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix);
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, policy);
 
 YOMM2_METHOD(
-    times, (virtual_<const matrix&>, virtual_<const matrix&>), Subtype);
-YOMM2_METHOD(times, (double, virtual_<const matrix&>), Subtype);
-YOMM2_METHOD(times, (virtual_<const matrix&>, double), Subtype);
+    times, (virtual_<const matrix&>, virtual_<const matrix&>), Subtype, policy);
+YOMM2_METHOD(times, (double, virtual_<const matrix&>), Subtype, policy);
+YOMM2_METHOD(times, (virtual_<const matrix&>, double), Subtype, policy);
 
 YOMM2_OVERRIDE(times, (const matrix&, const matrix&), Subtype) {
     return MATRIX_MATRIX;
 }
 
-YOMM2_OVERRIDE(times, (const diagonal_matrix&, const diagonal_matrix&), Subtype) {
+YOMM2_OVERRIDE(
+    times, (const diagonal_matrix&, const diagonal_matrix&), Subtype) {
     return DIAGONAL_DIAGONAL;
 }
 
@@ -119,9 +122,9 @@ YOMM2_OVERRIDE(times, (const matrix& m, double a), Subtype) {
     return MATRIX_SCALAR;
 }
 
-YOMM2_METHOD(times, (virtual_<matrix&&>, virtual_<matrix&&>), int);
-YOMM2_METHOD(times, (double, virtual_<matrix&&>), int);
-YOMM2_METHOD(times, (virtual_<matrix&&>, double), int);
+YOMM2_METHOD(times, (virtual_<matrix&&>, virtual_<matrix&&>), int, policy);
+YOMM2_METHOD(times, (double, virtual_<matrix&&>), int, policy);
+YOMM2_METHOD(times, (virtual_<matrix&&>, double), int, policy);
 
 YOMM2_OVERRIDE(times, (matrix&&, matrix&&), int) {
     return -MATRIX_MATRIX;
@@ -147,20 +150,21 @@ YOMM2_OVERRIDE(times, (matrix && m, double a), int) {
     return -MATRIX_SCALAR;
 }
 
-YOMM2_METHOD(zero_ref, (virtual_<matrix&>), Subtype);
+YOMM2_METHOD(zero, (virtual_<matrix&>), Subtype, policy);
 
-YOMM2_OVERRIDE(zero_ref, (dense_matrix & m), Subtype) {
+YOMM2_OVERRIDE(zero, (dense_matrix & m), Subtype) {
     return MATRIX;
 }
 
-YOMM2_OVERRIDE(zero_ref, (diagonal_matrix & m), Subtype) {
+YOMM2_OVERRIDE(zero, (diagonal_matrix & m), Subtype) {
     return DIAGONAL;
 }
 
 BOOST_AUTO_TEST_CASE(simple) {
-    auto report = initialize();
+    auto report = initialize<policy>();
 
     {
+        // pass by const ref
         const matrix& dense = dense_matrix();
         const matrix& diag = diagonal_matrix();
         BOOST_TEST(times(dense, dense) == MATRIX_MATRIX);
@@ -172,6 +176,7 @@ BOOST_AUTO_TEST_CASE(simple) {
     }
 
     {
+        // pass by xref
         BOOST_TEST(times(dense_matrix(), dense_matrix()) == -MATRIX_MATRIX);
         BOOST_TEST(
             times(diagonal_matrix(), diagonal_matrix()) == -DIAGONAL_DIAGONAL);
@@ -182,14 +187,118 @@ BOOST_AUTO_TEST_CASE(simple) {
     }
 
     {
+        // pass by ref
         dense_matrix dense;
-        BOOST_TEST(zero_ref(dense) == MATRIX);
+        BOOST_TEST(zero(dense) == MATRIX);
         diagonal_matrix diagonal;
-        BOOST_TEST(zero_ref(diagonal) == DIAGONAL);
+        BOOST_TEST(zero(diagonal) == DIAGONAL);
     }
 }
 
 } // namespace matrices
+
+namespace ambiguity {
+
+using policy = test_policy_<__COUNTER__>;
+
+struct matrix {
+    virtual ~matrix() {
+    }
+};
+
+struct dense_matrix : matrix {};
+struct diagonal_matrix : matrix {};
+
+enum Subtype { NONE, MATRIX_MATRIX, MATRIX_DIAGONAL, DIAGONAL_MATRIX };
+
+YOMM2_CLASSES(matrix, dense_matrix, diagonal_matrix, policy);
+
+YOMM2_METHOD(
+    times, (virtual_<const matrix&>, virtual_<const matrix&>),
+    std::pair<Subtype, Subtype>, policy);
+
+YOMM2_OVERRIDE(
+    times, (const matrix&, const matrix&), std::pair<Subtype, Subtype>) {
+    BOOST_TEST(!has_next());
+    return std::pair(MATRIX_MATRIX, NONE);
+}
+
+YOMM2_OVERRIDE(
+    times, (const matrix& a, const diagonal_matrix& b),
+    std::pair<Subtype, Subtype>) {
+    BOOST_TEST(has_next());
+    return std::pair(MATRIX_DIAGONAL, next(a, b).first);
+}
+
+YOMM2_OVERRIDE(
+    times, (const diagonal_matrix& a, const matrix& b),
+    std::pair<Subtype, Subtype>) {
+    BOOST_TEST(has_next());
+    return std::pair(DIAGONAL_MATRIX, next(a, b).first);
+}
+
+BOOST_AUTO_TEST_CASE(ambiguity) {
+    auto compiler = initialize<policy>();
+    BOOST_TEST(compiler.report.ambiguous == 1);
+
+    // N2216: in case of ambiguity, pick one.
+    diagonal_matrix diag1, diag2;
+    auto result1 = times(diag1, diag2);
+    BOOST_TEST(result1.first == DIAGONAL_MATRIX);
+    // Which overrider is picked is NOT documented! However, I know that it is
+    // the last in registration order. This is important for the test for
+    // ambiguity resolution using covariant return types.
+    BOOST_TEST(result1.second == MATRIX_MATRIX);
+
+    // but always the same
+    auto result2 = times(diag1, diag2);
+    BOOST_TEST((result1 == result2));
+}
+
+} // namespace ambiguity
+namespace covariant_return_type {
+
+using policy = test_policy_<__COUNTER__>;
+
+enum Subtype { MATRIX_MATRIX, MATRIX_DENSE, DENSE_MATRIX };
+
+struct matrix {
+    virtual ~matrix() {
+    }
+
+    Subtype type;
+};
+
+struct dense_matrix : matrix {};
+
+YOMM2_CLASSES(matrix, dense_matrix, policy);
+
+YOMM2_METHOD(
+    times, (virtual_<const matrix&>, virtual_<const matrix&>), matrix*, policy);
+
+YOMM2_OVERRIDE(times, (const matrix&, const dense_matrix&), matrix*) {
+    auto result = new dense_matrix;
+    result->type = MATRIX_DENSE;
+    return result;
+}
+
+YOMM2_OVERRIDE(times, (const dense_matrix&, const matrix&), dense_matrix*) {
+    auto result = new dense_matrix;
+    result->type = DENSE_MATRIX;
+    return result;
+}
+
+BOOST_AUTO_TEST_CASE(covariant_return_type) {
+    auto compiler = initialize<policy>();
+    BOOST_TEST(compiler.report.ambiguous == 0);
+
+    // N2216: use covariant return types to resolve ambiguity.
+    dense_matrix left, right;
+    std::unique_ptr<matrix> result(times(left, right));
+    BOOST_TEST(result->type == DENSE_MATRIX);
+}
+
+} // namespace covariant_return_type
 
 namespace test_next_fn {
 
@@ -270,26 +379,26 @@ void test_handler(const default_policy::error_variant& error_v) {
 
 namespace initialize_error_handling {
 
-using test_policy = test_policy_<__COUNTER__>;
+using policy = test_policy_<__COUNTER__>;
 
 struct base {
     virtual ~base() {
     }
 };
 
-YOMM2_METHOD(foo, (virtual_<base&>), void, test_policy);
+YOMM2_METHOD(foo, (virtual_<base&>), void, policy);
 
 BOOST_AUTO_TEST_CASE(test_initialize_error_handling) {
-    auto prev_handler = test_policy::set_error_handler(errors::test_handler);
+    auto prev_handler = policy::set_error_handler(errors::test_handler);
 
     try {
-        initialize<test_policy>();
+        initialize<policy>();
     } catch (const unknown_class_error& error) {
-        test_policy::set_error_handler(prev_handler);
+        policy::set_error_handler(prev_handler);
         BOOST_TEST(error.type == reinterpret_cast<type_id>(&typeid(base)));
         return;
     } catch (...) {
-        test_policy::set_error_handler(prev_handler);
+        policy::set_error_handler(prev_handler);
         BOOST_FAIL("unexpected exception");
     }
     BOOST_FAIL("did not throw");
@@ -331,7 +440,7 @@ BOOST_AUTO_TEST_CASE(across_namespaces) {
 
 namespace report {
 
-using test_policy = test_policy_<__COUNTER__>;
+using policy = test_policy_<__COUNTER__>;
 
 struct Animal {
     virtual void foo() = 0;
@@ -355,38 +464,38 @@ template<class... Class>
 void fn(Class&...) {
 }
 
-YOMM2_CLASSES(Animal, Dog, Cat, test_policy);
+YOMM2_CLASSES(Animal, Dog, Cat, policy);
 
-BOOST_AUTO_TEST_CASE(update_report) {
-    using kick = method<kick_(virtual_<Animal&>), void, test_policy>;
-    using pet = method<pet_(virtual_<Animal&>), void, test_policy>;
+BOOST_AUTO_TEST_CASE(initialize_report) {
+    using kick = method<kick_(virtual_<Animal&>), void, policy>;
+    using pet = method<pet_(virtual_<Animal&>), void, policy>;
     using meet =
-        method<meet_(virtual_<Animal&>, virtual_<Animal&>), void, test_policy>;
+        method<meet_(virtual_<Animal&>, virtual_<Animal&>), void, policy>;
 
-    auto report = initialize<test_policy>().report;
+    auto report = initialize<policy>().report;
     BOOST_TEST(report.not_implemented == 3);
     BOOST_TEST(report.ambiguous == 0);
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
     YOMM2_REGISTER(kick::override<fn<Animal>>);
-    report = initialize<test_policy>().report;
+    report = initialize<policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     YOMM2_REGISTER(pet::override<fn<Cat>>);
     YOMM2_REGISTER(pet::override<fn<Dog>>);
-    report = initialize<test_policy>().report;
+    report = initialize<policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 
     // create ambiguity
     YOMM2_REGISTER(meet::override<fn<Animal, Cat>>);
     YOMM2_REGISTER(meet::override<fn<Dog, Animal>>);
-    report = initialize<test_policy>().report;
+    report = initialize<policy>().report;
     BOOST_TEST(report.cells == 4);
     BOOST_TEST(report.ambiguous == 1);
 
     YOMM2_REGISTER(meet::override<fn<Cat, Cat>>);
-    report = initialize<test_policy>().report;
+    report = initialize<policy>().report;
     BOOST_TEST(report.cells == 6);
     BOOST_TEST(report.ambiguous == 1);
 
@@ -394,7 +503,7 @@ BOOST_AUTO_TEST_CASE(update_report) {
     YOMM2_REGISTER(meet::override<fn<Dog, Dog>>);
     YOMM2_REGISTER(meet::override<fn<Dog, Cat>>);
     YOMM2_REGISTER(meet::override<fn<Cat, Dog>>);
-    report = initialize<test_policy>().report;
+    report = initialize<policy>().report;
     BOOST_TEST(report.cells == 9);
     BOOST_TEST(report.ambiguous == 0);
 }
@@ -403,22 +512,22 @@ BOOST_AUTO_TEST_CASE(update_report) {
 
 namespace test_comma_in_return_type {
 
-using test_policy = test_policy_<__COUNTER__>;
+using policy = test_policy_<__COUNTER__>;
 
 struct Test {
     virtual ~Test() {};
 };
 
-YOMM2_CLASSES(Test, test_policy);
+YOMM2_CLASSES(Test, policy);
 
-YOMM2_METHOD(foo, (virtual_<Test&>), std::pair<int, int>, test_policy);
+YOMM2_METHOD(foo, (virtual_<Test&>), std::pair<int, int>, policy);
 
 YOMM2_OVERRIDE(foo, (Test&), std::pair<int, int>) {
     return {1, 2};
 }
 
 BOOST_AUTO_TEST_CASE(comma_in_return_type) {
-    initialize<test_policy>();
+    initialize<policy>();
 
     Test test;
 

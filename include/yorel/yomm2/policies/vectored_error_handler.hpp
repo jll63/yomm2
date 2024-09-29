@@ -45,7 +45,7 @@ struct vectored_error_handler : virtual error_handler {
         if constexpr (Policy::template has_facet<error_output>) {
             if (auto error = std::get_if<resolution_error>(&error_v)) {
                 const char* explanation[] = {
-                    "no applicable definition", "ambiguous call"};
+                    "no applicable overrider", "ambiguous call"};
                 Policy::error_stream
                     << explanation
                            [error->status - resolution_error::no_definition]

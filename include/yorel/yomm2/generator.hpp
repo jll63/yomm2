@@ -267,8 +267,6 @@ uint16_t generator::encode_group(
 
         if (spec == &method->not_implemented) {
             return method->specs.size();
-        } else if (spec == &method->ambiguous) {
-            return method->specs.size() + 1;
         } else {
             return entry.group_index;
         }
