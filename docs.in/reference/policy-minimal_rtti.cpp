@@ -57,13 +57,13 @@ using vptr = virtual_ptr<Class, final_policy>;
 
 register_classes(Animal, Dog, Cat, final_policy);
 
-declare_method(kick, (vptr<Animal>), std::string, final_policy);
+declare_method(poke, (vptr<Animal>), std::string, final_policy);
 
-define_method(kick, (vptr<Cat> cat), std::string) {
+define_method(poke, (vptr<Cat> cat), std::string) {
     return "hiss";
 }
 
-define_method(kick, (vptr<Dog> dog), std::string) {
+define_method(poke, (vptr<Dog> dog), std::string) {
     return "bark";
 }
 
@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(ref_static_rtti) {
         vptr<Animal>::final(snoopy),
     };
 
-    BOOST_TEST(kick(animals[0]) == "hiss");
-    BOOST_TEST(kick(animals[1]) == "bark");
+    BOOST_TEST(poke(animals[0]) == "hiss");
+    BOOST_TEST(poke(animals[1]) == "bark");
 }
 //***

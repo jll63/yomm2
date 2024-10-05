@@ -110,7 +110,6 @@ struct virtual_ptr_traits<std::shared_ptr<Class>, Policy> {
     }
 };
 
-
 namespace detail {
 
 template<class... Ts>

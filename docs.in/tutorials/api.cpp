@@ -70,8 +70,8 @@ use_classes<Animal, Dog, Bulldog> use_animal_classes;
 // >
 
 // code<
-struct kick_method;
-using kick = method<kick_method(virtual_<Animal&>), std::string>;
+struct poke_method;
+using poke = method<poke_method(virtual_<Animal&>), std::string>;
 // >
 
 // md<
@@ -92,9 +92,9 @@ using feed = method<feed_method(virtual_<Animal&>), std::string>;
 
 // md<
 
-// In the absence of the first parameter, `kick` and `feed` would be the same
+// In the absence of the first parameter, `poke` and `feed` would be the same
 // method. Together, the two arguments provide a unique key for the method.
-// Since the `kick_method` and `feed_method` types are local to the current namespace,
+// Since the `poke_method` and `feed_method` types are local to the current namespace,
 // this scheme also protects against accidental interference across namespaces.
 
 // The same key can be used for more than one method, provided that the
@@ -106,11 +106,11 @@ using feed = method<feed_method(virtual_<Animal&>), std::string>;
 // >
 
 // code<
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-kick::override<kick_dog> add_kick_dog;
+poke::override<poke_dog> add_poke_dog;
 // >
 
 // md<
@@ -127,11 +127,11 @@ kick::override<kick_dog> add_kick_dog;
 // >
 
 // code<
-std::string kick_bulldog(Bulldog& dog) {
-    return kick::next<kick_bulldog>(dog) + " and bite back";
+std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite back";
 }
 
-kick::override<kick_bulldog> add_kick_bulldog;
+poke::override<poke_bulldog> add_poke_bulldog;
 // >
 
 // md<
@@ -147,10 +147,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite back");
 }
 // >
 
@@ -239,9 +239,9 @@ using namespace yorel::yomm2;
 
 YOMM2_REGISTER(use_classes<Animal, Dog, Bulldog>);
 
-struct kick_;
+struct poke_;
 
-using kick = method<kick_(virtual_<Animal&>), std::string>;
+using poke = method<poke_(virtual_<Animal&>), std::string>;
 
 // >
 
@@ -258,11 +258,11 @@ using kick = method<kick_(virtual_<Animal&>), std::string>;
 // >
 
 // code<
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-YOMM2_REGISTER(kick::override<kick_dog>);
+YOMM2_REGISTER(poke::override<poke_dog>);
 // >
 
 // md<
@@ -277,11 +277,11 @@ YOMM2_REGISTER(kick::override<kick_dog>);
 // >
 
 // code<
-static std::string kick_bulldog(Bulldog& dog) {
-    return kick::next<kick_bulldog>(dog) + " and bite back";
+static std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite back";
 }
 
-YOMM2_REGISTER(kick::override<kick_bulldog>);
+YOMM2_REGISTER(poke::override<poke_bulldog>);
 // >
 
 // md<
@@ -302,10 +302,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_definition_containers) {
     initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite back");
 }
 
 } // namespace synopsis_better

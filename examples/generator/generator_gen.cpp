@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
 
     std::ofstream slots("slots.hpp");
     generator
-        .write_static_offsets<method_class(kick, (virtual_ptr<Animal>), void)>(
+        .write_static_offsets<method_class(poke, (virtual_ptr<Animal>), void)>(
             slots)
         .write_static_offsets<method_class(
             meet, (virtual_ptr<Animal>, virtual_ptr<Animal>), void)>(slots);

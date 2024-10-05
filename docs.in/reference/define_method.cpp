@@ -63,13 +63,13 @@ struct Bulldog : Dog {};
 
 register_classes(Animal, Dog, Bulldog);
 
-declare_method(kick, (virtual_<Animal&>), std::string);
+declare_method(poke, (virtual_<Animal&>), std::string);
 
-define_method(kick, (Dog& dog), std::string) {
+define_method(poke, (Dog& dog), std::string) {
     return "bark";
 }
 
-define_method(kick, (Bulldog& dog), std::string) {
+define_method(poke, (Bulldog& dog), std::string) {
     return next(dog) + " and bite";
 }
 
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(ref_example) {
     Animal* animal;
 
     animal = &snoopy;
-    BOOST_TEST(kick(*animal) == "bark");
+    BOOST_TEST(poke(*animal) == "bark");
 
     animal = &hector;
-    BOOST_TEST(kick(*animal) == "bark and bite");
+    BOOST_TEST(poke(*animal) == "bark and bite");
 }
 
 #endif

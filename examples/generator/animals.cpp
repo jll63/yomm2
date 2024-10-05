@@ -7,11 +7,11 @@ Animal::~Animal() {
 
 register_classes(Animal, Dog, Cat);
 
-define_method(kick, (virtual_ptr<Cat>), void) {
+define_method(poke, (virtual_ptr<Cat>), void) {
     std::cout << "hiss\n";
 }
 
-define_method(kick, (virtual_ptr<Dog>), void) {
+define_method(poke, (virtual_ptr<Dog>), void) {
     std::cout << "bark\n";
 }
 

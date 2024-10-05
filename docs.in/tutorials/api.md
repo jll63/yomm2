@@ -37,8 +37,8 @@ invocations of `register_class`.
 
 
 ```c++
-struct kick_key;
-using kick_method = method<kick_key, std::string(virtual_<Animal&>)>;
+struct poke_key;
+using poke_method = method<poke_key, std::string(virtual_<Animal&>)>;
 ```
 
 
@@ -56,9 +56,9 @@ using feed_method = method<feed_key, std::string(virtual_<Animal&>)>;
 ```
 
 
-In the absence of the first parameter, `kick` and `feed` would be the same
+In the absence of the first parameter, `poke` and `feed` would be the same
 method. Together, the two arguments provide a unique key for the method.
-Since the `kick_key` and `feed_key` types are local to the current namespace,
+Since the `poke_key` and `feed_key` types are local to the current namespace,
 this scheme also protects against accidental interference across namespaces.
 
 The same key can be used for more than one method, provided that the
@@ -69,11 +69,11 @@ Now let's add a definition to the method:
 
 
 ```c++
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-kick_method::add_function<kick_dog> add_kick_dog;
+poke_method::add_function<poke_dog> add_poke_dog;
 ```
 
 
@@ -88,13 +88,13 @@ to a function that will be set to the function's next definition by
 
 
 ```c++
-kick_method::next_type kick_bulldog_next;
+poke_method::next_type poke_bulldog_next;
 
-std::string kick_bulldog(Bulldog& dog) {
-    return kick_bulldog_next(dog) + " and bite back";
+std::string poke_bulldog(Bulldog& dog) {
+    return poke_bulldog_next(dog) + " and bite back";
 }
 
-kick_method::add_function<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
+poke_method::add_function<poke_bulldog> add_poke_bulldog(&poke_bulldog_next);
 ```
 
 
@@ -108,10 +108,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     update();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick_method::fn(*snoopy) == "bark");
+    BOOST_TEST(poke_method::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick_method::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke_method::fn(*hector) == "bark and bite back");
 }
 ```
 
@@ -184,9 +184,9 @@ using namespace yorel::yomm2;
 
 YOMM2_STATIC(use_classes<Animal, Dog, Bulldog>);
 
-struct YOMM2_SYMBOL(kick);
+struct YOMM2_SYMBOL(poke);
 
-using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
+using poke_method = method<YOMM2_SYMBOL(poke), std::string(virtual_<Animal&>)>;
 ```
 
 
@@ -200,13 +200,13 @@ function named `fn`. Containers are added to methods via the
 
 
 ```c++
-struct kick_dog {
+struct poke_dog {
     static std::string fn(Dog& dog) {
         return "bark";
     }
 };
 
-YOMM2_STATIC(kick_method::add_definition<kick_dog>);
+YOMM2_STATIC(poke_method::add_definition<poke_dog>);
 ```
 
 
@@ -219,13 +219,13 @@ nested CRTP helper to inject a `next` into a container.
 
 
 ```c++
-struct kick_bulldog : kick_method::next<kick_bulldog> {
+struct poke_bulldog : poke_method::next<poke_bulldog> {
     static std::string fn(Bulldog& dog) {
         return next(dog) + " and bite back";
     }
 };
 
-YOMM2_STATIC(kick_method::add_definition<kick_bulldog>);
+YOMM2_STATIC(poke_method::add_definition<poke_bulldog>);
 ```
 
 

@@ -21,19 +21,19 @@ struct Cat : Animal {
 
 register_classes(Animal, Dog, Cat);
 
-declare_method(kick, (virtual_<Animal&>, std::ostream&), void);
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void);
 
-define_method(kick, (Cat & animal, std::ostream& os), void) {
+define_method(poke, (Cat & animal, std::ostream& os), void) {
     os << animal.name << " hisses.\n";
 }
 
-define_method(kick, (Dog & animal, std::ostream& os), void) {
+define_method(poke, (Dog & animal, std::ostream& os), void) {
     os << animal.name << " barks.\n";
 }
 
-void kick_animals(const std::vector<Animal*>& animals, std::ostream& os) {
+void poke_animals(const std::vector<Animal*>& animals, std::ostream& os) {
     for (auto animal : animals) {
-        kick(*animal, os);
+        poke(*animal, os);
     }
 }
 
@@ -44,5 +44,5 @@ int main() {
     Cat felix{"Felix"}, sylvester{"Sylvester"};
     std::vector<Animal*> animals = {&hector, &felix, &sylvester, &snoopy};
 
-    kick_animals(animals, std::cout);
+    poke_animals(animals, std::cout);
 }

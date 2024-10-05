@@ -310,8 +310,8 @@ struct Animal {
     virtual ~Animal() {}
 };
 
-using kick = method<void, void (virtual_<Animal&>)>;
-static_assert(!has_static_offsets<kick>::value);
+using poke = method<void, void (virtual_<Animal&>)>;
+static_assert(!has_static_offsets<poke>::value);
 
 using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);

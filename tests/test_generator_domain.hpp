@@ -47,7 +47,7 @@ struct DomesticDog : Dog, Property {
     using Property::Property;
 };
 
-declare_method(kick, (virtual_<Animal&>, std::ostream&), void);
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void);
 declare_method(
     meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&), void);
 declare_method(identify, (virtual_<Property&>, std::ostream&), void);

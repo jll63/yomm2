@@ -26,20 +26,20 @@ using yorel::yomm2::virtual_ptr;
 
 struct Animal {
     virtual ~Animal();
-    virtual void kick() = 0;
+    virtual void poke() = 0;
 };
 
 struct Dog : Animal {
-    virtual void kick() {
+    virtual void poke() {
     }
 };
 
 struct Cat : Animal {
-    virtual void kick() {
+    virtual void poke() {
     }
 };
 
-declare_method(kick, (virtual_ptr<Animal>), void);
+declare_method(poke, (virtual_ptr<Animal>), void);
 declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>), void);
 
 #if __has_include("slots.hpp")

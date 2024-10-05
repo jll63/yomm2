@@ -49,7 +49,7 @@ YOMM2_DECLARE, defined in <yorel/yomm2/macros.hpp>, also provided by <yorel/yomm
 
 ## Example
 ```
-declare_method(std::string, kick, (virtual_<Animal&>));
+declare_method(std::string, poke, (virtual_<Animal&>));
 declare_method(std::string, meet, (virtual_<Animal&>, virtual_<Animal&>));
 declare_method(bool, approve, (virtual_<Role&>, virtual_<Expense&>), double);
 ```

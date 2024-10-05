@@ -312,29 +312,29 @@ struct Bulldog : Dog {};
 
 register_classes(Animal, Dog, Bulldog);
 
-struct YOMM2_METHOD_NAME(kick);
-using kick = method<YOMM2_METHOD_NAME(kick)(virtual_<Animal&>), std::string>;
+struct YOMM2_METHOD_NAME(poke);
+using poke = method<YOMM2_METHOD_NAME(poke)(virtual_<Animal&>), std::string>;
 
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-YOMM2_REGISTER(kick::override<kick_dog>);
+YOMM2_REGISTER(poke::override<poke_dog>);
 
-std::string kick_bulldog(Bulldog& dog) {
-    return kick::next<kick_bulldog>(dog) + " and bite back";
+std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite back";
 }
 
-YOMM2_REGISTER(kick::override<kick_bulldog>);
+YOMM2_REGISTER(poke::override<poke_bulldog>);
 
 BOOST_AUTO_TEST_CASE(test_next_fn) {
     initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite back");
 }
 
 } // namespace test_next_fn
@@ -415,7 +415,7 @@ class Animal {
     }
 };
 
-YOMM2_METHOD(kick, (virtual_<const Animal&>), std::string);
+YOMM2_METHOD(poke, (virtual_<const Animal&>), std::string);
 
 } // namespace animals
 
@@ -425,7 +425,7 @@ class Dog : public animals::Animal {};
 
 YOMM2_CLASSES(Dog, animals::Animal);
 
-YOMM2_OVERRIDE(kick, (const Dog& dog), std::string) {
+YOMM2_OVERRIDE(poke, (const Dog& dog), std::string) {
     return "bark";
 }
 
@@ -433,7 +433,7 @@ YOMM2_OVERRIDE(kick, (const Dog& dog), std::string) {
 
 BOOST_AUTO_TEST_CASE(across_namespaces) {
     const animals::Animal& animal = more_animals::Dog();
-    BOOST_TEST("bark" == kick(animal));
+    BOOST_TEST("bark" == poke(animal));
 }
 
 } // namespace across_namespaces
@@ -456,7 +456,7 @@ struct Cat : Animal {
     }
 };
 
-struct kick_;
+struct poke_;
 struct pet_;
 struct meet_;
 
@@ -467,7 +467,7 @@ void fn(Class&...) {
 YOMM2_CLASSES(Animal, Dog, Cat, policy);
 
 BOOST_AUTO_TEST_CASE(initialize_report) {
-    using kick = method<kick_(virtual_<Animal&>), void, policy>;
+    using poke = method<poke_(virtual_<Animal&>), void, policy>;
     using pet = method<pet_(virtual_<Animal&>), void, policy>;
     using meet =
         method<meet_(virtual_<Animal&>, virtual_<Animal&>), void, policy>;
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(initialize_report) {
     // 'meet' dispatch table is one cell, containing 'not_implemented'
     BOOST_TEST(report.cells == 1);
 
-    YOMM2_REGISTER(kick::override<fn<Animal>>);
+    YOMM2_REGISTER(poke::override<fn<Animal>>);
     report = initialize<policy>().report;
     BOOST_TEST(report.not_implemented == 2);
 

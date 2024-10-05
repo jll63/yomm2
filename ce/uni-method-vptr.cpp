@@ -23,20 +23,20 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_ptr;
 
-declare_method(kick, (virtual_ptr<Animal>, std::ostream&), void);
+declare_method(poke, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(kick, (virtual_ptr<Cat> animal, std::ostream& os), void) {
+define_method(poke, (virtual_ptr<Cat> animal, std::ostream& os), void) {
     os << animal->name << " hisses.\n";
 }
 
-define_method(kick, (virtual_ptr<Dog> animal, std::ostream& os), void) {
+define_method(poke, (virtual_ptr<Dog> animal, std::ostream& os), void) {
     os << animal->name << " barks.\n";
 }
 
-void kick_animals(
+void poke_animals(
     const std::vector<virtual_ptr<Animal>>& animals, std::ostream& os) {
     for (auto animal : animals) {
-        kick(animal, os);
+        poke(animal, os);
     }
 }
 
@@ -48,5 +48,5 @@ int main() {
     std::vector<virtual_ptr<Animal>> animals = {
         hector, felix, sylvester, snoopy};
 
-    kick_animals(animals, std::cout);
+    poke_animals(animals, std::cout);
 }

@@ -32,9 +32,9 @@ struct Dog : Animal {};
 
 register_classes(Animal, Dog);
 
-declare_method(kick, (virtual_<Animal&>), std::string);
+declare_method(poke, (virtual_<Animal&>), std::string);
 
-define_method(kick, (Dog & dog), std::string) {
+define_method(poke, (Dog & dog), std::string) {
     return "bark";
 }
 
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ref_method_class) {
     yorel::yomm2::initialize();
 
     Animal&& dog = Dog();
-    using X = YOMM2_METHOD_CLASS(kick, (virtual_<Animal&>), std::string);
-    auto reply = YOMM2_METHOD_CLASS(kick, (virtual_<Animal&>), std::string)::fn(dog);
+    using X = YOMM2_METHOD_CLASS(poke, (virtual_<Animal&>), std::string);
+    auto reply = YOMM2_METHOD_CLASS(poke, (virtual_<Animal&>), std::string)::fn(dog);
     BOOST_TEST(reply == "bark");
 }

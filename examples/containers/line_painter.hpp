@@ -15,8 +15,7 @@ namespace painter {
 namespace paint1d {
 
 define_method_inline(
-    paintObject, (Painter & painter, const geometries::Line& arc),
-    void) {
+    paintObject, (Painter & painter, const geometries::Line& arc), void) {
     std::cout << "#" << painter.counter;
 }
 

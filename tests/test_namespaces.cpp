@@ -36,16 +36,16 @@ register_classes(
     delphinus::Dolphin);
 
 // open method with single virtual argument <=> virtual function "from outside"
-declare_method(kick, (virtual_<interfaces::Animal&>), std::string);
+declare_method(poke, (virtual_<interfaces::Animal&>), std::string);
 
 namespace canis {
-// implement 'kick' for dogs
-define_method(kick, (Dog & dog), std::string) {
+// implement 'poke' for dogs
+define_method(poke, (Dog & dog), std::string) {
     return "bark";
 }
 
-// implement 'kick' for bulldogs
-define_method(kick, (Bulldog & dog), std::string) {
+// implement 'poke' for bulldogs
+define_method(poke, (Bulldog & dog), std::string) {
     return next(dog) + " and bite";
 }
 } // namespace canis
@@ -85,8 +85,8 @@ int main() {
                                             std::make_unique<canis::Bulldog>(),
                                         snoopy = std::make_unique<canis::Dog>();
 
-    std::cout << "kick snoopy: " << kick(*snoopy) << "\n"; // bark
-    std::cout << "kick hector: " << kick(*hector) << "\n"; // bark and bite
+    std::cout << "poke snoopy: " << poke(*snoopy) << "\n"; // bark
+    std::cout << "poke hector: " << poke(*hector) << "\n"; // bark and bite
 
     std::unique_ptr<interfaces::Animal>
         sylvester = std::make_unique<felis::Cat>(),

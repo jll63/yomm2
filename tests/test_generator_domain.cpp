@@ -2,11 +2,11 @@
 
 register_classes(Animal, Cat, Dog, Property, DomesticCat, DomesticDog);
 
-define_method(kick, (Dog&, std::ostream& os), void) {
+define_method(poke, (Dog&, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(kick, (Cat&, std::ostream& os), void) {
+define_method(poke, (Cat&, std::ostream& os), void) {
     os << "hiss";
 }
 

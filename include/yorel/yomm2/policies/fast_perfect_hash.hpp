@@ -162,7 +162,7 @@ std::size_t fast_perfect_hash<Policy>::hash_max;
 
 template<class Policy>
 struct checked_perfect_hash : virtual fast_perfect_hash<Policy>,
-                                            virtual runtime_checks {
+                              virtual runtime_checks {
     static std::vector<type_id> control;
 
     static auto hash_type_id(type_id type) -> type_id {

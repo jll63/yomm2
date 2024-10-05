@@ -258,13 +258,13 @@ templates `use_classes` and `method` accept an addition policy argument.
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(kick, (Dog & dog, std::ostream& os), void) {
+define_method(poke, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(kick, (Cat & cat, std::ostream& os), void) {
+define_method(poke, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -289,12 +289,12 @@ BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
 
     {
         std::stringstream os;
-        kick(a, os);
+        poke(a, os);
         BOOST_TEST(os.str() == "Snoopy barks.");
     }
     {
         std::stringstream os;
-        kick(b, os);
+        poke(b, os);
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
@@ -392,13 +392,13 @@ struct custom_policy
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(kick, (Dog & dog, std::ostream& os), void) {
+define_method(poke, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(kick, (Cat & cat, std::ostream& os), void) {
+define_method(poke, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -413,23 +413,23 @@ BOOST_AUTO_TEST_CASE(custom_rtti_integer_demo) {
 
     {
         std::stringstream os;
-        kick(a, os);
+        poke(a, os);
         BOOST_TEST(os.str() == "Snoopy barks.");
     }
     {
         std::stringstream os;
-        kick(b, os);
+        poke(b, os);
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
 
-void call_kick(Animal& a, std::ostream& os) {
-    return kick(a, os);
+void call_poke(Animal& a, std::ostream& os) {
+    return poke(a, os);
 }
 // mov     rax, qword ptr [rdi + 8]
 // mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 // mov     rax, qword ptr [rcx + 8*rax]
-// mov     rcx, qword ptr [rip + method<custom_policy, kick, void
+// mov     rcx, qword ptr [rip + method<custom_policy, poke, void
 // (virtual_<Animal&>, basic_ostream<char, char_traits<char> >&)>::fn+80] mov
 // rax, qword ptr [rax + 8*rcx]
 // jmp     rax
@@ -438,13 +438,13 @@ void call_kick(Animal& a, std::ostream& os) {
 
 /***
 
-A call to `kick` now compiles to a shorter assembly code:
+A call to `poke` now compiles to a shorter assembly code:
 
 ```asm
 mov     rax, qword ptr [rdi + 8]
 mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 mov     rax, qword ptr [rcx + 8*rax]
-mov     rcx, qword ptr [rip + method<custom_policy, kick, ...>::fn+80]
+mov     rcx, qword ptr [rip + method<custom_policy, poke, ...>::fn+80]
 mov     rax, qword ptr [rax + 8*rcx]
 jmp     rax
 ```
@@ -546,13 +546,13 @@ struct custom_policy
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(kick, (virtual_<Animal&>, std::ostream&), void, custom_policy);
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void, custom_policy);
 
-define_method(kick, (Dog & dog, std::ostream& os), void) {
+define_method(poke, (Dog & dog, std::ostream& os), void) {
     os << dog.name << " barks.";
 }
 
-define_method(kick, (Cat & cat, std::ostream& os), void) {
+define_method(poke, (Cat & cat, std::ostream& os), void) {
     os << cat.name << " hisses.";
 }
 
@@ -563,12 +563,12 @@ BOOST_AUTO_TEST_CASE(custom_rtti_deferred) {
 
     {
         std::stringstream os;
-        kick(a, os);
+        poke(a, os);
         BOOST_TEST(os.str() == "Snoopy barks.");
     }
     {
         std::stringstream os;
-        kick(b, os);
+        poke(b, os);
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }

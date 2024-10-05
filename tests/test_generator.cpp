@@ -13,7 +13,7 @@
 using namespace yorel::yomm2;
 
 static_assert(detail::has_static_offsets<method_class(
-                  kick, (virtual_<Animal&>, std::ostream&), void)>::value);
+                  poke, (virtual_<Animal&>, std::ostream&), void)>::value);
 static_assert(detail::has_static_offsets<method_class(
                   meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&),
                   void)>::value);
@@ -36,15 +36,15 @@ BOOST_AUTO_TEST_CASE(test_generator) {
     auto cat = std::make_unique<DomesticCat>("Alice");
     auto dog = std::make_unique<DomesticDog>("Bob");
 
-    kick(*cat, os);
+    poke(*cat, os);
     BOOST_TEST(os.str() == "hiss");
 
     os.str("");
-    kick(*dog, os);
+    poke(*dog, os);
     BOOST_TEST(os.str() == "bark");
 
     try {
-        kick(*animal, os);
+        poke(*animal, os);
         BOOST_FAIL("should have thrown");
     } catch (const resolution_error& e) {
     }

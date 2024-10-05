@@ -194,25 +194,25 @@ using yomm2::virtual_;
 
 YOMM2_REGISTER(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 
-struct kick_methods;
-using kick = yomm2::method<kick_methods(virtual_<Animal&>), std::string>;
+struct poke_methods;
+using poke = yomm2::method<poke_methods(virtual_<Animal&>), std::string>;
 
-std::string kick_cat(Cat& dog) {
+std::string poke_cat(Cat& dog) {
     return "hiss";
 }
-YOMM2_REGISTER(kick::override<kick_cat>);
+YOMM2_REGISTER(poke::override<poke_cat>);
 
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-YOMM2_REGISTER(kick::override<kick_dog>);
+YOMM2_REGISTER(poke::override<poke_dog>);
 
-std::string kick_bulldog(Bulldog& dog) {
-    return kick::next<kick_bulldog>(dog) + " and bite";
+std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite";
 }
 
-YOMM2_REGISTER(kick::override<kick_bulldog>);
+YOMM2_REGISTER(poke::override<poke_bulldog>);
 
 struct YOMM2_METHOD_NAME(pet); // use obfuscated name
 using pet =
@@ -237,9 +237,9 @@ BOOST_AUTO_TEST_CASE(ref_method_example) {
                             snoopy = std::make_unique<Dog>(),
                             hector = std::make_unique<Bulldog>();
 
-    BOOST_TEST(kick::fn(*felix) == "hiss");
-    BOOST_TEST(kick::fn(*snoopy) == "bark");
-    BOOST_TEST(kick::fn(*hector) == "bark and bite");
+    BOOST_TEST(poke::fn(*felix) == "hiss");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite");
 
     BOOST_TEST(pet::fn(*felix) == "purr");
     BOOST_TEST(pet::fn(*snoopy) == "wag tail");
