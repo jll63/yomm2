@@ -30,33 +30,33 @@ struct Jet : Expense {};
 register_classes(
     Role, Employee, Manager, Founder, Expense, Public, Bus, Metro, Taxi, Jet);
 
-declare_method(double, pay, (virtual_<const Employee&>));
+declare_method(pay, (virtual_<const Employee&>), double);
 declare_method(
-    bool, approve, (virtual_<const Role&>, virtual_<const Expense&>, double));
+    approve, (virtual_<const Role&>, virtual_<const Expense&>, double), bool);
 
-define_method(double, pay, (const Employee&)) {
+define_method(pay, (const Employee&), double) {
     return 3000;
 }
 
-define_method(double, pay, (const Manager& exec)) {
+define_method(pay, (const Manager& exec), double) {
     return next(exec) + 2000;
 }
 
-define_method(bool, approve, (const Role& r, const Expense& e, double amount)) {
+define_method(approve, (const Role& r, const Expense& e, double amount), bool) {
     return false;
 }
 
 define_method(
-    bool, approve, (const Employee& r, const Public& e, double amount)) {
+    approve, (const Employee& r, const Public& e, double amount), bool) {
     return true;
 }
 
-define_method(bool, approve, (const Manager& r, const Taxi& e, double amount)) {
+define_method(approve, (const Manager& r, const Taxi& e, double amount), bool) {
     return true;
 }
 
 define_method(
-    bool, approve, (const Founder& r, const Expense& e, double amount)) {
+    approve, (const Founder& r, const Expense& e, double amount), bool) {
     return true;
 }
 

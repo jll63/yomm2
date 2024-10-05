@@ -72,12 +72,14 @@ register_classes(Animal, Dog);
 
 namespace YOMM2_GENSYM {
 
-void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
+void poke_dog(virtual_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+struct YOMM2_METHOD_NAME(poke);
+using poke =
+    method<YOMM2_METHOD_NAME(poke)(virtual_ptr<Animal>, std::ostream&), void>;
+YOMM2_REGISTER(poke::override<poke_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
     yorel::yomm2::initialize();
@@ -86,7 +88,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         boost::test_tools::output_test_stream os;
         Dog dog;
         virtual_ptr<Animal> vptr(dog);
-        kick::fn(vptr, os);
+        poke::fn(vptr, os);
     }
 
     {
@@ -94,7 +96,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         boost::test_tools::output_test_stream os;
         Animal&& animal = Dog();
         auto vptr = virtual_ptr(animal); // GLOP
-        kick::fn(vptr, os);
+        poke::fn(vptr, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 
@@ -102,7 +104,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_by_ref) {
         // Using conversion ctor.
         boost::test_tools::output_test_stream os;
         Animal&& animal = Dog();
-        kick::fn(animal, os);
+        poke::fn(animal, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 }
@@ -148,12 +150,14 @@ BOOST_AUTO_TEST_CASE(test_final_error) {
 
 namespace YOMM2_GENSYM {
 
-void kick_dog(virtual_shared_ptr<Dog>, std::ostream& os) {
+void poke_dog(virtual_shared_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_shared_ptr<Animal>, std::ostream&)>;
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+struct YOMM2_METHOD_NAME(poke);
+using poke = method<
+    YOMM2_METHOD_NAME(poke)(virtual_shared_ptr<Animal>, std::ostream&), void>;
+YOMM2_REGISTER(poke::override<poke_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
     yorel::yomm2::initialize();
@@ -161,7 +165,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
     {
         boost::test_tools::output_test_stream os;
         virtual_shared_ptr<Animal> animal = make_virtual_shared<Dog>();
-        kick::fn(animal, os);
+        poke::fn(animal, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 }
@@ -169,13 +173,15 @@ BOOST_AUTO_TEST_CASE(test_virtual_shared_by_value) {
 
 namespace YOMM2_GENSYM {
 
-void kick_dog(const virtual_shared_ptr<Dog>&, std::ostream& os) {
+void poke_dog(const virtual_shared_ptr<Dog>&, std::ostream& os) {
     os << "bark";
 }
 
-using kick =
-    method<void, void(const virtual_shared_ptr<Animal>&, std::ostream&)>;
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+struct YOMM2_METHOD_NAME(poke);
+using poke = method<
+    YOMM2_METHOD_NAME(poke)(const virtual_shared_ptr<Animal>&, std::ostream&),
+    void>;
+YOMM2_REGISTER(poke::override<poke_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
     yorel::yomm2::initialize();
@@ -183,7 +189,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_shared_by_const_reference) {
     {
         boost::test_tools::output_test_stream os;
         virtual_shared_ptr<Animal> animal = make_virtual_shared<Dog>();
-        kick::fn(animal, os);
+        poke::fn(animal, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 }
@@ -198,12 +204,14 @@ struct Dog : Animal {};
 
 register_classes(Animal, Dog);
 
-void kick_dog(virtual_ptr<Dog>, std::ostream& os) {
+void poke_dog(virtual_ptr<Dog>, std::ostream& os) {
     os << "bark";
 }
 
-using kick = method<void, void(virtual_ptr<Animal>, std::ostream&)>;
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+struct YOMM2_METHOD_NAME(poke);
+using poke =
+    method<YOMM2_METHOD_NAME(poke)(virtual_ptr<Animal>, std::ostream&), void>;
+YOMM2_REGISTER(poke::override<poke_dog>);
 
 BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {
     yorel::yomm2::initialize();
@@ -212,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test_virtual_ptr_non_polymorphic) {
         boost::test_tools::output_test_stream os;
         Dog dog;
         auto vptr = virtual_ptr<Dog>::final(dog);
-        kick::fn(vptr, os);
+        poke::fn(vptr, os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 }

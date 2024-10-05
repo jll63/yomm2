@@ -2,34 +2,34 @@
 
 register_classes(Animal, Cat, Dog, Property, DomesticCat, DomesticDog);
 
-define_method(void, kick, (Dog&, std::ostream& os)) {
+define_method(poke, (Dog&, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (Cat&, std::ostream& os)) {
+define_method(poke, (Cat&, std::ostream& os), void) {
     os << "hiss";
 }
 
 // create an ambiguity with the following two definitions
-define_method(void, meet, (Cat&, Animal&, std::ostream& os)) {
+define_method(meet, (Cat&, Animal&, std::ostream& os), void) {
     os << "ignore";
 }
 
-define_method(void, meet, (Animal&, Dog&, std::ostream& os)) {
+define_method(meet, (Animal&, Dog&, std::ostream& os), void) {
     os << "wag tail";
 }
 // ^^^ ambiguous
 
-define_method(void, meet, (Dog&, Cat&, std::ostream& os)) {
+define_method(meet, (Dog&, Cat&, std::ostream& os), void) {
     os << "chase";
 }
 
-define_method(void, identify, (DomesticCat & animal, std::ostream& os)) {
+define_method(identify, (DomesticCat & animal, std::ostream& os), void) {
     os << animal.owner << "'s"
        << " cat";
 }
 
-define_method(void, identify, (DomesticDog & animal, std::ostream& os)) {
+define_method(identify, (DomesticDog & animal, std::ostream& os), void) {
     os << animal.owner << "'s"
        << " dog";
 }

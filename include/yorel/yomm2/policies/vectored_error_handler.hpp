@@ -9,12 +9,15 @@
 
 #include <yorel/yomm2/policies/core.hpp>
 
+#include <functional>
+#include <variant>
+
 namespace yorel {
 namespace yomm2 {
 namespace policies {
 
 template<class Policy>
-struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
+struct vectored_error_handler : virtual error_handler {
 
     using error_variant = std::variant<
         error, resolution_error, unknown_class_error, hash_search_error,
@@ -42,7 +45,7 @@ struct yOMM2_API_gcc vectored_error_handler : virtual error_handler {
         if constexpr (Policy::template has_facet<error_output>) {
             if (auto error = std::get_if<resolution_error>(&error_v)) {
                 const char* explanation[] = {
-                    "no applicable definition", "ambiguous call"};
+                    "no applicable overrider", "ambiguous call"};
                 Policy::error_stream
                     << explanation
                            [error->status - resolution_error::no_definition]

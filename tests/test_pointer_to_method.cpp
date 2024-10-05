@@ -23,15 +23,15 @@ class Dog : public Animal {};
 
 register_classes(Animal, Dog, Animal);
 
-declare_method(std::string, kick, (virtual_<Animal&>));
+declare_method(poke, (virtual_<Animal&>), std::string);
 
-define_method(std::string, kick, (Dog & dog)) {
+define_method(poke, (Dog & dog), std::string) {
     return "bark";
 }
 
 BOOST_AUTO_TEST_CASE(noadl) {
     yorel::yomm2::initialize();
-    auto stimulus = &kick;
+    auto stimulus = &poke;
     Dog snoopy;
     Animal& animal = snoopy;
     BOOST_TEST(stimulus(snoopy) == "bark");

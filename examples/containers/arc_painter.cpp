@@ -20,13 +20,10 @@ namespace painter {
 namespace paint1d {
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Arc& arc)) {
+    paintObject, (Painter & painter, const geometries::Arc& arc), void) {
     ++painter.counter;
-    method_definition(painters, void, (Painter&, const geometries::Line&))(
-        painter, arc);
-    std::cout << " "
-              << "painting arc\n";
+    next(painter, arc);
+    std::cout << " " << "painting arc\n";
 }
 
 } // namespace paint1d

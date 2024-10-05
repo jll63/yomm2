@@ -42,7 +42,7 @@ struct Object {
 struct Axe : Object {};
 
 template<class VirtualBearPtr>
-auto kick_bear(VirtualBearPtr) {
+auto poke_bear(VirtualBearPtr) {
     return std::string("growl");
 }
 
@@ -59,6 +59,9 @@ struct indirect_test_policy : test_policy_<Name> {
 template<int Name>
 using policy_types = types<test_policy_<Name>, indirect_test_policy<Name>>;
 
+struct YOMM2_METHOD_NAME(poke);
+struct YOMM2_METHOD_NAME(fight);
+
 namespace YOMM2_GENSYM {
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(
@@ -66,10 +69,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     using namespace detail;
 
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
-    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
-    static typename kick::template override_fn<
-        kick_bear<virtual_ptr<Player, Policy>>>
-        YOMM2_GENSYM;
+    using poke = method<
+        YOMM2_METHOD_NAME(poke)(virtual_ptr<Player, Policy>), std::string,
+        Policy>;
+    static
+        typename poke::template override<poke_bear<virtual_ptr<Player, Policy>>>
+            YOMM2_GENSYM;
 
     initialize<Policy>();
 
@@ -122,18 +127,19 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
-    using kick = method<void, std::string(virtual_ptr<Player, Policy>), Policy>;
-    static typename kick::template override_fn<
-        kick_bear<virtual_ptr<Player, Policy>>>
-        YOMM2_GENSYM;
+    using poke = method<
+        YOMM2_METHOD_NAME(poke)(virtual_ptr<Player, Policy>), std::string,
+        Policy>;
+    static
+        typename poke::template override<poke_bear<virtual_ptr<Player, Policy>>>
+            YOMM2_GENSYM;
 
     using fight = method<
-        void,
-        std::string(
+        YOMM2_METHOD_NAME(fight)(
             virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
             virtual_ptr<Player, Policy>),
-        Policy>;
-    static typename fight::template override_fn<fight_bear<
+        std::string, Policy>;
+    static typename fight::template override<fight_bear<
         virtual_ptr<Player, Policy>, virtual_ptr<Object, Policy>,
         virtual_ptr<Player, Policy>>>
         YOMM2_GENSYM;
@@ -141,7 +147,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     initialize<Policy>();
 
     Bear bear;
-    BOOST_TEST(kick::fn(virtual_ptr<Player, Policy>(bear)) == "growl");
+    BOOST_TEST(poke::fn(virtual_ptr<Player, Policy>(bear)) == "growl");
 
     Warrior warrior;
     Axe axe;
@@ -170,22 +176,22 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
 
     static use_classes<Player, Warrior, Object, Axe, Bear, Policy> YOMM2_GENSYM;
 
-    using kick =
-        method<void, std::string(virtual_shared_ptr<Player, Policy>), Policy>;
+    using poke = method<
+        YOMM2_METHOD_NAME(poke)(virtual_shared_ptr<Player, Policy>),
+        std::string, Policy>;
 
-    static typename kick::template override_fn<
-        kick_bear<virtual_shared_ptr<Player, Policy>>>
+    static typename poke::template override<
+        poke_bear<virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
 
     using fight = method<
-        void,
-        std::string(
+        YOMM2_METHOD_NAME(fight)(
             virtual_shared_ptr<Player, Policy>,
             virtual_shared_ptr<Object, Policy>,
             virtual_shared_ptr<Player, Policy>),
-        Policy>;
+        std::string, Policy>;
 
-    static typename fight::template override_fn<fight_bear<
+    static typename fight::template override<fight_bear<
         virtual_shared_ptr<Player, Policy>, virtual_shared_ptr<Object, Policy>,
         virtual_shared_ptr<Player, Policy>>>
         YOMM2_GENSYM;
@@ -196,7 +202,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(
     auto warrior = make_virtual_shared<Warrior, Policy>();
     auto axe = make_virtual_shared<Axe, Policy>();
 
-    BOOST_TEST(kick::fn(bear) == "growl");
+    BOOST_TEST(poke::fn(bear) == "growl");
 
     BOOST_TEST(fight::fn(warrior, axe, bear) == "kill bear");
 }

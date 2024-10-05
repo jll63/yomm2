@@ -70,8 +70,8 @@ use_classes<Animal, Dog, Bulldog> use_animal_classes;
 // >
 
 // code<
-struct kick_key;
-using kick_method = method<kick_key, std::string(virtual_<Animal&>)>;
+struct poke_method;
+using poke = method<poke_method(virtual_<Animal&>), std::string>;
 // >
 
 // md<
@@ -86,15 +86,15 @@ using kick_method = method<kick_key, std::string(virtual_<Animal&>)>;
 // >
 
 // code<
-struct feed_key;
-using feed_method = method<feed_key, std::string(virtual_<Animal&>)>;
+struct feed_method;
+using feed = method<feed_method(virtual_<Animal&>), std::string>;
 // >
 
 // md<
 
-// In the absence of the first parameter, `kick` and `feed` would be the same
+// In the absence of the first parameter, `poke` and `feed` would be the same
 // method. Together, the two arguments provide a unique key for the method.
-// Since the `kick_key` and `feed_key` types are local to the current namespace,
+// Since the `poke_method` and `feed_method` types are local to the current namespace,
 // this scheme also protects against accidental interference across namespaces.
 
 // The same key can be used for more than one method, provided that the
@@ -106,11 +106,11 @@ using feed_method = method<feed_key, std::string(virtual_<Animal&>)>;
 // >
 
 // code<
-std::string kick_dog(Dog& dog) {
+std::string poke_dog(Dog& dog) {
     return "bark";
 }
 
-kick_method::override_fn<kick_dog> add_kick_dog;
+poke::override<poke_dog> add_poke_dog;
 // >
 
 // md<
@@ -120,20 +120,18 @@ kick_method::override_fn<kick_dog> add_kick_dog;
 // appropriate function. Function templates and explicit specialization can also
 // be used for this purpose.
 
-// What about `next`? The constructor of `override_fn` can be passed a pointer
+// What about `next`? The constructor of `override` can be passed a pointer
 // to a function that will be set to the function's next definition by
 // `update`. The pointer type is available in the method as `next_type`.
 
 // >
 
 // code<
-kick_method::next_type kick_bulldog_next;
-
-std::string kick_bulldog(Bulldog& dog) {
-    return kick_bulldog_next(dog) + " and bite back";
+std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite back";
 }
 
-kick_method::override_fn<kick_bulldog> add_kick_bulldog(&kick_bulldog_next);
+poke::override<poke_bulldog> add_poke_bulldog;
 // >
 
 // md<
@@ -149,10 +147,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
     initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick_method::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick_method::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite back");
 }
 // >
 
@@ -161,7 +159,7 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // ## A peek inside the two main YOMM2 macros
 
 // The code in the example above is essentially what
-// `YOMM2_DECLARE`/`declare_method` and `YOMM2_DEFINE`/`define_method` generate.
+// `YOMM2_METHOD`/`declare_method` and `YOMM2_OVERRIDE`/`define_method` generate.
 
 // In addition, `declare_method` generates an ordinary inline function that
 // forwards to the `fn` object nested inside the method. Importantly, ordinary
@@ -176,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // passing it `declval` arguments for the definition's parameter list. The
 // compiler performs overload resolution, and the macro uses `decltype` to
 // extract the result type, i.e the method's class, and registers the definition
-// and the `next` pointer with `override_fn`.
+// and the `next` pointer with `override`.
 
 // In the process, both macros need to create identifiers for the various static
 // objects, and the name of the function inside the definition wrapper class.
@@ -187,10 +185,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_functions_no_macros) {
 // - `YOMM2_GENSYM` expands to a new symbol each time it is called. It is used
 //   for the static "registrar" objects.
 
-// - `YOMM2_STATIC(...)` expands to `static __VA_ARGS__ YOMM2_GENSYM`, i.e. it
+// - `YOMM2_REGISTER(...)` expands to `static __VA_ARGS__ YOMM2_GENSYM`, i.e. it
 //   creates a static object of the type specified as macro parameters.
 
-// - `YOMM2_SYMBOL(name)` expands to an obfuscated version of `name`. It is used
+// - `YOMM2_METHOD_NAME(name)` expands to an obfuscated version of `name`. It is used
 //   for the method key and the guide function.
 
 // In addition, the header provides
@@ -235,21 +233,21 @@ class Bulldog : public Dog {};
 // code<
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/symbols.hpp>
+#include <yorel/yomm2/macros/register.hpp>
 
 using namespace yorel::yomm2;
 
-YOMM2_STATIC(use_classes<Animal, Dog, Bulldog>);
+YOMM2_REGISTER(use_classes<Animal, Dog, Bulldog>);
 
-struct YOMM2_SYMBOL(kick);
+struct poke_;
 
-using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
+using poke = method<poke_(virtual_<Animal&>), std::string>;
 
 // >
 
 // md<
 
-// `override_fn` is a workhorse that is intended to be used directly only by
+// `override` is a workhorse that is intended to be used directly only by
 // `define_method`. YOMM2 has another mechanism that is a bit more high level:
 // *definition containers*.
 
@@ -260,13 +258,11 @@ using kick_method = method<YOMM2_SYMBOL(kick), std::string(virtual_<Animal&>)>;
 // >
 
 // code<
-struct kick_dog {
-    static std::string fn(Dog& dog) {
-        return "bark";
-    }
-};
+std::string poke_dog(Dog& dog) {
+    return "bark";
+}
 
-YOMM2_STATIC(kick_method::override<kick_dog>);
+YOMM2_REGISTER(poke::override<poke_dog>);
 // >
 
 // md<
@@ -281,13 +277,11 @@ YOMM2_STATIC(kick_method::override<kick_dog>);
 // >
 
 // code<
-struct kick_bulldog : kick_method::with_next<kick_bulldog> {
-    static std::string fn(Bulldog& dog) {
-        return next(dog) + " and bite back";
-    }
-};
+static std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite back";
+}
 
-YOMM2_STATIC(kick_method::override<kick_bulldog>);
+YOMM2_REGISTER(poke::override<poke_bulldog>);
 // >
 
 // md<
@@ -308,10 +302,10 @@ BOOST_AUTO_TEST_CASE(test_synopsis_definition_containers) {
     initialize();
 
     std::unique_ptr<Animal> snoopy = std::make_unique<Dog>();
-    BOOST_TEST(kick_method::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
 
     std::unique_ptr<Animal> hector = std::make_unique<Bulldog>();
-    BOOST_TEST(kick_method::fn(*hector) == "bark and bite back");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite back");
 }
 
 } // namespace synopsis_better

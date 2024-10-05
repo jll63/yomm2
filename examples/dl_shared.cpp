@@ -14,7 +14,7 @@
 
 using namespace std;
 
-define_method(string, encounter, (const Herbivore&, const Carnivore&)) {
+define_method(encounter, (const Herbivore&, const Carnivore&), string) {
     return "run";
 }
 
@@ -26,6 +26,6 @@ extern "C" Tiger* make_tiger() {
     return new Tiger;
 }
 
-define_method(string, encounter, (const Carnivore&, const Herbivore&)) {
+define_method(encounter, (const Carnivore&, const Herbivore&), string) {
     return "hunt";
 }

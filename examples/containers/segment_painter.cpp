@@ -20,13 +20,12 @@ namespace painter {
 namespace paint1d {
 
 define_method(
-    painters, void, paintObject,
-    (Painter & painter, const geometries::Segment& segment)) {
+    paintObject, (Painter & painter, const geometries::Segment& segment),
+    void) {
     ++painter.counter;
-    method_definition(painters, void, (Painter&, const geometries::Line&))(
+    YOMM2_OVERRIDERS(paintObject)<void(Painter&, const geometries::Line&)>::fn(
         painter, segment);
-    std::cout << " "
-              << "painting segment\n";
+    std::cout << " " << "painting segment\n";
 }
 
 } // namespace paint1d

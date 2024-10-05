@@ -100,6 +100,12 @@ struct generic_compiler {
         std::vector<vtbl_entry> vtbl;
         std::uintptr_t** static_vptr;
 
+        bool is_base_of(class_* other) const {
+            return std::find(
+                       covariant_classes.begin(), covariant_classes.end(),
+                       other) != covariant_classes.end();
+        }
+
         const std::uintptr_t* vptr() const {
             return *static_vptr;
         }
@@ -117,9 +123,11 @@ struct generic_compiler {
         }
     };
 
-    struct definition {
-        const detail::definition_info* info;
+    struct overrider {
+        detail::overrider_info* info = nullptr;
+        overrider* next = nullptr;
         std::vector<class_*> vp;
+        class_* covariant_return_type = nullptr;
         std::uintptr_t pf;
         std::size_t method_index, spec_index;
     };
@@ -133,33 +141,32 @@ struct generic_compiler {
 
     using group_map = std::map<bitvec, group>;
 
-    struct update_method_report {
+    struct method_report {
         std::size_t cells = 0;
         std::size_t not_implemented = 0;
         std::size_t ambiguous = 0;
     };
 
-    struct update_report : update_method_report {};
+    struct report : method_report {};
 
-    static void
-    accumulate(const update_method_report& partial, update_report& total);
+    static void accumulate(const method_report& partial, report& total);
 
     struct method {
         detail::method_info* info;
         std::vector<class_*> vp;
-        std::vector<definition> specs;
+        class_* covariant_return_type = nullptr;
+        std::vector<overrider> specs;
         std::vector<std::size_t> slots;
         std::vector<std::size_t> strides;
-        std::vector<const definition*> dispatch_table;
+        std::vector<const overrider*> dispatch_table;
         // following two are dummies, when converting to a function pointer, we will
         // get the corresponding pointer from method_info
-        definition not_implemented;
-        definition ambiguous;
-        const std::uintptr_t* gv_dispatch_table{nullptr};
+        overrider not_implemented;
+        const std::uintptr_t* gv_dispatch_table = nullptr;
         auto arity() const {
             return vp.size();
         }
-        update_method_report report;
+        method_report report;
     };
 
     std::deque<class_> classes;
@@ -199,18 +206,16 @@ trace_type<Policy>& operator<<(
 struct spec_name {
     spec_name(
         const detail::generic_compiler::method& method,
-        const detail::generic_compiler::definition* def)
+        const detail::generic_compiler::overrider* def)
         : method(method), def(def) {
     }
     const detail::generic_compiler::method& method;
-    const detail::generic_compiler::definition* def;
+    const detail::generic_compiler::overrider* def;
 };
 
 template<class Policy>
 trace_type<Policy>& operator<<(trace_type<Policy>& trace, const spec_name& sn) {
-    if (sn.def == &sn.method.ambiguous) {
-        trace << "ambiguous";
-    } else if (sn.def == &sn.method.not_implemented) {
+    if (sn.def == &sn.method.not_implemented) {
         trace << "not implemented";
     } else {
         trace << type_name(sn.def->info->type);
@@ -227,7 +232,7 @@ struct compiler : detail::generic_compiler {
     using type_index_type = decltype(Policy::type_index(0));
 
     typename detail::aggregate_reports<
-        detail::types<update_report>, typename Policy::facets>::type report;
+        detail::types<report>, typename Policy::facets>::type report;
 
     std::unordered_map<type_index_type, class_*> class_map;
 
@@ -249,12 +254,13 @@ struct compiler : detail::generic_compiler {
         method& m, std::size_t dim,
         std::vector<group_map>::const_iterator group, const bitvec& candidates,
         bool concrete);
-    void install_gv();
-    void print(const update_method_report& report) const;
-    static std::vector<const definition*>
-    best(std::vector<const definition*>& candidates);
-    static bool is_more_specific(const definition* a, const definition* b);
-    static bool is_base(const definition* a, const definition* b);
+    void write_global_data();
+    void print(const method_report& report) const;
+    static void select_dominant_overriders(
+        std::vector<overrider*>& dominants, std::size_t& pick,
+        std::size_t& remaining);
+    static bool is_more_specific(const overrider* a, const overrider* b);
+    static bool is_base(const overrider* a, const overrider* b);
 
     static type_id static_type(type_id type) {
         if constexpr (std::is_base_of_v<
@@ -279,7 +285,7 @@ void compiler<Policy>::install_global_tables() {
         abort();
     }
 
-    install_gv();
+    write_global_data();
 
     print(report);
     ++trace << "Finished\n";
@@ -320,41 +326,37 @@ void compiler<Policy>::resolve_static_type_ids() {
     };
 
     if constexpr (std::is_base_of_v<policies::deferred_static_rtti, Policy>) {
-        if (!Policy::classes.empty())
-            for (auto& ci : Policy::classes) {
-                resolve(&ci.type);
+        for (auto& ci : Policy::classes) {
+            resolve(&ci.type);
 
-                if (*ci.last_base == 0) {
-                    for (auto& ti : range{ci.first_base, ci.last_base}) {
-                        resolve(&ti);
-                    }
-
-                    *ci.last_base = 1;
+            if (*ci.last_base == 0) {
+                for (auto& ti : range{ci.first_base, ci.last_base}) {
+                    resolve(&ti);
                 }
+
+                *ci.last_base = 1;
             }
+        }
 
-        if (!Policy::methods.empty())
-            for (auto& method : Policy::methods) {
-                for (auto& ti : range{method.vp_begin, method.vp_end}) {
-                    if (*method.vp_end == 0) {
-                        resolve(&ti);
-                        *method.vp_end = 1;
-                    }
+        for (auto& method : Policy::methods) {
+            for (auto& ti : range{method.vp_begin, method.vp_end}) {
+                if (*method.vp_end == 0) {
+                    resolve(&ti);
+                    *method.vp_end = 1;
+                }
 
-                    if (!method.specs.empty())
-                        for (auto& definition : method.specs) {
-                            if (*definition.vp_end == 0) {
-                                for (auto& ti : range{
-                                         definition.vp_begin,
-                                         definition.vp_end}) {
-                                    resolve(&ti);
-                                }
-
-                                *definition.vp_end = 1;
-                            }
+                for (auto& overrider : method.specs) {
+                    if (*overrider.vp_end == 0) {
+                        for (auto& ti :
+                             range{overrider.vp_begin, overrider.vp_end}) {
+                            resolve(&ti);
                         }
+
+                        *overrider.vp_end = 1;
+                    }
                 }
             }
+        }
     }
 }
 
@@ -563,37 +565,46 @@ void compiler<Policy>::augment_methods() {
             meth_iter->vp.push_back(class_);
         }
 
-        // initialize the function pointer in the dummy specs
+        if (Policy::type_index(meth_info.return_type) !=
+            Policy::type_index(Policy::template static_type<void>())) {
+            auto covariant_return_iter =
+                class_map.find(Policy::type_index(meth_info.return_type));
+
+            if (covariant_return_iter != class_map.end()) {
+                meth_iter->covariant_return_type =
+                    covariant_return_iter->second;
+            }
+        }
+
+        // initialize the function pointer in the synthetic not_implemented
+        // overrider
         const auto method_index = meth_iter - methods.begin();
-        meth_iter->ambiguous.pf =
-            reinterpret_cast<uintptr_t>(meth_iter->info->ambiguous);
-        meth_iter->ambiguous.method_index = method_index;
         auto spec_size = meth_info.specs.size();
-        meth_iter->ambiguous.spec_index = spec_size;
         meth_iter->not_implemented.pf =
             reinterpret_cast<uintptr_t>(meth_iter->info->not_implemented);
         meth_iter->not_implemented.method_index = method_index;
-        meth_iter->not_implemented.spec_index = spec_size + 1;
+        meth_iter->not_implemented.spec_index = spec_size;
 
         meth_iter->specs.resize(spec_size);
         auto spec_iter = meth_iter->specs.begin();
 
-        for (auto& definition_info : meth_info.specs) {
+        for (auto& overrider_info : meth_info.specs) {
             spec_iter->method_index = meth_iter - methods.begin();
             spec_iter->spec_index = spec_iter - meth_iter->specs.begin();
 
-            ++trace << type_name(definition_info.type) << " ("
-                    << definition_info.pf << ")\n";
-            spec_iter->info = &definition_info;
+            ++trace << type_name(overrider_info.type) << " ("
+                    << overrider_info.pf << ")\n";
+            spec_iter->info = &overrider_info;
             spec_iter->vp.reserve(meth_info.arity());
             std::size_t param_index = 0;
 
             for (auto type :
-                 range{definition_info.vp_begin, definition_info.vp_end}) {
+                 range{overrider_info.vp_begin, overrider_info.vp_end}) {
                 indent _(trace);
                 auto class_ = class_map[Policy::type_index(type)];
+
                 if (!class_) {
-                    ++trace << "error for *virtual* parameter #"
+                    ++trace << "unknown class error for *virtual* parameter #"
                             << (param_index + 1) << "\n";
                     unknown_class_error error;
                     error.type = type;
@@ -607,6 +618,25 @@ void compiler<Policy>::augment_methods() {
                 spec_iter->pf =
                     reinterpret_cast<uintptr_t>(spec_iter->info->pf);
                 spec_iter->vp.push_back(class_);
+            }
+
+            if (meth_iter->covariant_return_type) {
+                auto covariant_return_iter = class_map.find(
+                    Policy::type_index(overrider_info.return_type));
+
+                if (covariant_return_iter != class_map.end()) {
+                    spec_iter->covariant_return_type =
+                        covariant_return_iter->second;
+                } else {
+                    unknown_class_error error;
+                    error.type = overrider_info.return_type;
+
+                    if constexpr (has_facet<Policy, error_handler>) {
+                        Policy::error(error);
+                    }
+
+                    abort();
+                }
             }
 
             ++spec_iter;
@@ -856,7 +886,7 @@ void compiler<Policy>::build_dispatch_tables() {
         }
 
         {
-            ++trace << "assigning specs\n";
+            ++trace << "building dispatch table\n";
             bitvec all(m.specs.size());
             all = ~all;
             build_dispatch_table(m, dims - 1, groups.end() - 1, all, true);
@@ -890,55 +920,6 @@ void compiler<Policy>::build_dispatch_tables() {
 
             print(m.report);
             accumulate(m.report, report);
-            ++trace << "assigning next\n";
-
-            std::vector<const definition*> specs;
-            std::transform(
-                m.specs.begin(), m.specs.end(), std::back_inserter(specs),
-                [](const definition& spec) { return &spec; });
-
-            for (auto& spec : m.specs) {
-                indent _(trace);
-                ++trace << type_name(spec.info->type) << ":\n";
-                std::vector<const definition*> candidates;
-                std::copy_if(
-                    specs.begin(), specs.end(), std::back_inserter(candidates),
-                    [&spec](const definition* other) {
-                        return is_base(other, &spec);
-                    });
-
-                if constexpr (trace_enabled) {
-                    indent _(trace);
-                    ++trace << "for next, select best:\n";
-
-                    for (auto& candidate : candidates) {
-                        indent _(trace);
-                        ++trace << "#" << candidate->spec_index
-                                << type_name(candidate->info->type) << "\n";
-                    }
-                }
-
-                auto nexts = best(candidates);
-                void* next;
-
-                if (nexts.size() == 1) {
-                    const definition_info* next_info = nexts.front()->info;
-                    next = next_info->pf;
-                    ++trace << "-> "
-                            << "#" << nexts.front()->spec_index
-                            << type_name(next_info->type) << "\n";
-                } else if (nexts.empty()) {
-                    ++trace << "-> none\n";
-                    next = m.info->not_implemented;
-                } else if (nexts.size() > 1) {
-                    ++trace << "->  ambiguous\n";
-                    next = m.info->ambiguous;
-                }
-
-                if (spec.info->next) {
-                    *spec.info->next = next;
-                }
-            }
         }
     }
 }
@@ -966,12 +947,12 @@ void compiler<Policy>::build_dispatch_table(
         }
 
         if (dim == 0) {
-            std::vector<const definition*> applicable;
+            std::vector<overrider*> candidates;
             std::size_t i = 0;
 
-            for (const auto& spec : m.specs) {
+            for (auto& spec : m.specs) {
                 if (mask[i]) {
-                    applicable.push_back(&spec);
+                    candidates.push_back(&spec);
                 }
                 ++i;
             }
@@ -980,49 +961,109 @@ void compiler<Policy>::build_dispatch_table(
                 ++trace << "select best of:\n";
                 indent _(trace);
 
-                for (auto& app : applicable) {
+                for (auto& app : candidates) {
                     ++trace << "#" << app->spec_index << " "
                             << type_name(app->info->type) << "\n";
                 }
             }
 
-            auto specs = best(applicable);
+            std::vector<overrider*> dominants = candidates;
+            std::size_t pick, remaining;
 
-            if (specs.size() > 1) {
-                indent _(trace);
-                ++trace << "ambiguous\n";
-                m.dispatch_table.push_back(&m.ambiguous);
-                ++m.report.ambiguous;
-            } else if (specs.empty()) {
+            select_dominant_overriders(dominants, pick, remaining);
+
+            if (remaining == 0) {
                 indent _(trace);
                 ++trace << "not implemented\n";
                 m.dispatch_table.push_back(&m.not_implemented);
                 ++m.report.not_implemented;
             } else {
-                auto spec = specs[0];
-                m.dispatch_table.push_back(spec);
-                ++trace << "-> #" << spec->spec_index << " "
-                        << type_name(spec->info->type)
-                        << " pf = " << spec->info->pf << "\n";
+                auto overrider = dominants[pick];
+                m.dispatch_table.push_back(overrider);
+                ++trace;
+
+                trace << "-> #" << overrider->spec_index << " "
+                      << type_name(overrider->info->type)
+                      << " pf = " << overrider->info->pf;
+
+                if (remaining > 1) {
+                    trace << " (ambiguous)";
+                    ++m.report.ambiguous;
+                }
+
+                trace << "\n";
+
+                // -------------------------------------------------------------
+                // next
+
+                // First remove the dominant overriders from the candidates.
+                // Note that the dominants appear in the candidates in the same
+                // relative order.
+                auto candidate = candidates.begin();
+                remaining = 0;
+
+                for (auto dominant : dominants) {
+                    if (*candidate == dominant) {
+                        *candidate = nullptr;
+                    } else {
+                        ++remaining;
+                    }
+
+                    ++candidate;
+                }
+
+                if (remaining == 0) {
+                    ++trace << "no 'next'\n";
+                    overrider->next = &m.not_implemented;
+                } else {
+                    if constexpr (trace_enabled) {
+                        ++trace << "for 'next', select best of:\n";
+                        indent _(trace);
+
+                        for (auto& app : candidates) {
+                            if (app) {
+                                ++trace << "#" << app->spec_index << " "
+                                        << type_name(app->info->type) << "\n";
+                            }
+                        }
+                    }
+
+                    select_dominant_overriders(candidates, pick, remaining);
+
+                    auto next_overrider = candidates[pick];
+                    overrider->next = next_overrider;
+
+                    ++trace << "-> #" << next_overrider->spec_index << " "
+                            << type_name(next_overrider->info->type)
+                            << " pf = " << next_overrider->info->pf;
+
+                    if (remaining > 1) {
+                        trace << " (ambiguous)";
+                        // do not increment m.report.ambiguous, for same reason
+                    }
+
+                    trace << "\n";
+                }
             }
         } else {
             build_dispatch_table(
                 m, dim - 1, group_iter - 1, mask,
                 concrete && group.has_concrete_classes);
         }
+
         ++group_index;
     }
 }
 
 inline void detail::generic_compiler::accumulate(
-    const update_method_report& partial, update_report& total) {
+    const method_report& partial, report& total) {
     total.cells += partial.cells;
     total.not_implemented += partial.not_implemented != 0;
     total.ambiguous += partial.ambiguous != 0;
 }
 
 template<class Policy>
-void compiler<Policy>::install_gv() {
+void compiler<Policy>::write_global_data() {
     using namespace policies;
     using namespace detail;
 
@@ -1045,32 +1086,52 @@ void compiler<Policy>::install_gv() {
         if (m.info->arity() == 1) {
             // Uni-methods just need an index in the method table.
             m.info->slots_strides_ptr[0] = m.slots[0];
-            continue;
-        }
+        } else {
+            auto strides_iter = std::copy(
+                m.slots.begin(), m.slots.end(), m.info->slots_strides_ptr);
+            std::copy(m.strides.begin(), m.strides.end(), strides_iter);
 
-        // multi-methods only
+            if constexpr (trace_enabled) {
+                ++trace << rflush(4, Policy::dispatch_data.size()) << " "
+                        << " method #" << m.dispatch_table[0]->method_index
+                        << " " << type_name(m.info->method_type) << "\n";
+                indent _(trace);
 
-        auto strides_iter = std::copy(
-            m.slots.begin(), m.slots.end(), m.info->slots_strides_ptr);
-        std::copy(m.strides.begin(), m.strides.end(), strides_iter);
-
-        if constexpr (trace_enabled) {
-            ++trace << rflush(4, Policy::dispatch_data.size()) << " "
-                    << " method #" << m.dispatch_table[0]->method_index << " "
-                    << type_name(m.info->method_type) << "\n";
-            indent _(trace);
-
-            for (auto& entry : m.dispatch_table) {
-                ++trace << "spec #" << entry->spec_index << " "
-                        << spec_name(m, entry) << "\n";
+                for (auto& entry : m.dispatch_table) {
+                    ++trace << "spec #" << entry->spec_index << " "
+                            << spec_name(m, entry) << "\n";
+                }
             }
-        }
 
-        m.gv_dispatch_table = gv_iter;
-        BOOST_ASSERT(gv_iter + m.dispatch_table.size() <= gv_last);
-        gv_iter = std::transform(
-            m.dispatch_table.begin(), m.dispatch_table.end(), gv_iter,
-            [](auto spec) { return spec->pf; });
+            m.gv_dispatch_table = gv_iter;
+            BOOST_ASSERT(gv_iter + m.dispatch_table.size() <= gv_last);
+            gv_iter = std::transform(
+                m.dispatch_table.begin(), m.dispatch_table.end(), gv_iter,
+                [](auto spec) { return spec->pf; });
+        }
+    }
+
+    ++trace << "Setting 'next' pointers\n";
+
+    for (auto& m : methods) {
+        indent _(trace);
+        ++trace << "method #"
+                << " " << type_name(m.info->method_type) << "\n";
+
+        for (auto& overrider : m.specs) {
+            if (overrider.next) {
+                ++trace << "#" << overrider.spec_index << " "
+                        << spec_name(m, &overrider) << " -> ";
+
+                trace << "#" << overrider.next->spec_index << " "
+                      << spec_name(m, overrider.next);
+                *overrider.info->next = (void*)overrider.next->pf;
+            } else {
+                trace << "none";
+            }
+
+            trace << "\n";
+        }
     }
 
     ++trace << "Initializing v-tables at " << gv_iter << "\n";
@@ -1129,35 +1190,66 @@ void compiler<Policy>::install_gv() {
 }
 
 template<class Policy>
-std::vector<const detail::generic_compiler::definition*>
-compiler<Policy>::best(std::vector<const definition*>& candidates) {
-    std::vector<const definition*> best;
+void compiler<Policy>::select_dominant_overriders(
+    std::vector<overrider*>& candidates, std::size_t& pick,
+    std::size_t& remaining) {
 
-    for (auto spec : candidates) {
-        const definition* candidate = spec;
+    pick = 0;
+    remaining = 0;
 
-        for (auto iter = best.begin(); iter != best.end();) {
-            if (is_more_specific(spec, *iter)) {
-                iter = best.erase(iter);
-            } else if (is_more_specific(*iter, spec)) {
-                candidate = nullptr;
-                break;
-            } else {
-                ++iter;
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        if (candidates[i]) {
+            for (size_t j = i + 1; j < candidates.size(); ++j) {
+                if (candidates[j]) {
+                    if (is_more_specific(candidates[i], candidates[j])) {
+                        candidates[j] = nullptr;
+                    } else if (is_more_specific(candidates[j], candidates[i])) {
+                        candidates[i] = nullptr;
+                        break; // this one is dead
+                    }
+                }
             }
         }
 
-        if (candidate) {
-            best.push_back(candidate);
+        if (candidates[i]) {
+            pick = i;
+            ++remaining;
         }
     }
 
-    return best;
+    if (remaining <= 1 || !candidates[pick]->covariant_return_type) {
+        return;
+    }
+
+    remaining = 0;
+
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        if (candidates[i]) {
+            for (size_t j = i + 1; j < candidates.size(); ++j) {
+                if (candidates[j]) {
+                    BOOST_ASSERT(candidates[i] != candidates[j]);
+
+                    if (candidates[i]->covariant_return_type->is_base_of(
+                            candidates[j]->covariant_return_type)) {
+                        candidates[i] = nullptr;
+                    } else if (candidates[j]->covariant_return_type->is_base_of(
+                                   candidates[i]->covariant_return_type)) {
+                        candidates[j] = nullptr;
+                    }
+                }
+            }
+        }
+
+        if (candidates[i]) {
+            pick = i;
+            ++remaining;
+        }
+    }
 }
 
 template<class Policy>
 bool compiler<Policy>::is_more_specific(
-    const definition* a, const definition* b) {
+    const overrider* a, const overrider* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1179,7 +1271,7 @@ bool compiler<Policy>::is_more_specific(
 }
 
 template<class Policy>
-bool compiler<Policy>::is_base(const definition* a, const definition* b) {
+bool compiler<Policy>::is_base(const overrider* a, const overrider* b) {
     bool result = false;
 
     auto a_iter = a->vp.begin(), a_last = a->vp.end(), b_iter = b->vp.begin();
@@ -1199,7 +1291,7 @@ bool compiler<Policy>::is_base(const definition* a, const definition* b) {
 }
 
 template<class Policy>
-void compiler<Policy>::print(const update_method_report& report) const {
+void compiler<Policy>::print(const method_report& report) const {
     ++trace;
 
     if (report.cells) {
@@ -1211,16 +1303,12 @@ void compiler<Policy>::print(const update_method_report& report) const {
           << " ambiguous\n";
 }
 
-template<class Policy>
+template<class Policy = YOMM2_DEFAULT_POLICY>
 auto initialize() -> compiler<Policy> {
     compiler<Policy> compiler;
     compiler.initialize();
 
     return compiler;
-}
-
-inline auto initialize() -> compiler<YOMM2_DEFAULT_POLICY> {
-    return initialize<YOMM2_DEFAULT_POLICY>();
 }
 
 } // namespace yomm2

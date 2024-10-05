@@ -31,19 +31,16 @@ namespace yorel {
 namespace yomm2 {
 namespace policies {
 
-struct yOMM2_API_gcc release
-    : basic_policy<
-          release, std_rtti, fast_perfect_hash<release>, vptr_vector<release>,
-          vectored_error_handler<release>> {};
+struct release : basic_policy<
+                     release, std_rtti, fast_perfect_hash<release>,
+                     vptr_vector<release>, vectored_error_handler<release>> {};
 
-struct yOMM2_API_gcc debug
-    : basic_policy<
-          debug, std_rtti, checked_perfect_hash<debug>, vptr_vector<debug>,
-          basic_error_output<debug>, basic_trace_output<debug>,
-          vectored_error_handler<debug>> {};
+struct debug : basic_policy<
+                   debug, std_rtti, checked_perfect_hash<debug>,
+                   vptr_vector<debug>, basic_error_output<debug>,
+                   basic_trace_output<debug>, vectored_error_handler<debug>> {};
 
 } // namespace policies
-
 
 #ifdef NDEBUG
 using default_policy = policies::release;

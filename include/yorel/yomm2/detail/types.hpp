@@ -7,24 +7,6 @@
 
 #include <yorel/yomm2/detail/static_list.hpp>
 
-#if defined(YOMM2_SHARED)
-#if defined(_MSC_VER)
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc __declspec(dllimport)
-#endif
-#endif
-#endif
-
-#if !defined(yOMM2_API_gcc)
-#define yOMM2_API_gcc
-#endif
-
-#if !defined(yOMM2_API_msc)
-#define yOMM2_API_msc
-#endif
-
-#define yOMM2_API yOMM2_API_gcc yOMM2_API_msc
-
 namespace yorel {
 namespace yomm2 {
 
@@ -67,11 +49,11 @@ struct class_info : static_list<class_info>::static_link {
     type_id *first_base, *last_base;
     bool is_abstract{false};
 
-    auto vptr() const -> const std::uintptr_t* {
+    auto vptr() const {
         return *static_vptr;
     }
 
-    auto indirect_vptr() const -> const std::uintptr_t* const* {
+    auto indirect_vptr() {
         return static_vptr;
     }
 
@@ -87,14 +69,15 @@ struct class_info : static_list<class_info>::static_link {
 // -----------
 // method info
 
-struct definition_info;
+struct overrider_info;
 
-struct yOMM2_API method_info : static_list<method_info>::static_link {
-    type_id *vp_begin, *vp_end;
-    static_list<definition_info> specs;
-    void* ambiguous;
+struct method_info : static_list<method_info>::static_link {
+    type_id* vp_begin;
+    type_id* vp_end;
+    static_list<overrider_info> specs;
     void* not_implemented;
     type_id method_type;
+    type_id return_type;
     std::size_t* slots_strides_ptr;
 
     auto arity() const {
@@ -102,12 +85,13 @@ struct yOMM2_API method_info : static_list<method_info>::static_link {
     }
 };
 
-struct definition_info : static_list<definition_info>::static_link {
-    ~definition_info() {
+struct overrider_info : static_list<overrider_info>::static_link {
+    ~overrider_info() {
         method->specs.remove(*this);
     }
 
     method_info* method; // for the destructor, to remove definition
+    type_id return_type; // for N2216 disambiguation
     type_id type;        // of the function, for trace
     void** next;
     type_id *vp_begin, *vp_end;

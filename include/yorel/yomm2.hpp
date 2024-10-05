@@ -17,6 +17,14 @@
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/macros.hpp>
 
+#define register_classes YOMM2_CLASSES
+#define declare_method YOMM2_METHOD
+#define declare_static_method YOMM2_STATIC_METHOD
+#define define_method YOMM2_OVERRIDE
+#define define_method_in YOMM2_OVERRIDE_IN
+#define define_method_inline YOMM2_OVERRIDE_INLINE
+#define method_class YOMM2_METHOD_CLASS
+
 using yorel::yomm2::virtual_;
 using yorel::yomm2::virtual_ptr;
 

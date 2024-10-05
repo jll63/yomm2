@@ -47,10 +47,10 @@ struct DomesticDog : Dog, Property {
     using Property::Property;
 };
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&));
+declare_method(poke, (virtual_<Animal&>, std::ostream&), void);
 declare_method(
-    void, meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&));
-declare_method(void, identify, (virtual_<Property&>, std::ostream&));
+    meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&), void);
+declare_method(identify, (virtual_<Property&>, std::ostream&), void);
 
 #ifdef _MSC_VER
 // Because MSC is believes that forward declaring with 'struct' or 'class' makes

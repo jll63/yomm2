@@ -37,13 +37,13 @@ struct diagonal_matrix : matrix {
 
 register_classes(matrix, dense_matrix, diagonal_matrix);
 
-declare_method(string, to_json, (virtual_<const matrix&>));
+declare_method(to_json, (virtual_<const matrix&>), string);
 
-define_method(string, to_json, (const dense_matrix& m)) {
+define_method(to_json, (const dense_matrix& m), string) {
     return "json for dense matrix...";
 }
 
-define_method(string, to_json, (const diagonal_matrix& m)) {
+define_method(to_json, (const diagonal_matrix& m), string) {
     return "json for diagonal matrix...";
 }
 
@@ -51,22 +51,25 @@ define_method(string, to_json, (const diagonal_matrix& m)) {
 // matrix * matrix
 
 declare_method(
-    shared_ptr<const matrix>, times,
+    times,
     (virtual_<const shared_ptr<const matrix>&>,
-     virtual_<const shared_ptr<const matrix>&>));
+     virtual_<const shared_ptr<const matrix>&>),
+    shared_ptr<const matrix>);
 
 // catch-all matrix * matrix -> dense_matrix
 define_method(
-    auto, times,
-    (const shared_ptr<const matrix>& a, const shared_ptr<const matrix>& b)) {
+    times,
+    (const shared_ptr<const matrix>& a, const shared_ptr<const matrix>& b),
+    shared_ptr<const dense_matrix>) {
     return make_shared<dense_matrix>();
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
 define_method(
-    auto, times,
+    times,
     (const shared_ptr<const diagonal_matrix>& a,
-     const shared_ptr<const diagonal_matrix>& b)) {
+     const shared_ptr<const diagonal_matrix>& b),
+    shared_ptr<const diagonal_matrix>) {
     return make_shared<diagonal_matrix>();
 }
 
@@ -79,15 +82,19 @@ operator*(shared_ptr<const matrix> a, shared_ptr<const matrix> b) {
 // scalar * matrix
 
 declare_method(
-    shared_ptr<const matrix>, times,
-    (double, virtual_<shared_ptr<const matrix>>));
+    times, (double, virtual_<shared_ptr<const matrix>>),
+    shared_ptr<const matrix>);
 
 // catch-all matrix * scalar -> dense_matrix
-define_method(auto, times, (double a, shared_ptr<const matrix> b)) {
+define_method(
+    times, (double a, shared_ptr<const matrix> b),
+    shared_ptr<const dense_matrix>) {
     return make_shared<dense_matrix>();
 }
 
-define_method(auto, times, (double a, shared_ptr<const diagonal_matrix> b)) {
+define_method(
+    times, (double a, shared_ptr<const diagonal_matrix> b),
+    shared_ptr<const diagonal_matrix>) {
     return make_shared<diagonal_matrix>();
 }
 

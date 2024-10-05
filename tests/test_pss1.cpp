@@ -23,13 +23,13 @@ struct D : B, C {};
 
 register_classes(A, B, C, D);
 
-declare_method(string, foobar, (virtual_<A&>));
+declare_method(foobar, (virtual_<A&>), string);
 
-define_method(string, foobar, (A&)) {
+define_method(foobar, (A&), string) {
     return "foobar(A)";
 }
 
-define_method(string, foobar, (C&)) {
+define_method(foobar, (C&), string) {
     return "foobar(C)";
 }
 

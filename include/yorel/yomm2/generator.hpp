@@ -217,7 +217,7 @@ template<class T>
 const generator& generator::write_static_offsets(std::ostream& os) const {
     using namespace detail;
 
-    if constexpr (is_policy<T>) {
+    if constexpr (is_policy_fn<T>::value) {
         for (auto& method : T::methods) {
             write_static_offsets(method, os);
         }
@@ -267,8 +267,6 @@ uint16_t generator::encode_group(
 
         if (spec == &method->not_implemented) {
             return method->specs.size();
-        } else if (spec == &method->ambiguous) {
-            return method->specs.size() + 1;
         } else {
             return entry.group_index;
         }

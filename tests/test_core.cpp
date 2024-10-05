@@ -18,7 +18,7 @@ using namespace yorel::yomm2::detail;
 
 // clang-format off
 
-namespace YOMM2_GENSYM {
+namespace test_virtual {
 
 struct base {
     virtual ~base() {}
@@ -30,6 +30,30 @@ struct c : base {};
 struct d : base {};
 struct e : base {};
 struct f : base {};
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, const base&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base*>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, const base*>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, base&&>::polymorphic_type, base>);
+
+static_assert(
+    std::is_same_v<
+        virtual_traits<default_policy, int>::polymorphic_type, void>);
 
 static_assert(
     std::is_same_v<
@@ -205,57 +229,17 @@ struct my_policy : policies::abstract_policy {};
 
 static_assert(
     std::is_same_v<
-        get_policy<Animal, Dog>,
-        default_policy
->);
-
-static_assert(
-    std::is_same_v<
-        get_policy<Animal, Dog, my_policy>,
-        my_policy
->);
-
-static_assert(
-    std::is_same_v<
-        remove_policy<Animal, Dog, my_policy>,
-        types<Animal, Dog>
->);
-
-static_assert(
-    std::is_same_v<
-        remove_policy<Animal, Dog, my_policy, default_policy>,
-        types<Animal, Dog>
->);
-
-static_assert(
-    std::is_same_v<
-        use_classes_macro<Animal, Dog>,
+        use_classes<Animal, Dog>,
         use_classes_aux<default_policy, types<Animal, Dog>>::type
 >);
 
 static_assert(
     std::is_same_v<
-        use_classes_macro<Animal, Dog, my_policy, default_policy>,
+        use_classes<Animal, Dog, my_policy, default_policy>,
         use_classes_aux<my_policy, types<Animal, Dog>>::type
     >);
 
 } // namespace test_use_classes
-
-namespace test_has_next {
-
-struct with_next {
-    static int next;
-};
-
-static_assert(has_next<with_next>::value);
-
-struct sans_next {
-    static int next;
-};
-
-static_assert(has_next<sans_next>::value);
-
-}
 
 namespace facets {
 
@@ -326,36 +310,10 @@ struct Animal {
     virtual ~Animal() {}
 };
 
-using kick = method<void, void (virtual_<Animal&>)>;
-static_assert(!has_static_offsets<kick>::value);
+using poke = method<void, void (virtual_<Animal&>)>;
+static_assert(!has_static_offsets<poke>::value);
 
 using meet = method<void, void (virtual_<Animal&>, virtual_<Animal&>)>;
 static_assert(has_static_offsets<meet>::value);
-
-}
-
-// -----------------------------------------------------------------------------
-// noexcept
-
-namespace test_noexcept {
-
-struct Animal {};
-struct Cat : public Animal {};
-
-struct policy : test_policy_<__COUNTER__> {};
-
-register_classes(Animal, Cat, policy);
-
-using name = method<void, const char*(virtual_<Animal&>), noexcept_, policy>;
-
-static_assert(noexcept(name::fn));
-
-const char* name_cat(Cat&) {
-    throw 0;
-    return "cat";
-}
-
-// should not compile:
-// YOMM2_STATIC(name::override_fn<name_cat>);
 
 }

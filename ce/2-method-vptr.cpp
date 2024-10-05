@@ -24,29 +24,30 @@ register_classes(Animal, Dog, Cat);
 using yorel::yomm2::virtual_ptr;
 
 declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&));
+    meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
 define_method(
-    void, meet, (virtual_ptr<Cat> a1, virtual_ptr<Cat> a2, std::ostream& os)) {
+    meet, (virtual_ptr<Cat> a1, virtual_ptr<Cat> a2, std::ostream& os), void) {
     os << a1->name << " ignores " << a2->name << "\n";
 }
 
 define_method(
-    void, meet, (virtual_ptr<Dog> a1, virtual_ptr<Cat> a2, std::ostream& os)) {
+    meet, (virtual_ptr<Dog> a1, virtual_ptr<Cat> a2, std::ostream& os), void) {
     os << a1->name << " chases " << a2->name << "\n";
 }
 
 define_method(
-    void, meet, (virtual_ptr<Cat> a1, virtual_ptr<Dog> a2, std::ostream& os)) {
+    meet, (virtual_ptr<Cat> a1, virtual_ptr<Dog> a2, std::ostream& os), void) {
     os << a1->name << " runs away from " << a2->name << "\n";
 }
 
 define_method(
-    void, meet, (virtual_ptr<Dog> a1, virtual_ptr<Dog> a2, std::ostream& os)) {
+    meet, (virtual_ptr<Dog> a1, virtual_ptr<Dog> a2, std::ostream& os), void) {
     os << a1->name << " wags tail at " << a2->name << "\n";
 }
 
-void meet_animals(const std::vector<virtual_ptr<Animal>>& animals, std::ostream& os) {
+void meet_animals(
+    const std::vector<virtual_ptr<Animal>>& animals, std::ostream& os) {
     for (auto animal : animals) {
         for (auto other : animals) {
             if (&animal != &other) {

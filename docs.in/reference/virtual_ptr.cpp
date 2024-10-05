@@ -200,31 +200,27 @@ class Cat : public Animal {
 
 register_classes(Animal, Dog, Cat);
 
-declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
+declare_method(poke, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(void, kick, (virtual_ptr<Dog> dog, std::ostream& os)) {
+define_method(poke, (virtual_ptr<Dog> dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (virtual_ptr<Cat> cat, std::ostream& os)) {
+define_method(poke, (virtual_ptr<Cat> cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&));
+declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os), void) {
     os << "chase";
 }
 
@@ -241,13 +237,13 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[0], os);
+        poke(animals[0], os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[1], os);
+        poke(animals[1], os);
         BOOST_CHECK(os.is_equal("hiss"));
     }
 
@@ -266,8 +262,8 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr) {
 
 //***
 
-void call_kick(virtual_ptr<Animal> animal, std::ostream& os) {
-    kick(animal, os);
+void call_poke(virtual_ptr<Animal> animal, std::ostream& os) {
+    poke(animal, os);
 }
 
 void call_meet(virtual_ptr<Animal> a, virtual_ptr<Animal> b, std::ostream& os) {
@@ -278,10 +274,10 @@ void call_meet(virtual_ptr<Animal> a, virtual_ptr<Animal> b, std::ostream& os) {
 
 /***
 
-A call to `kick` compiles to three instructions and two memory reads:
+A call to `poke` compiles to three instructions and two memory reads:
 
 ```asm
-mov	rax, qword ptr [rip + method<kick, ...>::fn+96]
+mov	rax, qword ptr [rip + method<poke, ...>::fn+96]
 mov	rax, qword ptr [rsi + 8*rax]
 jmp	rax
 ```
@@ -327,31 +323,27 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_ptr;
 
-declare_method(void, kick, (virtual_ptr<Animal>, std::ostream&));
+declare_method(poke, (virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(void, kick, (virtual_ptr<Dog> dog, std::ostream& os)) {
+define_method(poke, (virtual_ptr<Dog> dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (virtual_ptr<Cat> cat, std::ostream& os)) {
+define_method(poke, (virtual_ptr<Cat> cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&));
+declare_method(meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Cat> a, virtual_ptr<Dog> b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os)) {
+define_method(meet, (virtual_ptr<Dog> a, virtual_ptr<Cat> b, std::ostream& os), void) {
     os << "chase";
 }
 
@@ -369,13 +361,13 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final) {
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[0], os);
+        poke(animals[0], os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[1], os);
+        poke(animals[1], os);
         BOOST_CHECK(os.is_equal("hiss"));
     }
 
@@ -404,7 +396,7 @@ selected, as in the following example.
 
 //***
 
-define_method(void, kick, (virtual_ptr<Animal> dog, std::ostream& os)) {
+define_method(poke, (virtual_ptr<Animal> dog, std::ostream& os), void) {
     os << "wrong call";
 }
 
@@ -416,7 +408,7 @@ BOOST_AUTO_TEST_CASE(ref_virtual_ptr_final_incorrect) {
     auto animal_vptr = virtual_ptr<Animal>::final(animal);
 
     boost::test_tools::output_test_stream os;
-    kick(animal_vptr, os);
+    poke(animal_vptr, os);
     BOOST_CHECK(os.is_equal("wrong call"));
 }
 
@@ -463,41 +455,27 @@ register_classes(Animal, Dog, Cat);
 
 using yorel::yomm2::virtual_shared_ptr;
 
-declare_method(void, kick, (const virtual_shared_ptr<Animal>&, std::ostream&));
+declare_method(poke, (const virtual_shared_ptr<Animal>&, std::ostream&), void);
 
-define_method(void, kick, (
-        const virtual_shared_ptr<Dog>& dog, std::ostream& os)) {
+define_method(poke, (const virtual_shared_ptr<Dog>& dog, std::ostream& os), void) {
     os << "bark";
 }
 
-define_method(void, kick, (
-    const virtual_shared_ptr<Cat>& cat, std::ostream& os)) {
+define_method(poke, (const virtual_shared_ptr<Cat>& cat, std::ostream& os), void) {
     os << "hiss";
 }
 
-declare_method(
-    void, meet, (
-        const virtual_shared_ptr<Animal>&,
-        const virtual_shared_ptr<Animal>&, std::ostream&));
+declare_method(meet, (const virtual_shared_ptr<Animal>&,const virtual_shared_ptr<Animal>&, std::ostream&), void);
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Dog>& a,
-        const virtual_shared_ptr<Dog>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Dog>& a,const virtual_shared_ptr<Dog>& b, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Cat>& a,
-        const virtual_shared_ptr<Dog>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Cat>& a,const virtual_shared_ptr<Dog>& b, std::ostream& os), void) {
     os << "run";
 }
 
-define_method(
-    void, meet, (
-        const virtual_shared_ptr<Dog>& a,
-        const virtual_shared_ptr<Cat>& b, std::ostream& os)) {
+define_method(meet, (const virtual_shared_ptr<Dog>& a,const virtual_shared_ptr<Cat>& b, std::ostream& os), void) {
     os << "chase";
 }
 
@@ -514,13 +492,13 @@ BOOST_AUTO_TEST_CASE(ref_make_virtual_shared) {
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[0], os);
+        poke(animals[0], os);
         BOOST_CHECK(os.is_equal("bark"));
     }
 
     {
         boost::test_tools::output_test_stream os;
-        kick(animals[1], os);
+        poke(animals[1], os);
         BOOST_CHECK(os.is_equal("hiss"));
     }
 

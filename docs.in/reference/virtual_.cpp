@@ -27,14 +27,12 @@ struct Animal {
     virtual ~Animal() {}
 };
 
-declare_method(void, kick, (virtual_<Animal*>));
-declare_method(void, kick, (virtual_<Animal&>));
-declare_method(void, kick, (virtual_<Animal&&>));
-declare_method(void, kick, (virtual_<std::shared_ptr<Animal>>));
-declare_method(void, kick, (virtual_<const std::shared_ptr<Animal>&>));
-declare_method(void, kick, (virtual_<const Animal*>));
-declare_method(void, kick, (virtual_<const Animal&>));
-declare_method(void, kick, (virtual_<std::shared_ptr<const Animal>>));
-declare_method(void, kick, (virtual_<const std::shared_ptr<const Animal>&>));
+declare_method(poke, (virtual_<Animal&>), void);
+declare_method(poke, (virtual_<Animal&&>), void);
+declare_method(poke, (virtual_<std::shared_ptr<Animal>>), void);
+declare_method(poke, (virtual_<const std::shared_ptr<Animal>&>), void);
+declare_method(poke, (virtual_<const Animal&>), void);
+declare_method(poke, (virtual_<std::shared_ptr<const Animal>>), void);
+declare_method(poke, (virtual_<const std::shared_ptr<const Animal>&>), void);
 
 #endif

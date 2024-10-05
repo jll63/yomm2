@@ -21,25 +21,25 @@ class Spaceship : public Thing {};
 
 register_classes(Thing, Spaceship, Asteroid);
 
-declare_method(void, collideWith, (virtual_<Thing&>, virtual_<Thing&>));
+declare_method(collideWith, (virtual_<Thing&>, virtual_<Thing&>), void);
 
-define_method(void, collideWith, (Thing & left, Thing& right)) {
+define_method(collideWith, (Thing & left, Thing& right), void) {
     // default collision handling
 }
 
-define_method(void, collideWith, (Asteroid & left, Asteroid& right)) {
+define_method(collideWith, (Asteroid & left, Asteroid& right), void) {
     // handle Asteroid-Asteroid collision
 }
 
-define_method(void, collideWith, (Asteroid & left, Spaceship& right)) {
+define_method(collideWith, (Asteroid & left, Spaceship& right), void) {
     // handle Asteroid-Spaceship collision
 }
 
-define_method(void, collideWith, (Spaceship & left, Asteroid& right)) {
+define_method(collideWith, (Spaceship & left, Asteroid& right), void) {
     // handle Spaceship-Asteroid collision
 }
 
-define_method(void, collideWith, (Spaceship & left, Spaceship& right)) {
+define_method(collideWith, (Spaceship & left, Spaceship& right), void) {
     // handle Spaceship-Spaceship collision
 }
 

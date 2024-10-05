@@ -108,7 +108,7 @@ class Animal {
 class Cat : public Animal {};
 class Dog : public Animal {};
 
-struct kick_key;
+struct poke_key;
 
 namespace minimal {
 
@@ -122,15 +122,15 @@ struct minimal_policy : basic_policy<minimal_policy>, rtti {
 template<typename T>
 using virtual_ptr = virtual_ptr<T, minimal_policy>;
 
-using kick = method<kick_key, std::string(virtual_ptr<Animal>), minimal_policy>;
+using poke = method<poke_key, std::string(virtual_ptr<Animal>), minimal_policy>;
 
-struct kick_dog {
+struct poke_dog {
     static std::string fn(virtual_ptr<Dog> dog) {
         return "bark";
     }
 };
 
-struct kick_cat {
+struct poke_cat {
     static std::string fn(virtual_ptr<Cat> dog) {
         return "hiss";
     }
@@ -139,8 +139,8 @@ struct kick_cat {
 BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
     static use_classes<Animal, Cat, Dog, minimal_policy> YOMM2_GENSYM;
 
-    static kick::add_definition<kick_cat> YOMM2_GENSYM;
-    static kick::add_definition<kick_dog> YOMM2_GENSYM;
+    static poke::add_definition<poke_cat> YOMM2_GENSYM;
+    static poke::add_definition<poke_dog> YOMM2_GENSYM;
 
     update<minimal_policy>();
 
@@ -152,8 +152,8 @@ BOOST_AUTO_TEST_CASE(policy_tutorial_minimal_policy) {
         final_virtual_ptr<minimal_policy>(dog),
     };
 
-    BOOST_TEST(kick::fn(animals[0]) == "hiss");
-    BOOST_TEST(kick::fn(animals[1]) == "bark");
+    BOOST_TEST(poke::fn(animals[0]) == "hiss");
+    BOOST_TEST(poke::fn(animals[1]) == "bark");
 }
 } // namespace minimal
 ```
@@ -301,13 +301,13 @@ templates `use_classes` and `method` accept an addition policy argument.
 ```c++
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
+declare_method(void, poke, (virtual_<Animal&>, std::ostream&), custom_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(void, poke, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(void, poke, (Cat & cat, std::ostream& os)) {
     os << cat.name << " hisses.";
 }
 ```
@@ -328,12 +328,12 @@ BOOST_AUTO_TEST_CASE(custom_rtti_demo) {
 
     {
         std::stringstream os;
-        kick(a, os);
+        poke(a, os);
         BOOST_TEST(os.str() == "Snoopy barks.");
     }
     {
         std::stringstream os;
-        kick(b, os);
+        poke(b, os);
         BOOST_TEST(os.str() == "Sylvester hisses.");
     }
 }
@@ -420,25 +420,25 @@ struct custom_policy
 
 register_classes(Animal, Dog, Cat, custom_policy);
 
-declare_method(void, kick, (virtual_<Animal&>, std::ostream&), custom_policy);
+declare_method(void, poke, (virtual_<Animal&>, std::ostream&), custom_policy);
 
-define_method(void, kick, (Dog & dog, std::ostream& os)) {
+define_method(void, poke, (Dog & dog, std::ostream& os)) {
     os << dog.name << " barks.";
 }
 
-define_method(void, kick, (Cat & cat, std::ostream& os)) {
+define_method(void, poke, (Cat & cat, std::ostream& os)) {
     os << cat.name << " hisses.";
 }
 ```
 
 
-A call to `kick` now compiles to a shorter assembly code:
+A call to `poke` now compiles to a shorter assembly code:
 
 ```asm
 mov     rax, qword ptr [rdi + 8]
 mov     rcx, qword ptr [rip + basic_domain<custom_policy>::context+24]
 mov     rax, qword ptr [rcx + 8*rax]
-mov     rcx, qword ptr [rip + method<custom_policy, kick, ...>::fn+80]
+mov     rcx, qword ptr [rip + method<custom_policy, poke, ...>::fn+80]
 mov     rax, qword ptr [rax + 8*rcx]
 jmp     rax
 ```

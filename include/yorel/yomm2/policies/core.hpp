@@ -18,20 +18,8 @@ namespace yorel {
 namespace yomm2 {
 namespace detail {
 
-template<class Name>
-struct yOMM2_API_gcc yOMM2_API_msc method_tables {
-    template<class Class>
-    static std::uintptr_t* static_vptr;
-};
-
-template<class Name>
-template<class Class>
-std::uintptr_t* method_tables<Name>::static_vptr;
-
 using class_catalog = detail::static_list<detail::class_info>;
 using method_catalog = detail::static_list<detail::method_info>;
-
-struct domain {};
 
 } // namespace detail
 
@@ -90,10 +78,11 @@ struct debug_shared;
 struct release_shared;
 
 template<class Name>
-struct yOMM2_API_gcc basic_domain : detail::domain,
-                                    detail::method_tables<Name> {
+struct basic_domain {
     static detail::class_catalog classes;
     static detail::method_catalog methods;
+    template<class Class>
+    static std::uintptr_t* static_vptr;
     static std::vector<std::uintptr_t> dispatch_data;
 };
 
@@ -102,6 +91,10 @@ detail::class_catalog basic_domain<Name>::classes;
 
 template<class Name>
 detail::method_catalog basic_domain<Name>::methods;
+
+template<class Name>
+template<class Class>
+std::uintptr_t* basic_domain<Name>::static_vptr;
 
 template<class Name>
 std::vector<std::uintptr_t> basic_domain<Name>::dispatch_data;

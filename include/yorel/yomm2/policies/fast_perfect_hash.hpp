@@ -16,7 +16,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy>
-struct yOMM2_API_gcc fast_perfect_hash : virtual type_hash {
+struct fast_perfect_hash : virtual type_hash {
     struct report {
         std::size_t method_table_size, dispatch_table_size;
         std::size_t hash_search_attempts;
@@ -161,8 +161,8 @@ template<class Policy>
 std::size_t fast_perfect_hash<Policy>::hash_max;
 
 template<class Policy>
-struct yOMM2_API_gcc checked_perfect_hash : virtual fast_perfect_hash<Policy>,
-                                            virtual runtime_checks {
+struct checked_perfect_hash : virtual fast_perfect_hash<Policy>,
+                              virtual runtime_checks {
     static std::vector<type_id> control;
 
     static auto hash_type_id(type_id type) -> type_id {

@@ -216,40 +216,27 @@ struct Engineer : Person {};
 
 register_classes(Number, Integer, Rational, Person, Engineer);
 
-declare_method(
-    void, add,
-    (virtual_<const Person&>, virtual_<const Number&>, virtual_<const Number&>,
-     std::ostream&));
+declare_method(add, (virtual_<const Person&>, virtual_<const Number&>, virtual_<const Number&>,std::ostream&), void);
 
-define_method(
-    void, add,
-    (const Person&, const Number& a, const Number& b, std::ostream& os)) {
+define_method(add, (const Person&, const Number& a, const Number& b, std::ostream& os), void) {
     os << "I don't know how to do this...";
 }
 
-define_method(
-    void, add,
-    (const Person&, const Integer& a, const Integer& b, std::ostream& os)) {
+define_method(add, (const Person&, const Integer& a, const Integer& b, std::ostream& os), void) {
     os << a.value << " + " << b.value << " = " << a.value + b.value;
 }
 
-define_method(
-    void, add,
-    (const Engineer&, const Integer& a, const Rational& b, std::ostream& os)) {
+define_method(add, (const Engineer&, const Integer& a, const Rational& b, std::ostream& os), void) {
     os << a.value << " + " << b.num << "/" << b.den << " = "
        << a.value * b.den + b.num << "/" << b.den;
 }
 
-define_method(
-    void, add,
-    (const Engineer&, const Rational& a, const Integer& b, std::ostream& os)) {
+define_method(add, (const Engineer&, const Rational& a, const Integer& b, std::ostream& os), void) {
     os << a.num << "/" << a.den << " + " << b.value << " = "
        << a.num + b.value * a.den << "/" << a.den;
 }
 
-define_method(
-    void, add,
-    (const Engineer&, const Rational& a, const Rational& b, std::ostream& os)) {
+define_method(add, (const Engineer&, const Rational& a, const Rational& b, std::ostream& os), void) {
     os << a.num << "/" << a.den << " + " << b.num << "/" << b.den << " = "
        << a.num * b.den + a.den * b.num << "/" << a.den * b.den;
 }

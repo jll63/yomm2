@@ -370,31 +370,29 @@ struct population : abstract_population {
 
         use_classes<classes, Policy> YOMM2_GENSYM;
 
-        using method1 = method<population, void(virtual_<Base&>), Policy>;
+        using method1 = method<population(virtual_<Base&>), void, Policy>;
         using method2 =
-            method<population, void(virtual_<Base&>, virtual_<Base&>), Policy>;
+            method<population(virtual_<Base&>, virtual_<Base&>), void, Policy>;
 
         template<typename T>
         static void fn1(T&) {
         }
-        typename method1::template override_fn<fn1<intermediate<0>>>
-            YOMM2_GENSYM;
-        typename method1::template override_fn<fn1<intermediate<1>>>
-            YOMM2_GENSYM;
+        typename method1::template override<fn1<intermediate<0>>> YOMM2_GENSYM;
+        typename method1::template override<fn1<intermediate<1>>> YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(T&, U&) {
         }
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };
@@ -409,31 +407,29 @@ struct population : abstract_population {
 
         use_classes<classes, Policy> YOMM2_GENSYM;
 
-        using method1 = method<population, void(vptr<Base>), Policy>;
+        using method1 = method<population(vptr<Base>), void, Policy>;
         using method2 =
-            method<population, void(vptr<Base>, vptr<Base>), Policy>;
+            method<population(vptr<Base>, vptr<Base>), void, Policy>;
 
         template<typename T>
         static void fn1(vptr<T>) {
         }
-        typename method1::template override_fn<fn1<intermediate<0>>>
-            YOMM2_GENSYM;
-        typename method1::template override_fn<fn1<intermediate<1>>>
-            YOMM2_GENSYM;
+        typename method1::template override<fn1<intermediate<0>>> YOMM2_GENSYM;
+        typename method1::template override<fn1<intermediate<1>>> YOMM2_GENSYM;
 
         template<typename T, typename U>
         static void fn2(vptr<T>, vptr<U>) {
         }
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<0>, intermediate<1>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<0>>>
             YOMM2_GENSYM;
-        typename method2::template override_fn<
+        typename method2::template override<
             fn2<intermediate<1>, intermediate<1>>>
             YOMM2_GENSYM;
     };
@@ -697,11 +693,11 @@ int main(int argc, char** argv) {
 }
 
 // void call_hash_factors_in_globals_1(population<std::integral_constant<std::size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::Animal& a) {
-//     population<std::integral_constant<std::size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::dispatcher::kick(a);
+//     population<std::integral_constant<std::size_t, 0>, ordinary_base, orthogonal_dispatch<use_basic_policy>, no_work>::dispatcher::poke(a);
 // }
 
 // void call_direct_intrusive_1(population<std::integral_constant<std::size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::Animal& a) {
-//     population<std::integral_constant<std::size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::dispatcher::kick(a);
+//     population<std::integral_constant<std::size_t, 0>, ordinary_base, direct_intrusive_dispatch, no_work>::dispatcher::poke(a);
 // 	// movq	  8(%rdi),                       %rax
 // 	// movslq method.fn.slots_strides(%rip), %rcx
 // 	// jmpq	*(%rax,%rcx,8)

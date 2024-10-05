@@ -6,13 +6,13 @@
 
 void call_vf(Animal& a) {
     // yardstick
-    a.kick();
+    a.poke();
     // mov	rax, qword ptr [rdi]
     // jmp	qword ptr [rax + 16]            # TAILCALL
 }
 
-void call_kick(virtual_ptr<Animal> animal) {
-    kick(animal);
+void call_poke(virtual_ptr<Animal> animal) {
+    poke(animal);
     // mov	rax, qword ptr [rsi + 16]
     // jmp	rax                             # TAILCALL
 }
@@ -37,9 +37,9 @@ int main() {
     virtual_ptr dog = virtual_ptr<Dog>::final(snoopy);
 
     // // our yardstick: an ordinary virtual function call
-    // felix.kick();
+    // felix.poke();
 
-    call_kick(cat);
+    call_poke(cat);
     call_meet(dog, cat);
 
     return 0;

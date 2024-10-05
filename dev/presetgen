@@ -28,7 +28,6 @@ COMPILER_VERSIONS = {
     "c++": [""],
     "cl": [""],
 }
-LINKAGE = ["static", "shared"]
 CONFIGURATIONS = {"dbg": "Debug", "rel": "Release", "reldbg": "RelWithDebInfo"}
 
 
@@ -41,7 +40,7 @@ presets = {
     "cmakeMinimumRequired": {"major": 3, "minor": 21, "patch": 0},
     "configurePresets": [
         {
-            "name": join(build_system, compiler, version, linkage),
+            "name": join(build_system, compiler, version),
             "generator": tool_chain.generator,
             "toolchainFile": "${sourceDir}/vcpkg/scripts/buildsystems/vcpkg.cmake",
             "binaryDir": "${sourceDir}/builds/${presetName}",
@@ -53,36 +52,35 @@ presets = {
                 "YOMM2_ENABLE_EXAMPLES": "ON",
                 "YOMM2_ENABLE_TESTS": "ON",
                 "YOMM2_ENABLE_BENCHMARKS": "ON",
+                "VCPKG_INSTALL_OPTIONS": "--allow-unsupported"
+
             },
             **tool_chain.configure_presets,
         }
         for build_system, tool_chain in TOOLCHAINS.items()
         for compiler in tool_chain.compilers
         for version in COMPILER_VERSIONS[compiler]
-        for linkage in LINKAGE
     ],
     "buildPresets": [
         {
-            "name": "build-" + join(build_system, compiler, version, linkage, config),
-            "configurePreset": join(build_system, compiler, version, linkage),
+            "name": "build-" + join(build_system, compiler, version, config),
+            "configurePreset": join(build_system, compiler, version),
             "configuration": CONFIGURATIONS[config],
         }
         for build_system, tool_chain in TOOLCHAINS.items()
         for compiler in tool_chain.compilers
         for version in COMPILER_VERSIONS[compiler]
-        for linkage in LINKAGE
         for config in CONFIGURATIONS
     ],
     "testPresets": [
         {
-            "name": "test-" + join(build_system, compiler, version, linkage, config),
-            "configurePreset": join(build_system, compiler, version, linkage),
+            "name": "test-" + join(build_system, compiler, version, config),
+            "configurePreset": join(build_system, compiler, version),
             "configuration": CONFIGURATIONS[config],
         }
         for build_system, tool_chain in TOOLCHAINS.items()
         for compiler in tool_chain.compilers
         for version in COMPILER_VERSIONS[compiler]
-        for linkage in LINKAGE
         for config in CONFIGURATIONS
     ],
 }

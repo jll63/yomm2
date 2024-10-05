@@ -77,13 +77,12 @@ void decode_dispatch_data(Data& init) {
             packed_slots_iter += slots_strides_count;
 
             auto specs =
-                (uintptr_t*)alloca((method.specs.size() + 2) * pointer_size);
+                (uintptr_t*)alloca((method.specs.size() + 1) * pointer_size);
             *method_defs_iter++ = specs;
             ++trace << "specs index: " << specs << "\n";
             specs = std::transform(
                 method.specs.begin(), method.specs.end(), specs,
                 [](auto& spec) { return (uintptr_t)spec.pf; });
-            *specs++ = (uintptr_t)method.ambiguous;
             *specs++ = (uintptr_t)method.not_implemented;
             ++method_index;
         }

@@ -123,31 +123,31 @@ namespace openmethods {
 
 register_classes(Node, Number, Plus, Times);
 
-declare_method(string, to_rpn, (virtual_<const Node&>));
+declare_method(to_rpn, (virtual_<const Node&>), string);
 
-define_method(string, to_rpn, (const Number& expr)) {
+define_method(to_rpn, (const Number& expr), string) {
   return std::to_string(expr.val);
 }
 
-define_method(string, to_rpn, (const Plus& expr)) {
+define_method(to_rpn, (const Plus& expr), string) {
   return to_rpn(expr.left) + " " + to_rpn(expr.right) + " +";
 }
 
-define_method(string, to_rpn, (const Times& expr)) {
+define_method(to_rpn, (const Times& expr), string) {
   return to_rpn(expr.left) + " " + to_rpn(expr.right) + " *";
 }
 
-declare_method(int, value, (virtual_<const Node&>));
+declare_method(value, (virtual_<const Node&>), int);
 
-define_method(int, value, (const Number& expr)) {
+define_method(value, (const Number& expr), int) {
   return expr.val;
 }
 
-define_method(int, value, (const Plus& expr)) {
+define_method(value, (const Plus& expr), int) {
   return value(expr.left) + value(expr.right);
 }
 
-define_method(int, value, (const Times& expr)) {
+define_method(value, (const Times& expr), int) {
   return value(expr.left) * value(expr.right);
 }
 }
@@ -156,13 +156,13 @@ namespace virtual_ptr_demo {
 
 using namespace yorel::yomm2;
 
-declare_method(int, value, (virtual_ptr<const Node>));
+declare_method(value, (virtual_ptr<const Node>), int);
 
 int call_via_vptr(virtual_ptr<const Node> node) {
   return value(node);
 }
 
-define_method(int, value, (virtual_ptr<const Plus> expr)) {
+define_method(value, (virtual_ptr<const Plus> expr), int) {
   return value(expr->left) + value(expr->right);
 }
 
@@ -183,22 +183,20 @@ using namespace yorel::yomm2;
 use_classes<Node, Number, Plus, Times> use_animal_classes;
 
 struct value_id;
-using value = method<value_id, int(virtual_<const Node&>)>;
+using value = method<value_id(virtual_<const Node&>), int>;
 
 int number_value(const Number& node) {
   return node.val;
 }
-value::override_fn<number_value> add_number_value;
+value::override<number_value> add_number_value;
 
 template<class NodeClass, class Op>
-struct binary_value {
-  static int fn(const NodeClass& expr) {
+int binary_op(const NodeClass& expr) {
     return Op()(value::fn(expr.left), value::fn(expr.right));
-  }
-};
+}
 
-YOMM2_STATIC(value::override<binary_value<Plus, std::plus<int>>>);
-YOMM2_STATIC(value::override<binary_value<Times, std::multiplies<int>>>);
+YOMM2_REGISTER(value::override<binary_op<Plus, std::plus<int>>>);
+YOMM2_REGISTER(value::override<binary_op<Times, std::multiplies<int>>>);
 
 }
 

@@ -34,18 +34,18 @@ struct StateInspector : Inspector {};
 register_classes(Vehicle, Car, Truck, Inspector, StateInspector);
 
 declare_method(
-    void, inspect, (virtual_<const Vehicle&>, virtual_<const Inspector&>));
+    inspect, (virtual_<const Vehicle&>, virtual_<const Inspector&>), void);
 
-define_method(void, inspect, (const Vehicle& v, const Inspector& i)) {
+define_method(inspect, (const Vehicle& v, const Inspector& i), void) {
     cout << "Inspect vehicle.\n";
 }
 
-define_method(void, inspect, (const Car& v, const Inspector& i)) {
+define_method(inspect, (const Car& v, const Inspector& i), void) {
     next(v, i);
     cout << "Inspect seat belts.\n";
 }
 
-define_method(void, inspect, (const Car& v, const StateInspector& i)) {
+define_method(inspect, (const Car& v, const StateInspector& i), void) {
     next(v, i);
     cout << "Check road tax.\n";
 }

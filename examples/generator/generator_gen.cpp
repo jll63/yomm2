@@ -12,10 +12,10 @@ int main(int argc, char* argv[]) {
 
     std::ofstream slots("slots.hpp");
     generator
-        .write_static_offsets<method_class(void, kick, (virtual_ptr<Animal>))>(
+        .write_static_offsets<method_class(poke, (virtual_ptr<Animal>), void)>(
             slots)
         .write_static_offsets<method_class(
-            void, meet, (virtual_ptr<Animal>, virtual_ptr<Animal>))>(slots);
+            meet, (virtual_ptr<Animal>, virtual_ptr<Animal>), void)>(slots);
 
     std::ofstream tables("tables.hpp");
     generator.encode_dispatch_data(compiler, tables);

@@ -6,6 +6,8 @@
 #ifndef YOREL_YOMM2_TEMPLATES_HPP
 #define YOREL_YOMM2_TEMPLATES_HPP
 
+#include <yorel/yomm2/detail/types.hpp>
+
 #include <boost/mp11/algorithm.hpp>
 #include <boost/mp11/bind.hpp>
 #include <boost/mp11/list.hpp>
@@ -92,12 +94,12 @@ struct use_definition {
 
     template<typename T>
     struct impl<true, T> {
-        using type = typename T::method::template override<T>;
+        using type = typename T::method::template override<T::fn>;
     };
 
     template<typename First, typename... Rest>
     struct impl<false, Definition<First, Rest...>> {
-        using type = typename First::template override<Definition<First, Rest...>>;
+        using type = typename First::template override<Definition<First, Rest...>::fn>;
     };
 
     template<typename TypeList>

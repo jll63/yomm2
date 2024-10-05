@@ -43,7 +43,7 @@ struct Dog : Animal {};
 
 register_classes(Animal, Dog);
 
-declare_method(void, kick, (virtual_<Animal&>));
+declare_method(poke, (virtual_<Animal&>), void);
 
 using namespace yorel::yomm2; // for brevity
 
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(ref_set_error_handler_example) {
 
     try {
         Dog snoopy;
-        kick(snoopy);
+        poke(snoopy);
     } catch (const std::runtime_error& error) {
         BOOST_TEST(error.what() == "not defined");
         return;

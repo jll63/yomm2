@@ -14,7 +14,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy>
-struct yOMM2_API_gcc vptr_vector : virtual external_vptr {
+struct vptr_vector : virtual external_vptr {
     static std::vector<const std::uintptr_t*> vptrs;
 
     template<typename ForwardIterator>

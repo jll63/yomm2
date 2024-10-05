@@ -1,6 +1,6 @@
 #ifdef YOMM2_MD
 
-hrefs: YOMM2_DEFINE
+hrefs: YOMM2_OVERRIDE
 
 macro: define_method
 headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp></sub
@@ -12,11 +12,11 @@ headers: yorel/yomm2/cute.hpp, yorel/yomm2.hpp></sub
 ### Usage
 
 ```
-define_method(return-type, name, (method-parameter-list)) {
+define_method(name, (method-parameter-list), return-type) {
     ...
 }
 
-define_method(container, return-type, name, (method-parameter-list)) {
+define_method(return-type, name, container, (method-parameter-list)) {
     ...
 }
 ```
@@ -63,13 +63,13 @@ struct Bulldog : Dog {};
 
 register_classes(Animal, Dog, Bulldog);
 
-declare_method(std::string, kick, (virtual_<Animal*>));
+declare_method(poke, (virtual_<Animal&>), std::string);
 
-define_method(std::string, kick, (Dog* dog)) {
+define_method(poke, (Dog& dog), std::string) {
     return "bark";
 }
 
-define_method(std::string, kick, (Bulldog* dog)) {
+define_method(poke, (Bulldog& dog), std::string) {
     return next(dog) + " and bite";
 }
 
@@ -81,10 +81,10 @@ BOOST_AUTO_TEST_CASE(ref_example) {
     Animal* animal;
 
     animal = &snoopy;
-    BOOST_TEST(kick(animal) == "bark");
+    BOOST_TEST(poke(*animal) == "bark");
 
     animal = &hector;
-    BOOST_TEST(kick(animal) == "bark and bite");
+    BOOST_TEST(poke(*animal) == "bark and bite");
 }
 
 #endif

@@ -15,9 +15,9 @@ using yorel::yomm2::virtual_;
 
 // register_classes(classes);
 
-// declare_method(return, name, (params));
+// declare_method(name, (params), return);
 
-// define_method(return, name, (params)) {
+// define_method(name, (params), return) {
 // }
 
 int main() {

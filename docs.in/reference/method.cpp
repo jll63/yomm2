@@ -1,6 +1,6 @@
 /***
 entry: method
-hrefs: method-fn, method-next_type, method-override_fn, method-override, method-use_next
+hrefs: method-fn, method-next_type, method-override, method-override, method-use_next
 headers: yorel/yomm2/core.hpp, yorel/yomm2.hpp
 
 ```c++
@@ -16,14 +16,14 @@ struct method<Name, ReturnType(Args...), Policy>;
 
 `method` provides a static function object, `fn`, that takes a list of arguments
 of type `Args`, *minus* the `virtual_` decorator, and returns `ReturnType`.
-Method definitions can be added with the [`method::override_fn`](#override_fn)
+Method definitions can be added with the [`method::override`](#override)
 and [`method::override`](#override) class templates.
 
 ## Template parameters
 
 * **Name**: a type that differentiates methods with the same signature. It is
 recommended to declare a class (there is no need to define it) for each method
-name in the same namespace. ->YOMM2_SYMBOL can be used for that effect.
+name in the same namespace. ->YOMM2_METHOD_NAME can be used for that effect.
 
 * **ReturnType**: the type of the value returned by the function, or void. May
   not be `auto`.
@@ -82,17 +82,17 @@ The single instance of `method<Name, ReturnType(Args...)>`. Used to call the met
 
 | Name                              | Description                                               |
 | --------------------------------- | --------------------------------------------------------- |
-| [override_fn](#override_fn)     | add a definition to the method                            |
+| [override](#override)     | add a definition to the method                            |
 | [override](#override) | add a definition container to the method                  |
 | [next_type](#next_type)           | type of a pointer to the next most specialised definition |
 | [use_next](#use_next)             | CRTP base for definitions that use `next`                 |
 
-## override_fn
+## override
 
 ```c++
 template<auto Function>
-struct override_fn {
-    explicit override_fn(next_type* next = nullptr);
+struct override {
+    explicit override(next_type* next = nullptr);
 };
 ```
 
@@ -176,12 +176,15 @@ make sense, see the example below.
 
 #include <yorel/yomm2/core.hpp>
 #include <yorel/yomm2/compiler.hpp>
-#include <yorel/yomm2/symbols.hpp> // for YOMM2_GENSYM
+#include <yorel/yomm2/macros.hpp>
 
 #include <memory>
 #include <string>
 
-struct Animal { virtual ~Animal() {} };
+struct Animal {
+    virtual ~Animal() {
+    }
+};
 struct Cat : Animal {};
 struct Dog : Animal {};
 struct Bulldog : Dog {};
@@ -189,42 +192,54 @@ struct Bulldog : Dog {};
 namespace yomm2 = yorel::yomm2; // for brevity
 using yomm2::virtual_;
 
-YOMM2_STATIC(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
+YOMM2_REGISTER(yomm2::use_classes<Animal, Cat, Dog, Bulldog>);
 
-struct kick_methods;
-using kick = yomm2::method<kick_methods, std::string(virtual_<Animal&>)>;
+struct poke_methods;
+using poke = yomm2::method<poke_methods(virtual_<Animal&>), std::string>;
 
-std::string kick_cat(Cat& dog) { return "hiss"; }
-YOMM2_STATIC(kick::override_fn<kick_cat>);
+std::string poke_cat(Cat& dog) {
+    return "hiss";
+}
+YOMM2_REGISTER(poke::override<poke_cat>);
 
-std::string kick_dog(Dog& dog) { return "bark"; }
-YOMM2_STATIC(kick::override_fn<kick_dog>);
+std::string poke_dog(Dog& dog) {
+    return "bark";
+}
 
-struct kick_bulldog : kick::with_next<kick_bulldog> {
-    static std::string fn(Bulldog& dog) { return next(dog) + " and bite"; }
-};
-YOMM2_STATIC(kick::override<kick_bulldog>);
+YOMM2_REGISTER(poke::override<poke_dog>);
 
-struct YOMM2_SYMBOL(pet); // use obfuscated name
-using pet = yomm2::method<YOMM2_SYMBOL(pet), std::string(virtual_<Animal&>)>;
+std::string poke_bulldog(Bulldog& dog) {
+    return poke::next<poke_bulldog>(dog) + " and bite";
+}
 
-std::string pet_cat(Cat& dog) { return "purr"; }
-YOMM2_STATIC(pet::override_fn<pet_cat>);
+YOMM2_REGISTER(poke::override<poke_bulldog>);
 
-std::string pet_dog(Dog& dog) { return "wag tail"; }
-YOMM2_STATIC(pet::override_fn<pet_dog>);
+struct YOMM2_METHOD_NAME(pet); // use obfuscated name
+using pet =
+    yomm2::method<YOMM2_METHOD_NAME(pet)(virtual_<Animal&>), std::string>;
+
+std::string pet_cat(Cat& dog) {
+    return "purr";
+}
+
+YOMM2_REGISTER(pet::override<pet_cat>);
+
+std::string pet_dog(Dog& dog) {
+    return "wag tail";
+}
+
+YOMM2_REGISTER(pet::override<pet_dog>);
 
 BOOST_AUTO_TEST_CASE(ref_method_example) {
     yomm2::initialize();
 
-    std::unique_ptr<Animal>
-        felix = std::make_unique<Cat>(),
-        snoopy = std::make_unique<Dog>(),
-        hector = std::make_unique<Bulldog>();
+    std::unique_ptr<Animal> felix = std::make_unique<Cat>(),
+                            snoopy = std::make_unique<Dog>(),
+                            hector = std::make_unique<Bulldog>();
 
-    BOOST_TEST(kick::fn(*felix) == "hiss");
-    BOOST_TEST(kick::fn(*snoopy) == "bark");
-    BOOST_TEST(kick::fn(*hector) == "bark and bite");
+    BOOST_TEST(poke::fn(*felix) == "hiss");
+    BOOST_TEST(poke::fn(*snoopy) == "bark");
+    BOOST_TEST(poke::fn(*hector) == "bark and bite");
 
     BOOST_TEST(pet::fn(*felix) == "purr");
     BOOST_TEST(pet::fn(*snoopy) == "wag tail");

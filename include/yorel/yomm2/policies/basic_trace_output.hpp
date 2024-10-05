@@ -15,7 +15,7 @@ namespace yomm2 {
 namespace policies {
 
 template<class Policy, typename Stream = detail::ostderr>
-struct yOMM2_API_gcc basic_trace_output : virtual trace_output {
+struct basic_trace_output : virtual trace_output {
     static Stream trace_stream;
     static bool trace_enabled;
 };
