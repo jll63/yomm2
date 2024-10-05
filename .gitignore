@@ -16,3 +16,13 @@ doc/html/*
 .vscode/
 .vs/
 CMakeSettings.json
+
+_deps/
+
+export/
+
+fetch_and_include/
+
+tmpinst/
+
+CMakeFiles/

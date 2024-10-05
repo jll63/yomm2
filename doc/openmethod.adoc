@@ -113,26 +113,26 @@ functions (on the left side) and open-methods (on the right side):
 
 struct Animal {
     virtual ~Animal() = default;
-    virtual void kick(std::ostream&) const = 0;
+    virtual void poke(std::ostream&) const = 0;
 };
 
 struct Cat : Animal {
-    void kick(std::ostream& os) const override;
+    void poke(std::ostream& os) const override;
 };
 
 struct Dog : Animal {
-    void kick(std::ostream& os) const override;
+    void poke(std::ostream& os) const override;
 };
 
 
 
 
-void Cat::kick(std::ostream& os) const override {
+void Cat::poke(std::ostream& os) const override {
     os << "hiss";
 }
 
 
-void Dog::kick(std::ostream& os) const override {
+void Dog::poke(std::ostream& os) const override {
     os << "bark";
 }
 
@@ -145,8 +145,8 @@ int main() {
     Animal&& a = Cat();
     Animal&& b = Dog();
 
-    a.kick(std::cout); // prints "hiss"
-    a.kick(std::cout); // prints "bark"
+    a.poke(std::cout); // prints "hiss"
+    a.poke(std::cout); // prints "bark"
 
     return 0;
 }
@@ -174,15 +174,15 @@ struct Dog : Animal {                         <3>
 
 
 BOOST_OPENMETHOD(                             <4>
-    kick, (std::ostream&, virtual_<const Animal&>), void);
+    poke, (std::ostream&, virtual_<const Animal&>), void);
 
 BOOST_OPENMETHOD_OVERRIDE(                    <5>
-    kick, (std::ostream& os, const Cat& cat), void) {
+    poke, (std::ostream& os, const Cat& cat), void) {
         os << "hiss";
 }
 
 BOOST_OPENMETHOD_OVERRIDE(                    <5>
-    kick, (std::ostream& os, const Dog& dog), void) {
+    poke, (std::ostream& os, const Dog& dog), void) {
         os << "bark";
 }
 
@@ -194,8 +194,8 @@ int main() {
     Animal&& a = Cat();
     Animal&& b = Dog();
 
-    kick(std::cout, a); // prints "hiss"      <8>
-    kick(std::cout, b); // prints "bark"      <8>
+    poke(std::cout, a); // prints "hiss"      <8>
+    poke(std::cout, b); // prints "bark"      <8>
 
     return 0;
 }
@@ -208,9 +208,9 @@ int main() {
 `boost::openmethod::initialize()`. This is typically needed only in the `main`
 translation unit.
 
-<3> `kick` does not appear anywhere in the class definitions.
+<3> `poke` does not appear anywhere in the class definitions.
 
-<4> `kick` is declared outside of the classes. It is a free function. The
+<4> `poke` is declared outside of the classes. It is a free function. The
 `Animal` argument, implicitly passed as `this` to the virtual function, has
 become an explicit parameter. Its type is decorated with `virtual_`. It is not
 required to be the first parameter. The virtual function's cv-qualifier is now
@@ -224,7 +224,7 @@ relationships.  This can be done incrementally.
 
 <7> builds the dispatch tables.
 
-<8> `kick` is called as a free function. The appropriate override is called,
+<8> `poke` is called as a free function. The appropriate override is called,
 depending on the dynamic type if the virtual argument.
 
 If we break it down, we see that the same information is present in both, only
@@ -267,8 +267,10 @@ not exist.
 struct Bulldog : Dog {
 };
 
+BOOST_OPENMETHOD_CLASSES(Dog, Bulldog);
+
 BOOST_OPENMETHOD_OVERRIDE(
-    kick, (std::ostream& os, const Bulldog& dog), void) {
+    poke, (std::ostream& os, const Bulldog& dog), void) {
         next(os, dog); // prints "bark"
         os << " and bite";
 }
@@ -321,7 +323,121 @@ the method's arguments to the types required by the overrider.
 
 == Advanced Features
 
-=== Core API (Macro-less)
+=== Core API
+
+OpenMethod provides a public interface that does not require using macros. This
+can be useful in certain situations, for example when combining open methods and
+templates.
+
+Here is a rewrite of the Animals example.
+
+[source,c++]
+----
+#include <boost/openmethod/core.hpp>
+
+using namespace boost::openmethod;
+
+class poke_openmethod;
+
+using poke = method<
+    poke_openmethod(std::ostream&, virtual_<const Animal&>), void>;
+----
+
+An open-method is implemented as an instance of the `method` template. It takes
+a function signature and a return type.
+
+The `poke_openmethod` class acts as the method's identifier: it separates it
+from other methods with the same signature. The exact name does not really
+matter, and the class needs not be defined, only declared. Inventing a class
+name can get tedious, so OpenMethod provides a macro for that:
+
+[source,c++]
+----
+#include <boost/openmethod/macros/name.hpp>
+
+class BOOST_OPENMETHOD_NAME(pet);
+
+using pet = method<
+    BOOST_OPENMETHOD_NAME(pet)(std::ostream&, virtual_<const Animal&>), void>;
+----
+
+NOTE: BOOST_OPENMETHOD and associated macros use `BOOST_OPENMETHOD_NAME` in
+their implementation. This makes it possible to mix the "macro" and "core"
+styles.
+
+The method can be called via the nested function object `fn`:
+
+[source,c++]
+----
+poke::fn(std::cout, animal);
+----
+
+Overriders are ordinary functions, added to a method using the nested template
+`override`:
+
+[source,c++]
+----
+auto poke_cat(std::ostream& os, const Cat& cat), void) {
+    os << "hiss";
+}
+
+static poke::override<poke_cat> override_poke_cat;
+----
+
+If we are using C++26, we can use `_` instead of inventing an identifier. Again, OpenMethod provides a small convenience macro for this:
+
+NOTE: `override` can register more than one overrider.
+
+[source,c++]
+----
+#include <boost/openmethod/macros/register.hpp>
+
+auto poke_dog(std::ostream& os, const Dog& dog), void) {
+    os << "bark";
+}
+
+BOOST_OPENMETHOD_REGISTER(poke::override<poke_dog>);
+----
+
+`next` is available from the method's nested `next` template:
+
+[source,c++]
+----
+
+auto poke_bulldog(std::ostream& os, const Bulldog& dog), void) {
+    poke::next<poke_bulldog>(os, dog);
+    os << " and bite";
+}
+
+BOOST_OPENMETHOD_REGISTER(poke::override<poke_bulldog>);
+----
+
+Why not call `poke_dog` directly? That may be the right thing to do; however,
+keep in mind that, in a real program, a translation unit is not necessarily
+aware of the overriders added elsewhere - especially in presence of dynamic
+loading.
+
+[source,c++]
+----
+BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog, Bulldog);
+----
+
+[source,c++]
+----
+
+
+int main() {
+    boost::openmethod::initialize();
+
+    Animal&& a = Cat();
+    Animal&& b = Dog();
+
+    poke(std::cout, a); // prints "hiss"
+    poke(std::cout, b); // prints "bark"
+
+    return 0;
+}
+----
 
 === Policies
 
