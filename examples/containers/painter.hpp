@@ -41,7 +41,7 @@ class Painter {
     int counter = 0;
     template<typename...>
     friend struct paint1d::YOMM2_OVERRIDERS(paintObject);
-    friend struct paint2d::YOMM2_OVERRIDERS(
+    friend paint2d::YOMM2_OVERRIDERS(
         paintObject)<void(Painter&, const geometries::Shape&)>;
 };
 

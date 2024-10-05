@@ -10,8 +10,9 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/size.hpp>
 
-#define YOMM2_METHOD_NAME(NAME) NAME##_method_name
-#define YOMM2_OVERRIDERS(NAME) NAME##_overriders
+#define YOMM2_METHOD_NAME(NAME) yorel_yomm2_##NAME
+#define YOMM2_OVERRIDERS(NAME)                                                 \
+    BOOST_PP_CAT(YOMM2_METHOD_NAME(NAME), _overriders)
 
 #define yOMM2_PLIST(N, I, A)                                                   \
     BOOST_PP_COMMA_IF(I)                                                       \
