@@ -4,6 +4,8 @@ import os
 from pathlib import Path
 import re
 from subprocess import check_call
+import subprocess
+import sys
 
 BOOST_NAME = "openmethod"
 BOOST_INCLUDE = Path("include", "boost", BOOST_NAME)
@@ -21,6 +23,13 @@ REPLACE = (
     ("YOMM2_CLASS(ES)?|register_class(es)?", "BOOST_OPENMETHOD_CLASSES"),
 )
 
+modified = subprocess.check_output(
+    "git diff --name-only include/boost test".split(), encoding="ascii"
+)
+
+if modified:
+    sys.exit("Output directories have unstaged changes:\n" + modified)
+
 
 def skip(path):
     for skip in SKIP:
@@ -29,8 +38,6 @@ def skip(path):
 
     return False
 
-
-writeable = []
 
 for from_path in list(YOMM2_INCLUDE.rglob("*.hpp")) + list(YOMM2_TESTS.rglob("*.?pp")):
     if skip(from_path):
@@ -54,20 +61,9 @@ for from_path in list(YOMM2_INCLUDE.rglob("*.hpp")) + list(YOMM2_TESTS.rglob("*.
 
     to_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if to_path.exists():
-        if os.access(to_path, os.W_OK):
-            print("file is writeable, skipping")
-            writeable.append(to_path)
-            continue
-        os.chmod(to_path, 0o744)
-
     with to_path.open("w") as f:
         f.write(content)
 
     check_call(["clang-format", "-i", str(to_path)])
 
-    os.chmod(to_path, 0o444)
     print("done")
-
-if writeable:
-    print("Skipped because writeable:", *writeable)

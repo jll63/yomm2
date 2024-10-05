@@ -22,7 +22,7 @@ project
   ;
 
 # list
-run blackbox.cpp ;
+run test_blackbox.cpp ;
 
 # quick (for CI)
 alias quick : blackbox ;
