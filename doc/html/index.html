@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.20">
+<meta name="author" content="Emulation of Open Multi-Methods as proposed by N2216 | Jean-Louis Leroy">
+<title>OpenMethod</title>
+<link rel="stylesheet" href="./zajo-dark.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<meta name="keywords" content="c++,error handling,open source">
+<meta name="description" content="Lightweight Error Augmentation Framework">
+<link rel="stylesheet" href="./zajo-light.css" disabled=true>
+<script>
+function switch_style()
+{
+    var i, tag;
+    for( i=0, tag=document.getElementsByTagName("link"); i<tag.length; i++ )
+        if( tag[i].rel.indexOf("stylesheet")!=-1 && tag[i].href.includes("zajo-") )
+            tag[i].disabled = !tag[i].disabled;
+}
+</script>
+</head>
+<body class="article toc2 toc-left">
+<div id="header">
+<h1>OpenMethod<div style="z-index: 3; bottom:-16px; right:4px; position:fixed"><input width="32" height="32" type="image" alt="Skin" src="./skin.png" onclick="this.blur();switch_style();return false;"/></div></h1>
+<div class="details">
+<span id="author" class="author">Emulation of Open Multi-Methods as proposed by N2216 | Jean-Louis Leroy</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle"></div>
+<ul class="sectlevel1">
+<li><a href="#_abstract">Abstract</a></li>
+<li><a href="#support">Support</a></li>
+<li><a href="#distribution">Distribution</a></li>
+<li><a href="#_motivation">Motivation</a></li>
+<li><a href="#tutorial">Tutorial</a>
+<ul class="sectlevel2">
+<li><a href="#_hello_world">Hello World</a></li>
+<li><a href="#_next">Next</a></li>
+<li><a href="#_multiple_dispatch">Multiple Dispatch</a></li>
+<li><a href="#_multiple_inheritance">Multiple Inheritance</a></li>
+<li><a href="#_friendship">Friendship</a></li>
+<li><a href="#_virtual_ptr"><code>virtual_ptr</code></a></li>
+</ul>
+</li>
+<li><a href="#_advanced_features">Advanced Features</a>
+<ul class="sectlevel2">
+<li><a href="#_core_api">Core API</a></li>
+<li><a href="#_policies">Policies</a></li>
+<li><a href="#_error_handling">Error Handling</a></li>
+<li><a href="#_custom_rtti">Custom RTTI</a></li>
+</ul>
+</li>
+<li><a href="#_reference">Reference</a>
+<ul class="sectlevel2">
+<li><a href="#_headers">Headers</a></li>
+<li><a href="#_namespaces">Namespaces</a></li>
+<li><a href="#_macros">Macros</a>
+<ul class="sectlevel3">
+<li><a href="#_boost_openmethod">BOOST_OPENMETHOD</a></li>
+<li><a href="#_boost_openmethod_default_policy">BOOST_OPENMETHOD_DEFAULT_POLICY</a></li>
+<li><a href="#_boost_openmethod_classes">BOOST_OPENMETHOD_CLASSES</a></li>
+<li><a href="#_boost_openmethod_prefix">BOOST_OPENMETHOD_PREFIX</a></li>
+<li><a href="#_boost_openmethod_override">BOOST_OPENMETHOD_OVERRIDE</a></li>
+<li><a href="#_boost_openmethod_register">BOOST_OPENMETHOD_REGISTER</a></li>
+<li><a href="#_boost_openmethod_symbol">BOOST_OPENMETHOD_SYMBOL</a></li>
+</ul>
+</li>
+<li><a href="#_core_api_2">Core API</a>
+<ul class="sectlevel3">
+<li><a href="#_method">method</a></li>
+<li><a href="#_methodoverride">method::override</a></li>
+<li><a href="#_methodoverride_fn">method::override_fn</a></li>
+<li><a href="#_virtual">virtual_</a></li>
+<li><a href="#_virtual_ptr_2">virtual_ptr</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph text-right">
+<p><a href="https://github.com/boostorg/OpenMethod">GitHub</a> | <a href="https://boostorg.github.io/OpenMethod/OpenMethod.pdf">PDF</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_abstract">Abstract</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Boost OpenMethod implements Open Multi-Methods.
+Features:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>Header-only C++17 library.</p>
+</li>
+<li>
+<p>Closely emulates the N2216 standards committee paper, and extend beyond it.</p>
+</li>
+<li>
+<p>Fast dispatch, close or equal in performance to native virtual functions.</p>
+</li>
+<li>
+<p>Interoperable with other C++ constructs: templates, friends, namespaces, etc.</p>
+</li>
+<li>
+<p>Can be used with or without exception handling.</p>
+</li>
+<li>
+<p>Can be used with standard RTTI, or interfaced with custom RTTI.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<table class="tableblock frame-none grid-none stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="#tutorial">Tutorial</a> | <a href="#synopsis">[synopsis]</a> | <a href="https://github.com/boostorg/OpenMethod/blob/master/doc/whitepaper.md">Whitepaper</a> | <a href="https://github.com/boostorg/OpenMethod/blob/master/benchmark/benchmark.md">Benchmark</a></p></td>
+<td class="tableblock halign-right valign-top"><p class="tableblock">Reference: <a href="#functions">Functions</a> | <a href="#types">Types</a> | <a href="#predicates">Predicates</a> | <a href="#traits">Traits</a> | <a href="#macros">Macros</a></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="support">Support</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/boostorg/OpenMethod/issues">Report issues</a> on GitHub</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="distribution">Distribution</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>OpenMethod is distributed under the <a href="http://www.boost.org/LICENSE_1_0.txt">Boost Software License, Version 1.0</a>.</p>
+</div>
+<div class="paragraph">
+<p>There are three distribution channels:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>OpenMethod is included in official <a href="https://www.boost.org/">Boost</a> releases (starting with Boost 1.75), and therefore available via most package managers.</p>
+</li>
+<li>
+<p>The source code is hosted on <a href="https://github.com/boostorg/OpenMethod">GitHub</a>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_motivation">Motivation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Open-methods are similar to virtual functions, but they are not required to be
+members of a class. By being simultaneously free <em>and</em> virtual, they provide a
+solution to the Expression Problem:</p>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p>Given a set of types, and a set of operations on these types, is it possible
+to add new operations on the existing types, and new types to the existing
+operations, without modifying existing code?</p>
+</div>
+</blockquote>
+</div>
+<div class="paragraph">
+<p>As a bonus, open-methods can take more than one argument into account when
+selecting the appropriate function to call. This solves the problem of multiple
+dispatch.</p>
+</div>
+<div class="paragraph">
+<p>Open-methods are part of Lisp, Clojure, Julia, Cecil, Dylan, TADS, and other
+languages. Bjarne Stroustrup wanted open-methods in C++ almost from the
+beginning. He writes about it in D&amp;E. Circa 2007, with his PhD students Peter
+Pirkelbauer and Yuriy Solodkyy, they wrote a series of papers and an
+implementation based on the EDG compiler. Their design fit perfectly with othe
+parts of the language. They proposed it for adoption in the standard. It did not
+happen.</p>
+</div>
+<div class="paragraph">
+<p>This library implements the proposal, as closely as possible within the C++17
+standard.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="tutorial">Tutorial</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_hello_world">Hello World</h3>
+<div class="paragraph">
+<p>Here is a side-by-side implementation of the same program, using virtual
+functions (on the left side) and open-methods (on the right side):</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">virtual function</th>
+<th class="tableblock halign-left valign-top">open-method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">#include &lt;iostream&gt;
+
+
+
+struct Animal {
+    virtual ~Animal() = default;
+    virtual void poke(std::ostream&amp;) const = 0;
+};
+
+struct Cat : Animal {
+    void poke(std::ostream&amp; os) const override;
+};
+
+struct Dog : Animal {
+    void poke(std::ostream&amp; os) const override;
+};
+
+
+
+
+void Cat::poke(std::ostream&amp; os) const override {
+    os &lt;&lt; "hiss";
+}
+
+
+void Dog::poke(std::ostream&amp; os) const override {
+    os &lt;&lt; "bark";
+}
+
+
+
+
+int main() {
+
+
+    Animal&amp;&amp; a = Cat();
+    Animal&amp;&amp; b = Dog();
+
+    a.poke(std::cout); // prints "hiss"
+    a.poke(std::cout); // prints "bark"
+
+    return 0;
+}</code></pre>
+</div>
+</div></div></td>
+<td class="tableblock halign-left valign-top"><div class="content"><div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">#include &lt;iostream&gt;
+#include &lt;boost/openmethod.hpp&gt;               <i class="conum" data-value="1"></i><b>(1)</b>
+#include &lt;boost/openmethod/compiler.hpp&gt;      <i class="conum" data-value="2"></i><b>(2)</b>
+
+struct Animal {
+    virtual ~Animal() = default;              <i class="conum" data-value="3"></i><b>(3)</b>
+};
+
+
+struct Cat : Animal {                         <i class="conum" data-value="3"></i><b>(3)</b>
+};
+
+
+struct Dog : Animal {                         <i class="conum" data-value="3"></i><b>(3)</b>
+};
+
+
+BOOST_OPENMETHOD(                             <i class="conum" data-value="4"></i><b>(4)</b>
+    poke, (std::ostream&amp;, virtual_&lt;const Animal&amp;&gt;), void);
+
+BOOST_OPENMETHOD_OVERRIDE(                    <i class="conum" data-value="5"></i><b>(5)</b>
+    poke, (std::ostream&amp; os, const Cat&amp; cat), void) {
+        os &lt;&lt; "hiss";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(                    <i class="conum" data-value="5"></i><b>(5)</b>
+    poke, (std::ostream&amp; os, const Dog&amp; dog), void) {
+        os &lt;&lt; "bark";
+}
+
+BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog);   <i class="conum" data-value="6"></i><b>(6)</b>
+
+int main() {
+    boost::openmethod::initialize();          <i class="conum" data-value="7"></i><b>(7)</b>
+
+    Animal&amp;&amp; a = Cat();
+    Animal&amp;&amp; b = Dog();
+
+    poke(std::cout, a); // prints "hiss"      <i class="conum" data-value="8"></i><b>(8)</b>
+    poke(std::cout, b); // prints "bark"      <i class="conum" data-value="8"></i><b>(8)</b>
+
+    return 0;
+}</code></pre>
+</div>
+</div></div></td>
+</tr>
+</tbody>
+</table>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Include the main OpenMethod header.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Include the compiler header, which provides
+<code>boost::openmethod::initialize()</code>. This is typically needed only in the <code>main</code>
+translation unit.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td><code>poke</code> does not appear anywhere in the class definitions.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td><code>poke</code> is declared outside of the classes. It is a free function. The
+<code>Animal</code> argument, implicitly passed as <code>this</code> to the virtual function, has
+become an explicit parameter. Its type is decorated with <code>virtual_</code>. It is not
+required to be the first parameter. The virtual function&#8217;s cv-qualifier is now
+applied to the virtual parameter. Note that parameter names are not allowed in
+<code>BOOST_OPENMETHOD</code> - only types.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>provides overrides for <code>Cat</code> and <code>Dog</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="6"></i><b>6</b></td>
+<td>Classes need to be registered for the library to recognize the inheritance
+relationships.  This can be done incrementally.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="7"></i><b>7</b></td>
+<td>builds the dispatch tables.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="8"></i><b>8</b></td>
+<td><code>poke</code> is called as a free function. The appropriate override is called,
+depending on the dynamic type if the virtual argument.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If we break it down, we see that the same information is present in both, only
+it has moved around in the method version:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The implicit <code>this</code> parameter is explicit in the method signature. The virtual
+function&#8217;s cv-qualifier is now applied to the virtual parameter.</p>
+</li>
+<li>
+<p><code>virtual</code> has moved to the is replaced by <code>virtual_&lt;const Animal&amp;&gt;</code> has become
+a <code>virtual_</code> decorator</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Incidentally, there is no obligation for the <code>const Animal&amp;</code> to be the first
+method parameter. <code>virtual_</code> can appear anywhere, any number of times. At least
+one parameter must be  <code>virtual_</code>.</p>
+</div>
+<div class="paragraph">
+<p>At this point, we can neither call the method, nor the virtual function. We need
+to provide overrides.</p>
+</div>
+<div class="paragraph">
+<p>There are a couple of differences between the two though.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The open-method is not a member of <code>Animal</code>. We can add as many methods about
+Animals as we please, without chaning the classes.</p>
+</li>
+<li>
+<p>Adding a pure virtual function to a class makes it abstract - it cananot be
+instantiated. It is not the case with open-methods. Whether or not an
+implementation exists cannot be checked by looking at one translation unit at a
+time. Calling a method with a combination of arguments that does not match any
+method override is a run-time error.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_next">Next</h3>
+<div class="paragraph">
+<p>If a virtual function overrides a non-pure virtual function, it typically calls
+the calls the latter as part of its implementation. The equivalent for
+open-methods is a call to special function called <code>next</code>. It calls the next most
+specific override, i.e. what would have been called if the current override did
+not exist.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">struct Bulldog : Dog {
+};
+
+BOOST_OPENMETHOD_CLASSES(Dog, Bulldog);
+
+BOOST_OPENMETHOD_OVERRIDE(
+    poke, (std::ostream&amp; os, const Bulldog&amp; dog), void) {
+        next(os, dog); // prints "bark"
+        os &lt;&lt; " and bite";
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multiple_dispatch">Multiple Dispatch</h3>
+<div class="paragraph">
+<p>Open-methods can have more than one virtual parameter.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">BOOST_OPENMETHOD(
+    std::ostream&amp;, encounter, (virtual_&lt;Animal&amp;&gt;, virtual_&lt;Animal&amp;&gt;), void);
+
+// 'encounter' catch-all implementation.
+BOOST_OPENMETHOD_OVERRIDE(std::ostream&amp; os, encounter, (Animal&amp;, Animal&amp;, void)) {
+    os &lt;&lt; "ignore";
+}
+
+// Add definitions for specific pairs of animals.
+BOOST_OPENMETHOD_OVERRIDE(std::ostream&amp; os, encounter, (Dog&amp; dog1, Dog&amp; dog2, void)) {
+    os &lt;&lt; "wag tail";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(std::ostream&amp; os, encounter, (Dog&amp; dog, Cat&amp; cat, void)) {
+    os &lt;&lt; "chase";
+}
+
+BOOST_OPENMETHOD_OVERRIDE(std::ostream&amp; os, encounter, (Cat&amp; cat, Dog&amp; dog, void)) {
+    os &lt;&lt; "run";
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The appropriate overrider is selected using the same process similar to overload
+resolution. If there is no single overrider that is more specialized than all
+the others, the return type is used as a tie-breaker, <em>if</em> it is covariant with
+the return type of the base method. If there is still no unique overrider, one
+of the overriders is chosen arbitrarily.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multiple_inheritance">Multiple Inheritance</h3>
+<div class="paragraph">
+<p>Multiple inheritance is supported, with the exception of repeated inheritance.</p>
+</div>
+<div class="paragraph">
+<p>Virtual inheritance is supported, but it incurs calls to <code>dynamic_cast</code> to cast
+the method&#8217;s arguments to the types required by the overrider.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_friendship">Friendship</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_virtual_ptr"><code>virtual_ptr</code></h3>
+
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_advanced_features">Advanced Features</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_core_api">Core API</h3>
+<div class="paragraph">
+<p>OpenMethod provides a public interface that does not require using macros. This
+can be useful in certain situations, for example when combining open methods and
+templates.</p>
+</div>
+<div class="paragraph">
+<p>Here is a rewrite of the Animals example.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">#include &lt;boost/openmethod/core.hpp&gt;
+
+using namespace boost::openmethod;
+
+class poke_openmethod;
+
+using poke = method&lt;
+    poke_openmethod(std::ostream&amp;, virtual_&lt;const Animal&amp;&gt;), void&gt;;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>An open-method is implemented as an instance of the <code>method</code> template. It takes
+a function signature and a return type.</p>
+</div>
+<div class="paragraph">
+<p>The <code>poke_openmethod</code> class acts as the method&#8217;s identifier: it separates it
+from other methods with the same signature. The exact name does not really
+matter, and the class needs not be defined, only declared. Inventing a class
+name can get tedious, so OpenMethod provides a macro for that:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">#include &lt;boost/openmethod/macros/name.hpp&gt;
+
+class BOOST_OPENMETHOD_NAME(pet);
+
+using pet = method&lt;
+    BOOST_OPENMETHOD_NAME(pet)(std::ostream&amp;, virtual_&lt;const Animal&amp;&gt;), void&gt;;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+BOOST_OPENMETHOD and associated macros use <code>BOOST_OPENMETHOD_NAME</code> in
+their implementation. This makes it possible to mix the "macro" and "core"
+styles.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The method can be called via the nested function object <code>fn</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">poke::fn(std::cout, animal);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Overriders are ordinary functions, added to a method using the nested template
+<code>override</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">auto poke_cat(std::ostream&amp; os, const Cat&amp; cat), void) {
+    os &lt;&lt; "hiss";
+}
+
+static poke::override&lt;poke_cat&gt; override_poke_cat;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we are using C++26, we can use <code>_</code> instead of inventing an identifier. Again, OpenMethod provides a small convenience macro for this:</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<code>override</code> can register more than one overrider.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">#include &lt;boost/openmethod/macros/register.hpp&gt;
+
+auto poke_dog(std::ostream&amp; os, const Dog&amp; dog), void) {
+    os &lt;&lt; "bark";
+}
+
+BOOST_OPENMETHOD_REGISTER(poke::override&lt;poke_dog&gt;);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><code>next</code> is available from the method&#8217;s nested <code>next</code> template:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">auto poke_bulldog(std::ostream&amp; os, const Bulldog&amp; dog), void) {
+    poke::next&lt;poke_bulldog&gt;(os, dog);
+    os &lt;&lt; " and bite";
+}
+
+BOOST_OPENMETHOD_REGISTER(poke::override&lt;poke_bulldog&gt;);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Why not call <code>poke_dog</code> directly? That may be the right thing to do; however,
+keep in mind that, in a real program, a translation unit is not necessarily
+aware of the overriders added elsewhere - especially in presence of dynamic
+loading.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">BOOST_OPENMETHOD_CLASSES(Animal, Cat, Dog, Bulldog);</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="rouge highlight nowrap"><code data-lang="c++">int main() {
+    boost::openmethod::initialize();
+
+    Animal&amp;&amp; a = Cat();
+    Animal&amp;&amp; b = Dog();
+
+    poke(std::cout, a); // prints "hiss"
+    poke(std::cout, b); // prints "bark"
+
+    return 0;
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_policies">Policies</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_error_handling">Error Handling</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_custom_rtti">Custom RTTI</h3>
+
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_reference">Reference</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_headers">Headers</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_namespaces">Namespaces</h3>
+
+</div>
+<div class="sect2">
+<h3 id="_macros">Macros</h3>
+<div class="sect3">
+<h4 id="_boost_openmethod">BOOST_OPENMETHOD</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_default_policy">BOOST_OPENMETHOD_DEFAULT_POLICY</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_classes">BOOST_OPENMETHOD_CLASSES</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_prefix">BOOST_OPENMETHOD_PREFIX</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_override">BOOST_OPENMETHOD_OVERRIDE</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_register">BOOST_OPENMETHOD_REGISTER</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_boost_openmethod_symbol">BOOST_OPENMETHOD_SYMBOL</h4>
+
+</div>
+</div>
+<div class="sect2">
+<h3 id="_core_api_2">Core API</h3>
+<div class="sect3">
+<h4 id="_method">method</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_methodoverride">method::override</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_methodoverride_fn">method::override_fn</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_virtual">virtual_</h4>
+
+</div>
+<div class="sect3">
+<h4 id="_virtual_ptr_2">virtual_ptr</h4>
+
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="footer">
+<div id="footer-text">
+</div>
+</div>
+</body>
+</html>

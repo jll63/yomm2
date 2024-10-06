@@ -9,8 +9,8 @@ tests/benchmarks_parameters.hpp
 **/vcpkg_installed
 .venv/
 
+build/*
 __build__/*
-doc/html/*
 
 # ides
 .vscode/

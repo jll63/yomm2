@@ -10,8 +10,8 @@ using asciidoctor ;
 html index.html : openmethod.adoc : <asciidoctor-attribute>stylesheet=zajo-dark.css <asciidoctor-attribute>linkcss ;
 install html_ : index.html skin.png zajo-dark.css zajo-light.css rouge-github.css : <location>html ;
 
-pdf openmethod.pdf : openmethod.adoc : <asciidoctor-doctype>book  <asciidoctor-attribute>pdf-themesdir=. <asciidoctor-attribute>pdf-theme=openmethod ;
-install pdf_ : openmethod.pdf : <location>html ;
+# pdf openmethod.pdf : openmethod.adoc : <asciidoctor-doctype>book  <asciidoctor-attribute>pdf-themesdir=. <asciidoctor-attribute>pdf-theme=openmethod ;
+# install pdf_ : openmethod.pdf : <location>html ;
 
 alias boostdoc ;
 explicit boostdoc ;
