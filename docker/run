@@ -1,3 +1,0 @@
-#!/bin/bash
-
-docker run --rm -it -v $(realpath ..):/home/$(id -u -n)/yomm2 "$@" yomm2:latest bash

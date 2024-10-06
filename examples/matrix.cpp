@@ -8,9 +8,9 @@
 #include <string>
 #include <typeinfo>
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/virtual_shared_ptr.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/virtual_shared_ptr.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 using std::make_shared;
 using std::shared_ptr;
@@ -35,29 +35,29 @@ struct diagonal_matrix : matrix {
     }
 };
 
-register_classes(matrix, dense_matrix, diagonal_matrix);
+BOOST_OPENMETHOD_CLASSES(matrix, dense_matrix, diagonal_matrix);
 
-declare_method(to_json, (virtual_<const matrix&>), string);
+BOOST_OPENMETHOD(to_json, (virtual_<const matrix&>), string);
 
-define_method(to_json, (const dense_matrix& m), string) {
+BOOST_OPENMETHOD_OVERRIDE(to_json, (const dense_matrix& m), string) {
     return "json for dense matrix...";
 }
 
-define_method(to_json, (const diagonal_matrix& m), string) {
+BOOST_OPENMETHOD_OVERRIDE(to_json, (const diagonal_matrix& m), string) {
     return "json for diagonal matrix...";
 }
 
 // -----------------------------------------------------------------------------
 // matrix * matrix
 
-declare_method(
+BOOST_OPENMETHOD(
     times,
     (virtual_<const shared_ptr<const matrix>&>,
      virtual_<const shared_ptr<const matrix>&>),
     shared_ptr<const matrix>);
 
 // catch-all matrix * matrix -> dense_matrix
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     times,
     (const shared_ptr<const matrix>& a, const shared_ptr<const matrix>& b),
     shared_ptr<const dense_matrix>) {
@@ -65,7 +65,7 @@ define_method(
 }
 
 // diagonal_matrix * diagonal_matrix -> diagonal_matrix
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     times,
     (const shared_ptr<const diagonal_matrix>& a,
      const shared_ptr<const diagonal_matrix>& b),
@@ -81,18 +81,18 @@ operator*(shared_ptr<const matrix> a, shared_ptr<const matrix> b) {
 // -----------------------------------------------------------------------------
 // scalar * matrix
 
-declare_method(
+BOOST_OPENMETHOD(
     times, (double, virtual_<shared_ptr<const matrix>>),
     shared_ptr<const matrix>);
 
 // catch-all matrix * scalar -> dense_matrix
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     times, (double a, shared_ptr<const matrix> b),
     shared_ptr<const dense_matrix>) {
     return make_shared<dense_matrix>();
 }
 
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     times, (double a, shared_ptr<const diagonal_matrix> b),
     shared_ptr<const diagonal_matrix>) {
     return make_shared<diagonal_matrix>();
@@ -121,7 +121,7 @@ int main() {
     using std::cerr;
     using std::cout;
 
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     shared_ptr<const matrix> a = make_shared<dense_matrix>();
     shared_ptr<const matrix> b = make_shared<diagonal_matrix>();

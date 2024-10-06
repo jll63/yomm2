@@ -1,1 +1,0 @@
-cmake -G "Visual Studio 15 2017" -DYOMM2_ENABLE_TESTS=1 -DYOMM2_ENABLE_BENCHMARKS=1 -DBOOST_ROOT=d:\dev\boost ..

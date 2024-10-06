@@ -1,4 +1,0 @@
-#!/bin/bash
-
-cd ./build/$1/Release/tests
-../../../../dev/run-benchmarks-here

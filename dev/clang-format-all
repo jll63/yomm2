@@ -1,3 +1,0 @@
-#!/bin/bash
-
-find include src examples tests -type f -name "*.?pp" | xargs clang-format -i

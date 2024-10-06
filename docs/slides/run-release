@@ -1,8 +1,0 @@
-#!/usr/bin/bash
-docker run --rm -p 8080:8080 \
-    -v /home/jll/dev/yomm2/docs/slides/deck:/reveal/docs/slides \
-    -v /home/jll/dev/yomm2/docs/slides/resources:/reveal/resources \
-    -v /home/jll/dev/yomm2/docs/slides/theme:/reveal/dist/theme \
-    -e TITLE=YOMM2 -e THEME_CSS=yomm2.css \
-    -e ADDITIONAL_REVEAL_OPTIONS=center:false,controls:false -e MARGIN=0 \
-    "$@" cloudogu/reveal.js

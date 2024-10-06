@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 struct Animal {
     const char* name;
@@ -19,29 +19,29 @@ struct Cat : Animal {
     using Animal::Animal;
 };
 
-register_classes(Animal, Dog, Cat);
+BOOST_OPENMETHOD_CLASSES(Animal, Dog, Cat);
 
-using yorel::yomm2::virtual_ptr;
+using boost::openmethod::virtual_ptr;
 
-declare_method(
+BOOST_OPENMETHOD(
     meet, (virtual_ptr<Animal>, virtual_ptr<Animal>, std::ostream&), void);
 
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     meet, (virtual_ptr<Cat> a1, virtual_ptr<Cat> a2, std::ostream& os), void) {
     os << a1->name << " ignores " << a2->name << "\n";
 }
 
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     meet, (virtual_ptr<Dog> a1, virtual_ptr<Cat> a2, std::ostream& os), void) {
     os << a1->name << " chases " << a2->name << "\n";
 }
 
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     meet, (virtual_ptr<Cat> a1, virtual_ptr<Dog> a2, std::ostream& os), void) {
     os << a1->name << " runs away from " << a2->name << "\n";
 }
 
-define_method(
+BOOST_OPENMETHOD_OVERRIDE(
     meet, (virtual_ptr<Dog> a1, virtual_ptr<Dog> a2, std::ostream& os), void) {
     os << a1->name << " wags tail at " << a2->name << "\n";
 }
@@ -58,7 +58,7 @@ void meet_animals(
 }
 
 int main() {
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     Dog hector{"Hector"}, snoopy{"Snoopy"};
     Cat felix{"Felix"}, sylvester{"Sylvester"};

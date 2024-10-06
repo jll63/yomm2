@@ -1,6 +1,6 @@
 // Check whether the version in CMakeLists.txt is up to date
 //
-// Copyright 2018 Peter Dimov
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 //
 // Distributed under the Boost Software License, Version 1.0.
 //

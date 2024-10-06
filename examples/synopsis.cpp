@@ -25,51 +25,51 @@ class Dolphin : public Animal {};
 // =============================================================================
 // Add behavior to existing classes, without modifying them.
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 // Classes must be registered:
-register_classes(Animal, Dog, Cat, Dolphin);
+BOOST_OPENMETHOD_CLASSES(Animal, Dog, Cat, Dolphin);
 
-// ...but it does not have to be in one call to 'register_classes', as long as
+// ...but it does not have to be in one call to 'BOOST_OPENMETHOD_CLASSES', as long as
 // inheritance relationships can be deduced. This allows *adding* classes to an
 // existing collection of classes.
-register_classes(Dog, Bulldog);
+BOOST_OPENMETHOD_CLASSES(Dog, Bulldog);
 
 // Define a uni-method, i.e. a method with a single virtual argument. This is in
 // essence a virtual function implemented as a free function.
-declare_method(poke, (virtual_<Animal&>, std::ostream&), void);
+BOOST_OPENMETHOD(poke, (virtual_<Animal&>, std::ostream&), void);
 
 // Implement 'poke' for dogs.
-define_method(poke, (Dog& dog, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(poke, (Dog& dog, std::ostream& os), void) {
     os << "bark";
 }
 
 // Implement 'poke' for bulldogs. They behave like Dogs, but, in addition, they
 // fight back.
-define_method(poke, (Bulldog& dog, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(poke, (Bulldog& dog, std::ostream& os), void) {
     next(dog, os); // calls "base" method, i.e. definition for Dog
     os << " and bite";
 }
 
 // A multi-method with two virtual arguments...
-declare_method(meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&), void);
+BOOST_OPENMETHOD(meet, (virtual_<Animal&>, virtual_<Animal&>, std::ostream&), void);
 
 // 'meet' catch-all implementation.
-define_method(meet, (Animal&, Animal&, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(meet, (Animal&, Animal&, std::ostream& os), void) {
     os << "ignore";
 }
 
 // Add definitions for specific pairs of animals.
-define_method(meet, (Dog& dog1, Dog& dog2, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(meet, (Dog& dog1, Dog& dog2, std::ostream& os), void) {
     os << "wag tail";
 }
 
-define_method(meet, (Dog& dog, Cat& cat, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(meet, (Dog& dog, Cat& cat, std::ostream& os), void) {
     os << "chase";
 }
 
-define_method(meet, (Cat& cat, Dog& dog, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(meet, (Cat& cat, Dog& dog, std::ostream& os), void) {
     os << "run";
 }
 
@@ -82,7 +82,7 @@ define_method(meet, (Cat& cat, Dog& dog, std::ostream& os), void) {
 
 int main() {
     // Initialise method dispatch tables.
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     // Create a few objects.
     // Note that the actual classes are type-erased to base class Animal!

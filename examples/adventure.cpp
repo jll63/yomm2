@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 struct Character {
     virtual ~Character() {
@@ -34,37 +34,42 @@ struct Creature {
 struct Dragon : Creature {};
 struct Bear : Creature {};
 
-register_classes(
+BOOST_OPENMETHOD_CLASSES(
     Character, Warrior, Device, Hands, Axe, Banana, Creature, Dragon, Bear);
 
-declare_method(
+BOOST_OPENMETHOD(
     fight, (virtual_<Character&>, virtual_<Creature&>, virtual_<Device&>),
     std::string);
 
-define_method(fight, (Character & x, Creature& y, Banana& z), std::string) {
+BOOST_OPENMETHOD_OVERRIDE(
+    fight, (Character & x, Creature& y, Banana& z), std::string) {
     return "are you insane?";
 }
 
-define_method(fight, (Character & x, Creature& y, Axe& z), std::string) {
+BOOST_OPENMETHOD_OVERRIDE(
+    fight, (Character & x, Creature& y, Axe& z), std::string) {
     return "not agile enough to wield";
 }
 
-define_method(fight, (Warrior & x, Creature& y, Axe& z), std::string) {
+BOOST_OPENMETHOD_OVERRIDE(
+    fight, (Warrior & x, Creature& y, Axe& z), std::string) {
     return "and cuts it into pieces";
 }
 
-define_method(fight, (Warrior & x, Dragon& y, Axe& z), std::string) {
+BOOST_OPENMETHOD_OVERRIDE(
+    fight, (Warrior & x, Dragon& y, Axe& z), std::string) {
     return "and dies a honorable death";
 }
 
-define_method(fight, (Character & x, Dragon& y, Hands& z), std::string) {
+BOOST_OPENMETHOD_OVERRIDE(
+    fight, (Character & x, Dragon& y, Hands& z), std::string) {
     return "Congratulations! You have just vainquished a dragon with your bare "
            "hands"
            " (unbelievable, isn't it?)";
 }
 
 int main() {
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     std::unique_ptr<Character> bob = std::make_unique<Character>(),
                                rambo = std::make_unique<Warrior>();

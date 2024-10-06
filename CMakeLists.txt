@@ -39,9 +39,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   # Testing (off by default)
 
   option(BUILD_TESTING "Build the tests." OFF)
+  option(BUILD_EXAMPLES "Build the examples." OFF)
   include(CTest)
 
-  if(BUILD_TESTING)
+  if(BUILD_TESTING OR BUILD_EXAMPLES)
 
     set(BUILD_TESTING OFF) # hide cache variable
 
@@ -65,8 +66,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 if(BUILD_TESTING)
-
   add_subdirectory(test)
   set_property(TARGET tests PROPERTY EXCLUDE_FROM_ALL FALSE)
+endif()
 
+if(BUILD_EXAMPLES)
+  add_subdirectory(examples)
 endif()

@@ -23,6 +23,18 @@ project
 
 # list
 run test_blackbox.cpp ;
+run test_compiler.cpp ;
+run test_core.cpp ;
+run test_custom_rtti.cpp ;
+run test_member_method.cpp ;
+run test_move.cpp ;
+run test_namespaces.cpp ;
+run test_pointer_to_method.cpp ;
+run test_rolex.cpp ;
+run test_static_list.cpp ;
+run test_virtual_ptr_all.cpp ;
+run test_virtual_ptr_basic.cpp ;
+run test_virtual_ptr.cpp ;
 
 # quick (for CI)
 alias quick : blackbox ;

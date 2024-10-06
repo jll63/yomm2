@@ -1,5 +1,5 @@
 // next.cpp
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -9,8 +9,8 @@
 
 #include <iostream>
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 using namespace std;
 
@@ -31,27 +31,29 @@ struct Inspector {
 
 struct StateInspector : Inspector {};
 
-register_classes(Vehicle, Car, Truck, Inspector, StateInspector);
+BOOST_OPENMETHOD_CLASSES(Vehicle, Car, Truck, Inspector, StateInspector);
 
-declare_method(
+BOOST_OPENMETHOD(
     inspect, (virtual_<const Vehicle&>, virtual_<const Inspector&>), void);
 
-define_method(inspect, (const Vehicle& v, const Inspector& i), void) {
+BOOST_OPENMETHOD_OVERRIDE(
+    inspect, (const Vehicle& v, const Inspector& i), void) {
     cout << "Inspect vehicle.\n";
 }
 
-define_method(inspect, (const Car& v, const Inspector& i), void) {
+BOOST_OPENMETHOD_OVERRIDE(inspect, (const Car& v, const Inspector& i), void) {
     next(v, i);
     cout << "Inspect seat belts.\n";
 }
 
-define_method(inspect, (const Car& v, const StateInspector& i), void) {
+BOOST_OPENMETHOD_OVERRIDE(
+    inspect, (const Car& v, const StateInspector& i), void) {
     next(v, i);
     cout << "Check road tax.\n";
 }
 
 int main() {
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     const Vehicle& vehicle1 = Car();
     const Inspector& inspector1 = StateInspector();

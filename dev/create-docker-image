@@ -1,6 +1,0 @@
-#!/bin/bash
-
-docker build \
-       --build-arg USER=$USER --build-arg UID=$(id -u) \
-       --build-arg GROUP=$(id -g -n jll) --build-arg GID=$(id -g) \
-       -t yomm2:latest  $(dirname $0)/../docker

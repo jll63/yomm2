@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 struct Animal {
     const char* name;
@@ -19,15 +19,15 @@ struct Cat : Animal {
     using Animal::Animal;
 };
 
-register_classes(Animal, Dog, Cat);
+BOOST_OPENMETHOD_CLASSES(Animal, Dog, Cat);
 
-declare_method(poke, (virtual_<Animal&>, std::ostream&), void);
+BOOST_OPENMETHOD(poke, (virtual_<Animal&>, std::ostream&), void);
 
-define_method(poke, (Cat & animal, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(poke, (Cat & animal, std::ostream& os), void) {
     os << animal.name << " hisses.\n";
 }
 
-define_method(poke, (Dog & animal, std::ostream& os), void) {
+BOOST_OPENMETHOD_OVERRIDE(poke, (Dog & animal, std::ostream& os), void) {
     os << animal.name << " barks.\n";
 }
 
@@ -38,7 +38,7 @@ void poke_animals(const std::vector<Animal*>& animals, std::ostream& os) {
 }
 
 int main() {
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     Dog hector{"Hector"}, snoopy{"Snoopy"};
     Cat felix{"Felix"}, sylvester{"Sylvester"};

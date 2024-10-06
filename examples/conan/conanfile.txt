@@ -1,7 +1,0 @@
-[requires]
-yomm2/1.6.0
-[generators]
-CMakeDeps
-CMakeToolchain
-[layout]
-cmake_layout

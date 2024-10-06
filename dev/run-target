@@ -1,6 +1,0 @@
-#!/bin/bash
-
-COMPILER=$1
-BUILD=$2
-TARGET=$3
-cd build/$COMPILER/$BUILD && make $TARGET && find . -name $TARGET -type f -exec $YOMM2_RUN_TARGET_PREFIX {} \;

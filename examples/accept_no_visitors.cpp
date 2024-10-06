@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2021 Jean-Louis Leroy
+// Copyright (c) 2018-2024 Jean-Louis Leroy
 // Distributed under the Boost Software License, Version 1.0.
 // See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,8 +7,8 @@
 #include <memory>
 #include <string>
 
-#include <yorel/yomm2.hpp>
-#include <yorel/yomm2/compiler.hpp>
+#include <boost/openmethod.hpp>
+#include <boost/openmethod/compiler.hpp>
 
 using std::cout;
 using std::make_shared;
@@ -45,63 +45,63 @@ struct Integer : Node {
 // =============================================================================
 // add behavior to existing classes, without changing them
 
-register_classes(Node, Plus, Times, Integer);
+BOOST_OPENMETHOD_CLASSES(Node, Plus, Times, Integer);
 
 // -----------------------------------------------------------------------------
 // evaluate
 
-declare_method(value, (virtual_<const Node&>), int);
+BOOST_OPENMETHOD(value, (virtual_<const Node&>), int);
 
-define_method(value, (const Plus& expr), int) {
+BOOST_OPENMETHOD_OVERRIDE(value, (const Plus& expr), int) {
     return value(*expr.left) + value(*expr.right);
 }
 
-define_method(value, (const Times& expr), int) {
+BOOST_OPENMETHOD_OVERRIDE(value, (const Times& expr), int) {
     return value(*expr.left) * value(*expr.right);
 }
 
-define_method(value, (const Integer& expr), int) {
+BOOST_OPENMETHOD_OVERRIDE(value, (const Integer& expr), int) {
     return expr.value;
 }
 
 // -----------------------------------------------------------------------------
 // render as Forth
 
-declare_method(as_forth, (virtual_<const Node&>), string);
+BOOST_OPENMETHOD(as_forth, (virtual_<const Node&>), string);
 
-define_method(as_forth, (const Plus& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_forth, (const Plus& expr), string) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " +";
 }
 
-define_method(as_forth, (const Times& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_forth, (const Times& expr), string) {
     return as_forth(*expr.left) + " " + as_forth(*expr.right) + " *";
 }
 
-define_method(as_forth, (const Integer& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_forth, (const Integer& expr), string) {
     return std::to_string(expr.value);
 }
 
 // -----------------------------------------------------------------------------
 // render as Lisp
 
-declare_method(as_lisp, (virtual_<const Node&>), string);
+BOOST_OPENMETHOD(as_lisp, (virtual_<const Node&>), string);
 
-define_method(as_lisp, (const Plus& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_lisp, (const Plus& expr), string) {
     return "(plus " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 }
 
-define_method(as_lisp, (const Times& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_lisp, (const Times& expr), string) {
     return "(times " + as_lisp(*expr.left) + " " + as_lisp(*expr.right) + ")";
 }
 
-define_method(as_lisp, (const Integer& expr), string) {
+BOOST_OPENMETHOD_OVERRIDE(as_lisp, (const Integer& expr), string) {
     return std::to_string(expr.value);
 }
 
 // -----------------------------------------------------------------------------
 
 int main() {
-    yorel::yomm2::initialize();
+    boost::openmethod::initialize();
 
     shared_ptr<Node> expr = make_shared<Times>(
         make_shared<Integer>(2),

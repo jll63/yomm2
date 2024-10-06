@@ -1,9 +1,0 @@
-#!/bin/bash
-
-cd $(dirname $0)/..
-mkdir -p build/iwyu
-cd build/iwyu
-export CXXFLAGS="-isystem /usr/lib/gcc/x86_64-linux-gnu/9/include" 
-cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=1 ../..
-iwyu_tool -p . | tee iwyu.out
-
