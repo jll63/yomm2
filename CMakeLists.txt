@@ -127,7 +127,7 @@ install(EXPORT YOMM2Targets
 )
 # Copy config files to install directory
 install(FILES
-  "${CMAKE_CURRENT_BINARY_DIR}/YOMM2Config.cmake"
+  "YOMM2Config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/YOMM2ConfigVersion.cmake"
   DESTINATION lib/cmake/YOMM2
 )
