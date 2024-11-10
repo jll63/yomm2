@@ -1,7 +1,11 @@
+@PACKAGE_INIT@
+
 include(CMakeFindDependencyMacro)
 
+# Tell library users about the Boost dependency
 find_dependency(Boost 1.74... REQUIRED)
 
+# Add the targets file
 include("${CMAKE_CURRENT_LIST_DIR}/YOMM2Targets.cmake")
 
 check_required_components(YOMM2)
