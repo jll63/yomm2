@@ -9,6 +9,16 @@
 
 <br/>
 
+
+## Past
+
+<br/>
+
+
+## Past
+
+<br/>
+
 <ul>
   <li class="fragment">goals:
     <ul>
@@ -38,8 +48,8 @@
 
 <ul>
   <li class="fragment">2020: give up on adoption in the standard</li>
-  <li class="fragment">new developments
-  </li>
+  <li class="fragment">new features</li>
+  <li class="fragment">virtual_ptr</li>
 </ul>
 
 
@@ -48,6 +58,10 @@
 ## virtual_ptr
 
 <br/>
+
+```c++
+declare_method(int, value, (virtual_ptr<Node>));
+```
 
 ```c++
 int call_via_vptr(virtual_ptr<const Node> node) {
@@ -59,12 +73,6 @@ int call_via_vptr(virtual_ptr<const Node> node) {
 mov	rax, qword ptr [rip + method<value, int (virtual_ptr<Node>)::fn+80]
 mov	rax, qword ptr [rsi + 8*rax]
 jmp	rax
-```
-
-<br/>
-
-```c++
-declare_method(int, value, (virtual_ptr<Node>));
 ```
 
 
@@ -121,6 +129,17 @@ ret
 
 
 
+## New Features
+
+<br/>
+
+<ul>
+  <li>virtual_ptr</li>
+  <li class="fragment">core API</li>
+</ul>
+
+
+
 ## Core API
 
 ```c++
@@ -153,23 +172,25 @@ YOMM2_STATIC(use_classes<Node, Number, Plus, Times>);
 
 
 
-## Present
+## New Features
 
 <br/>
 
 <ul>
   <li>virtual_ptr</li>
   <li>core API</li>
-  <li class="fragment">template interop toolkit</li>
-  <li class="fragment">header only (Compiler Explorer)</li>
+  <li class="fragment">header only</li>
   <li class="fragment">friendship</li>
   <li class="fragment">member methods</li>
-  <li class="fragment">policies and facets (latest release)
+  <li class="fragment">policies and facets
     <ul>
       <li class="fragment">custom RTTI</li>
       <li class="fragment">custom error handling, trace, vptr placement...</li>
     </ul>
   </li>
+  <li class="fragment">match (beat?) virtual function speed</li>
+  <li class="fragment">pre-calculate dispatch tables</li>
+  <li class="fragment">vcpkg, Conan, Compiler Explorer</li>
 </ul>
 
 
@@ -179,14 +200,7 @@ YOMM2_STATIC(use_classes<Node, Number, Plus, Times>);
 <br/>
 
 <ul>
-  <li class="fragment">goals:
-    <ul>
-      <li class="fragment">match (beat?) virtual function speed</li>
-      <li class="fragment">pre-calculate dispatch tables</li>
-      <li class="fragment">malloc-free operation</li>
-      <li class="fragment">dispatch on std::any</li>
-      <li class="fragment">(feature complete)</li>
-      <li class="fragment">C++20</li>
-    </ul>
-  </li>
+  <li class="fragment">Boost.OpenMethod ?</li>
+  <li class="fragment">C++20</li>
+  <li class="fragment">C++26 (reflection)</li>
 </ul>

@@ -41,6 +41,10 @@ add_executable(test_namespaces test_namespaces.cpp)
 target_link_libraries(test_namespaces YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME test_namespaces COMMAND test_namespaces)
 
+add_executable(test_rolex test_rolex.cpp)
+target_link_libraries(test_rolex YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
+add_test(NAME test_rolex COMMAND test_rolex)
+
 add_executable(test_pointer_to_method test_pointer_to_method.cpp)
 target_link_libraries(test_pointer_to_method YOMM2::yomm2 ${CMAKE_THREAD_LIBS_INIT})
 add_test(NAME test_pointer_to_method COMMAND test_pointer_to_method)

@@ -1,5 +1,5 @@
 
-# Inside yomm2
+# Inside YOMM2
 
 <!-- .slide: class="title"  -->
 <!-- .slide: class="center" -->
@@ -8,9 +8,9 @@
 
 ## Inside YOMM2
 
-* purely in C++17 (no extra tooling)
+* pure C++17 (no extra tooling)
 
-* constant time dispatch
+* "constant" time dispatch (proportional to #vargs)
 
 * uses tables of function pointers
 
@@ -57,23 +57,7 @@ declare_method(double, pay, (virtual_<Employee&>));
 
 ```C++
 struct YoMm2_S_pay;
-yomm2::method<
-    YoMm2_S_pay, double(virtual_<const Employee&>),
-    yomm2::default_policy>
-pay_yOMM2_selector_(
-    yomm2::detail::remove_virtual<virtual_<const Employee&>> a0);
-```
 
-
-
-## declare_method
-
-```C++
-declare_method(double, pay, (virtual_<Employee&>));
-```
-
-
-```C++
 inline double
 pay(yomm2::detail::remove_virtual<virtual_<const Employee&>> a0) {
     return yomm2::method<
@@ -83,6 +67,12 @@ pay(yomm2::detail::remove_virtual<virtual_<const Employee&>> a0) {
             yomm2::detail::remove_virtual<virtual_<const Employee&>>>(
             a0));
 };
+
+yomm2::method<
+    YoMm2_S_pay, double(virtual_<const Employee&>),
+    yomm2::default_policy>
+pay_yOMM2_selector_(
+    yomm2::detail::remove_virtual<virtual_<const Employee&>> a0);
 ```
 
 
@@ -108,17 +98,6 @@ struct _yOMM2_spec {
 };
 _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body>
     YoMm2_gS_11(&next, typeid(_yOMM2_spec).name()); } }
-```
-
-
-
-## define_method
-
-```C++
-define_method(double, pay, (Employee&)) { return 3000; }
-```
-
-```C++
 YoMm2_gS_10::_yOMM2_method::return_type
 YoMm2_gS_10::_yOMM2_spec::yOMM2_body(const Employee&) {
     return 3000;
@@ -129,13 +108,13 @@ YoMm2_gS_10::_yOMM2_spec::yOMM2_body(const Employee&) {
 
 ## update
 
-uses the class and method info registered by static ctors
+* uses class and method info registered by static ctors
 
-* build representation of class hierarchies
+* builds a representation of class hierarchies
 
-* calculate the hash and dispatch tables
+* builds dispatch tables
 
-* find a perfect (not minimal) hash function for the `type_info`s
+* finds a perfect (not minimal) hash function for the `type_info`s
   * H(x) = (M * x) >> S
 
 
@@ -155,7 +134,7 @@ uses the class and method info registered by static ctors
 during `update`
 
 ```C++
-method<pay>::slots_strides.i = 1;
+method<pay>::slots_strides[] = { 1 };
 
 // method table for Employee
 mtbls[ H(&typeid(Employee)) ] = {
@@ -179,9 +158,9 @@ pay(bill)
 ```
 =>
 ```C++
-mtbls[ H(&typeid(bill)) ]          // mtable for type
-  [ method<pay>::slots_strides.i ] // pointer to fun
-(bill)                             // call
+mtbls[ H(&typeid(bill)) ]           // mtable for type
+  [ method<pay>::slots_strides[0] ] // pointer to fun
+(bill)                              // call
 ```
 
 
@@ -193,15 +172,15 @@ double call_pay(Employee& e) { return pay(e); }
 ```
 
 ```asm
-mov	r8, qword ptr [rip + context+24]              ; hash table
-mov	rdx, qword ptr [rip + context+32]             ; M
-mov	cl, byte ptr [rip + context+40]               ; S
-movsxd rsi, dword ptr [rip + method<pay>::fn+96]  ; slot
-mov	rax, qword ptr [rdi]                          ; vptr
-imul rdx, qword ptr [rax - 8]                     ; M * &typeid(e)
-shr	rdx, cl                                       ; >> S
-mov	rax, qword ptr [r8 + 8*rdx]                   ; method table
-jmp	qword ptr [rax + 8*rsi]                       ; call wrapper
+mov	rax, qword ptr [rdi]                  ; vptr
+mov	rdx, qword ptr [rip + hash_mult]      ; M
+imul	rdx, qword ptr [rax - 8]            ; M * &typeid(e)
+movzx	ecx, byte ptr [rip + hash_shift]    ; S
+shr	rdx, cl                               ; >> S
+mov	rax, qword ptr [rip + vptrs]          ; vptrs
+mov	rax, qword ptr [rax + 8*rdx]          ; vptr
+mov	rcx, qword ptr [rip + slots_strides]  ; slot
+jmp	qword ptr [rax + 8*rcx]
 ```
 
 
@@ -235,15 +214,15 @@ define_method(bool, approve, (Founder& r, Expense& e, double amount)) {
 
 * it's a little more complicated
 
-* use a multi-dimensional dispatch table
+* uses a multi-dimensional dispatch table
 
 * size can grow very quickly
 
-* the table must be "compressed", devoid of redundancies
+* table must be "compressed", devoid of redundancies
 
 * in fact the "uncompressed" table never exists
 
-* work in terms of class _groups_, not classes
+* works in terms of class _groups_, not classes
 
 
 
@@ -271,7 +250,7 @@ define_method(bool, approve, (Founder& r, Expense& e, double amount)) {
 ## Dispatching a Multi-Method
 
 ```C++
-method<approve>::.slots_strides.pw = { 0, 4, 0 };
+method<approve>::.slots_strides = { 0, 4, 0 };
 
 mtbls[ H(&typeid(Employee)) ] = {
   // & of (Employee,Expense+Jet) cell
@@ -292,59 +271,38 @@ mtbls[ H(&typeid(Cab))     ] = { 2 };
 ## Dispatching a Multi-Method
 
 ```C++
-approve(bill, ticket, 5000)
+approve(bill, ticket, 6)
 ```
 =>
 ```C++
-word* slots_strides = method<approve>::.slots_strides.pw;
+std::uintptr_t* slots_strides = method<approve>::.slots_strides;
 
 mtbls[ H(&typeid(bill)) ]        // method table for bill
-  [ slots_strides[0].i ]         // ptr to cell in 1st column
+  [ slots_strides[0] ]           // ptr to cell in 1st column
   [ mtbls [ H(&typeid(ticket)) ] // method table for ticket
-    [ slots_strides[2].i ]       // column
-    * slots_strides[1].i         // stride
+    [ slots_strides[2] ]         // column
+    * slots_strides[1]           // stride
   ]                              // pointer to function
-(bill, ticket, 5000)             // call
+(bill, ticket, 6)                // call
 ```
 
 
 
-## Benchmarks
 
-|                     |          | gcc6 | clang6 |
-|---------------------|----------|------|--------|
-| normal inheritance  |          |      |        |
-| virtual function    | 1-method | 16%  | 17%    |
-| double dispatch     | 2-method | 25%  | 35%    |
-| virtual inheritance |          |      |        |
-| virtual function    | 1-method | 19%  | 17%    |
-| double dispatch     | 2-method | 40%  | 33%    |
-
-
-
-## yomm2 vs other systems
+## YOMM2 vs other systems
 
 * Pirkelbauer - Solodkyi - Stroustrup (PSS)
-* yomm11
 * Cmm
 * Loki / Modern C++
 
 
 
-## yomm2 vs PSS
+## YOMM2 vs PSS
 
 * Solodkyi's  papers on open methods etc.:
     * [Open Multi-Methods for C++](http://www.stroustrup.com/multimethods.pdf)
     * [Design and Evaluation of C++ Open Multi-Methods](https://parasol.tamu.edu/~yuriys/papers/OMM10.pdf)
     * [Simplifying the Analysis of C++ Programs](http://oaktrust.library.tamu.edu/bitstream/handle/1969.1/151376/SOLODKYY-DISSERTATION-2013.pdf)
 * PSS attempts harder to resolve ambiguities
-* yomm2 overrides not visible as overloads, cannot specialize multiple methods
-* yomm2 supports smart pointers, `next`
-
-
-
-## yomm2 vs yomm11
-
-* no need to instrument classes
-
-* methods are ordinary functions
+* YOMM2 overrides not visible as overloads, cannot specialize multiple methods
+* YOMM2 supports smart pointers, `next`

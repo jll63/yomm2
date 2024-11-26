@@ -107,7 +107,7 @@ define_method(int, value, (Plus& expr)) {
 	mov	  rdx, qword ptr [rip+fast_perfect_hash<release>::mult]
 
 	imul	rdx, qword ptr [rax-8]
-	mov	  cl, byte ptr [rip+fast_perfect_hash<release>::shift]
+	mov	  cl,  byte ptr [rip+fast_perfect_hash<release>::shift]
 
 	shr	  rdx, cl
 	mov	  rax, qword ptr [rip+vptr_vector<release>::vptrs]
@@ -118,8 +118,10 @@ define_method(int, value, (Plus& expr)) {
 	jmp	  qword ptr [rax+8*rcx]
 ```
 
-* 15-30% slower than equivalent native virtual function call (using perfect
-  integer hash; but see `virtual_ptr`)
+* llvm-mca: 4.2 cycles
+
+* benchmarks (google, rdtsc): 15-65% slower than equivalent native virtual
+  function call (using perfect integer hash; but see `virtual_ptr`)
 
 * [Optimizing Away C++ Virtual Functions May Be
   Pointless](https://www.youtube.com/watch?v=i5MAXAxp_Tw)  - Shachar Shemesh -
