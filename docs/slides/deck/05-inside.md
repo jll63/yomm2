@@ -15,7 +15,7 @@
 * uses tables of function pointers
 
 * object -> dispatch data?
-  * perfect integer hash of `&type_info`
+  * perfect integer hash of `&typeid(obj)`
 
 
 
@@ -59,20 +59,20 @@ declare_method(double, pay, (virtual_<Employee&>));
 struct YoMm2_S_pay;
 
 inline double
-pay(yomm2::detail::remove_virtual<virtual_<const Employee&>> a0) {
+pay(yomm2::detail::remove_virtual<virtual_<Employee&>> a0) {
     return yomm2::method<
-        YoMm2_S_pay, double(virtual_<const Employee&>),
+        YoMm2_S_pay, double(virtual_<Employee&>),
         yomm2::default_policy>::
         fn(std::forward<
-            yomm2::detail::remove_virtual<virtual_<const Employee&>>>(
+            yomm2::detail::remove_virtual<virtual_<Employee&>>>(
             a0));
 };
 
 yomm2::method<
-    YoMm2_S_pay, double(virtual_<const Employee&>),
+    YoMm2_S_pay, double(virtual_<Employee&>),
     yomm2::default_policy>
 pay_yOMM2_selector_(
-    yomm2::detail::remove_virtual<virtual_<const Employee&>> a0);
+    yomm2::detail::remove_virtual<virtual_<Employee&>> a0);
 ```
 
 
@@ -89,17 +89,17 @@ template<typename T> struct _yOMM2_select;
 template<typename... A> struct _yOMM2_select<void(A...)> {
     using type = decltype(pay_yOMM2_selector_(std::declval<A>()...));
 };
-using _yOMM2_method = _yOMM2_select<void(const Employee&)>::type;
+using _yOMM2_method = _yOMM2_select<void(Employee&)>::type;
 using _yOMM2_return_t = _yOMM2_method::return_type;
 _yOMM2_method::function_pointer_type next;
 struct _yOMM2_spec {
     static YoMm2_gS_10::_yOMM2_method::return_type
-    yOMM2_body(const Employee&);
+    yOMM2_body(Employee&);
 };
 _yOMM2_method::add_function<_yOMM2_spec::yOMM2_body>
     YoMm2_gS_11(&next, typeid(_yOMM2_spec).name()); } }
 YoMm2_gS_10::_yOMM2_method::return_type
-YoMm2_gS_10::_yOMM2_spec::yOMM2_body(const Employee&) {
+YoMm2_gS_10::_yOMM2_spec::yOMM2_body(Employee&) {
     return 3000;
 }
 ```
@@ -172,15 +172,15 @@ double call_pay(Employee& e) { return pay(e); }
 ```
 
 ```asm
-mov	rax, qword ptr [rdi]                  ; vptr
-mov	rdx, qword ptr [rip + hash_mult]      ; M
-imul	rdx, qword ptr [rax - 8]            ; M * &typeid(e)
-movzx	ecx, byte ptr [rip + hash_shift]    ; S
-shr	rdx, cl                               ; >> S
-mov	rax, qword ptr [rip + vptrs]          ; vptrs
-mov	rax, qword ptr [rax + 8*rdx]          ; vptr
-mov	rcx, qword ptr [rip + slots_strides]  ; slot
-jmp	qword ptr [rax + 8*rcx]
+mov	  rax, qword ptr [rdi]                  ; vptr
+mov	  rdx, qword ptr [rip + hash_mult]      ; M
+imul	rdx, qword ptr [rax - 8]              ; M * &typeid(e)
+movzx	ecx, byte ptr [rip + hash_shift]      ; S
+shr	  rdx, cl                               ; >> S
+mov	  rax, qword ptr [rip + vptrs]          ; vptrs
+mov	  rax, qword ptr [rax + 8*rdx]          ; vptr
+mov	  rcx, qword ptr [rip + slots_strides]  ; slot
+jmp	  qword ptr [rax + 8*rcx]
 ```
 
 
@@ -250,7 +250,7 @@ define_method(bool, approve, (Founder& r, Expense& e, double amount)) {
 ## Dispatching a Multi-Method
 
 ```C++
-method<approve>::.slots_strides = { 0, 4, 0 };
+method<approve>::slots_strides = { 0, 4, 0 };
 
 mtbls[ H(&typeid(Employee)) ] = {
   // & of (Employee,Expense+Jet) cell

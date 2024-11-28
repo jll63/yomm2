@@ -62,13 +62,13 @@ Output:
 <br/><br/>
 
 ```C++
-cout << to_rpn(expr) << " = " << expr->value() << "\n";
+cout << to_rpn(expr) << " = " << expr.value() << "\n";
 //      ^^^^^^
 ```
 
 Output:
 ```
-2 3 4 * + = 14
+2 3 4 + * = 14
 ```
 
 
@@ -94,7 +94,7 @@ struct Plus : Node {
 
 struct Times : Node {
   // as before
-  string to_rpn() const override { return left.to_rpn() + " " + right.to_rpn() + " &"; }
+  string to_rpn() const override { return left.to_rpn() + " " + right.to_rpn() + " *"; }
 };
 ```
 

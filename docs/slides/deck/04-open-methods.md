@@ -86,13 +86,13 @@ int main() {
 * AST classes should _only_ represent the tree
 
 ```C++
-declare_method(int, value, (virtual_<Node&>));
+declare_method(int, value, (virtual_<const Node&>));
 
-define_method(int, value, (Number& expr)) {
+define_method(int, value, (const Number& expr)) {
   return expr.val;
 }
 
-define_method(int, value, (Plus& expr)) {
+define_method(int, value, (const Plus& expr)) {
   return value(expr.left) + value(expr.right);
 }
 ```

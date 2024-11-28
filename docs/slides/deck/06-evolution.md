@@ -9,16 +9,6 @@
 
 <br/>
 
-
-## Past
-
-<br/>
-
-
-## Past
-
-<br/>
-
 <ul>
   <li class="fragment">goals:
     <ul>
@@ -60,7 +50,7 @@
 <br/>
 
 ```c++
-declare_method(int, value, (virtual_ptr<Node>));
+declare_method(int, value, (virtual_ptr<const Node>));
 ```
 
 ```c++
