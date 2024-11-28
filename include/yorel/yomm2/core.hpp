@@ -84,9 +84,7 @@ struct method<Key, R(A...), Policy> : detail::method_info {
     std::uintptr_t
     resolve_uni(const ArgType& arg, const MoreArgTypes&... more_args) const;
 
-    template<
-        std::size_t VirtualArg, typename MethodArgList, typename ArgType,
-        typename... MoreArgTypes>
+    template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
     std::uintptr_t resolve_multi_first(
         const ArgType& arg, const MoreArgTypes&... more_args) const;
 
@@ -457,7 +455,7 @@ method<Key, R(A...), Policy>::resolve(const ArgType&... args) const {
     if constexpr (arity == 1) {
         pf = resolve_uni<types<A...>, ArgType...>(args...);
     } else {
-        pf = resolve_multi_first<0, types<A...>, ArgType...>(args...);
+        pf = resolve_multi_first<types<A...>, ArgType...>(args...);
     }
 
     return reinterpret_cast<function_pointer_type>(pf);
@@ -527,9 +525,7 @@ inline std::uintptr_t method<Key, R(A...), Policy>::resolve_uni(
 }
 
 template<typename Key, typename R, class Policy, typename... A>
-template<
-    std::size_t VirtualArg, typename MethodArgList, typename ArgType,
-    typename... MoreArgTypes>
+template<typename MethodArgList, typename ArgType, typename... MoreArgTypes>
 inline std::uintptr_t method<Key, R(A...), Policy>::resolve_multi_first(
     const ArgType& arg, const MoreArgTypes&... more_args) const {
 
