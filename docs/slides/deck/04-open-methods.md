@@ -120,7 +120,7 @@ define_method(int, value, (const Plus& expr)) {
 
 * llvm-mca: 4.2 cycles
 
-* benchmarks (google, rdtsc): 15-65% slower than equivalent native virtual
+* benchmarks (google, rdtsc): 15-100% slower than equivalent native virtual
   function call (using perfect integer hash; but see `virtual_ptr`)
 
 * [Optimizing Away C++ Virtual Functions May Be
