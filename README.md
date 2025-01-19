@@ -186,7 +186,7 @@ turn on optimization (-O2). With both clang and gcc, dispatching a call to a
 method with one virtual argument takes 15-30% more time than calling the
 equivalent virtual member function (unless the call goes through a virtual base,
 which requires a dynamic cast). It does not involve branching or looping, only a
-few memory reads (which the CPU can be parallelize), a multiplication, a bit
+few memory reads (which the CPU can parallelize), a multiplication, a bit
 shift, a final memory read, then an indirect call. If the body of the method
 does any amount of work, the difference is unnoticeable.
 
@@ -199,7 +199,7 @@ instructions and two memory reads.
 ## Installation
 
 YOMM2 is available on both major package managers. This is the easiest way of
-integrating it in your project, along with its dependencies. See [the vcpkg
+integrating it into your project, along with its dependencies. See [the vcpkg
 example](examples/vcpkg) and [the Conan2 example](examples/conan).
 
 YOMM2 can also be built and installed from the sources, using straight `cmake`.
