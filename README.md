@@ -7,6 +7,10 @@
 [![Vcpkg package](https://repology.org/badge/version-for-repo/vcpkg/yomm2.svg)](https://repology.org/project/yomm2/versions)
 ---
 
+*Since about 1985, I have
+always felt some twinge of regret for not providing multi-methods.  
+Stroustrup, 1994, The Design and Evolution of C++, 13.8.*
+
 This library implements fast, open, multi-methods for C++17. It is strongly
 inspired by the papers by Peter Pirkelbauer, Yuriy Solodkyy, and Bjarne
 Stroustrup.
