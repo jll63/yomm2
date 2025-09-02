@@ -77,7 +77,7 @@ struct domain {};
 } // namespace detail
 
 template<class Class, class Policy>
-struct virtual_ptr;
+class virtual_ptr;
 
 template<typename T>
 struct virtual_;
