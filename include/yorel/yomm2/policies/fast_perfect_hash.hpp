@@ -140,7 +140,7 @@ void fast_perfect_hash<Policy>::hash_initialize(
     hash_search_error error;
     error.attempts = total_attempts;
     // error.duration = std::chrono::steady_clock::now() - start_time;
-    error.buckets = 1 << M;
+    error.buckets = size_t(1) << M;
 
     if constexpr (has_facet<Policy, error_handler>) {
         Policy::error(error_type(error));
