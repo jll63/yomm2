@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> YOMM2 has been superseded by Boost.OpenMethod. See README for details.
+
+
 <span style="font-size:xx-large;">yorel::yomm2::<strong>types</strong></span><br/>
 <sub>defined in <yorel/yomm2/core.hpp></sub><br/>
 

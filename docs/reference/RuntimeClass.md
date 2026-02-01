@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> YOMM2 has been superseded by Boost.OpenMethod. See README for details.
+
+
 <span style="font-size:xx-large;"><strong>RuntimeClass</strong><br/></span><br/>
 
 This concept specifies the operations available on the objects in the range

@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> YOMM2 has been superseded by Boost.OpenMethod. See README for details.
+
+
 <span style="font-size:xx-large;">yorel::yomm2::<strong>method_call_error</strong></span><br/>
 <span style="font-size:xx-large;">yorel::yomm2::<strong>method_call_error_handler</strong></span><br/>
 <span style="font-size:xx-large;">yorel::yomm2::<strong>set_method_call_error_handler</strong></span><br/>

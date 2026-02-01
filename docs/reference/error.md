@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> YOMM2 has been superseded by Boost.OpenMethod. See README for details.
+
+
 <span style="font-size:xx-large;">yorel::yomm2::<strong>error</strong><br/>
 yorel::yomm2::<strong>error_type</strong><br/>
 yorel::yomm2::<strong>error_handler_type</strong><br/>

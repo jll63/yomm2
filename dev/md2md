@@ -19,6 +19,11 @@ with contextlib.suppress(FileNotFoundError):
 
 with open(out_path, "w") as wh:
     text = mdgen.replace_md(text, source=source)
+    print("> [!IMPORTANT]", file=wh)
+    print(
+        "> YOMM2 has been superseded by Boost.OpenMethod. See README for details.\n\n",
+        file=wh,
+    )
     print(text, file=wh, end="")
 
 out_path.chmod(0o400)

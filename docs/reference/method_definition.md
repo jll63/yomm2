@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> YOMM2 has been superseded by Boost.OpenMethod. See README for details.
+
+
 
 
 <span style="font-size:xx-large;"><strong>method_definition</strong><br/></span><br/>
