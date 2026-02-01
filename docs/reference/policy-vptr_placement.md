@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 
 <span style="font-size:xx-large;">yorel::yomm2::policy::<strong>vptr_placement</strong><br/>
 yorel::yomm2::policy::<strong>external_vptr</strong></span><br/>

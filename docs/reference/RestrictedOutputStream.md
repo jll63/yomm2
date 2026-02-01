@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 <span style="font-size:xx-large;"><strong>RestrictedOutputStream</strong><br/></span><br/>
 
     Stream& operator<<(Stream& os, const std::string_view& view);

@@ -37,6 +37,12 @@ def generate():
         input = fh.read()
 
     with open(out_path, "w") as out:
+        print("> **DEPRECATION NOTICE**<br>", file=out)
+        print(
+            "> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.\n",
+            file=out,
+        )
+
         fragments = re.findall(
             r"(/\*{3}(.*?)\*{3}/)|(//\*{3}(.*?)//\*{3})",
             re.sub(

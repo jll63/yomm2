@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 
 <sub>defined in <yorel/yomm2/core.hpp>, also provided by <yorel/yomm2/keywords.hpp>, <yorel/yomm2.hpp></sub><br/>
 

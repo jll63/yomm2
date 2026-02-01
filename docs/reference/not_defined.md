@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 **yorel::yomm2::not_defined** <small>(experimental)</small><br>
 <sub>defined in <yorel/yomm2/template.hpp></sub><br/>
 

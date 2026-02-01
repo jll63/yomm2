@@ -236,5 +236,3 @@ more reasons why you should use them.
 2. In the future, additional functionality may be added to containers.
 
 The rest of the example is as before.
-
-

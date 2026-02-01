@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 
 
 <span style="font-size:xx-large;">yorel::yomm2::<strong>aggregate</strong></span><br/>

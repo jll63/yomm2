@@ -17,8 +17,13 @@ with open(sys.argv[1]) as rh:
 with contextlib.suppress(FileNotFoundError):
     out_path.chmod(0o600)
 
-with open(out_path, "w") as wh:
+with open(out_path, "w") as out:
     text = mdgen.replace_md(text, source=source)
-    print(text, file=wh, end="")
+    print("> **DEPRECATION NOTICE**<br>", file=out)
+    print(
+        "> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.\n",
+        file=out,
+    )
+    print(text, file=out, end="")
 
 out_path.chmod(0o400)

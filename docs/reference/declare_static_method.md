@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 
 
 <span style="font-size:xx-large;"><strong>declare_static_method</strong><br/></span><br/>

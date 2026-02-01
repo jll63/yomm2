@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 ## Introduction
 
 YOMM2 is a library that implements open multi-methods for C++17. The semantics
@@ -7,7 +10,7 @@ Yuriy Solodkyy, and Bjarne Stroustrup.
 
 This implementation diverges from the paper on the following points:
 * A "base-method" is called a "method declaration" in YOMM2, and an "overrider"
-  is called a "method definition". This is because
+  is called a "method definition".
 * YOMM2 has a mechanism (`next`) to call the next most specialised method.
 * The paper allows only references for virtual parameters. YOMM2 also allows
   pointers and smart pointers.

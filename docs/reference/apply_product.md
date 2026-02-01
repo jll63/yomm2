@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 
 
 **yorel::yomm2::apply_product** <small>(experimental)</small><br>

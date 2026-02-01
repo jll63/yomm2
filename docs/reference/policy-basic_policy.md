@@ -1,3 +1,6 @@
+> **DEPRECATION NOTICE**<br>
+> YOMM2 has been superseded by Boost.OpenMethod. See README for more details.
+
 <span style="font-size:xx-large;">yorel::yomm2::<strong>policy</strong><br/>
 yorel::yomm2::policy::<strong>basic_policy</strong></span><br/>
 <span style="font-size:xx-large;">yorel::yomm2::policy::<strong>debug</strong><br/>
